@@ -22,19 +22,29 @@
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
-    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+    <div class="topbar-user-wrap">
+      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+        <span class="avatar" id="topbar-emoji">🧑</span>
+        <span class="naam" id="topbar-naam">…</span>
+      </div>
+      <div class="profiel-menu" id="profiel-menu">
+        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="contacten.html" class="profiel-menu-item">👥&nbsp; Contacten</a>
+        <div class="profiel-menu-divider"></div>
+        <button class="profiel-menu-item profiel-menu-logout" onclick="Auth.logout()">🚪&nbsp; Uitloggen</button>
+      </div>
+    </div>
   </div>
 </header>
-<nav class="bottom-nav">
-  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
-  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
-  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
-  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
-  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
-  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
-  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
-  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
-  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+<nav class="bottom-nav" id="sidebar">
+  <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Menu inklappen">&#9664;</button>
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
 </nav>
 <main class="main-content">
 <div class="page-content">

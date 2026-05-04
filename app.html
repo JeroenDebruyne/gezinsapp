@@ -2300,5 +2300,27 @@ laadOp().then(async ()=>{
   renderRooster();
 });
 </script>
+
+<script>
+// Sidebar toggle (desktop)
+(function(){
+  const expanded = localStorage.getItem('sidebar-expanded') !== 'false';
+  if(expanded) document.body.classList.add('sidebar-expanded');
+})();
+function toggleSidebar(){
+  const exp = document.body.classList.toggle('sidebar-expanded');
+  localStorage.setItem('sidebar-expanded', exp);
+  const btn = document.getElementById('sidebar-toggle');
+  if(btn) btn.title = exp ? 'Menu inklappen' : 'Menu uitklappen';
+}
+// Profiel dropdown
+function toggleProfielMenu(e){
+  e && e.stopPropagation();
+  document.getElementById('profiel-menu')?.classList.toggle('open');
+}
+document.addEventListener('click', function(){
+  document.getElementById('profiel-menu')?.classList.remove('open');
+});
+</script>
 </body>
 </html>
