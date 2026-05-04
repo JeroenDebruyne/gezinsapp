@@ -2301,19 +2301,18 @@ laadOp().then(async ()=>{
 });
 </script>
 
+
 <script>
-// Sidebar toggle (desktop)
+// ── Sidebar (desktop) ────────────────────────────────────────
 (function(){
-  const expanded = localStorage.getItem('sidebar-expanded') !== 'false';
-  if(expanded) document.body.classList.add('sidebar-expanded');
+  if(localStorage.getItem('sidebar-expanded') !== 'false')
+    document.body.classList.add('sidebar-expanded');
 })();
 function toggleSidebar(){
   const exp = document.body.classList.toggle('sidebar-expanded');
   localStorage.setItem('sidebar-expanded', exp);
-  const btn = document.getElementById('sidebar-toggle');
-  if(btn) btn.title = exp ? 'Menu inklappen' : 'Menu uitklappen';
 }
-// Profiel dropdown
+// ── Profiel dropdown ─────────────────────────────────────────
 function toggleProfielMenu(e){
   e && e.stopPropagation();
   document.getElementById('profiel-menu')?.classList.toggle('open');
@@ -2321,6 +2320,21 @@ function toggleProfielMenu(e){
 document.addEventListener('click', function(){
   document.getElementById('profiel-menu')?.classList.remove('open');
 });
+// ── Module overlay (mobiel) ───────────────────────────────────
+function toggleModules(){
+  document.getElementById('module-overlay')?.classList.toggle('open');
+}
+function sluitModules(e){
+  if(e.target === document.getElementById('module-overlay'))
+    document.getElementById('module-overlay').classList.remove('open');
+}
+// ── Actieve pagina in mobiele nav ─────────────────────────────
+(function(){
+  const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
+  document.querySelectorAll('.mobile-nav-item[data-pagina]').forEach(el => {
+    if(el.dataset.pagina === pagina) el.classList.add('active');
+  });
+})();
 </script>
 </body>
 </html>

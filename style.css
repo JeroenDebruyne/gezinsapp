@@ -40,7 +40,7 @@ html{height:100%;}
 body{
   font-family:-apple-system,'SF Pro Text',system-ui,sans-serif;
   background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;
-  min-height:100%;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  min-height:100%;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
   -webkit-font-smoothing:antialiased;
 }
 
@@ -59,24 +59,62 @@ body{
 .topbar-user .naam{font-weight:600;color:var(--ink);}
 .opslag-status{font-size:11px;color:var(--muted-2);white-space:nowrap;}
 
-/* Bottom nav — mobiel */
-.bottom-nav{
+/* ── Mobiele bottom nav (2 knoppen) ─────────────────────────── */
+.bottom-nav{ display:none; } /* verborgen op mobiel, alleen desktop */
+
+.bottom-nav-mobile{
   position:fixed;bottom:0;left:0;right:0;z-index:100;
   height:calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
   background:rgba(247,245,240,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);display:flex;
+  border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
 }
-.bottom-nav-item{
+.mobile-nav-item{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;font-size:9px;color:var(--muted);cursor:pointer;border:none;background:none;
-  padding:5px 1px;text-decoration:none;transition:color .15s;
-  -webkit-tap-highlight-color:transparent;font-family:inherit;min-width:0;
+  gap:3px;font-size:11px;font-weight:500;color:var(--muted);
+  text-decoration:none;cursor:pointer;border:none;background:none;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+  transition:color .15s;
 }
-.bottom-nav-item .nav-icon{font-size:20px;line-height:1;transition:transform .15s;}
-.bottom-nav-item .nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-.bottom-nav-item.active{color:var(--accent);font-weight:600;}
-.bottom-nav-item.active .nav-icon{transform:scale(1.08);}
+.mobile-nav-item.active{ color:var(--accent); }
+.mobile-nav-icon{ font-size:26px;line-height:1; }
+.mobile-nav-label{ font-size:11px; }
+
+/* ── Module overlay (mobiel) ─────────────────────────────────── */
+.module-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(44,41,38,0.45);z-index:200;
+  align-items:flex-end;
+}
+.module-overlay.open{ display:flex; }
+.module-sheet{
+  background:var(--surface);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  width:100%;
+  padding:14px 16px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 32px rgba(44,41,38,.12);
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.module-sheet-handle{
+  width:40px;height:4px;background:var(--border-2);
+  border-radius:2px;margin:0 auto 18px;
+}
+.module-tiles{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.module-tile{
+  background:var(--surface-2);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:16px 14px;
+  display:flex;flex-direction:column;gap:6px;
+  text-decoration:none;color:var(--ink);
+  transition:all .15s;-webkit-tap-highlight-color:transparent;
+}
+.module-tile:hover,.module-tile:active{ background:var(--accent-l);border-color:var(--accent); }
+.module-tile-icon{ font-size:28px;line-height:1; }
+.module-tile-naam{ font-size:14px;font-weight:600; }
+
 .sidebar-toggle{display:none;}
 
 /* Profiel dropdown */
@@ -102,6 +140,8 @@ body{
 
 /* Desktop sidebar */
 @media(min-width:768px){
+  .bottom-nav-mobile{ display:none; }
+  .module-overlay{ display:none !important; }
   :root{ --sidebar-w: 52px; --sidebar-w-exp: 220px; }
 
   body{

@@ -39,7 +39,36 @@
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span></a>
 </nav>
+<nav class="bottom-nav-mobile">
+  <a class="mobile-nav-item" href="index.html" data-pagina="index">
+    <span class="mobile-nav-icon">🏠</span>
+    <span class="mobile-nav-label">Home</span>
+  </a>
+  <button class="mobile-nav-item" onclick="toggleModules()">
+    <span class="mobile-nav-icon">⊞</span>
+    <span class="mobile-nav-label">Alles</span>
+  </button>
+</nav>
+
+<!-- Module grid (mobiel) -->
+<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
+  <div class="module-sheet" onclick="event.stopPropagation()">
+    <div class="module-sheet-handle"></div>
+    <div class="module-tiles">
+      <a class="module-tile" href="agenda.html"><span class="module-tile-icon">📅</span><span class="module-tile-naam">Agenda</span></a>
+      <a class="module-tile" href="todos.html"><span class="module-tile-icon">✅</span><span class="module-tile-naam">To-do's</span></a>
+      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
+      <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
+      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
+      <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
+      <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
+      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
+    </div>
+  </div>
+</div>
 
 <main class="main-content">
 
@@ -419,6 +448,40 @@ document.getElementById('t-titel').addEventListener('keydown', e=>{
 if (new URLSearchParams(location.search).get('nieuw')==='1') {
   window.addEventListener('load',()=>setTimeout(openModal,300));
 }
+</script>
+<script>
+// ── Sidebar (desktop) ────────────────────────────────────────
+(function(){
+  if(localStorage.getItem('sidebar-expanded') !== 'false')
+    document.body.classList.add('sidebar-expanded');
+})();
+function toggleSidebar(){
+  const exp = document.body.classList.toggle('sidebar-expanded');
+  localStorage.setItem('sidebar-expanded', exp);
+}
+// ── Profiel dropdown ─────────────────────────────────────────
+function toggleProfielMenu(e){
+  e && e.stopPropagation();
+  document.getElementById('profiel-menu')?.classList.toggle('open');
+}
+document.addEventListener('click', function(){
+  document.getElementById('profiel-menu')?.classList.remove('open');
+});
+// ── Module overlay (mobiel) ───────────────────────────────────
+function toggleModules(){
+  document.getElementById('module-overlay')?.classList.toggle('open');
+}
+function sluitModules(e){
+  if(e.target === document.getElementById('module-overlay'))
+    document.getElementById('module-overlay').classList.remove('open');
+}
+// ── Actieve pagina in mobiele nav ─────────────────────────────
+(function(){
+  const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
+  document.querySelectorAll('.mobile-nav-item[data-pagina]').forEach(el => {
+    if(el.dataset.pagina === pagina) el.classList.add('active');
+  });
+})();
 </script>
 </body>
 </html>
