@@ -7,11 +7,12 @@ const Auth = (() => {
 
   // DEV_MODE = true  → geen login nodig
   // DEV_MODE = false → login.html vereist
-  const DEV_MODE = true;
+  const DEV_MODE = false;
 
   const SUPABASE_URL = 'https://rdessctmorraeeipysct.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';
   const SESSION_KEY  = 'sb-rdessctmorraeeipysct-auth-token';
+  const KIND_KEY     = 'gezinsapp-kind-sessie';
 
   const ROLLEN = {
     gezinshoofd: {
@@ -67,6 +68,9 @@ const Auth = (() => {
 
   function profiel() {
     if (DEV_MODE) return DEV_PROFIEL;
+    // Kindersessie (geen Supabase-account nodig)
+    const kindKey = localStorage.getItem(KIND_KEY);
+    if (kindKey) return PROFIELEN.find(p => p.persoonKey === kindKey) || null;
     const s = _readSession();
     if (!s?.user) return null;
     const email = s.user.email?.toLowerCase()||'';
@@ -88,6 +92,12 @@ const Auth = (() => {
 
   async function logout() {
     if (DEV_MODE) { alert('Zet DEV_MODE=false in auth.js om in te loggen.'); return; }
+    // Kindersessie uitloggen
+    if (localStorage.getItem(KIND_KEY)) {
+      localStorage.removeItem(KIND_KEY);
+      window.location.replace('login.html');
+      return;
+    }
     fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:headers()}).catch(()=>{});
     _clearSession();
     window.location.replace('login.html');
@@ -111,9 +121,16 @@ const Auth = (() => {
 
   async function requireAuth() {
     if (DEV_MODE) return true;
+    if (localStorage.getItem(KIND_KEY)) return true;
     const s = await refreshIfNeeded();
     if (!s) { window.location.replace('login.html'); return false; }
     return true;
+  }
+
+  function loginAlsKind(persoonKey) {
+    _clearSession();
+    localStorage.setItem(KIND_KEY, persoonKey);
+    window.location.replace('index.html');
   }
 
   function initPagina(paginaKey) {
@@ -140,5 +157,5 @@ const Auth = (() => {
     setInterval(refreshIfNeeded, 4*60*1000);
   }
 
-  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, PROFIELEN, ROLLEN };
+  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, loginAlsKind, PROFIELEN, ROLLEN, KIND_KEY };
 })();

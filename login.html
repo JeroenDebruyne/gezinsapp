@@ -280,6 +280,9 @@ body {
 }
 .avatar-btn:hover { border-color: var(--ink-2); background: #fff; }
 .avatar-btn.selected { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 2px var(--ink); }
+.avatar-btn-kind { background: #f0fdf4; border-color: #bbf7d0; }
+.avatar-btn-kind:hover { background: #dcfce7; border-color: #86efac; }
+.avatar-btn-kind .avatar-rol { color: #15803d; }
 .avatar-emoji { font-size: 20px; line-height: 1; }
 .avatar-info { display: flex; flex-direction: column; }
 .avatar-naam { font-size: 13px; font-weight: 500; color: var(--ink); }
@@ -341,41 +344,37 @@ body {
         <span class="btn-spinner"></span>
       </button>
 
-      <div class="divider">of snel inloggen als</div>
+      <div class="divider">of log in als</div>
 
-      <!-- Snelle profielen (alleen zichtbaar als ze account hebben) -->
       <div class="avatar-grid" id="avatar-grid">
-        <button class="avatar-btn" onclick="quickLogin('jij')" data-persoon="jij">
+        <button class="avatar-btn" onclick="kiesVolwassene('jeroen.debruyne@outlook.be')" data-persoon="jeroen">
           <span class="avatar-emoji">🧑</span>
           <span class="avatar-info">
             <span class="avatar-naam">Jeroen</span>
-            <span class="avatar-rol">Beheerder</span>
+            <span class="avatar-rol">Gezinshoofd</span>
           </span>
         </button>
-        <button class="avatar-btn" onclick="quickLogin('kelly')" data-persoon="kelly">
+        <button class="avatar-btn" onclick="kiesVolwassene('dewaegenaerekelly@hotmail.com')" data-persoon="kelly">
           <span class="avatar-emoji">👩</span>
           <span class="avatar-info">
             <span class="avatar-naam">Kelly</span>
-            <span class="avatar-rol">Ouder</span>
+            <span class="avatar-rol">Gezinshoofd</span>
           </span>
         </button>
-        <button class="avatar-btn" onclick="quickLogin('nora')" data-persoon="nora">
+        <button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('nora')" data-persoon="nora">
           <span class="avatar-emoji">👧</span>
           <span class="avatar-info">
             <span class="avatar-naam">Nora</span>
-            <span class="avatar-rol">Kind</span>
+            <span class="avatar-rol">Kind · tik om in te loggen</span>
           </span>
         </button>
-        <button class="avatar-btn" onclick="quickLogin('odiel')" data-persoon="odiel">
+        <button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('odiel')" data-persoon="odiel">
           <span class="avatar-emoji">👦</span>
           <span class="avatar-info">
             <span class="avatar-naam">Odiel</span>
-            <span class="avatar-rol">Kind</span>
+            <span class="avatar-rol">Kind · tik om in te loggen</span>
           </span>
         </button>
-      </div>
-      <div class="footer" id="avatar-info-tekst" style="margin-top:0.5rem;display:none;">
-        De snelle knoppen werken nadat je elk account eenmalig hebt aangemaakt in Supabase Auth.
       </div>
     </div>
 
@@ -406,15 +405,6 @@ body {
 const SUPABASE_URL = 'https://rdessctmorraeeipysct.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';
 const SESSION_KEY  = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
-
-// Mapping persoon → email (pas aan naar echte emails!)
-// BELANGRIJK: maak deze accounts eerst aan in Supabase Auth dashboard
-const QUICK_EMAILS = {
-  jij:   'jeroen.debruyne@outlook.be',
-  kelly: 'dewaegenaerekelly@hotmail.com',
-  nora:  'debruyne.nora@icloud.com',
-  odiel: 'debruyne.odiel@icloud.com',
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function saveSession(data) {
@@ -474,7 +464,8 @@ async function doLogin() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Inloggen mislukt');
     saveSession(data);
-    window.location.replace('app.html');
+    localStorage.removeItem('gezinsapp-kind-sessie');
+    window.location.replace('index.html');
   } catch (e) {
     showMsg('❌ ' + (e.message === 'Invalid login credentials' ? 'Verkeerd e-mailadres of wachtwoord.' : e.message));
   } finally {
@@ -482,20 +473,21 @@ async function doLogin() {
   }
 }
 
-// ── Snelle login (persoon-knop) ────────────────────────────────────────────────
-async function quickLogin(persoon) {
-  const email = QUICK_EMAILS[persoon];
-  if (!email) {
-    showMsg('⚙️ Stel eerst het e-mailadres in voor "' + persoon + '" in de QUICK_EMAILS tabel bovenaan login.html.', 'error');
-    document.getElementById('avatar-info-tekst').style.display = 'block';
-    return;
-  }
-  // Vul het email-veld in zodat de gebruiker het wachtwoord kan invoeren
+// ── Volwassene: avatar invullen + wachtwoord focus ───────────────────────────
+function kiesVolwassene(email) {
   document.getElementById('login-email').value = email;
+  document.getElementById('login-pw').value = '';
   document.getElementById('login-pw').focus();
-  // Markeer de geselecteerde avatar
   document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelector(`[data-persoon="${persoon}"]`).classList.add('selected');
+  const persoon = email.includes('jeroen') ? 'jeroen' : 'kelly';
+  document.querySelector(`[data-persoon="${persoon}"]`)?.classList.add('selected');
+}
+
+// ── Kind: direct inloggen zonder wachtwoord ────────────────────────────────
+function loginAlsKind(persoonKey) {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.setItem('gezinsapp-kind-sessie', persoonKey);
+  window.location.replace('index.html');
 }
 
 // ── Wachtwoord reset ──────────────────────────────────────────────────────────
@@ -535,12 +527,18 @@ document.addEventListener('keydown', e => {
 // ── Redirect als al ingelogd ───────────────────────────────────────────────────
 (function checkAlreadyLoggedIn() {
   try {
+    // Kindersessie actief
+    if (localStorage.getItem('gezinsapp-kind-sessie')) {
+      window.location.replace('index.html');
+      return;
+    }
+    // Volwassene sessie nog geldig
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return;
     const s = JSON.parse(raw);
     const exp = s.expires_at || 0;
     if (s.access_token && Date.now()/1000 < exp - 60) {
-      window.location.replace('app.html');
+      window.location.replace('index.html');
     }
   } catch {}
 })();
