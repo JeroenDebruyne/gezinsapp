@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Contacten</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">👥 Contacten</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+    <button class="btn btn-primary btn-sm" onclick="openCrmModal()" id="btn-nieuw-contact">+ Contact</button>
+  </div>
+</header>
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+<main class="main-content">
+<div class="page-content">
+  <input type="text" id="crm-search" placeholder="🔍 Zoeken…" oninput="renderCrm()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;"/>
+  <div id="verjaardag-alerts"></div>
+  <div id="crm-lijst"></div>
+</div>
+</main>
+
+<!-- Modal -->
+<div class="modal-bg" id="crm-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3 id="crm-modal-titel">Contact toevoegen</h3>
+  <div class="form-grid">
+    <div class="form-row"><label>Naam / familie</label><input type="text" id="c-naam" placeholder="Familie Janssen"/></div>
+    <div class="form-row"><label>Partner</label><input type="text" id="c-partner" placeholder="Optioneel"/></div>
+    <div class="form-row"><label>Aantal kinderen</label><input type="number" id="c-kinderen" min="0" value="0" onchange="checkKinderenVelden()"/></div>
+    <div class="form-row"><label>Kerstmis</label><select id="c-kerstmis"><option value="ja">Ja</option><option value="nee">Nee</option></select></div>
+  </div>
+  <div id="c-kinderen-namen-veld" style="display:none;">
+    <div class="form-row"><label>Namen kinderen</label><input type="text" id="c-kinderen-namen" placeholder="Lotte, Pieter"/></div>
+  </div>
+  <div class="form-row"><label>Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
+  <div class="form-row"><label>Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="closeCrmModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="saveContact()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('contacten');
+if(!Auth.kan('kanContactenBeheren'))document.getElementById('btn-nieuw-contact').style.display='none';
+
+laadOp().then(renderCrm).catch(()=>{laadLokaal();renderCrm();});
+
+function checkKinderenVelden(){
+  document.getElementById('c-kinderen-namen-veld').style.display=parseInt(document.getElementById('c-kinderen').value)>0?'block':'none';
+}
+function renderCrm(){
+  const search=(document.getElementById('crm-search')||{}).value||'';
+  let filtered=contacten;
+  if(search)filtered=filtered.filter(c=>c.naam.toLowerCase().includes(search.toLowerCase())||(c.partner||'').toLowerCase().includes(search.toLowerCase()));
+  const el=document.getElementById('crm-lijst');
+  const kanBewerken=Auth.kan('kanContactenBeheren');
+  if(!filtered.length){el.innerHTML=`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;return;}
+  el.innerHTML=filtered.map(c=>`
+    <div class="crm-card">
+      <div class="crm-card-header">
+        <div>
+          <div class="crm-naam">👨‍👩‍👧 ${c.naam}</div>
+          ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${c.partner}</div>`:''}
+          ${parseInt(c.kinderen)>0?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👧 ${c.kinderenNamen||parseInt(c.kinderen)+' kinderen'}</div>`:''}
+        </div>
+        ${kanBewerken?`<div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="verwijderContact(${c.id})">🗑️</button>
+        </div>`:''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span style="font-size:12px;padding:3px 10px;border-radius:99px;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--druk-bg)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--druk-clr)'};font-weight:600;">🎄 Kerstmis: ${c.kerstmis==='ja'?'Ja':'Nee'}</span>
+      </div>
+      ${c.cadeauNj?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">🎊 Nieuwjaar: ${c.cadeauNj}</div>`:''}
+      ${c.cadeauVj?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">🎂 Verjaardag: ${c.cadeauVj}</div>`:''}
+    </div>`).join('');
+}
+function openCrmModal(contact){
+  document.getElementById('crm-modal-titel').textContent=contact?'Contact bewerken':'Contact toevoegen';
+  document.getElementById('c-naam').value=contact?.naam||'';
+  document.getElementById('c-partner').value=contact?.partner||'';
+  document.getElementById('c-kinderen').value=contact?.kinderen||'0';
+  document.getElementById('c-kinderen-namen').value=contact?.kinderenNamen||'';
+  document.getElementById('c-kinderen-namen-veld').style.display=(contact&&parseInt(contact.kinderen)>0)?'block':'none';
+  document.getElementById('c-kerstmis').value=contact?.kerstmis||'ja';
+  document.getElementById('c-cadeau-nj').value=contact?.cadeauNj||'';
+  document.getElementById('c-cadeau-vj').value=contact?.cadeauVj||'';
+  document.getElementById('crm-modal-bg').dataset.editId=contact?.id||'';
+  document.getElementById('crm-modal-bg').classList.add('open');
+}
+function closeCrmModal(){document.getElementById('crm-modal-bg').classList.remove('open');}
+function saveContact(){
+  const naam=document.getElementById('c-naam').value.trim();if(!naam)return;
+  const editId=document.getElementById('crm-modal-bg').dataset.editId;
+  const bestaande=editId?contacten.find(c=>c.id==editId):null;
+  const contact={
+    id:editId?parseInt(editId)||editId:Date.now(),_sbId:bestaande?._sbId,
+    naam,partner:document.getElementById('c-partner').value,
+    kinderen:document.getElementById('c-kinderen').value,
+    kinderenNamen:document.getElementById('c-kinderen-namen').value,
+    kerstmis:document.getElementById('c-kerstmis').value,
+    cadeauNj:document.getElementById('c-cadeau-nj').value,
+    cadeauVj:document.getElementById('c-cadeau-vj').value,
+  };
+  if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
+  else contacten.push(contact);
+  closeCrmModal();renderCrm();slaLokaalOp();sbSaveContact(contact);
+}
+function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
+function verwijderContact(id){
+  if(!confirm('Contact verwijderen?'))return;
+  const c=contacten.find(c=>c.id===id||c.id==id);
+  contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
+  renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);
+}
+document.getElementById('crm-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('crm-modal-bg'))closeCrmModal();});
+</script>
+</body>
+</html>

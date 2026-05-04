@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Receptfiche</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Override grid layout — deze pagina heeft geen sidebar */
+body {
+  display: block !important;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+.topbar { grid-column: unset; }
+
+/* Hero */
+.recept-hero {
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  padding: 2rem 1.5rem 1.75rem;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.recept-hero-emoji { font-size: 64px; margin-bottom: 12px; line-height: 1; }
+.recept-hero-naam {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.5px;
+  margin-bottom: 12px; color: var(--ink);
+}
+.recept-chips {
+  display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 10px;
+}
+.recept-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: 99px; padding: 5px 13px;
+  font-size: 13px; font-weight: 500; color: var(--ink);
+}
+
+/* Content */
+.fiche-content {
+  max-width: 680px; margin: 0 auto; padding: 1.5rem 1.25rem;
+}
+@media(min-width: 768px) { .fiche-content { padding: 2rem 2rem; } }
+
+.fiche-sectie { margin-bottom: 2rem; }
+.fiche-sectie-titel {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em;
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+/* Ingrediënten */
+.ing-rij {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.ing-rij:last-child { border-bottom: none; }
+.ing-naam { font-size: 14px; font-weight: 500; color: var(--ink); }
+.ing-rechts { display: flex; align-items: center; gap: 8px; }
+.ing-hoev { font-size: 13px; color: var(--ink-2); }
+.ing-winkel {
+  font-size: 11px; background: var(--bg-2); padding: 2px 9px;
+  border-radius: 99px; color: var(--muted); white-space: nowrap;
+}
+
+/* Bereiding */
+.bereiding-tekst {
+  font-size: 15px; line-height: 1.9; color: var(--ink-2);
+  white-space: pre-wrap;
+}
+
+/* Bron */
+.bron-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--accent); font-size: 14px; text-decoration: none;
+  padding: 10px 16px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface);
+  transition: all .15s; font-weight: 500;
+}
+.bron-link:hover { background: var(--accent-l); border-color: var(--accent); }
+
+/* Actie balk */
+.actie-balk {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  padding: 12px 1.25rem calc(12px + env(safe-area-inset-bottom));
+  background: rgba(247,245,240,0.97);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+
+/* Laden */
+.fiche-laden {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 4rem 2rem; gap: 12px;
+  color: var(--muted); font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="topbar-title">
+    <a href="recepten.html" style="color:var(--accent);font-weight:600;text-decoration:none;margin-right:6px;font-size:17px;">‹</a>
+    Receptfiche
+  </div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()">
+      <span class="avatar" id="topbar-emoji">🧑</span>
+      <span class="naam" id="topbar-naam">…</span>
+    </div>
+  </div>
+</header>
+
+<!-- Inhoud -->
+<div id="fiche-wrap">
+  <div class="fiche-laden"><div class="spinner"></div>Laden…</div>
+</div>
+
+<!-- Actie balk -->
+<div class="actie-balk" id="actie-balk" style="display:none;">
+  <button class="btn btn-secondary" style="flex:1;" onclick="history.back()">‹ Terug</button>
+  <button class="btn btn-primary" style="flex:2;" id="btn-bewerk" onclick="bewerkRecept()">✏️ Bewerken</button>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+// Geen sidebar nodig op deze pagina
+Auth.requireAuth();
+const params = new URLSearchParams(location.search);
+const receptId = params.get('id');
+
+const EMOJIS_D = { avond:'🍝', lunch:'🥗', weekend:'🍖', ontbijt:'🥐' };
+const TYPE_LBL = { avond:'🍝 Avond', lunch:'🥗 Lunch', weekend:'🍖 Weekend', ontbijt:'🥐 Ontbijt' };
+
+laadOp().then(toonFiche).catch(() => { laadLokaal(); toonFiche(); });
+
+function toonFiche() {
+  // Vul topbar naam in
+  const p = Auth.profiel();
+  if (p) {
+    document.getElementById('topbar-naam').textContent = p.naam;
+    document.getElementById('topbar-emoji').textContent = p.emoji;
+  }
+  if (Auth.isDev()) document.getElementById('dev-badge').style.display = 'inline';
+
+  if (!receptId) { location.href = 'recepten.html'; return; }
+
+  const r = recepten.find(r => String(r.id) === receptId || String(r._sbId) === receptId);
+  if (!r) {
+    document.getElementById('fiche-wrap').innerHTML = `
+      <div class="fiche-laden">
+        <span style="font-size:40px;">😕</span>
+        <p>Recept niet gevonden</p>
+        <a href="recepten.html" class="btn btn-primary" style="margin-top:8px;">← Terug naar recepten</a>
+      </div>`;
+    return;
+  }
+
+  document.title = r.naam + ' — Gezinsapp';
+  window._huidigRecept = r;
+
+  const types = (r.types && r.types.length) ? r.types : [r.type].filter(Boolean);
+  const eersteType = types[0] || 'avond';
+
+  document.getElementById('fiche-wrap').innerHTML = `
+    <!-- Hero -->
+    <div class="recept-hero">
+      <div class="recept-hero-emoji">${EMOJIS_D[eersteType] || '🍽️'}</div>
+      <div class="recept-hero-naam">${r.naam}</div>
+      <div class="recept-chips">
+        ${types.map(t => `<span class="recept-chip">${TYPE_LBL[t] || t}</span>`).join('')}
+        ${r.tijd ? `<span class="recept-chip">⏱ ${r.tijd} min</span>` : ''}
+        ${r.porties ? `<span class="recept-chip">🍽 ${r.porties} porties</span>` : ''}
+        ${r.moeilijk ? `<span class="recept-chip">📊 ${r.moeilijk}</span>` : ''}
+      </div>
+      ${(r.tags || []).length ? `
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:4px;">
+          ${r.tags.map(t => `<span class="tag-pill">${t}</span>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div class="fiche-content">
+
+      ${(r.ingredienten || []).length ? `
+      <div class="fiche-sectie">
+        <div class="fiche-sectie-titel">🛒 Ingrediënten (${r.ingredienten.length})</div>
+        ${r.ingredienten.map(i => `
+          <div class="ing-rij">
+            <span class="ing-naam">${i.naam}</span>
+            <div class="ing-rechts">
+              ${(i.hoev || i.eenheid) ? `<span class="ing-hoev">${[i.hoev, i.eenheid].filter(Boolean).join(' ')}</span>` : ''}
+              ${i.winkel ? `<span class="ing-winkel">🏪 ${i.winkel}</span>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      ${r.bereiding ? `
+      <div class="fiche-sectie">
+        <div class="fiche-sectie-titel">👨‍🍳 Bereidingswijze</div>
+        <div class="bereiding-tekst">${r.bereiding.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>` : ''}
+
+      ${r.bron ? `
+      <div class="fiche-sectie">
+        <div class="fiche-sectie-titel">📎 Bron</div>
+        ${r.bron.startsWith('http')
+          ? `<a href="${r.bron}" target="_blank" rel="noopener" class="bron-link">🔗 Bekijk origineel recept ↗</a>`
+          : `<p style="font-size:14px;color:var(--ink-2);">${r.bron}</p>`}
+      </div>` : ''}
+
+    </div>`;
+
+  // Toon actie balk
+  document.getElementById('actie-balk').style.display = 'flex';
+  if (!Auth.kan('kanReceptenBeheren')) {
+    document.getElementById('btn-bewerk').style.display = 'none';
+  }
+}
+
+function bewerkRecept() {
+  if (!window._huidigRecept) return;
+  location.href = 'recepten.html?bewerk=' + window._huidigRecept.id;
+}
+</script>
+</body>
+</html>

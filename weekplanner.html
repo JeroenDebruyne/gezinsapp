@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Maaltijden</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">🍽️ Maaltijden</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+  </div>
+</header>
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+<main class="main-content">
+<div class="page-content">
+  <div class="page-header">
+    <div class="week-nav-row" style="margin-bottom:0;">
+      <button class="nav-btn" onclick="changeWeekP(-1)">&#8592;</button>
+      <span class="week-lbl" id="week-lbl-p"></span>
+      <button class="nav-btn" onclick="changeWeekP(1)">&#8594;</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" onclick="openAiSuggestie()">✨ AI weekmenu</button>
+      <button class="btn btn-primary" onclick="location.href='boodschappen.html'">🛒 Boodschappen</button>
+    </div>
+  </div>
+
+  <!-- AI panel -->
+  <div id="ai-suggestie-panel" style="display:none;background:var(--c-jeroen);border:1.5px solid var(--c-jeroen-dot);border-radius:var(--radius);padding:16px;margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:15px;font-weight:700;color:var(--c-jeroen-t);">✨ AI weekmenu</div>
+      <button onclick="document.getElementById('ai-suggestie-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;">×</button>
+    </div>
+    <div id="ai-suggestie-inhoud" style="font-size:13px;color:var(--c-jeroen-t);margin-bottom:12px;">Klik op "Genereer" om een weekmenu te laten voorstellen op basis van jullie rooster en recepten.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="btn-genereer" class="btn btn-primary" onclick="genereerAiMenu()">✨ Genereer weekmenu</button>
+      <button id="btn-toepassen" class="btn btn-secondary" style="display:none;" onclick="pasAiMenuToe()">✅ Toepassen</button>
+    </div>
+  </div>
+
+  <div class="planner-grid" id="planner-grid"></div>
+</div>
+</main>
+
+<!-- Modal: slot keuze -->
+<div class="modal-bg" id="plan-modal-bg">
+<div class="modal" style="max-width:400px;">
+  <div class="modal-handle"></div>
+  <h3 id="plan-titel"></h3>
+  <div id="drukte-info-box" style="margin-bottom:12px;"></div>
+  <div class="section-label">Snelle opties</div>
+  <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
+  <div class="section-label">Recepten</div>
+  <div id="plan-recepten" style="max-height:220px;overflow-y:auto;"></div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="closePlanModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="savePlanKeuze()">Bevestigen</button>
+  </div>
+</div>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('weekplanner');
+let weekOffsetP=0, activeSlot=null, selectedKeuze=null;
+let aiMenuVoorstel=null, chatGeschiedenisWP=[];
+
+laadOp().then(renderPlanner).catch(()=>{laadLokaal();renderPlanner();});
+
+function changeWeekP(dir){weekOffsetP+=dir;renderPlanner();}
+
+function renderPlanner(){
+  const dates=getWeekDates(weekOffsetP);
+  document.getElementById('week-lbl-p').textContent=wLabel(dates);
+  const today=fDateISO(new Date());
+  document.getElementById('planner-grid').innerHTML=dates.map((date,i)=>{
+    const key=fDateISO(date);const isW=i>=4&&i<=5;
+    const dagPlan=planning[key]||{};
+    const drukte=getDagDrukte(key);
+    const eetGroo=activiteiten.some(a=>(a.eetGrooNora||a.eetGrooOdiel)&&(a.dagen||[]).includes(DAGKEYS_WP[i]));
+    const slotsHtml=SLOTS.map(slot=>{
+      const keuze=dagPlan[slot.key];
+      let badge='';
+      if(!keuze) badge=`<span class="slot-leeg">+ Toevoegen</span>`;
+      else if(SPEC[keuze]) badge=`<span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>`;
+      else{const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));if(r){const w=r.tijd>DRUKTE_MAX[drukte];badge=`<div class="slot-naam">${r.naam}${w?' <span class="warn">⚠️</span>':''}</div><div class="slot-tijd">${r.tijd}m</div>`;}}
+      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${badge}</div>`;
+    }).join('');
+    return `<div class="dag-col${isW?' weekend':''}${key===today?' vandaag':''}">
+      <div class="dag-head${isW?' wknd':''}"><div class="dag-naam">${DAGKORT_WP[i]}</div><div class="dag-datum">${fDate(date)}</div></div>
+      <div class="drukte-strip">
+        <div class="drukte-dot ${drukte}"></div>
+        <span style="font-size:9px;color:var(--muted);">${drukte.charAt(0).toUpperCase()+drukte.slice(1)}</span>
+        ${eetGroo?`<span class="eetgroo-badge">Bij opa/oma</span>`:''}
+      </div>
+      ${slotsHtml}
+    </div>`;
+  }).join('');
+}
+
+const DAGKORT_WP=['Di','Wo','Do','Vr','Za','Zo','Ma'];
+const DAGLANG_WP=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
+const DAGKEYS_WP=['di','wo','do','vr','za','zo','ma'];
+
+function openPlanModal(dk,slotKey,dagnaam,dagIndex){
+  activeSlot={dagKey:dk,slotKey,dagIndex};selectedKeuze=null;
+  const drukte=getDagDrukte(dk);
+  const maxTijd=DRUKTE_MAX[drukte];
+  document.getElementById('plan-titel').textContent=dagnaam+' — '+SLOTS.find(s=>s.key===slotKey).lbl;
+  document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">Drukte: ${drukte.charAt(0).toUpperCase()+drukte.slice(1)} — max ${maxTijd===999?'onbeperkt':maxTijd+' min'} aanbevolen</div>`;
+  const isW=dagIndex>=4&&dagIndex<=5;
+  const slot=SLOTS.find(s=>s.key===slotKey);
+  const types=isW?['weekend']:slot.types;
+  let specHtml='';
+  if(slotKey==='avond') specHtml+=`<button class="spec-btn sb-shake" onclick="selectPlanK('shake',this)">🥤 Shake</button>`;
+  specHtml+=`<button class="spec-btn sb-uiteten" onclick="selectPlanK('uiteten',this)">🍴 Uit eten</button>`;
+  specHtml+=`<button class="spec-btn sb-afhalen" onclick="selectPlanK('afhalen',this)">📦 Afhalen</button>`;
+  specHtml+=`<button class="spec-btn sb-restjes" onclick="selectPlanK('restjes',this)">♻️ Restjes</button>`;
+  document.getElementById('spec-opties').innerHTML=specHtml;
+  const gef=recepten.filter(r=>types.includes(r.type));
+  const aanb=gef.filter(r=>r.tijd<=maxTijd);
+  const comp=gef.filter(r=>r.tijd>maxTijd);
+  document.getElementById('plan-recepten').innerHTML=[
+    ...aanb.map(r=>`<button class="plan-recept-btn aanbevolen" onclick="selectPlanK(${r.id},this)">${r.naam}<span class="aanbevolen-badge">✓ ${r.tijd}m</span></button>`),
+    ...comp.map(r=>`<button class="plan-recept-btn vaag" onclick="selectPlanK(${r.id},this)">${r.naam}<span style="font-size:11px;color:var(--muted-2);">${r.tijd}m</span></button>`),
+  ].join('')||`<p style="font-size:13px;color:var(--muted);padding:8px 0;">Geen recepten beschikbaar.</p>`;
+  document.getElementById('plan-modal-bg').classList.add('open');
+}
+function selectPlanK(k,el){
+  selectedKeuze=k;
+  document.querySelectorAll('#spec-opties .spec-btn,#plan-recepten .plan-recept-btn').forEach(b=>b.classList.remove('geselecteerd'));
+  el.classList.add('geselecteerd');
+}
+function savePlanKeuze(){
+  if(!activeSlot||selectedKeuze===null){closePlanModal();return;}
+  if(!planning[activeSlot.dagKey]) planning[activeSlot.dagKey]={};
+  planning[activeSlot.dagKey][activeSlot.slotKey]=selectedKeuze;
+  closePlanModal();renderPlanner();slaLokaalOp();
+  sbSavePlanning(activeSlot.dagKey,activeSlot.slotKey,selectedKeuze,planning[activeSlot.dagKey].porties);
+}
+function closePlanModal(){document.getElementById('plan-modal-bg').classList.remove('open');activeSlot=null;selectedKeuze=null;}
+document.getElementById('plan-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('plan-modal-bg'))closePlanModal();});
+
+function openAiSuggestie(){document.getElementById('ai-suggestie-panel').style.display='block';}
+
+async function genereerAiMenu(){
+  let apiKey=localStorage.getItem('anthropic_api_key')||'';
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-...):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  const btn=document.getElementById('btn-genereer');
+  btn.textContent='⏳ Bezig…';btn.disabled=true;
+  document.getElementById('ai-suggestie-inhoud').textContent='De agent denkt na over jullie week…';
+  try{
+    const context=buildContext();
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Je bent een gezinsassistent. Stel een weekmenu voor op basis van de drukte per dag en beschikbare recepten. Geef een korte toelichting per dag. Recepten: ${context.recepten}`,messages:[{role:'user',content:`Week: ${context.week}\n\nStel een weekmenu voor.`}]})
+    });
+    const data=await res.json();
+    const tekst=data.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'Geen antwoord';
+    document.getElementById('ai-suggestie-inhoud').innerHTML=`<div style="font-size:13px;color:var(--c-jeroen-t);line-height:1.7;white-space:pre-wrap;">${tekst}</div>`;
+  }catch(e){
+    document.getElementById('ai-suggestie-inhoud').textContent='❌ Fout: '+e.message;
+  }
+  btn.textContent='✨ Genereer weekmenu';btn.disabled=false;
+}
+
+function buildContext(){
+  const dates=getWeekDates(weekOffsetP);
+  const week=dates.map((d,i)=>`${DAGLANG_WP[i]} ${fDate(d)}: ${getDagDrukte(fDateISO(d))}`).join(', ');
+  const recep=recepten.map(r=>`${r.naam}(${r.type},${r.tijd}min)`).join('; ');
+  return{week,recepten:recep};
+}
+function pasAiMenuToe(){document.getElementById('ai-suggestie-panel').style.display='none';}
+</script>
+</body>
+</html>

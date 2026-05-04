@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gezinsapp">
+<meta name="theme-color" content="#ffffff">
+<title>Gezinsapp — Home</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">🏠 Gezinsapp</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;margin-right:6px;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()" title="Uitloggen">
+      <span class="avatar" id="topbar-emoji">🧑</span>
+      <span class="naam" id="topbar-naam">…</span>
+    </div>
+  </div>
+</header>
+
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+
+<main class="main-content">
+<div class="page-content">
+  <div class="dag-overzicht-card">
+    <div class="dag-overzicht-datum" id="dag-datum"></div>
+    <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
+    <div class="dag-overzicht-drukte" id="dag-drukte" style="margin-top:10px;">
+      <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
+    </div>
+  </div>
+
+  <div class="section-label">Bekijk als</div>
+  <div class="avatar-strip" id="persoon-strip"></div>
+
+  <div class="section-label">Snel toevoegen</div>
+  <div class="snelle-actie-grid">
+    <button class="snelle-actie-btn" onclick="location.href='todos.html'">
+      <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
+      <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
+      <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
+      <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
+    </button>
+  </div>
+
+  <div class="section-label">Vandaag</div>
+  <div id="vandaag-lijst"><div class="spinner"></div></div>
+
+  <div class="section-label">Openstaande to-do's</div>
+  <div id="todos-preview"><div class="spinner"></div></div>
+</div>
+</main>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('index');
+laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+
+function renderHomepage(){
+  const nu=new Date(); const datumISO=fDateISO(nu); const p=Auth.profiel();
+  const dagNamen=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  const maandNamen=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+  document.getElementById('dag-datum').textContent=
+    dagNamen[nu.getDay()].charAt(0).toUpperCase()+dagNamen[nu.getDay()].slice(1)+
+    ' '+nu.getDate()+' '+maandNamen[nu.getMonth()]+' '+nu.getFullYear();
+  const uur=nu.getHours();
+  document.getElementById('dag-begroeting').textContent=
+    (uur<12?'Goedemorgen':uur<18?'Goedemiddag':'Goedenavond')+', '+(p?.naam||'...')+' 👋';
+  const drukte=getDagDrukte(datumISO);
+  document.getElementById('dag-drukte-dot').textContent={rustig:'🟢',normaal:'🟡',druk:'🔴'}[drukte];
+  document.getElementById('dag-drukte-label').textContent={rustig:'Rustige dag',normaal:'Drukke dag',druk:'Zeer drukke dag'}[drukte];
+  renderPersoonStrip(p);
+  renderVandaag(datumISO,p);
+  renderTodosPreview(p);
+}
+
+function renderPersoonStrip(p){
+  const huidig=sessionStorage.getItem('perspectief')||p?.persoonKey;
+  document.getElementById('persoon-strip').innerHTML=Auth.PROFIELEN.map(pr=>`
+    <div class="avatar-chip${pr.persoonKey===huidig?' active':''}" onclick="wisselPersoon('${pr.persoonKey}')">
+      <span>${pr.emoji}</span><span>${pr.naam}</span>
+    </div>`).join('');
+}
+
+function wisselPersoon(key){sessionStorage.setItem('perspectief',key);renderHomepage();}
+
+function renderVandaag(datumISO,p){
+  const el=document.getElementById('vandaag-lijst');
+  const perspectief=sessionStorage.getItem('perspectief')||p?.persoonKey;
+  const dagActs=activiteiten.filter(a=>{
+    if(!isActiefOpDatum(a,datumISO)) return false;
+    if(a.prive&&!Auth.kan('kanAllesZien')&&!a.wie?.includes(perspectief)) return false;
+    if(perspectief) return !a.wie||a.wie.includes(perspectief)||a.wie.includes('familie');
+    return true;
+  }).sort((a,b)=>tijdMinuten(a.start)-tijdMinuten(b.start));
+  if(!dagActs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🌿</div><p>Geen activiteiten vandaag</p></div>';return;}
+  el.innerHTML=dagActs.map(a=>`
+    <div class="card" style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:22px;">${a.wie?.length===1?(PEMOJI[a.wie[0]]||'📌'):'👨‍👩‍👧‍👦'}</div>
+      <div style="flex:1;">
+        <div class="card-title">${a.naam}${a.prive?' 🔒':''}</div>
+        <div class="meta">
+          ${a.start?`<span>🕐 ${a.start}${a.eindUur?' – '+a.eindUur:''}</span>`:''}
+          ${a.locatie?`<span>📍 ${a.locatie}</span>`:''}
+          ${(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTodosPreview(p){
+  const el=document.getElementById('todos-preview');
+  const perspectief=sessionStorage.getItem('perspectief')||p?.persoonKey;
+  const open=todos.filter(t=>!t.gedaan&&(!t.wie||t.wie.includes(perspectief))).slice(0,5);
+  if(!open.length){el.innerHTML='<div class="card" style="color:var(--muted);font-size:13px;text-align:center;padding:1rem;">✅ Geen openstaande to-do\'s</div>';return;}
+  el.innerHTML=open.map(t=>`
+    <div class="todo-item">
+      <div class="todo-check${t.gedaan?' done':''}" onclick="toggleTodo('${t.id}')">${t.gedaan?'✓':''}</div>
+      <div class="todo-body">
+        <div class="todo-titel${t.gedaan?' done':''}">${t.titel}</div>
+        <div class="todo-meta">
+          ${t.deadline?`<span>📅 ${t.deadline}</span>`:''}
+          ${(t.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
+        </div>
+      </div>
+    </div>`).join('')+
+    '<a href="todos.html" style="display:block;text-align:center;font-size:12px;color:var(--muted);padding:8px;margin-top:4px;">Alle to-do\'s bekijken →</a>';
+}
+
+function toggleTodo(id){
+  const t=todos.find(x=>x.id==id);
+  if(t){t.gedaan=!t.gedaan;slaLokaalOp();renderHomepage();}
+}
+</script>
+</body>
+</html>

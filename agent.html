@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Agent</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.chat-container{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:var(--radius);padding:1rem;min-height:320px;max-height:520px;overflow-y:auto;margin-bottom:1rem;border:1.5px solid var(--border);}
+.voorbeeld-btns{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1rem;}
+.voorbeeld-btn{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:99px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;font-weight:500;transition:all .15s;}
+.voorbeeld-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
+.bevestiging-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px;}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">🤖 Agent</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+    <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑️ Wis chat</button>
+  </div>
+</header>
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+<main class="main-content">
+<div class="page-content">
+  <div class="info-box">De gezinsassistent heeft toegang tot jullie agenda, recepten en weekplanning. Hij vraagt altijd bevestiging voor hij iets aanpast.</div>
+
+  <div class="voorbeeld-btns">
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Maak een weekmenu voor deze week op basis van ons rooster en recepten.')">📅 Weekmenu maken</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Genereer de boodschappenlijst per winkel op basis van het huidige weekmenu.')">🛒 Boodschappenlijst</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Welke recepten zijn geschikt voor een drukke dag? Max 20 minuten.')">⚡ Snelle recepten</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een overzicht van de activiteiten deze week en hoe druk elke dag is.')">📊 Weekoverzicht</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Stel een to-do lijst voor op basis van wat we deze week moeten doen.')">✅ To-do voorstellen</button>
+  </div>
+
+  <div class="chat-container" id="chat-berichten">
+    <div style="align-self:flex-start;">
+      <div class="chat-bubble-bot">Hallo! 👋 Ik ben jullie gezinsassistent. Ik heb toegang tot jullie agenda, recepten en weekplanning. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?</div>
+    </div>
+  </div>
+
+  <!-- Bevestiging panel -->
+  <div id="bevestiging-panel" style="display:none;" class="bevestiging-modal">
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
+    <div id="bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="bevestigActie()">✅ Bevestigen</button>
+      <button class="btn btn-secondary" onclick="annuleerActie()">❌ Annuleren</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;">
+    <input type="text" id="chat-input" placeholder="Stel een vraag of geef een opdracht…"
+      style="flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"
+      onkeydown="if(event.key==='Enter')stuurBericht()"/>
+    <button class="btn btn-primary" onclick="stuurBericht()" style="border-radius:99px;padding:12px 22px;">Stuur</button>
+  </div>
+</div>
+</main>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('agent');
+let chatGeschiedenis=[];
+let pendingActie=null;
+let weekOffsetP=0;
+
+laadOp().catch(()=>laadLokaal());
+
+const AGENT_TOOLS=[
+  {name:'get_rooster',description:'Haal alle activiteiten op uit het rooster.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_recepten',description:'Haal recepten op.',input_schema:{type:'object',properties:{type:{type:'string'},max_tijd:{type:'number'}},required:[]}},
+  {name:'get_weekplanning',description:'Haal de huidige weekplanning op.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_drukte_week',description:'Haal de drukte per dag op voor de huidige week.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_todos',description:'Haal alle openstaande to-do\'s op.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'stel_weekmenu_in',description:'Stel het weekmenu in. VERPLICHT: vraag eerst bevestiging via het bevestiging_vereist veld.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+  {name:'voeg_todo_toe',description:'Voeg een to-do toe. VERPLICHT: vraag eerst bevestiging.',input_schema:{type:'object',properties:{titel:{type:'string'},deadline:{type:'string'},wie:{type:'array',items:{type:'string'}},prioriteit:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
+  {name:'get_boodschappenlijst',description:'Genereer de boodschappenlijst per winkel.',input_schema:{type:'object',properties:{},required:[]}}
+];
+
+const SYSTEEMPROMPT=`Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere. 
+Gezin: Jeroen (vader, admin), Kelly (moeder), Nora (6j), Odiel (3j).
+Week loopt van dinsdag tot maandag. Doordeweeks eten kindjes op school.
+
+BELANGRIJK: Als je iets wil toevoegen of aanpassen (weekmenu, to-do's), moet je ALTIJD eerst bevestiging vragen via het 'bevestiging_vereist: true' veld in de tool. Geef een duidelijk 'bevestiging_bericht' wat je gaat doen.
+Antwoord altijd in het Nederlands. Wees kort en direct.`;
+
+function voerToolUit(naam,input){
+  if(input.bevestiging_vereist){
+    pendingActie={naam,input:JSON.parse(JSON.stringify(input))};
+    toonBevestiging(input.bevestiging_bericht||'Wil je dit uitvoeren?');
+    return 'WACHT_OP_BEVESTIGING';
+  }
+  return _voerToolUitZonderBevestiging(naam,input);
+}
+
+function _voerToolUitZonderBevestiging(naam,input){
+  switch(naam){
+    case 'get_rooster':
+      return JSON.stringify(activiteiten.map(a=>({naam:a.naam,wie:(a.wie||[]).map(w=>PLABEL[w]||w),dagen:a.dagen,start:a.start,eind:a.eindUur,duur:a.duur,locatie:a.locatie,freq:a.freq})));
+    case 'get_recepten':
+      let recs=recepten;
+      if(input.type)recs=recs.filter(r=>r.type===input.type);
+      if(input.max_tijd)recs=recs.filter(r=>r.tijd<=input.max_tijd);
+      return JSON.stringify(recs.map(r=>({id:r.id,naam:r.naam,type:r.type,tijd:r.tijd,moeilijk:r.moeilijk,score:r.score,tags:r.tags})));
+    case 'get_weekplanning':
+      const dates=getWeekDates(0);
+      return JSON.stringify(dates.map((d,i)=>{
+        const key=fDateISO(d);const dag=planning[key]||{};const dagNamen=['Di','Wo','Do','Vr','Za','Zo','Ma'];
+        return{dag:dagNamen[i],datum:fDate(d),ontbijt:getNaam(dag.ontbijt),lunch:getNaam(dag.lunch),avond:getNaam(dag.avond)};
+      }));
+    case 'get_drukte_week':
+      const datesD=getWeekDates(0);const dagNamenD=['Di','Wo','Do','Vr','Za','Zo','Ma'];
+      return JSON.stringify(datesD.map((d,i)=>({dag:dagNamenD[i],datum:fDate(d),drukte:getDagDrukte(fDateISO(d))})));
+    case 'get_todos':
+      return JSON.stringify(todos.filter(t=>!t.gedaan).map(t=>({titel:t.titel,deadline:t.deadline,prioriteit:t.prioriteit,wie:(t.wie||[]).map(w=>PLABEL[w]||w)})));
+    case 'stel_weekmenu_in':
+      if(input.menu&&Array.isArray(input.menu)){
+        const datesM=getWeekDates(0);const dagNamenM=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
+        input.menu.forEach(dagData=>{
+          const idx=dagNamenM.findIndex(d=>d===dagData.dag||d.startsWith(dagData.dag));
+          if(idx<0)return;
+          const key=fDateISO(datesM[idx]);if(!planning[key])planning[key]={};
+          ['ontbijt','lunch','avond'].forEach(slot=>{if(dagData[slot]!==undefined)planning[key][slot]=dagData[slot];});
+        });
+        slaLokaalOp();return'✅ Weekmenu ingesteld!';
+      }return'Fout formaat';
+    case 'voeg_todo_toe':
+      const todo={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:fDateISO(new Date())};
+      todos.push(todo);slaLokaalOp();return'✅ To-do toegevoegd: '+input.titel;
+    case 'get_boodschappenlijst':
+      const res={};WINKELS.forEach(w=>res[w]=[]);
+      Object.values(planning).forEach(dag=>{Object.values(dag).forEach(keuze=>{if(keuze&&!SPEC[keuze]){const r=recepten.find(r=>r.id===keuze||r.id==keuze);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push({naam:ing.naam,hoev:ing.hoev,eenheid:ing.eenheid,recept:r.naam});});}});});
+      return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));
+    default:return'Onbekende tool: '+naam;
+  }
+}
+
+function getNaam(keuze){if(!keuze)return'niet ingevuld';if(SPEC[keuze])return SPEC[keuze];const r=recepten.find(r=>r.id===keuze||r.id==keuze);return r?r.naam:'onbekend';}
+
+function toonBevestiging(bericht){
+  document.getElementById('bevestiging-tekst').textContent=bericht;
+  document.getElementById('bevestiging-panel').style.display='block';
+}
+function bevestigActie(){
+  document.getElementById('bevestiging-panel').style.display='none';
+  if(!pendingActie)return;
+  const {naam,input}=pendingActie;
+  pendingActie=null;
+  const result=_voerToolUitZonderBevestiging(naam,input);
+  voegBerichtToe('assistant','✅ Uitgevoerd: '+result);
+}
+function annuleerActie(){
+  document.getElementById('bevestiging-panel').style.display='none';
+  pendingActie=null;
+  voegBerichtToe('assistant','❌ Geannuleerd.');
+}
+
+async function stuurBericht(){
+  const input=document.getElementById('chat-input');
+  const tekst=input.value.trim();if(!tekst)return;
+  let apiKey=localStorage.getItem('anthropic_api_key')||'';
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  input.value='';
+  voegBerichtToe('user',tekst);
+  chatGeschiedenis.push({role:'user',content:tekst});
+  const typingEl=voegBerichtToe('assistant','⏳…',true);
+  try{
+    let response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:SYSTEEMPROMPT,tools:AGENT_TOOLS,messages:chatGeschiedenis})
+    });
+    let data=await response.json();
+    while(data.stop_reason==='tool_use'){
+      const toolResults=[];
+      for(const block of data.content){
+        if(block.type==='tool_use'){
+          const result=voerToolUit(block.name,block.input);
+          if(result==='WACHT_OP_BEVESTIGING'){typingEl?.remove();return;}
+          toolResults.push({type:'tool_result',tool_use_id:block.id,content:result});
+        }
+      }
+      chatGeschiedenis.push({role:'assistant',content:data.content});
+      chatGeschiedenis.push({role:'user',content:toolResults});
+      response=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:SYSTEEMPROMPT,tools:AGENT_TOOLS,messages:chatGeschiedenis})
+      });
+      data=await response.json();
+    }
+    const finaleTekst=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    typingEl?.remove();
+    voegBerichtToe('assistant',finaleTekst);
+    chatGeschiedenis.push({role:'assistant',content:finaleTekst});
+  }catch(e){
+    typingEl?.remove();
+    voegBerichtToe('assistant','❌ Fout: '+e.message);
+    if(e.message.includes('401'))localStorage.removeItem('anthropic_api_key');
+  }
+}
+
+function stuurVoorbeeldVraag(tekst){document.getElementById('chat-input').value=tekst;stuurBericht();}
+
+function voegBerichtToe(rol,tekst,isTyping=false){
+  const container=document.getElementById('chat-berichten');
+  const wrap=document.createElement('div');
+  wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};max-width:82%;`;
+  const bubble=document.createElement('div');
+  bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
+  bubble.innerHTML=rol==='user'?tekst:formateerAntwoord(tekst);
+  wrap.appendChild(bubble);container.appendChild(wrap);
+  container.scrollTop=container.scrollHeight;
+  return isTyping?wrap:null;
+}
+
+function formateerAntwoord(tekst){
+  return tekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+}
+function clearChat(){chatGeschiedenis=[];document.getElementById('chat-berichten').innerHTML=`<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>`;}
+</script>
+</body>
+</html>

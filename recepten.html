@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Recepten</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.import-stap{display:none;}.import-stap.actief{display:block;}
+.import-url-input{width:100%;padding:13px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;}
+.import-url-input:focus{border-color:var(--accent);}
+.import-loader{display:flex;flex-direction:column;align-items:center;gap:14px;padding:2.5rem 1rem;text-align:center;}
+.import-loader .spinner{margin:0;}
+.import-loader-tekst{font-size:14px;color:var(--muted);}
+.import-loader-sub{font-size:12px;color:var(--muted-2);}
+.import-preview{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
+.import-preview-naam{font-size:17px;font-weight:700;margin-bottom:4px;}
+.import-preview-meta{font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;}
+.import-preview-ing span{display:inline-block;background:var(--bg-2);border-radius:6px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px;}
+.import-error{background:var(--druk-bg);border:1.5px solid var(--druk-dot);border-radius:var(--radius-sm);padding:14px;font-size:13px;color:var(--druk-clr);margin-bottom:14px;}
+.import-success-badge{display:inline-flex;align-items:center;gap:6px;background:var(--rustig-bg);color:var(--rustig-clr);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:600;}
+.sites-lijst{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.site-chip{font-size:11px;padding:3px 10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);}
+
+/* Type multiselect */
+.type-ms{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+.type-chip{padding:7px 14px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);font-size:13px;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:5px;transition:all .15s;font-weight:500;user-select:none;}
+.type-chip.selected{border-color:var(--accent);background:var(--accent);color:#fff;}
+.type-chip:hover:not(.selected){background:var(--bg-2);}
+
+/* Combo ingrediënt input */
+.ing-combo-wrap{position:relative;}
+.ing-combo-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;}
+.ing-combo-input:focus{border-color:var(--accent);}
+.ing-combo-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--accent);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);z-index:50;max-height:160px;overflow-y:auto;box-shadow:var(--shadow);}
+.ing-combo-dropdown.open{display:block;}
+.ing-combo-option{padding:8px 10px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.ing-combo-option:hover{background:var(--accent-l);}
+.ing-combo-option .winkel-hint{font-size:11px;color:var(--muted);}
+.ing-combo-nieuw{padding:8px 10px;font-size:13px;cursor:pointer;color:var(--accent);font-weight:600;border-top:1px solid var(--border);}
+.ing-combo-nieuw:hover{background:var(--accent-l);}
+.ing-nieuw-badge{font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">📖 Recepten</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+    <button class="btn btn-secondary btn-sm" onclick="openImportModal()" id="btn-import-recept">🔗 Via link</button>
+    <button class="btn btn-primary btn-sm" onclick="openReceptModal()" id="btn-nieuw-recept">+ Recept</button>
+  </div>
+</header>
+
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+
+<main class="main-content">
+<div class="page-content">
+  <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
+  <div class="pill-tabs" id="recept-type-tabs">
+    <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
+    <button class="ptab" onclick="filterRType('avond',this)">🍝 Avond</button>
+    <button class="ptab" onclick="filterRType('lunch',this)">🥗 Lunch</button>
+    <button class="ptab" onclick="filterRType('weekend',this)">🍖 Weekend</button>
+    <button class="ptab" onclick="filterRType('ontbijt',this)">🥐 Ontbijt</button>
+  </div>
+  <div class="recept-grid" id="recipes-grid"></div>
+</div>
+</main>
+
+<!-- ══ MODAL: Importeer via link ══ -->
+<div class="modal-bg" id="import-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>🔗 Recept importeren via link</h3>
+  <div class="import-stap actief" id="import-stap-1">
+    <div class="form-row">
+      <label>Plak de URL van het recept</label>
+      <input class="import-url-input" type="url" id="import-url" placeholder="https://www.dagelijksekost.be/recepten/…" onkeydown="if(event.key==='Enter')startImport()"/>
+    </div>
+    <div class="info-box" style="margin-bottom:14px;">
+      <div style="font-weight:600;margin-bottom:6px;">Werkt met de meeste receptensites:</div>
+      <div class="sites-lijst">
+        <span class="site-chip">Dagelijkse Kost</span><span class="site-chip">Njam</span>
+        <span class="site-chip">15gram</span><span class="site-chip">Colruyt</span>
+        <span class="site-chip">Delhaize</span><span class="site-chip">VTM Koken</span>
+        <span class="site-chip">Albert Heijn</span><span class="site-chip">en meer…</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeImportModal()">Annuleren</button>
+      <button class="modal-btn modal-btn-primary" onclick="startImport()">🔍 Importeren</button>
+    </div>
+  </div>
+  <div class="import-stap" id="import-stap-2">
+    <div class="import-loader">
+      <div class="spinner"></div>
+      <div class="import-loader-tekst" id="import-loader-tekst">Recept ophalen…</div>
+      <div class="import-loader-sub" id="import-loader-sub">De agent leest de pagina uit</div>
+    </div>
+  </div>
+  <div class="import-stap" id="import-stap-3">
+    <div class="import-preview" id="import-preview"></div>
+    <div class="info-box">✏️ Je kan alles nog aanpassen voor je opslaat.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Andere link</button>
+      <button class="modal-btn modal-btn-primary" onclick="openReceptVanImport()">✏️ Bekijk &amp; sla op</button>
+    </div>
+  </div>
+  <div class="import-stap" id="import-stap-4">
+    <div class="import-error" id="import-error-tekst"></div>
+    <div class="info-box">Tip: zorg dat de URL direct naar een receptpagina verwijst.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Probeer opnieuw</button>
+      <button class="modal-btn modal-btn-primary" onclick="openReceptModal();closeImportModal()">Manueel invoeren</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: Recept bewerken/toevoegen ══ -->
+<div class="modal-bg" id="recept-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3 id="recept-modal-titel">Nieuw recept</h3>
+
+  <div class="form-row">
+    <label>Naam</label>
+    <input type="text" id="f-naam" placeholder="Spaghetti bolognese"/>
+  </div>
+
+  <!-- Type multiselect -->
+  <div class="form-row">
+    <label>Type (meerdere mogelijk)</label>
+    <div class="type-ms" id="f-type-ms">
+      <div class="type-chip" data-type="avond" onclick="toggleType(this)">🍝 Avond</div>
+      <div class="type-chip" data-type="lunch" onclick="toggleType(this)">🥗 Lunch</div>
+      <div class="type-chip" data-type="weekend" onclick="toggleType(this)">🍖 Weekend</div>
+      <div class="type-chip" data-type="ontbijt" onclick="toggleType(this)">🥐 Ontbijt</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <div class="form-row">
+      <label>Tijd (min)</label>
+      <input type="number" id="f-tijd" placeholder="30" min="1"/>
+    </div>
+    <div class="form-row">
+      <label>Porties</label>
+      <input type="number" id="f-porties" placeholder="4" min="1" value="4"/>
+    </div>
+    <div class="form-row">
+      <label>Moeilijkheid</label>
+      <select id="f-moeilijk"><option>Snel</option><option>Normaal</option><option>Uitgebreid</option></select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Bron (URL of kookboek)</label>
+    <input type="text" id="f-bron" placeholder="https://… of Kookboek p.42"/>
+  </div>
+  <div class="form-row">
+    <label>Bereidingswijze</label>
+    <textarea id="f-bereiding" rows="4" placeholder="Stap 1: …"></textarea>
+  </div>
+  <div class="form-row">
+    <label>Tags</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;" id="tag-selector"></div>
+  </div>
+
+  <!-- Ingrediënten -->
+  <div class="section-label">Ingrediënten</div>
+  <div style="display:grid;grid-template-columns:3fr 0.7fr 0.8fr 1.4fr 28px;gap:5px;margin-bottom:6px;padding:0 2px;">
+    <span style="font-size:11px;color:var(--muted);font-weight:600;">INGREDIËNT</span>
+    <span style="font-size:11px;color:var(--muted);font-weight:600;">HOEV.</span>
+    <span style="font-size:11px;color:var(--muted);font-weight:600;">EENHEID</span>
+    <span style="font-size:11px;color:var(--muted);font-weight:600;">WINKEL</span>
+    <span></span>
+  </div>
+  <div id="ingredients-container"></div>
+  <button onclick="addIngredient()" style="width:100%;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-2)';this.style.color='var(--muted)'">+ Ingrediënt toevoegen</button>
+
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="closeReceptModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="saveRecept()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('recepten');
+if(!Auth.kan('kanReceptenBeheren')){
+  document.getElementById('btn-nieuw-recept').style.display='none';
+  document.getElementById('btn-import-recept').style.display='none';
+}
+
+let activeRType='alle';
+let geimporteerdRecept=null;
+let geselecteerdeTypes=[];   // array van geselecteerde types
+
+laadOp().then(()=>{
+  renderRecepten();
+  // Auto-open bewerken als we terugkomen van de fiche
+  const params=new URLSearchParams(location.search);
+  const bewerkId=params.get('bewerk');
+  if(bewerkId){
+    const r=recepten.find(r=>String(r.id)===bewerkId);
+    if(r) setTimeout(()=>openReceptModal(r),300);
+  }
+}).catch(()=>{laadLokaal();renderRecepten();});
+
+// ── Recepten weergave ─────────────────────────────────────────
+function filterRType(type,el){
+  activeRType=type;
+  document.querySelectorAll('#recept-type-tabs .ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderRecepten();
+}
+
+function renderRecepten(){
+  const search=(document.getElementById('recept-search')||{}).value||'';
+  let filtered=recepten;
+  if(activeRType!=='alle'){
+    filtered=filtered.filter(r=>{
+      // Ondersteuning voor zowel oud 'type' veld als nieuw 'types' array
+      const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
+      return types.includes(activeRType);
+    });
+  }
+  if(search) filtered=filtered.filter(r=>r.naam.toLowerCase().includes(search.toLowerCase())||(r.tags||[]).some(t=>t.toLowerCase().includes(search.toLowerCase())));
+  const kanBewerken=Auth.kan('kanReceptenBeheren');
+  document.getElementById('recipes-grid').innerHTML=filtered.map(r=>{
+    const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
+    const eersteType=types[0]||'avond';
+    const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+    return `
+    <div class="recept-card" onclick="location.href='recept-detail.html?id=${r.id}'" style="cursor:pointer;">
+      <div class="recept-thumb thumb-${eersteType}">${EMOJIS[eersteType]||'🍽️'}</div>
+      <div class="recept-info">
+        <div class="recept-naam">${r.naam}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
+          ${r.porties?`<span>🍽 ${r.porties}p</span>`:''}
+          ${r.moeilijk?`<span>${r.moeilijk}</span>`:''}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">
+          ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
+          ${(r.tags||[]).map(t=>`<span class="tag-pill">${t}</span>`).join('')}
+        </div>
+        ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.bron}">📎 ${r.bron.replace(/^https?:\/\//,'').split('/')[0]}</div>`:''}
+        ${kanBewerken?`<div style="display:flex;gap:5px;margin-top:10px;" onclick="event.stopPropagation()">
+          <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openReceptModal(recepten.find(r=>r.id==${r.id}))">✏️ Bewerk</button>
+          <button class="btn btn-danger btn-sm" style="flex:1;" onclick="verwijderRecept(${r.id})">🗑️</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('')||`<div class="empty-state"><span class="empty-icon">📖</span><p>Geen recepten gevonden</p></div>`;
+}
+
+// ── Type multiselect ──────────────────────────────────────────
+function toggleType(el){
+  el.classList.toggle('selected');
+  geselecteerdeTypes=getGeselecteerdeTypes();
+}
+function getGeselecteerdeTypes(){
+  return [...document.querySelectorAll('#f-type-ms .type-chip.selected')].map(el=>el.dataset.type);
+}
+function setTypes(types){
+  document.querySelectorAll('#f-type-ms .type-chip').forEach(chip=>{
+    chip.classList.toggle('selected',(types||[]).includes(chip.dataset.type));
+  });
+  geselecteerdeTypes=types||[];
+}
+
+// ── Ingrediënten combo-input ──────────────────────────────────
+function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
+  const w=winkel||zoekStandaardWinkel(naam);
+  const rowId='ing-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+  return `<div id="${rowId}" style="display:grid;grid-template-columns:3fr 0.7fr 0.8fr 1.4fr 28px;gap:5px;align-items:center;margin-bottom:8px;">
+    <div class="ing-combo-wrap">
+      <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${naam}"
+        oninput="filterIngCombo(this,'${rowId}')"
+        onfocus="filterIngCombo(this,'${rowId}')"
+        onblur="setTimeout(()=>sluitIngCombo('${rowId}'),150)"
+        autocomplete="off"/>
+      ${isNieuw?`<span class="ing-nieuw-badge">Nieuw</span>`:''}
+      <div class="ing-combo-dropdown" id="dd-${rowId}"></div>
+    </div>
+    <input style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" type="text" placeholder="500" value="${hoev}"/>
+    <input style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" type="text" placeholder="gram" value="${eenheid}"/>
+    <select class="winkel-sel" style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);">
+      ${WINKELS.map(ww=>`<option${ww===w?' selected':''}>${ww}</option>`).join('')}
+    </select>
+    <button style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted-2);padding:0;" onclick="this.closest('div[id]').remove()">×</button>
+  </div>`;
+}
+
+function filterIngCombo(input, rowId){
+  const zoek=input.value.toLowerCase().trim();
+  const dd=document.getElementById('dd-'+rowId);
+  const matches=standaardIngredienten.filter(i=>i.naam.toLowerCase().includes(zoek)).slice(0,8);
+  let html=matches.map(i=>`
+    <div class="ing-combo-option" onmousedown="kiesIng('${rowId}','${i.naam.replace(/'/g,"\\'")}','${i.winkel}')">
+      <span>${i.naam}</span>
+      <span class="winkel-hint">🏪 ${i.winkel}</span>
+    </div>`).join('');
+  // "Nieuw aanmaken" optie als naam niet exact bestaat
+  const bestaatExact=standaardIngredienten.some(i=>i.naam.toLowerCase()===zoek);
+  if(zoek&&!bestaatExact){
+    html+=`<div class="ing-combo-nieuw" onmousedown="maakNieuwIng('${rowId}','${input.value.replace(/'/g,"\\'")}')">
+      ✨ Nieuw ingrediënt: <strong>${input.value}</strong>
+    </div>`;
+  }
+  dd.innerHTML=html;
+  dd.classList.toggle('open', html.length>0);
+}
+
+function kiesIng(rowId, naam, winkel){
+  const row=document.getElementById(rowId);
+  row.querySelector('.ing-combo-input').value=naam;
+  const sel=row.querySelector('.winkel-sel');
+  if(sel&&winkel){for(let o of sel.options){if(o.value===winkel){sel.value=winkel;break;}}}
+  sluitIngCombo(rowId);
+}
+
+function maakNieuwIng(rowId, naam){
+  const row=document.getElementById(rowId);
+  const input=row.querySelector('.ing-combo-input');
+  input.value=naam;
+  // Markeer als nieuw — wordt opgeslagen bij saveRecept
+  row.dataset.nieuw='1';
+  row.dataset.nieuwNaam=naam;
+  // Toon nieuw-badge
+  let badge=row.querySelector('.ing-nieuw-badge');
+  if(!badge){
+    badge=document.createElement('span');
+    badge.className='ing-nieuw-badge';
+    badge.textContent='Nieuw';
+    badge.style.cssText='position:absolute;top:-6px;right:4px;font-size:9px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 5px;border-radius:99px;font-weight:700;';
+    row.querySelector('.ing-combo-wrap').style.position='relative';
+    row.querySelector('.ing-combo-wrap').appendChild(badge);
+  }
+  sluitIngCombo(rowId);
+}
+
+function sluitIngCombo(rowId){
+  const dd=document.getElementById('dd-'+rowId);
+  if(dd) dd.classList.remove('open');
+}
+
+function addIngredient(){
+  document.getElementById('ingredients-container').insertAdjacentHTML('beforeend',ingRow());
+}
+
+function zoekStandaardWinkel(naam){
+  if(!naam)return'';
+  const m=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase().trim());
+  return m?m.winkel:'';
+}
+
+// ── Recept modal ──────────────────────────────────────────────
+function openReceptModal(recept, vanImport=false){
+  const titel=vanImport?'Geïmporteerd recept — nakijken & opslaan':recept?'Recept bewerken':'Nieuw recept';
+  document.getElementById('recept-modal-titel').textContent=titel;
+
+  // Types instellen
+  const types=recept?(recept.types&&recept.types.length?recept.types:[recept.type].filter(Boolean)):[];
+  setTypes(types);
+
+  // Tags
+  document.getElementById('tag-selector').innerHTML=ALLE_TAGS.map(t=>{
+    const sel=recept&&(recept.tags||[]).includes(t);
+    return `<span onclick="this.dataset.sel=this.dataset.sel==='1'?'0':'1';this.style.background=this.dataset.sel==='1'?'var(--accent)':'var(--surface)';this.style.color=this.dataset.sel==='1'?'#fff':'var(--muted)';this.style.borderColor=this.dataset.sel==='1'?'var(--accent)':'var(--border-2)';"
+      style="padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1.5px solid ${sel?'var(--accent)':'var(--border-2)'};background:${sel?'var(--accent)':'var(--surface)'};color:${sel?'#fff':'var(--muted)'};font-weight:500;"
+      data-sel="${sel?'1':'0'}">${t}</span>`;
+  }).join('');
+
+  if(recept){
+    document.getElementById('f-naam').value=recept.naam||'';
+    document.getElementById('f-tijd').value=recept.tijd||'';
+    document.getElementById('f-porties').value=recept.porties||4;
+    document.getElementById('f-moeilijk').value=recept.moeilijk||'Normaal';
+    document.getElementById('f-bron').value=recept.bron||'';
+    document.getElementById('f-bereiding').value=recept.bereiding||'';
+    document.getElementById('ingredients-container').innerHTML=(recept.ingredienten||[]).map(i=>ingRow(i.naam,i.hoev,i.eenheid,i.winkel)).join('');
+    document.getElementById('recept-modal-bg').dataset.editId=vanImport?'':(recept.id||'');
+  } else {
+    ['f-naam','f-bron','f-bereiding'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-tijd').value='';
+    document.getElementById('f-porties').value='4';
+    document.getElementById('ingredients-container').innerHTML=ingRow();
+    document.getElementById('recept-modal-bg').dataset.editId='';
+  }
+  document.getElementById('recept-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('f-naam').focus(),150);
+}
+
+function closeReceptModal(){ document.getElementById('recept-modal-bg').classList.remove('open'); }
+
+function saveRecept(){
+  const naam=document.getElementById('f-naam').value.trim();
+  if(!naam){ alert('Geef een naam in.'); return; }
+  const types=getGeselecteerdeTypes();
+  if(!types.length){ alert('Selecteer minstens één type.'); return; }
+
+  const editId=document.getElementById('recept-modal-bg').dataset.editId;
+  const tags=[...document.querySelectorAll('#tag-selector span[data-sel="1"]')].map(el=>el.textContent);
+
+  // Ingrediënten ophalen + nieuwe opslaan
+  const nieuweIngs=[];
+  const ings=[...document.querySelectorAll('#ingredients-container > div[id]')].map(row=>{
+    const input=row.querySelector('.ing-combo-input');
+    const inputs=row.querySelectorAll('input');
+    const winkelSel=row.querySelector('.winkel-sel');
+    const ingNaam=input?input.value.trim():'';
+    const hoev=inputs[1]?inputs[1].value:'';
+    const eenheid=inputs[2]?inputs[2].value:'';
+    const winkel=winkelSel?winkelSel.value:'Colruyt';
+    if(!ingNaam)return null;
+    // Nieuw ingrediënt automatisch opslaan
+    if(row.dataset.nieuw==='1'){
+      const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===ingNaam.toLowerCase());
+      if(!bestaatAl) nieuweIngs.push({id:Date.now()+Math.random(),naam:ingNaam,winkel,categorie:''});
+    }
+    return{naam:ingNaam,hoev,eenheid,winkel};
+  }).filter(Boolean);
+
+  // Nieuwe ingrediënten opslaan in standaardIngredienten
+  nieuweIngs.forEach(ing=>{
+    standaardIngredienten.push(ing);
+    sbSaveIngredient(ing);
+  });
+
+  const bestaande=editId?recepten.find(r=>r.id==editId):null;
+  const recept={
+    id:editId?parseInt(editId)||editId:Date.now(),
+    _sbId:bestaande?._sbId,
+    naam,
+    types,
+    type:types[0]||'avond',   // backwards compat
+    tijd:parseInt(document.getElementById('f-tijd').value)||30,
+    porties:parseInt(document.getElementById('f-porties').value)||4,
+    moeilijk:document.getElementById('f-moeilijk').value,
+    wie:['jeroen','kelly','nora','odiel'],
+    bron:document.getElementById('f-bron').value,
+    bereiding:document.getElementById('f-bereiding').value,
+    tags,
+    ingredienten:ings
+  };
+
+  if(editId) recepten=recepten.map(r=>r.id==editId?recept:r);
+  else recepten.push(recept);
+
+  closeReceptModal();
+  renderRecepten();
+  slaLokaalOp();
+  sbSaveRecept(recept);
+  geimporteerdRecept=null;
+
+  if(nieuweIngs.length){
+    toonOpslagStatus(`✅ Opgeslagen + ${nieuweIngs.length} nieuw ingrediënt${nieuweIngs.length>1?'en':''} toegevoegd`);
+  }
+}
+
+function verwijderRecept(id){
+  if(!confirm('Recept verwijderen?'))return;
+  const r=recepten.find(r=>r.id===id||r.id==id);
+  recepten=recepten.filter(r=>r.id!==id&&r.id!=id);
+  renderRecepten();slaLokaalOp();if(r?._sbId)sbDeleteRecept(r._sbId);
+}
+
+// ── Import via link ───────────────────────────────────────────
+function openImportModal(){
+  document.getElementById('import-url').value='';
+  naarStap(1);
+  document.getElementById('import-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('import-url').focus(),200);
+}
+function closeImportModal(){ document.getElementById('import-modal-bg').classList.remove('open'); }
+function naarStap(n){
+  document.querySelectorAll('.import-stap').forEach(el=>el.classList.remove('actief'));
+  document.getElementById('import-stap-'+n).classList.add('actief');
+}
+
+async function startImport(){
+  const url=document.getElementById('import-url').value.trim();
+  if(!url||!url.startsWith('http')){ alert('Plak een geldige URL.'); return; }
+  let apiKey=localStorage.getItem('anthropic_api_key')||'';
+  if(!apiKey){ apiKey=prompt('Anthropic API key (sk-ant-…):'); if(!apiKey)return; localStorage.setItem('anthropic_api_key',apiKey); }
+  naarStap(2);
+  document.getElementById('import-loader-tekst').textContent='Recept ophalen van '+url.replace(/^https?:\/\//,'').split('/')[0]+'…';
+  try{
+    const systeemprompt=`Je bent een recept-extractie assistent. Haal het recept op van de opgegeven URL en geef UITSLUITEND geldige JSON terug zonder markdown backticks.
+Formaat:
+{
+  "naam": "string",
+  "types": ["avond|lunch|weekend|ontbijt"],
+  "tijd": 30,
+  "porties": 4,
+  "moeilijk": "Snel|Normaal|Uitgebreid",
+  "bereiding": "string",
+  "ingredienten": [{"naam":"string","hoev":"500","eenheid":"gram"}],
+  "tags": [],
+  "bron": "url"
+}
+types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
+tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
+    let berichten=[{role:'user',content:`Haal het recept op van: ${url}`}];
+    let response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten})
+    });
+    if(!response.ok){ const e=await response.json().catch(()=>({})); if(response.status===401)localStorage.removeItem('anthropic_api_key'); throw new Error(e.error?.message||'API fout '+response.status); }
+    let data=await response.json();
+    let max=5;
+    while(data.stop_reason==='tool_use'&&max-->0){
+      document.getElementById('import-loader-tekst').textContent='Pagina wordt gelezen…';
+      const toolResults=[];
+      for(const block of data.content){
+        if(block.type==='tool_use') toolResults.push({type:'tool_result',tool_use_id:block.id,content:'Extraheer het recept van: '+url});
+      }
+      berichten.push({role:'assistant',content:data.content});
+      berichten.push({role:'user',content:toolResults});
+      response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten})});
+      data=await response.json();
+    }
+    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+    const jsonStr=tekst.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+    let recept;
+    try{ recept=JSON.parse(jsonStr); }
+    catch(e){ const m=jsonStr.match(/\{[\s\S]*\}/); if(!m) throw new Error('Geen recept gevonden op deze pagina.'); recept=JSON.parse(m[0]); }
+    if(!recept.naam) throw new Error('Geen receptnaam gevonden. Is dit een receptpagina?');
+    // Normaliseer ingrediënten
+    recept.ingredienten=(recept.ingredienten||[]).map(i=>({naam:i.naam||'',hoev:String(i.hoev||''),eenheid:i.eenheid||'',winkel:zoekStandaardWinkel(i.naam)||'Colruyt'}));
+    recept.bron=recept.bron||url;
+    geimporteerdRecept=recept;
+    toonImportPreview(recept);
+    naarStap(3);
+  }catch(e){
+    document.getElementById('import-error-tekst').innerHTML=`<strong>❌ Import mislukt</strong><br><br>${e.message}`;
+    naarStap(4);
+  }
+}
+
+function toonImportPreview(r){
+  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+  const types=(r.types||[r.type]).filter(Boolean).map(t=>typeLabels[t]||t).join(', ');
+  const ingLijst=(r.ingredienten||[]).slice(0,8).map(i=>`<span>${i.hoev?i.hoev+' '+i.eenheid+' ':''}${i.naam}</span>`).join('');
+  const meer=(r.ingredienten||[]).length>8?`<span style="color:var(--muted);">+${r.ingredienten.length-8} meer</span>`:'';
+  document.getElementById('import-preview').innerHTML=`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+      <div class="import-preview-naam">${r.naam}</div>
+      <span class="import-success-badge">✅ Gevonden</span>
+    </div>
+    <div class="import-preview-meta">
+      ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
+      ${r.porties?`<span>🍽 ${r.porties} porties</span>`:''}
+      ${types?`<span>📋 ${types}</span>`:''}
+      ${r.moeilijk?`<span>📊 ${r.moeilijk}</span>`:''}
+    </div>
+    ${r.bereiding?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;max-height:60px;overflow:hidden;">${r.bereiding.slice(0,200)}${r.bereiding.length>200?'…':''}</div>`:''}
+    <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;">INGREDIËNTEN (${(r.ingredienten||[]).length})</div>
+    <div style="font-size:12px;">${ingLijst}${meer}</div>
+    ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📎 ${r.bron}</div>`:''}`;
+}
+
+function openReceptVanImport(){
+  if(!geimporteerdRecept)return;
+  closeImportModal();
+  setTimeout(()=>openReceptModal(geimporteerdRecept,true),100);
+}
+
+// Sluit modals bij klik op achtergrond
+['recept-modal-bg','import-modal-bg'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id)){closeReceptModal();closeImportModal();}});
+});
+</script>
+</body>
+</html>

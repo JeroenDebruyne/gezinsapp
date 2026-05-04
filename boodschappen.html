@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Boodschappen</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.voortgang-balk{background:var(--border);border-radius:99px;height:7px;margin:6px 0 14px;}
+.voortgang-fill{background:var(--rustig-dot);border-radius:99px;height:7px;transition:width .3s;}
+.boodschap-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.boodschap-cirkel{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.boodschap-cirkel.gedaan{background:var(--rustig-dot);border-color:var(--rustig-dot);}
+.boodschap-cirkel.gedaan::after{content:'✓';color:#fff;font-size:13px;font-weight:700;}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">🛒 Boodschappen</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+  </div>
+</header>
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+<main class="main-content">
+<div class="page-content">
+  <div class="pill-tabs" id="winkel-tabs"></div>
+
+  <!-- Extra item toevoegen -->
+  <div style="display:flex;gap:8px;margin-bottom:1rem;">
+    <input type="text" id="extra-naam" placeholder="Extra item toevoegen…" style="flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;" onkeydown="if(event.key==='Enter')voegExtraToe()"/>
+    <button class="btn btn-primary" onclick="voegExtraToe()">+ Voeg toe</button>
+  </div>
+
+  <!-- Voortgang -->
+  <div id="voortgang-wrap" style="display:none;">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;">
+      <span id="voortgang-tekst"></span>
+      <div style="display:flex;gap:10px;">
+        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:12px;color:var(--druk-clr);cursor:pointer;font-family:inherit;">🗑️ Verwijder afgevinkte</button>
+        <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
+      </div>
+    </div>
+    <div class="voortgang-balk"><div class="voortgang-fill" id="voortgang-fill"></div></div>
+  </div>
+
+  <!-- Boodschappenlijst -->
+  <div id="boodschappen-inhoud"></div>
+  <div class="section-label">Extra items</div>
+  <div id="extra-items-lijst"></div>
+</div>
+</main>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('boodschappen');
+let activeWinkel='Colruyt';
+let afgevinkt={};
+
+laadOp().then(()=>{renderWinkelTabs();renderBoodschappen();renderExtraItems();}).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();});
+
+function renderWinkelTabs(){
+  document.getElementById('winkel-tabs').innerHTML=WINKELS.map(w=>
+    `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${w}')">${w}</button>`
+  ).join('');
+}
+function switchWinkel(w){activeWinkel=w;renderWinkelTabs();renderBoodschappen();renderExtraItems();}
+
+function renderBoodschappen(){
+  const gepland=[];
+  Object.entries(planning).forEach(([dk,dag])=>{
+    Object.values(dag).forEach(keuze=>{
+      if(keuze&&!SPEC[keuze]){const r=recepten.find(r=>r.id===keuze||r.id==keuze);if(r)gepland.push({recept:r,dag:dk});}
+    });
+  });
+  const perIng={};
+  gepland.forEach(({recept,dag})=>{
+    (recept.ingredienten||[]).filter(i=>i.winkel===activeWinkel).forEach(ing=>{
+      const key=ing.naam.toLowerCase();
+      if(!perIng[key])perIng[key]={naam:ing.naam,eenheid:ing.eenheid,gebruiken:[]};
+      perIng[key].gebruiken.push({hoev:ing.hoev,dag,recept:recept.naam});
+    });
+  });
+  const items=Object.values(perIng);
+  const aantalAfgevinkt=items.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]).length;
+
+  if(items.length>0){
+    const pct=Math.round((aantalAfgevinkt/items.length)*100);
+    document.getElementById('voortgang-wrap').style.display='block';
+    document.getElementById('voortgang-tekst').textContent=`${aantalAfgevinkt} van ${items.length} in mandje`;
+    document.getElementById('voortgang-fill').style.width=pct+'%';
+    document.getElementById('btn-verwijder-afgevinkt').style.display=aantalAfgevinkt>0?'inline':'none';
+  } else {
+    document.getElementById('voortgang-wrap').style.display='none';
+  }
+
+  document.getElementById('boodschappen-inhoud').innerHTML=items.length===0
+    ?`<div class="empty-state"><span class="empty-icon">🛒</span><p>Geen ingrediënten voor ${activeWinkel}<br>Maak eerst een weekmenu aan</p></div>`
+    :items.map(item=>{
+      const key='ing_'+item.naam.toLowerCase();
+      const gedaan=afgevinkt[key];
+      return `<div class="boodschap-item" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.4;':''}">
+        <div class="boodschap-cirkel${gedaan?' gedaan':''}"></div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;':''}">${item.naam}</div>
+          ${item.gebruiken.map(g=>`<div style="font-size:12px;color:var(--muted);display:flex;justify-content:space-between;"><span>${g.recept}</span><span style="font-weight:500;">${g.hoev} ${item.eenheid}</span></div>`).join('')}
+          ${item.gebruiken.length>1?`<div style="font-size:11px;color:var(--muted-2);margin-top:2px;">${item.gebruiken.length}× nodig</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function renderExtraItems(){
+  const voor=extraItems.filter(i=>i.winkel===activeWinkel);
+  document.getElementById('extra-items-lijst').innerHTML=voor.length===0
+    ?`<p style="font-size:13px;color:var(--muted);padding:6px 0;">Geen extra items voor ${activeWinkel}</p>`
+    :voor.map(i=>{
+      const key='extra_'+i.id;const gedaan=afgevinkt[key];
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div class="boodschap-cirkel${gedaan?' gedaan':''}" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.5;':''}"></div>
+        <span style="flex:1;font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;opacity:.5;':''}">${i.naam}</span>
+        <span class="extra-badge">Extra</span>
+        <button onclick="verwijderExtra(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:18px;line-height:1;">×</button>
+      </div>`;
+    }).join('');
+}
+
+function toggleAfgevinkt(key){afgevinkt[key]=!afgevinkt[key];renderBoodschappen();renderExtraItems();}
+function resetAfgevinkt(){afgevinkt={};renderBoodschappen();renderExtraItems();}
+function verwijderAfgevinkt(){
+  const afgevinktExtras=extraItems.filter(i=>afgevinkt['extra_'+i.id]&&i.winkel===activeWinkel);
+  afgevinktExtras.forEach(i=>{extraItems=extraItems.filter(e=>e.id!==i.id);if(i._sbId)sbDeleteExtra(i._sbId);});
+  Object.keys(afgevinkt).forEach(k=>{delete afgevinkt[k];});
+  slaLokaalOp();renderBoodschappen();renderExtraItems();
+}
+function voegExtraToe(){
+  const naam=document.getElementById('extra-naam').value.trim();if(!naam)return;
+  const nieuwItem={id:Date.now(),naam,winkel:activeWinkel};
+  extraItems.push(nieuwItem);
+  document.getElementById('extra-naam').value='';
+  renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
+}
+function verwijderExtra(id){extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();}
+</script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gezinsapp">
+<meta name="theme-color" content="#faf9f7">
+<title>Gezinsapp — Inloggen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:   #faf9f7;
+  --sand:    #f0ede8;
+  --stone:   #e0dbd3;
+  --ink:     #1c1917;
+  --ink-2:   #44403c;
+  --muted:   #a8a29e;
+  --accent:  #c67c3a;
+  --accent-l:#faeeda;
+  --danger:  #b91c1c;
+  --success: #15803d;
+  --radius:  12px;
+}
+
+html { height: 100%; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--cream);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Decoratieve achtergrond ───────────────────────────────────────── */
+.bg-deco {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.bg-deco::before {
+  content: '';
+  position: absolute;
+  top: -120px; right: -80px;
+  width: 420px; height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #faeeda 0%, transparent 70%);
+  opacity: 0.7;
+}
+.bg-deco::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e1f5ee 0%, transparent 70%);
+  opacity: 0.5;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+.page {
+  position: relative; z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+}
+
+/* ── Kaart ─────────────────────────────────────────────────────────── */
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 1px solid var(--stone);
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 4px 24px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.04);
+  animation: fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Logo / header ─────────────────────────────────────────────────── */
+.logo-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 1.75rem;
+}
+.logo-icon {
+  width: 52px; height: 52px;
+  background: var(--ink);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(28,25,23,0.15);
+}
+.logo-title {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.logo-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Tab switcher (login / wachtwoord vergeten) ─────────────────────── */
+.mode-tabs {
+  display: flex;
+  background: var(--sand);
+  border-radius: 99px;
+  padding: 3px;
+  margin-bottom: 1.5rem;
+}
+.mode-tab {
+  flex: 1;
+  padding: 7px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  border-radius: 99px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.18s;
+}
+.mode-tab.active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(28,25,23,0.1);
+}
+
+/* ── Formulier ─────────────────────────────────────────────────────── */
+.form-section { display: none; }
+.form-section.active { display: block; }
+
+.form-row { margin-bottom: 1rem; }
+.form-row label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  margin-bottom: 5px;
+  letter-spacing: 0.01em;
+}
+.form-row input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--stone);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--cream);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-row input:focus {
+  border-color: var(--ink);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(28,25,23,0.06);
+}
+.form-row input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(185,28,28,0.07);
+}
+
+/* Wachtwoord wrapper met toggle */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 15px; padding: 2px;
+  line-height: 1; display: flex; align-items: center;
+}
+.pw-toggle:hover { color: var(--ink-2); }
+
+/* Submit knop */
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-submit:hover { background: #2c2a28; }
+.btn-submit:active { transform: scale(0.98); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-submit .btn-spinner {
+  display: none;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin: 0 auto;
+}
+.btn-submit.loading .btn-tekst { display: none; }
+.btn-submit.loading .btn-spinner { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Feedback berichten ─────────────────────────────────────────────── */
+.msg {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 1rem;
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+.msg.show { display: block; }
+.msg.error  { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+.msg.success{ background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Vergeet wachtwoord link ─────────────────────────────────────────── */
+.link-small {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  text-align: right;
+  margin-top: -6px;
+  margin-bottom: 1rem;
+}
+.link-small:hover { color: var(--ink-2); text-decoration: underline; }
+
+/* ── Divider ──────────────────────────────────────────────────────── */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 1.25rem 0;
+  font-size: 11px; color: var(--muted);
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--stone);
+}
+
+/* ── Avatar selectie ──────────────────────────────────────────────── */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.avatar-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--stone);
+  border-radius: var(--radius);
+  background: var(--cream);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.avatar-btn:hover { border-color: var(--ink-2); background: #fff; }
+.avatar-btn.selected { border-color: var(--ink); background: #fff; box-shadow: 0 0 0 2px var(--ink); }
+.avatar-emoji { font-size: 20px; line-height: 1; }
+.avatar-info { display: flex; flex-direction: column; }
+.avatar-naam { font-size: 13px; font-weight: 500; color: var(--ink); }
+.avatar-rol  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+/* ── Footer ───────────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── Mobiel ───────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .page { padding: 1.25rem 1rem; justify-content: flex-start; padding-top: 3rem; }
+  .card { padding: 1.5rem 1.25rem; }
+}
+</style>
+</head>
+<body>
+<div class="bg-deco"></div>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <div class="logo-icon">🏠</div>
+      <div class="logo-title">Gezinsapp</div>
+      <div class="logo-sub">Welkom terug</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-login" onclick="switchMode('login')">Inloggen</button>
+      <button class="mode-tab" id="tab-reset" onclick="switchMode('reset')">Wachtwoord vergeten</button>
+    </div>
+
+    <!-- Feedback -->
+    <div class="msg" id="msg"></div>
+
+    <!-- ═══ LOGIN FORMULIER ═══ -->
+    <div class="form-section active" id="sect-login">
+      <div class="form-row">
+        <label>E-mailadres</label>
+        <input type="email" id="login-email" placeholder="naam@email.com" autocomplete="email" inputmode="email"/>
+      </div>
+      <div class="form-row">
+        <label>Wachtwoord</label>
+        <div class="pw-wrap">
+          <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="pw-toggle" onclick="togglePw('login-pw',this)" type="button" aria-label="Wachtwoord tonen">👁</button>
+        </div>
+      </div>
+      <a class="link-small" onclick="switchMode('reset')">Wachtwoord vergeten?</a>
+      <button class="btn-submit" id="btn-login" onclick="doLogin()">
+        <span class="btn-tekst">Inloggen</span>
+        <span class="btn-spinner"></span>
+      </button>
+
+      <div class="divider">of snel inloggen als</div>
+
+      <!-- Snelle profielen (alleen zichtbaar als ze account hebben) -->
+      <div class="avatar-grid" id="avatar-grid">
+        <button class="avatar-btn" onclick="quickLogin('jij')" data-persoon="jij">
+          <span class="avatar-emoji">🧑</span>
+          <span class="avatar-info">
+            <span class="avatar-naam">Jeroen</span>
+            <span class="avatar-rol">Beheerder</span>
+          </span>
+        </button>
+        <button class="avatar-btn" onclick="quickLogin('kelly')" data-persoon="kelly">
+          <span class="avatar-emoji">👩</span>
+          <span class="avatar-info">
+            <span class="avatar-naam">Kelly</span>
+            <span class="avatar-rol">Ouder</span>
+          </span>
+        </button>
+        <button class="avatar-btn" onclick="quickLogin('nora')" data-persoon="nora">
+          <span class="avatar-emoji">👧</span>
+          <span class="avatar-info">
+            <span class="avatar-naam">Nora</span>
+            <span class="avatar-rol">Kind</span>
+          </span>
+        </button>
+        <button class="avatar-btn" onclick="quickLogin('odiel')" data-persoon="odiel">
+          <span class="avatar-emoji">👦</span>
+          <span class="avatar-info">
+            <span class="avatar-naam">Odiel</span>
+            <span class="avatar-rol">Kind</span>
+          </span>
+        </button>
+      </div>
+      <div class="footer" id="avatar-info-tekst" style="margin-top:0.5rem;display:none;">
+        De snelle knoppen werken nadat je elk account eenmalig hebt aangemaakt in Supabase Auth.
+      </div>
+    </div>
+
+    <!-- ═══ WACHTWOORD RESET ═══ -->
+    <div class="form-section" id="sect-reset">
+      <p style="font-size:13px;color:#666;margin-bottom:1.25rem;line-height:1.5;">
+        Vul je e-mailadres in. Je ontvangt een link om een nieuw wachtwoord in te stellen.
+      </p>
+      <div class="form-row">
+        <label>E-mailadres</label>
+        <input type="email" id="reset-email" placeholder="naam@email.com" autocomplete="email" inputmode="email"/>
+      </div>
+      <button class="btn-submit" id="btn-reset" onclick="doReset()">
+        <span class="btn-tekst">Stuur resetlink</span>
+        <span class="btn-spinner"></span>
+      </button>
+    </div>
+
+    <div class="footer">
+      Gezinsapp &nbsp;·&nbsp; Alleen voor de familie
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://rdessctmorraeeipysct.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';
+const SESSION_KEY  = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
+
+// Mapping persoon → email (pas aan naar echte emails!)
+// BELANGRIJK: maak deze accounts eerst aan in Supabase Auth dashboard
+const QUICK_EMAILS = {
+  jij:   'jeroen.debruyne@outlook.be',
+  kelly: 'dewaegenaerekelly@hotmail.com',
+  nora:  'debruyne.nora@icloud.com',
+  odiel: 'debruyne.odiel@icloud.com',
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function saveSession(data) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    access_token:  data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at:    data.expires_at || Math.floor(Date.now()/1000) + (data.expires_in || 3600),
+    user:          data.user,
+  }));
+}
+
+function showMsg(tekst, type = 'error') {
+  const el = document.getElementById('msg');
+  el.textContent = tekst;
+  el.className = 'msg show ' + type;
+}
+function hideMsg() {
+  const el = document.getElementById('msg');
+  el.className = 'msg';
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.classList.toggle('loading', loading);
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+function switchMode(mode) {
+  hideMsg();
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+  document.getElementById('sect-' + mode).classList.add('active');
+}
+
+// ── Inloggen ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  hideMsg();
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+
+  if (!email || !pw) { showMsg('Vul je e-mailadres en wachtwoord in.'); return; }
+
+  setLoading('btn-login', true);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Inloggen mislukt');
+    saveSession(data);
+    window.location.replace('app.html');
+  } catch (e) {
+    showMsg('❌ ' + (e.message === 'Invalid login credentials' ? 'Verkeerd e-mailadres of wachtwoord.' : e.message));
+  } finally {
+    setLoading('btn-login', false);
+  }
+}
+
+// ── Snelle login (persoon-knop) ────────────────────────────────────────────────
+async function quickLogin(persoon) {
+  const email = QUICK_EMAILS[persoon];
+  if (!email) {
+    showMsg('⚙️ Stel eerst het e-mailadres in voor "' + persoon + '" in de QUICK_EMAILS tabel bovenaan login.html.', 'error');
+    document.getElementById('avatar-info-tekst').style.display = 'block';
+    return;
+  }
+  // Vul het email-veld in zodat de gebruiker het wachtwoord kan invoeren
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-pw').focus();
+  // Markeer de geselecteerde avatar
+  document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`[data-persoon="${persoon}"]`).classList.add('selected');
+}
+
+// ── Wachtwoord reset ──────────────────────────────────────────────────────────
+async function doReset() {
+  hideMsg();
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { showMsg('Vul je e-mailadres in.'); return; }
+
+  setLoading('btn-reset', true);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    if (!res.ok) {
+      const d = await res.json();
+      throw new Error(d.error_description || 'Verzenden mislukt');
+    }
+    showMsg('✅ Resetlink verstuurd! Controleer je inbox.', 'success');
+    document.getElementById('reset-email').value = '';
+  } catch (e) {
+    showMsg('❌ ' + e.message);
+  } finally {
+    setLoading('btn-reset', false);
+  }
+}
+
+// ── Enter toets ───────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const sect = document.querySelector('.form-section.active').id;
+  if (sect === 'sect-login') doLogin();
+  if (sect === 'sect-reset') doReset();
+});
+
+// ── Redirect als al ingelogd ───────────────────────────────────────────────────
+(function checkAlreadyLoggedIn() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    const exp = s.expires_at || 0;
+    if (s.access_token && Date.now()/1000 < exp - 60) {
+      window.location.replace('app.html');
+    }
+  } catch {}
+})();
+</script>
+</body>
+</html>

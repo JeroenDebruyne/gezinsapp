@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gezinsapp">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — To-do's</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Topbar ─────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-title">✅ To-do's</div>
+  <div class="topbar-actions">
+    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;">🔧 dev</span>
+    <div class="topbar-user" onclick="Auth.logout()"><span class="avatar" id="topbar-emoji">🧑</span><span class="naam" id="topbar-naam">…</span></div>
+  </div>
+</header>
+
+<!-- ── Navigatie ──────────────────────────────────────────── -->
+<nav class="bottom-nav">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span>Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span>To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span>Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span>Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span>Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span>Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span>Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span>Instellingen</span></a>
+</nav>
+
+<main class="main-content">
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs" id="filter-tabs">
+    <button class="filter-tab active" data-filter="open" onclick="setFilter('open',this)">Openstaand</button>
+    <button class="filter-tab" data-filter="vandaag" onclick="setFilter('vandaag',this)">Vandaag</button>
+    <button class="filter-tab" data-filter="mijn" onclick="setFilter('mijn',this)">Mijn to-do's</button>
+    <button class="filter-tab" data-filter="gedaan" onclick="setFilter('gedaan',this)">Afgewerkt</button>
+    <button class="filter-tab" data-filter="alle" onclick="setFilter('alle',this)">Alle</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-balk" id="stats-balk"></div>
+
+  <!-- Lijst -->
+  <div class="todo-lijst" id="todo-lijst"></div>
+
+</main>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()" title="To-do toevoegen">＋</button>
+
+<!-- ══ MODAL: To-do toevoegen/bewerken ══ -->
+<div class="modal-bg" id="todo-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3 id="modal-titel">Nieuwe to-do</h3>
+
+  <div class="form-row">
+    <label>Wat moet er gedaan worden?</label>
+    <input type="text" id="t-titel" placeholder="Beschrijving van de to-do"/>
+  </div>
+
+  <div class="form-row">
+    <label>Notitie (optioneel)</label>
+    <textarea id="t-notitie" rows="2" placeholder="Extra details…"></textarea>
+  </div>
+
+  <div class="form-grid">
+    <div class="form-row">
+      <label>Deadline</label>
+      <input type="date" id="t-deadline"/>
+    </div>
+    <div class="form-row">
+      <label>Geschatte tijd</label>
+      <select id="t-duur">
+        <option value="">— geen —</option>
+        <option value="5">5 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="60">1 uur</option>
+        <option value="120">2 uur</option>
+        <option value="240">4 uur</option>
+        <option value="480">Hele dag</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Prioriteit</label>
+    <div class="prioriteit-keuze">
+      <button class="prio-btn hoog" onclick="setPrio('hoog',this)">🔴 Hoog</button>
+      <button class="prio-btn middel selected" onclick="setPrio('middel',this)">🟡 Middel</button>
+      <button class="prio-btn laag" onclick="setPrio('laag',this)">🟢 Laag</button>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Voor wie</label>
+    <div class="persoon-ms" id="t-wie-ms"></div>
+  </div>
+
+  <div class="prive-toggle" onclick="togglePrive()">
+    <div class="prive-toggle-left">
+      <span class="prive-toggle-label">🔒 Privé</span>
+      <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
+    </div>
+    <div class="ios-switch" id="prive-switch"></div>
+  </div>
+
+  <div class="modal-actions" id="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="saveTodo()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+// ── Init ──────────────────────────────────────────────────────
+Auth.initPagina('todos');
+
+let actieveFilter = 'open';
+let todoEditId    = null;
+let priveAan      = false;
+let geselecteerdePersonen = [];
+let geselecteerdePrio = 'middel';
+
+const KLEUR_BALK = { jeroen:'#5e5ce6', kelly:'#ff6b9d', nora:'#30d158', odiel:'#ff9f0a' };
+const PRIO_KLEUR = { hoog:'#ff453a', middel:'#ff9f0a', laag:'#30d158' };
+
+// ── Laden ─────────────────────────────────────────────────────
+laadOp().then(renderTodos).catch(()=>{ laadLokaal(); renderTodos(); });
+
+// ── Filter ────────────────────────────────────────────────────
+function setFilter(filter, el) {
+  actieveFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTodos();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderTodos() {
+  const vandaagISO = fDateISO(new Date());
+  const mijnKey    = Auth.profiel()?.persoonKey;
+
+  // Privé filter: anderen zien jouw privé niet
+  const zichtbaar = todos.filter(t => {
+    if (!t.prive) return true;
+    if (Auth.kan('kanAllesZien')) return true;
+    return (t.wie||[]).includes(mijnKey);
+  });
+
+  // Filter toepassen
+  let gefilterd;
+  switch (actieveFilter) {
+    case 'open':
+      gefilterd = zichtbaar.filter(t=>!t.gedaan);
+      break;
+    case 'vandaag':
+      gefilterd = zichtbaar.filter(t=>!t.gedaan && t.deadline===vandaagISO);
+      break;
+    case 'mijn':
+      gefilterd = zichtbaar.filter(t=>!t.gedaan && (t.wie||[]).includes(mijnKey));
+      break;
+    case 'gedaan':
+      gefilterd = zichtbaar.filter(t=>t.gedaan);
+      break;
+    default:
+      gefilterd = zichtbaar;
+  }
+
+  // Sorteren: hoog eerst, dan op deadline
+  gefilterd.sort((a,b)=>{
+    if (a.gedaan !== b.gedaan) return a.gedaan?1:-1;
+    const prioOrder = { hoog:0, middel:1, laag:2 };
+    const po = (prioOrder[a.prioriteit]??1) - (prioOrder[b.prioriteit]??1);
+    if (po!==0) return po;
+    if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
+    if (a.deadline) return -1;
+    if (b.deadline) return 1;
+    return 0;
+  });
+
+  // Stats
+  const totaalOpen = zichtbaar.filter(t=>!t.gedaan).length;
+  const verlopen   = zichtbaar.filter(t=>!t.gedaan&&t.deadline&&t.deadline<vandaagISO).length;
+  const vandaag    = zichtbaar.filter(t=>!t.gedaan&&t.deadline===vandaagISO).length;
+  document.getElementById('stats-balk').innerHTML = `
+    <div class="stat-chip"><span class="stat-num">${totaalOpen}</span> open</div>
+    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:#ff9f0a;">${vandaag}</span> vandaag</div>`:''}
+    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:#ff453a;">${verlopen}</span> verlopen</div>`:''}
+  `;
+
+  // Lijst
+  const el = document.getElementById('todo-lijst');
+  if (!gefilterd.length) {
+    const labels = { open:'Geen openstaande to-do\'s', vandaag:'Niets gepland voor vandaag', mijn:'Geen to-do\'s voor jou', gedaan:'Nog niets afgewerkt', alle:'Nog geen to-do\'s' };
+    el.innerHTML = `<div class="leeg">
+      <div class="leeg-icon">${actieveFilter==='gedaan'?'🎉':'✅'}</div>
+      <div class="leeg-titel">${labels[actieveFilter]||'Geen to-do\'s'}</div>
+      <div class="leeg-sub">${actieveFilter==='open'?'Tik op + om een to-do toe te voegen':''}</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = gefilterd.map(t => {
+    const deadlineBadge = maakDeadlineBadge(t.deadline, vandaagISO, t.gedaan);
+    const wieBadges = (t.wie||[]).map(w=>`
+      <span class="todo-badge" style="background:${KLEUR_BALK[w]}22;color:${KLEUR_BALK[w]};">
+        ${PEMOJI[w]||''} ${PLABEL[w]||w}
+      </span>`).join('');
+    const duurLabel = t.duur ? `⏱ ${t.duur>=60?Math.round(t.duur/60)+'u':t.duur+'min'}` : '';
+    const kanBewerken = Auth.kan('kanTodosBeheren') || (t.wie||[]).includes(mijnKey);
+
+    return `
+    <div class="todo-item${t.gedaan?' gedaan':''}">
+      <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan?' '+t.prioriteit:''}"
+        onclick="toggleTodo('${t.id}')"></button>
+      <div class="todo-body" onclick="${kanBewerken?`editTodo('${t.id}')`:''}" style="${kanBewerken?'':'cursor:default'}">
+        <div class="todo-titel${t.gedaan?' gedaan':''}">${t.titel}</div>
+        ${t.notitie?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${t.notitie}</div>`:''}
+        <div class="todo-meta" style="margin-top:5px;">
+          ${deadlineBadge}
+          ${duurLabel?`<span style="font-size:11px;">${duurLabel}</span>`:''}
+          ${wieBadges}
+          ${t.prive?`<span class="prive-badge">🔒 Privé</span>`:''}
+        </div>
+      </div>
+      ${kanBewerken?`<div class="todo-acties">
+        <button class="todo-icon-btn" onclick="verwijderTodo('${t.id}')" title="Verwijderen">🗑️</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function maakDeadlineBadge(deadline, vandaag, gedaan) {
+  if (!deadline || gedaan) return '';
+  const morgen = new Date(); morgen.setDate(morgen.getDate()+1);
+  const morgenISO = fDateISO(morgen);
+  const d = new Date(deadline+'T12:00:00');
+  const label = d.toLocaleDateString('nl-BE',{day:'numeric',month:'short'});
+  if (deadline < vandaag) return `<span class="todo-deadline-badge deadline-verlopen">⚠️ Verlopen: ${label}</span>`;
+  if (deadline === vandaag) return `<span class="todo-deadline-badge deadline-vandaag">📅 Vandaag</span>`;
+  if (deadline === morgenISO) return `<span class="todo-deadline-badge deadline-morgen">📅 Morgen</span>`;
+  return `<span class="todo-deadline-badge deadline-ok">📅 ${label}</span>`;
+}
+
+// ── Toggle gedaan ─────────────────────────────────────────────
+function toggleTodo(id) {
+  const t = todos.find(x=>x.id==id);
+  if (!t) return;
+  t.gedaan = !t.gedaan;
+  t.gedaanOp = t.gedaan ? fDateISO(new Date()) : null;
+  slaLokaalOp();
+  sbSaveTodo(t);
+  renderTodos();
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal(todo) {
+  todoEditId = todo?.id || null;
+  priveAan   = todo?.prive || false;
+  geselecteerdePersonen = todo ? [...(todo.wie||[])] : [Auth.profiel()?.persoonKey||'jeroen'];
+  geselecteerdePrio = todo?.prioriteit || 'middel';
+
+  document.getElementById('modal-titel').textContent = todo ? 'To-do bewerken' : 'Nieuwe to-do';
+  document.getElementById('t-titel').value    = todo?.titel||'';
+  document.getElementById('t-notitie').value  = todo?.notitie||'';
+  document.getElementById('t-deadline').value = todo?.deadline||'';
+  document.getElementById('t-duur').value     = todo?.duur||'';
+
+  updatePriveSwitch();
+  renderPersonenMS();
+  updatePrioBtns();
+
+  // Verwijder knop tonen bij bewerken
+  const actions = document.getElementById('modal-actions');
+  actions.innerHTML = todo
+    ? `<button class="modal-btn modal-btn-danger" onclick="verwijderTodo('${todo.id}')">Verwijderen</button>
+       <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuleren</button>
+       <button class="modal-btn modal-btn-primary" onclick="saveTodo()">Opslaan</button>`
+    : `<button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuleren</button>
+       <button class="modal-btn modal-btn-primary" onclick="saveTodo()">Opslaan</button>`;
+
+  document.getElementById('todo-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('t-titel').focus(), 100);
+}
+function editTodo(id) { openModal(todos.find(t=>t.id==id)); }
+function closeModal() { document.getElementById('todo-modal-bg').classList.remove('open'); }
+
+function renderPersonenMS() {
+  document.getElementById('t-wie-ms').innerHTML = PERSONEN.map(p=>
+    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${p}')">
+      ${PEMOJI[p]} ${PLABEL[p]}
+    </div>`).join('');
+}
+function togglePersoon(p) {
+  geselecteerdePersonen = geselecteerdePersonen.includes(p)
+    ? geselecteerdePersonen.filter(x=>x!==p)
+    : [...geselecteerdePersonen, p];
+  renderPersonenMS();
+}
+function setPrio(prio, el) {
+  geselecteerdePrio = prio;
+  updatePrioBtns();
+}
+function updatePrioBtns() {
+  document.querySelectorAll('.prio-btn').forEach(btn=>{
+    btn.classList.toggle('selected', btn.classList.contains(geselecteerdePrio));
+  });
+}
+function togglePrive() { priveAan=!priveAan; updatePriveSwitch(); }
+function updatePriveSwitch() {
+  document.getElementById('prive-switch').className='ios-switch'+(priveAan?' on':'');
+}
+
+function saveTodo() {
+  const titel = document.getElementById('t-titel').value.trim();
+  if (!titel) { alert('Geef een beschrijving in.'); return; }
+
+  const bestaande = todoEditId ? todos.find(t=>t.id==todoEditId) : null;
+  const todo = {
+    id:       todoEditId || String(Date.now()),
+    _sbId:    bestaande?._sbId,
+    titel,
+    notitie:  document.getElementById('t-notitie').value.trim(),
+    deadline: document.getElementById('t-deadline').value,
+    duur:     parseInt(document.getElementById('t-duur').value)||null,
+    prioriteit: geselecteerdePrio,
+    wie:      geselecteerdePersonen,
+    prive:    priveAan,
+    gedaan:   bestaande?.gedaan||false,
+    gedaanOp: bestaande?.gedaanOp||null,
+    aangemaaktDoor: Auth.profiel()?.persoonKey,
+    aangemaaktOp:   bestaande?.aangemaaktOp || fDateISO(new Date()),
+  };
+
+  if (todoEditId) todos = todos.map(t=>t.id==todoEditId?todo:t);
+  else todos.push(todo);
+
+  closeModal();
+  slaLokaalOp();
+  sbSaveTodo(todo);
+  renderTodos();
+}
+
+function verwijderTodo(id) {
+  if (!confirm('To-do verwijderen?')) return;
+  const t = todos.find(x=>x.id==id);
+  todos = todos.filter(x=>x.id!=id);
+  closeModal();
+  slaLokaalOp();
+  if (t?._sbId) sbDeleteTodo(t._sbId);
+  renderTodos();
+}
+
+// ── Supabase todo functies ────────────────────────────────────
+async function sbSaveTodo(todo) {
+  const data = {
+    titel:todo.titel, notitie:todo.notitie, deadline:todo.deadline||null,
+    duur:todo.duur, prioriteit:todo.prioriteit, wie:todo.wie,
+    prive:todo.prive, gedaan:todo.gedaan, gedaan_op:todo.gedaanOp||null,
+    aangemaakt_door:todo.aangemaaktDoor, aangemaakt_op:todo.aangemaaktOp,
+  };
+  try {
+    if (todo._sbId) {
+      await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data);
+    } else {
+      const res = await sbFetch('todos','POST',data);
+      if (res[0]) todo._sbId = res[0].id;
+    }
+    toonOpslagStatus('✅ Opgeslagen');
+  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+}
+async function sbDeleteTodo(sbId) {
+  try { await sbFetch(`todos?id=eq.${sbId}`,'DELETE'); } catch(e) {}
+}
+
+// Laad todos van Supabase (uitbreiding van laadOp in data.js)
+const _origLaadOp = laadOp;
+laadOp = async function() {
+  await _origLaadOp();
+  try {
+    const t = await sbFetch('todos');
+    if (t.length) todos = t.map(x=>({
+      ...x, wie:x.wie||[], gedaanOp:x.gedaan_op,
+      aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op,
+    }));
+  } catch(e) { /* gebruik lokale data */ }
+};
+
+// Sluit modal bij klik op achtergrond
+document.getElementById('todo-modal-bg').addEventListener('click', e=>{
+  if (e.target===document.getElementById('todo-modal-bg')) closeModal();
+});
+
+// Enter = opslaan
+document.getElementById('t-titel').addEventListener('keydown', e=>{
+  if (e.key==='Enter') saveTodo();
+});
+
+// Auto-open als ?nieuw=1
+if (new URLSearchParams(location.search).get('nieuw')==='1') {
+  window.addEventListener('load',()=>setTimeout(openModal,300));
+}
+</script>
+</body>
+</html>
