@@ -316,8 +316,8 @@ body {
       <div class="logo-sub">Welkom terug</div>
     </div>
 
-    <!-- Tabs -->
-    <div class="mode-tabs">
+    <!-- Tabs (verborgen tijdens recovery) -->
+    <div class="mode-tabs" id="mode-tabs">
       <button class="mode-tab active" id="tab-login" onclick="switchMode('login')">Inloggen</button>
       <button class="mode-tab" id="tab-reset" onclick="switchMode('reset')">Wachtwoord vergeten</button>
     </div>
@@ -376,6 +376,31 @@ body {
           </span>
         </button>
       </div>
+    </div>
+
+    <!-- ═══ NIEUW WACHTWOORD (na resetlink) ═══ -->
+    <div class="form-section" id="sect-nieuw">
+      <p style="font-size:13px;color:#666;margin-bottom:1.25rem;line-height:1.5;">
+        Kies een nieuw wachtwoord voor je account.
+      </p>
+      <div class="form-row">
+        <label>Nieuw wachtwoord</label>
+        <div class="pw-wrap">
+          <input type="password" id="nieuw-pw" placeholder="••••••••" autocomplete="new-password"/>
+          <button class="pw-toggle" onclick="togglePw('nieuw-pw',this)" type="button">👁</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Bevestig wachtwoord</label>
+        <div class="pw-wrap">
+          <input type="password" id="nieuw-pw2" placeholder="••••••••" autocomplete="new-password"/>
+          <button class="pw-toggle" onclick="togglePw('nieuw-pw2',this)" type="button">👁</button>
+        </div>
+      </div>
+      <button class="btn-submit" id="btn-nieuw" onclick="doNieuwWachtwoord()">
+        <span class="btn-tekst">Wachtwoord opslaan</span>
+        <span class="btn-spinner"></span>
+      </button>
     </div>
 
     <!-- ═══ WACHTWOORD RESET ═══ -->
@@ -524,9 +549,54 @@ document.addEventListener('keydown', e => {
   if (sect === 'sect-reset') doReset();
 });
 
-// ── Redirect als al ingelogd ───────────────────────────────────────────────────
+// ── Nieuw wachtwoord instellen (na resetlink) ─────────────────────────────────
+let _recoveryToken = null;
+
+async function doNieuwWachtwoord() {
+  hideMsg();
+  const pw  = document.getElementById('nieuw-pw').value;
+  const pw2 = document.getElementById('nieuw-pw2').value;
+  if (!pw || pw.length < 6) { showMsg('Wachtwoord moet minstens 6 tekens zijn.'); return; }
+  if (pw !== pw2) { showMsg('Wachtwoorden komen niet overeen.'); return; }
+
+  setLoading('btn-nieuw', true);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _recoveryToken },
+      body: JSON.stringify({ password: pw })
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Opslaan mislukt'); }
+    showMsg('✅ Wachtwoord opgeslagen! Je wordt ingelogd…', 'success');
+    setTimeout(() => window.location.replace('index.html'), 1500);
+  } catch(e) {
+    showMsg('❌ ' + e.message);
+  } finally {
+    setLoading('btn-nieuw', false);
+  }
+}
+
+// ── Redirect als al ingelogd / recovery token detecteren ─────────────────────
 (function checkAlreadyLoggedIn() {
   try {
+    // Supabase hash parameters parsen (#access_token=...&type=recovery)
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const params = Object.fromEntries(hash.split('&').map(p => p.split('=')));
+      if (params.error) {
+        showMsg('❌ ' + decodeURIComponent(params.error_description || params.error).replace(/\+/g, ' '));
+        return;
+      }
+      if (params.type === 'recovery' && params.access_token) {
+        _recoveryToken = params.access_token;
+        document.getElementById('mode-tabs').style.display = 'none';
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('sect-nieuw').classList.add('active');
+        document.querySelector('.logo-sub').textContent = 'Nieuw wachtwoord instellen';
+        history.replaceState(null, '', window.location.pathname);
+        return;
+      }
+    }
     // Kindersessie actief
     if (localStorage.getItem('gezinsapp-kind-sessie')) {
       window.location.replace('index.html');
