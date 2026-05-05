@@ -38,6 +38,7 @@
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
 
   <div class="sidebar-footer">
@@ -441,7 +442,7 @@ laadOp = async function() {
   try {
     const t = await sbFetch('todos');
     if (t.length) todos = t.map(x=>({
-      ...x, wie:x.wie||[], gedaanOp:x.gedaan_op,
+      ...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op,
       aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op,
     }));
   } catch(e) { /* gebruik lokale data */ }
