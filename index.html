@@ -374,6 +374,15 @@ function stuurVoorbeeldHome(tekst){
   homeStuurBericht(kanaal);
 }
 
+function homeEscapeHtml(tekst){
+  return String(tekst)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){
   const container=document.getElementById('home-chat-berichten-'+kanaal);
   if(!container)return null;
@@ -381,7 +390,10 @@ function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){
   wrap.style.cssText='align-self:'+(rol==='user'?'flex-end':'flex-start')+';max-width:90%;';
   const bubble=document.createElement('div');
   bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  bubble.innerHTML=rol==='user'?tekst:tekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  const veiligeTekst=homeEscapeHtml(tekst);
+  bubble.innerHTML=rol==='user'
+    ?veiligeTekst
+    :veiligeTekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
   wrap.appendChild(bubble);container.appendChild(wrap);
   container.scrollTop=container.scrollHeight;
   return isTyping?wrap:null;
