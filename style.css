@@ -193,8 +193,11 @@ body{
     flex-direction:row;justify-content:flex-start;
     gap:0;padding:10px 16px;font-size:14px;
     border-radius:0;overflow:hidden;white-space:nowrap;
-    min-height:44px;
+    min-height:44px;text-decoration:none;color:var(--ink-2);
+    transition:background .12s,color .12s;
   }
+  .bottom-nav-item:hover{background:var(--accent-l);color:var(--accent);}
+  .bottom-nav-item:hover .nav-icon{color:var(--accent);}
   .bottom-nav-item .nav-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center;}
   .bottom-nav-item .nav-label{
     opacity:0;margin-left:12px;transition:opacity .15s .05s;
@@ -204,6 +207,10 @@ body{
   .bottom-nav-item.active{background:var(--accent-l);color:var(--accent);font-weight:600;}
   .bottom-nav-item.active .nav-icon{ color:var(--accent); }
   .sidebar-toggle{ display:none; }
+
+  /* Topbar: user/sync al zichtbaar in sidebar → verbergen in topbar */
+  .topbar-user-wrap{ display:none; }
+  .topbar-actions .opslag-status{ display:none; }
 
   /* Sidebar footer */
   .sidebar-footer{
