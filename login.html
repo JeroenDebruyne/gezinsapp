@@ -348,34 +348,7 @@ body {
       <div class="divider">of log in als</div>
 
       <div class="avatar-grid" id="avatar-grid">
-        <button class="avatar-btn" onclick="kiesVolwassene('jeroen.debruyne@outlook.be')" data-persoon="jeroen">
-          <span class="avatar-emoji">🧑</span>
-          <span class="avatar-info">
-            <span class="avatar-naam">Jeroen</span>
-            <span class="avatar-rol">Gezinshoofd</span>
-          </span>
-        </button>
-        <button class="avatar-btn" onclick="kiesVolwassene('dewaegenaerekelly@hotmail.com')" data-persoon="kelly">
-          <span class="avatar-emoji">👩</span>
-          <span class="avatar-info">
-            <span class="avatar-naam">Kelly</span>
-            <span class="avatar-rol">Gezinshoofd</span>
-          </span>
-        </button>
-        <button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('nora')" data-persoon="nora">
-          <span class="avatar-emoji">👧</span>
-          <span class="avatar-info">
-            <span class="avatar-naam">Nora</span>
-            <span class="avatar-rol">Kind · tik om in te loggen</span>
-          </span>
-        </button>
-        <button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('odiel')" data-persoon="odiel">
-          <span class="avatar-emoji">👦</span>
-          <span class="avatar-info">
-            <span class="avatar-naam">Odiel</span>
-            <span class="avatar-rol">Kind · tik om in te loggen</span>
-          </span>
-        </button>
+        <div style="grid-column:1/-1;font-size:12px;color:#a8a29e;text-align:center;padding:4px 0;">⏳ Laden…</div>
       </div>
     </div>
 
@@ -431,6 +404,59 @@ body {
 const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SESSION_KEY  = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
+
+// Fallback profielen (als Supabase niet bereikbaar is)
+const FALLBACK_PROFIELEN = [
+  { email:'jeroen.debruyne@outlook.be',   naam:'Jeroen', emoji:'🧑', rol:'gezinshoofd', persoonKey:'jeroen', isKind:false },
+  { email:'dewaegenaerekelly@hotmail.com', naam:'Kelly',  emoji:'👩', rol:'gezinshoofd', persoonKey:'kelly',  isKind:false },
+  { email:null, naam:'Nora',  emoji:'👧', rol:'kind', persoonKey:'nora',  isKind:true },
+  { email:null, naam:'Odiel', emoji:'👦', rol:'kind', persoonKey:'odiel', isKind:true },
+];
+
+async function bouwAvatarGrid() {
+  const grid = document.getElementById('avatar-grid');
+  let profielen = FALLBACK_PROFIELEN;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/gezin_profielen?select=*&order=naam`, {
+      headers: { 'apikey': SUPABASE_KEY }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        profielen = data.map(p => ({
+          email: p.email || null,
+          naam: p.naam,
+          emoji: p.emoji || '👤',
+          rol: p.rol,
+          persoonKey: p.persoon_key,
+          isKind: p.is_kind || false,
+        }));
+      }
+    }
+  } catch {}
+
+  const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };
+  grid.innerHTML = profielen.map(p => {
+    if (p.isKind || p.rol === 'kind') {
+      return `<button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('${p.persoonKey}')" data-persoon="${p.persoonKey}">
+        <span class="avatar-emoji">${p.emoji}</span>
+        <span class="avatar-info">
+          <span class="avatar-naam">${p.naam}</span>
+          <span class="avatar-rol">Kind · tik om in te loggen</span>
+        </span>
+      </button>`;
+    }
+    return `<button class="avatar-btn" onclick="kiesVolwassene('${p.email}')" data-persoon="${p.persoonKey}">
+      <span class="avatar-emoji">${p.emoji}</span>
+      <span class="avatar-info">
+        <span class="avatar-naam">${p.naam}</span>
+        <span class="avatar-rol">${ROLLABEL[p.rol] || p.rol}</span>
+      </span>
+    </button>`;
+  }).join('');
+}
+
+bouwAvatarGrid();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function saveSession(data) {

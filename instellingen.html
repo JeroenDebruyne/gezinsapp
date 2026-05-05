@@ -206,25 +206,50 @@
       👥 Gebruikersbeheer
       <span style="font-size:10px;background:var(--druk-bg);color:var(--druk-clr);padding:1px 7px;border-radius:99px;font-weight:600;margin-left:6px;text-transform:none;letter-spacing:0;">Alleen gezinshoofd</span>
     </div>
-    <div class="info-box">Maak hier nieuwe accounts aan. Ze kunnen dan inloggen met hun e-mailadres.</div>
+    <div class="info-box">Volwassenen krijgen een loginaccount (e-mail + wachtwoord). Kinderen loggen in met een tik op hun avatar — geen account nodig.</div>
     <div id="gebruikers-lijst" style="margin-bottom:10px;"></div>
     <div class="card">
-      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">➕ Nieuw account</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">➕ Nieuw gezinslid</div>
       <div class="form-grid">
-        <div class="form-row"><label>Naam</label><input type="text" id="nu-naam" placeholder="bijv. Thomas"/></div>
-        <div class="form-row"><label>Rol</label>
-          <select id="nu-rol">
+        <div class="form-row">
+          <label>Naam</label>
+          <input type="text" id="nu-naam" oninput="suggestKey()" placeholder="bijv. Thomas"/>
+        </div>
+        <div class="form-row">
+          <label>Emoji</label>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--muted);align-self:center;">Kies:</span>
+            <button type="button" onclick="kiesEmoji('🧑')" class="btn btn-secondary btn-sm">🧑</button>
+            <button type="button" onclick="kiesEmoji('👩')" class="btn btn-secondary btn-sm">👩</button>
+            <button type="button" onclick="kiesEmoji('👧')" class="btn btn-secondary btn-sm">👧</button>
+            <button type="button" onclick="kiesEmoji('👦')" class="btn btn-secondary btn-sm">👦</button>
+            <button type="button" onclick="kiesEmoji('🧒')" class="btn btn-secondary btn-sm">🧒</button>
+            <button type="button" onclick="kiesEmoji('👶')" class="btn btn-secondary btn-sm">👶</button>
+            <button type="button" onclick="kiesEmoji('👨')" class="btn btn-secondary btn-sm">👨</button>
+            <button type="button" onclick="kiesEmoji('👵')" class="btn btn-secondary btn-sm">👵</button>
+          </div>
+          <input type="text" id="nu-emoji" value="👤" placeholder="of typ zelf" style="max-width:90px;font-size:18px;text-align:center;"/>
+        </div>
+        <div class="form-row">
+          <label>Rol</label>
+          <select id="nu-rol" onchange="toggleKindVelden()">
             <option value="gezinshoofd">Gezinshoofd</option>
             <option value="jeugd">Jeugd</option>
-            <option value="kind">Kind</option>
+            <option value="kind">Kind (logt in zonder account)</option>
           </select>
         </div>
-        <div class="form-row"><label>E-mailadres</label><input type="email" id="nu-email" placeholder="naam@email.com"/></div>
-        <div class="form-row"><label>Wachtwoord</label><input type="text" id="nu-pw" placeholder="min. 8 tekens"/></div>
+        <div id="nu-auth-velden">
+          <div class="form-row"><label>E-mailadres</label><input type="email" id="nu-email" placeholder="naam@email.com"/></div>
+          <div class="form-row"><label>Wachtwoord</label><input type="password" id="nu-pw" placeholder="min. 8 tekens"/></div>
+        </div>
+        <div class="form-row">
+          <label>Persoon-ID <span style="font-size:11px;font-weight:400;color:var(--muted);">(unieke sleutel, kleine letters)</span></label>
+          <input type="text" id="nu-key" placeholder="bijv. thomas" style="font-family:monospace;"/>
+        </div>
       </div>
       <div id="nu-msg" style="display:none;padding:10px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px;"></div>
       <div style="display:flex;justify-content:flex-end;">
-        <button class="btn btn-primary" id="nu-btn" onclick="maakNieuwAccount()">Account aanmaken</button>
+        <button class="btn btn-primary" id="nu-btn" onclick="maakNieuwAccount()">Aanmaken</button>
       </div>
     </div>
   </div>
@@ -241,8 +266,8 @@ Auth.initPagina('instellingen');
 
 const WERKDAGEN_KEYS=['ma','di','wo','do','vr'];
 const WERKDAGEN_LABELS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
-const SB_ANON_KEY='sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';
-const SB_AUTH_URL='https://rdessctmorraeeipysct.supabase.co/auth/v1';
+const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
+const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 
 laadOp().then(renderInstellingen).catch(()=>{laadLokaal();renderInstellingen();});
 
@@ -280,12 +305,11 @@ function renderInstellingen(){
 }
 
 function renderRoosters(){
-  const personen=[
-    {key:'jeroen',label:'🧑 Jeroen',metLocatie:true},
-    {key:'kelly',label:'👩 Kelly',metLocatie:false},
-    {key:'nora',label:'👧 Nora',metLocatie:false},
-    {key:'odiel',label:'👦 Odiel',metLocatie:false},
-  ];
+  const personen = Auth.getProfielen().map(p => ({
+    key: p.persoonKey,
+    label: `${p.emoji} ${p.naam}`,
+    metLocatie: p.rol === 'gezinshoofd',
+  }));
   document.getElementById('roosters-container').innerHTML=personen.map(p=>`
     <div class="card" style="margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -396,55 +420,93 @@ function verwijderIngredient(id){
 }
 document.getElementById('ing-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('ing-modal-bg'))closeIngModal();});
 
-// ── Admin: nieuw account
-async function maakNieuwAccount(){
-  const naam=document.getElementById('nu-naam').value.trim();
-  const email=document.getElementById('nu-email').value.trim();
-  const pw=document.getElementById('nu-pw').value;
-  const rol=document.getElementById('nu-rol').value;
-  const msgEl=document.getElementById('nu-msg');
-  const btnEl=document.getElementById('nu-btn');
-  function toonMsg(tekst,ok){
-    msgEl.textContent=tekst;msgEl.style.display='block';
-    msgEl.style.background=ok?'var(--rustig-bg)':'var(--druk-bg)';
-    msgEl.style.color=ok?'var(--rustig-clr)':'var(--druk-clr)';
+// ── Admin: hulpfuncties nieuw account ────────────────────────
+function kiesEmoji(emoji) {
+  document.getElementById('nu-emoji').value = emoji;
+}
+function suggestKey() {
+  const keyEl = document.getElementById('nu-key');
+  if (keyEl && !keyEl.dataset.manualEdit) {
+    const naam = document.getElementById('nu-naam').value.trim();
+    keyEl.value = naam.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
   }
-  if(!naam||!email||!pw){toonMsg('Vul alle velden in.',false);return;}
-  if(pw.length<8){toonMsg('Wachtwoord min. 8 tekens.',false);return;}
-  btnEl.disabled=true;btnEl.textContent='Bezig…';
-  try{
-    const res=await fetch(`${SB_AUTH_URL}/signup`,{
-      method:'POST',
-      headers:{'apikey':SB_ANON_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pw,data:{naam,rol}})
+}
+function toggleKindVelden() {
+  const isKind = document.getElementById('nu-rol').value === 'kind';
+  document.getElementById('nu-auth-velden').style.display = isKind ? 'none' : '';
+}
+document.getElementById('nu-key').addEventListener('input', function(){ this.dataset.manualEdit = '1'; });
+
+async function maakNieuwAccount() {
+  const naam   = document.getElementById('nu-naam').value.trim();
+  const emoji  = document.getElementById('nu-emoji').value.trim() || '👤';
+  const rol    = document.getElementById('nu-rol').value;
+  const key    = document.getElementById('nu-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const isKind = rol === 'kind';
+  const email  = isKind ? null : document.getElementById('nu-email').value.trim();
+  const pw     = isKind ? null : document.getElementById('nu-pw').value;
+  const msgEl  = document.getElementById('nu-msg');
+  const btnEl  = document.getElementById('nu-btn');
+
+  function toonMsg(tekst, ok) {
+    msgEl.textContent = tekst; msgEl.style.display = 'block';
+    msgEl.style.background = ok ? 'var(--rustig-bg)' : 'var(--druk-bg)';
+    msgEl.style.color = ok ? 'var(--rustig-clr)' : 'var(--druk-clr)';
+  }
+
+  if (!naam)  { toonMsg('Vul een naam in.', false); return; }
+  if (!key)   { toonMsg('Vul een persoon-ID in.', false); return; }
+  if (!isKind && !email) { toonMsg('Vul een e-mailadres in.', false); return; }
+  if (!isKind && (!pw || pw.length < 8)) { toonMsg('Wachtwoord min. 8 tekens.', false); return; }
+
+  btnEl.disabled = true; btnEl.textContent = 'Bezig…';
+  try {
+    if (!isKind) {
+      const res = await fetch(`${SB_AUTH_URL}/signup`, {
+        method: 'POST',
+        headers: { 'apikey': SB_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw, data: { naam, rol } })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error_description || data.msg || data.error || 'Aanmaken mislukt');
+    }
+
+    await sbFetch('gezin_profielen', 'POST', {
+      naam, emoji, rol,
+      persoon_key: key,
+      email: email || null,
+      is_kind: isKind,
     });
-    const data=await res.json();
-    if(!res.ok||data.error)throw new Error(data.error_description||data.msg||data.error||'Aanmaken mislukt');
-    await sbFetch('gezin_profielen','POST',{user_id:data.user?.id||null,naam,email,rol}).catch(()=>{});
-    toonMsg('✅ Account aangemaakt voor '+naam+'!',true);
-    document.getElementById('nu-naam').value='';document.getElementById('nu-email').value='';document.getElementById('nu-pw').value='';
+
+    toonMsg(`✅ ${naam} aangemaakt!`, true);
+    document.getElementById('nu-naam').value = '';
+    document.getElementById('nu-emoji').value = '👤';
+    document.getElementById('nu-key').value = '';
+    delete document.getElementById('nu-key').dataset.manualEdit;
+    if (!isKind) { document.getElementById('nu-email').value = ''; document.getElementById('nu-pw').value = ''; }
+    await Auth.laadProfielen();
     laadGebruikersLijst();
-  }catch(e){toonMsg('❌ '+e.message,false);}
-  btnEl.disabled=false;btnEl.textContent='Account aanmaken';
+  } catch(e) { toonMsg('❌ ' + e.message, false); }
+  btnEl.disabled = false; btnEl.textContent = 'Aanmaken';
 }
 
-async function laadGebruikersLijst(){
-  const el=document.getElementById('gebruikers-lijst');if(!el)return;
-  try{
-    const profielen=await sbFetch('gezin_profielen').catch(()=>[]);
-    if(!profielen.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>';return;}
-    const ROLKLEUR={gezinshoofd:'var(--druk-bg)',jeugd:'var(--normaal-bg)',kind:'var(--rustig-bg)'};
-    const ROLTXT={gezinshoofd:'var(--druk-clr)',jeugd:'var(--normaal-clr)',kind:'var(--rustig-clr)'};
-    el.innerHTML=profielen.map(p=>`
+async function laadGebruikersLijst() {
+  const el = document.getElementById('gebruikers-lijst'); if (!el) return;
+  try {
+    const profielen = await sbFetch('gezin_profielen?order=naam').catch(() => []);
+    if (!profielen.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>'; return; }
+    const ROLKLEUR = { gezinshoofd:'var(--druk-bg)', jeugd:'var(--normaal-bg)', kind:'var(--rustig-bg)' };
+    const ROLTXT   = { gezinshoofd:'var(--druk-clr)', jeugd:'var(--normaal-clr)', kind:'var(--rustig-clr)' };
+    el.innerHTML = profielen.map(p => `
       <div class="card" style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:6px;">
-        <div style="font-size:24px;">${p.rol==='kind'?(p.naam==='Nora'?'👧':'👦'):p.rol==='gezinshoofd'?'🧑':'👩'}</div>
+        <div style="font-size:24px;">${escHtml(p.emoji||'👤')}</div>
         <div style="flex:1;">
-          <div style="font-size:14px;font-weight:600;">${p.naam}</div>
-          <div style="font-size:12px;color:var(--muted);">${p.email}</div>
+          <div style="font-size:14px;font-weight:600;">${escHtml(p.naam)}</div>
+          <div style="font-size:12px;color:var(--muted);">${p.is_kind ? '👶 Kind-sessie (geen login)' : escHtml(p.email||'')}</div>
         </div>
         <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;">${Auth.ROLLEN[p.rol]?.label||p.rol}</span>
       </div>`).join('');
-  }catch(e){if(el)el.innerHTML='<div style="font-size:13px;color:var(--muted);">Kan lijst niet laden.</div>';}
+  } catch(e) { if (el) el.innerHTML = '<div style="font-size:13px;color:var(--muted);">Kan lijst niet laden.</div>'; }
 }
 
 // ── Topics nav: scroll naar sectie ───────────────────────────

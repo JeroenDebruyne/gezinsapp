@@ -14,6 +14,15 @@ const Auth = (() => {
   const SESSION_KEY  = 'sb-ceeplmghvcaqvlpicwyi-auth-token';
   const KIND_KEY     = 'gezinsapp-kind-sessie';
 
+  // Profielen — fallback hardcoded, vervangen zodra gezin_profielen geladen is
+  // Gebruik _profielenCache.length=0 + push() zodat externe refs (Auth.PROFIELEN) altijd hetzelfde array-object zien
+  const _profielenCache = [
+    { email:'jeroen.debruyne@outlook.be',   naam:'Jeroen', emoji:'🧑', rol:'gezinshoofd', persoonKey:'jeroen', isKind:false },
+    { email:'dewaegenaerekelly@hotmail.com', naam:'Kelly',  emoji:'👩', rol:'gezinshoofd', persoonKey:'kelly',  isKind:false },
+    { email:null, naam:'Nora',  emoji:'👧', rol:'kind', persoonKey:'nora',  isKind:true },
+    { email:null, naam:'Odiel', emoji:'👦', rol:'kind', persoonKey:'odiel', isKind:true },
+  ];
+
   const ROLLEN = {
     gezinshoofd: {
       label:'Gezinshoofd', kanAllesZien:true,
@@ -38,14 +47,6 @@ const Auth = (() => {
     },
   };
 
-  const PROFIELEN = [
-    { email:'jeroen.debruyne@outlook.be',   naam:'Jeroen', emoji:'🧑', rol:'gezinshoofd', persoonKey:'jeroen' },
-    { email:'dewaegenaerekelly@hotmail.com', naam:'Kelly',  emoji:'👩', rol:'gezinshoofd', persoonKey:'kelly'  },
-    { email:'debruyne.nora@icloud.com',      naam:'Nora',   emoji:'👧', rol:'kind',        persoonKey:'nora'   },
-    { email:'debruyne.odiel@icloud.com',     naam:'Odiel',  emoji:'👦', rol:'kind',        persoonKey:'odiel'  },
-  ];
-
-  const DEV_PROFIEL = PROFIELEN[0];
 
   function _readSession() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); } catch { return null; }
@@ -62,20 +63,45 @@ const Auth = (() => {
   function isDev() { return DEV_MODE; }
 
   function session() {
-    if (DEV_MODE) return { access_token:'dev', user:{ email:DEV_PROFIEL.email } };
+    if (DEV_MODE) return { access_token:'dev', user:{ email:_profielenCache[0]?.email } };
     return _readSession();
   }
 
   function profiel() {
-    if (DEV_MODE) return DEV_PROFIEL;
+    if (DEV_MODE) return _profielenCache[0];
     // Kindersessie (geen Supabase-account nodig)
     const kindKey = localStorage.getItem(KIND_KEY);
-    if (kindKey) return PROFIELEN.find(p => p.persoonKey === kindKey) || null;
+    if (kindKey) return _profielenCache.find(p => p.persoonKey === kindKey) || null;
     const s = _readSession();
     if (!s?.user) return null;
     const email = s.user.email?.toLowerCase()||'';
-    return PROFIELEN.find(p=>p.email.toLowerCase()===email)
+    return _profielenCache.find(p => p.email?.toLowerCase() === email)
       || { email, naam:email.split('@')[0], emoji:'👤', rol:'jeugd', persoonKey:'onbekend' };
+  }
+
+  async function laadProfielen() {
+    try {
+      const h = { 'apikey': SUPABASE_KEY };
+      const s = _readSession();
+      if (s?.access_token) h['Authorization'] = 'Bearer ' + s.access_token;
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/gezin_profielen?select=*&order=naam`,
+        { headers: h }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        _profielenCache.length = 0;
+        data.forEach(p => _profielenCache.push({
+          email:      p.email || null,
+          naam:       p.naam,
+          emoji:      p.emoji || '👤',
+          rol:        p.rol,
+          persoonKey: p.persoon_key,
+          isKind:     p.is_kind || false,
+        }));
+      }
+    } catch {}
   }
 
   function rol() { return profiel()?.rol||'kind'; }
@@ -163,5 +189,5 @@ const Auth = (() => {
     setInterval(refreshIfNeeded, 4*60*1000);
   }
 
-  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, loginAlsKind, PROFIELEN, ROLLEN, KIND_KEY };
+  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, loginAlsKind, laadProfielen, getProfielen: () => _profielenCache, PROFIELEN: _profielenCache, ROLLEN, KIND_KEY };
 })();

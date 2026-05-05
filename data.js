@@ -170,6 +170,7 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
 async function laadOp() {
   toonOpslagStatus('⏳ Data laden...');
   try {
+    await Auth.laadProfielen(); // laad profielen eerst zodat profiel() accuraat is
     const [r,i,a,p,b,c,d,t] = await Promise.all([
       sbFetch('recepten'), sbFetch('ingredienten'), sbFetch('activiteiten'),
       sbFetch('planning'), sbFetch('boodschappen_extra'), sbFetch('contacten'),
