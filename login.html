@@ -405,13 +405,8 @@ const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SESSION_KEY  = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
 
-// Fallback profielen (als Supabase niet bereikbaar is)
-const FALLBACK_PROFIELEN = [
-  { email:'jeroen.debruyne@outlook.be',   naam:'Jeroen', emoji:'🧑', rol:'gezinshoofd', persoonKey:'jeroen', isKind:false },
-  { email:'dewaegenaerekelly@hotmail.com', naam:'Kelly',  emoji:'👩', rol:'gezinshoofd', persoonKey:'kelly',  isKind:false },
-  { email:null, naam:'Nora',  emoji:'👧', rol:'kind', persoonKey:'nora',  isKind:true },
-  { email:null, naam:'Odiel', emoji:'👦', rol:'kind', persoonKey:'odiel', isKind:true },
-];
+// Geen fallback — gezinsleden worden altijd uit de database geladen
+const FALLBACK_PROFIELEN = [];
 
 async function bouwAvatarGrid() {
   const grid = document.getElementById('avatar-grid');
@@ -436,6 +431,10 @@ async function bouwAvatarGrid() {
   } catch {}
 
   const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };
+  if (!profielen.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:#a8a29e;text-align:center;padding:8px 0;">Geen gezinsleden gevonden.<br>Log in met e-mail hierboven.</div>';
+    return;
+  }
   grid.innerHTML = profielen.map(p => {
     if (p.isKind || p.rol === 'kind') {
       return `<button class="avatar-btn avatar-btn-kind" onclick="loginAlsKind('${p.persoonKey}')" data-persoon="${p.persoonKey}">

@@ -17,12 +17,31 @@ const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const WINKELS      = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
 
-// Personen — persoonKey is de sleutel door de hele app
-// 'jij' is legacy alias voor 'jeroen'
-const PERSONEN     = ['jeroen','kelly','nora','odiel'];
-const PLABEL       = { jeroen:'Jeroen', kelly:'Kelly', nora:'Nora', odiel:'Odiel', familie:'Familie' };
-const PBADGE       = { jeroen:'badge-jeroen', kelly:'badge-kelly', nora:'badge-nora', odiel:'badge-odiel', familie:'badge-familie' };
-const PEMOJI       = { jeroen:'🧑', kelly:'👩', nora:'👧', odiel:'👦' };
+// Personen — leeg bij opstart, herbouwd via herbouwPersonenData() na laadProfielen()
+// Muteert altijd dezelfde objecten zodat alle pagina-scripts de updates zien
+const PERSONEN = [];
+const PLABEL   = { familie:'Familie' };
+const PBADGE   = { familie:'badge-familie' };
+const PEMOJI   = {};
+
+// Kleuren worden hergebruikt als er meer dan 4 personen zijn
+const _BADGE_KLEUREN = ['badge-jeroen','badge-kelly','badge-nora','badge-odiel'];
+
+function herbouwPersonenData() {
+  const profielen = Auth.getProfielen();
+  // Leegmaken (muteren, niet vervangen)
+  PERSONEN.length = 0;
+  Object.keys(PLABEL).forEach(k => { if (k !== 'familie') delete PLABEL[k]; });
+  Object.keys(PBADGE).forEach(k => { if (k !== 'familie') delete PBADGE[k]; });
+  Object.keys(PEMOJI).forEach(k => delete PEMOJI[k]);
+  // Opnieuw vullen vanuit database-profielen
+  profielen.forEach((p, i) => {
+    PERSONEN.push(p.persoonKey);
+    PLABEL[p.persoonKey] = p.naam;
+    PBADGE[p.persoonKey] = _BADGE_KLEUREN[i % _BADGE_KLEUREN.length];
+    PEMOJI[p.persoonKey] = p.emoji;
+  });
+}
 
 const DKORT  = ['Di','Wo','Do','Vr','Za','Zo','Ma'];
 const DLANG  = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
@@ -70,28 +89,8 @@ let contacten = [];
 let todos = [];
 let uitzonderingen = [];
 let transportUitzonderingen = {};   // { 'YYYY-MM-DD': { nora:{brengt,haalt,eetGroo}, odiel:{...} } }
-let standaardTransport = {
-  nora: {
-    ma:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    di:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    wo:{brengt:'Kelly',haalt:'Kelly',eetGroo:false},
-    do:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    vr:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-  },
-  odiel: {
-    ma:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    di:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    wo:{brengt:'Kelly',haalt:'Kelly',eetGroo:false},
-    do:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    vr:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-  },
-};
-let vasteRoosters = {
-  jeroen: { ma:{actief:false,van:'09:00',tot:'17:00',locatie:'kantoor'}, di:{actief:true,van:'09:00',tot:'17:00',locatie:'thuis'}, wo:{actief:false,van:'09:00',tot:'17:00',locatie:'kantoor'}, do:{actief:true,van:'09:00',tot:'17:00',locatie:'thuis'}, vr:{actief:false,van:'09:00',tot:'17:00',locatie:'kantoor'} },
-  kelly:  { ma:{actief:true,van:'08:30',tot:'16:00'}, di:{actief:true,van:'08:30',tot:'16:00'}, wo:{actief:true,van:'08:30',tot:'12:30'}, do:{actief:true,van:'08:30',tot:'16:00'}, vr:{actief:true,van:'08:30',tot:'16:00'} },
-  nora:   { ma:{actief:true,van:'08:30',tot:'15:30'}, di:{actief:true,van:'08:30',tot:'15:30'}, wo:{actief:true,van:'08:30',tot:'12:00'}, do:{actief:true,van:'08:30',tot:'15:30'}, vr:{actief:true,van:'08:30',tot:'15:30'} },
-  odiel:  { ma:{actief:true,van:'08:00',tot:'16:30'}, di:{actief:true,van:'08:00',tot:'16:30'}, wo:{actief:true,van:'08:00',tot:'16:30'}, do:{actief:true,van:'08:00',tot:'16:30'}, vr:{actief:true,van:'08:00',tot:'16:30'} },
-};
+let standaardTransport = {};
+let vasteRoosters = {};
 
 // ── Hulpfuncties datum ────────────────────────────────────────
 function getWeekDates(offset) {
@@ -170,7 +169,8 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
 async function laadOp() {
   toonOpslagStatus('⏳ Data laden...');
   try {
-    await Auth.laadProfielen(); // laad profielen eerst zodat profiel() accuraat is
+    await Auth.laadProfielen();
+    herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
     const [r,i,a,p,b,c,d,t] = await Promise.all([
       sbFetch('recepten'), sbFetch('ingredienten'), sbFetch('activiteiten'),
       sbFetch('planning'), sbFetch('boodschappen_extra'), sbFetch('contacten'),

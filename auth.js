@@ -14,14 +14,9 @@ const Auth = (() => {
   const SESSION_KEY  = 'sb-ceeplmghvcaqvlpicwyi-auth-token';
   const KIND_KEY     = 'gezinsapp-kind-sessie';
 
-  // Profielen — fallback hardcoded, vervangen zodra gezin_profielen geladen is
-  // Gebruik _profielenCache.length=0 + push() zodat externe refs (Auth.PROFIELEN) altijd hetzelfde array-object zien
-  const _profielenCache = [
-    { email:'jeroen.debruyne@outlook.be',   naam:'Jeroen', emoji:'🧑', rol:'gezinshoofd', persoonKey:'jeroen', isKind:false },
-    { email:'dewaegenaerekelly@hotmail.com', naam:'Kelly',  emoji:'👩', rol:'gezinshoofd', persoonKey:'kelly',  isKind:false },
-    { email:null, naam:'Nora',  emoji:'👧', rol:'kind', persoonKey:'nora',  isKind:true },
-    { email:null, naam:'Odiel', emoji:'👦', rol:'kind', persoonKey:'odiel', isKind:true },
-  ];
+  // Profielen — leeg bij opstart, gevuld vanuit gezin_profielen tabel
+  // Muteert altijd hetzelfde array-object zodat externe refs (Auth.PROFIELEN) up-to-date blijven
+  const _profielenCache = [];
 
   const ROLLEN = {
     gezinshoofd: {
@@ -166,8 +161,9 @@ const Auth = (() => {
   }
 
   function initPagina(paginaKey) {
-    requireAuth().then(ok => {
+    requireAuth().then(async ok => {
       if (!ok) return;
+      await laadProfielen();   // eerst profielen laden zodat naam/emoji beschikbaar zijn
       const p = profiel();
       const nEl = document.getElementById('topbar-naam');
       const eEl = document.getElementById('topbar-emoji');
