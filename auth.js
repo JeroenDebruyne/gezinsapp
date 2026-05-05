@@ -86,8 +86,14 @@ const Auth = (() => {
   }
 
   function headers() {
-    const token = DEV_MODE ? SUPABASE_KEY : (_readSession()?.access_token||SUPABASE_KEY);
-    return { 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+token, 'Content-Type':'application/json' };
+    // apikey = anon/publishable key (altijd mee, voor RLS-role identificatie)
+    // Authorization Bearer = alleen een echt JWT access_token (NOOIT de publishable key)
+    const h = { 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' };
+    if (!DEV_MODE) {
+      const s = _readSession();
+      if (s?.access_token) h['Authorization'] = 'Bearer ' + s.access_token;
+    }
+    return h;
   }
 
   async function logout() {

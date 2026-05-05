@@ -156,7 +156,12 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
     if (!localStorage.getItem(Auth.KIND_KEY)) Auth.logout();
     throw new Error('Sessie verlopen');
   }
-  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.message||res.status); }
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    const msg = e.message || e.hint || e.error_description || String(res.status);
+    console.error(`[Supabase] ${methode} /${tabel}${filter}`, res.status, e);
+    throw new Error(msg);
+  }
   if (methode==='DELETE'||res.status===204) return [];
   return res.json();
 }
@@ -234,6 +239,13 @@ function toonOpslagStatus(tekst) {
   document.querySelectorAll('.opslag-status').forEach(el => el.textContent = tekst);
 }
 
+// Uniforme fout-afhandeling: log + toon in UI
+function _opslagFout(e, context) {
+  const msg = e?.message || String(e);
+  console.error(`[Opslaan/${context||'?'}]`, msg);
+  toonOpslagStatus('⚠️ ' + msg);
+}
+
 // ── Specifieke save functies ──────────────────────────────────
 async function sbSaveRecept(recept) {
   const data = {
@@ -254,9 +266,9 @@ async function sbSaveRecept(recept) {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('recepten','POST',data); if(res[0]) recept._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'recept'); }
 }
-async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
 
 async function sbSaveActiviteit(act) {
   const data = {
@@ -274,9 +286,9 @@ async function sbSaveActiviteit(act) {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('activiteiten','POST',data); if(res[0]) act._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'activiteit'); }
 }
-async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'activiteit-delete');} }
 
 async function sbSaveTodo(todo) {
   const data = {
@@ -289,9 +301,9 @@ async function sbSaveTodo(todo) {
     if (todo._sbId) { await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('todos','POST',data); if(res[0]) todo._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'todo'); }
 }
-async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
   const bestaand = await sbFetch(`planning?datum=eq.${datum}`).catch(()=>[]);
@@ -299,7 +311,7 @@ async function sbSavePlanning(datum, slot, waarde, porties) {
     if (bestaand.length) { await sbFetch(`planning?datum=eq.${datum}`,'PATCH',{[slot]:waarde,porties:porties||{}}); }
     else { await sbFetch('planning','POST',{datum,[slot]:waarde,porties:porties||{}}); }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'planning'); }
 }
 
 async function sbSaveIngredient(ing) {
@@ -308,9 +320,9 @@ async function sbSaveIngredient(ing) {
     if (ing._sbId) { await sbFetch(`ingredienten?id=eq.${ing._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('ingredienten','POST',data); if(res[0]) ing._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'ingredient'); }
 }
-async function sbDeleteIngredient(sbId) { try{await sbFetch(`ingredienten?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteIngredient(sbId) { try{await sbFetch(`ingredienten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'ingredient-delete');} }
 
 async function sbSaveContact(contact) {
   const data = { naam:contact.naam, partner:contact.partner, kinderen:parseInt(contact.kinderen)||0, kinderen_namen:contact.kinderenNamen, kerstmis:contact.kerstmis, cadeau_nj:contact.cadeauNj, cadeau_vj:contact.cadeauVj };
@@ -318,15 +330,15 @@ async function sbSaveContact(contact) {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('contacten','POST',data); if(res[0]) contact._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'contact'); }
 }
-async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'contact-delete');} }
 
 async function sbSaveExtra(item) {
   try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
-  catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  catch(e) { _opslagFout(e,'extra'); }
 }
-async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){} }
+async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }
 
 async function sbSaveDrukte(datum, drukte) {
   const bestaand = await sbFetch(`drukte_override?datum=eq.${datum}`).catch(()=>[]);
@@ -334,7 +346,7 @@ async function sbSaveDrukte(datum, drukte) {
     if (bestaand.length) { await sbFetch(`drukte_override?datum=eq.${datum}`,'PATCH',{drukte}); }
     else { await sbFetch('drukte_override','POST',{datum,drukte}); }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
+  } catch(e) { _opslagFout(e,'drukte'); }
 }
 
 async function sbSaveInstellingen() {
@@ -345,7 +357,7 @@ async function sbSaveInstellingen() {
       if (bestaand.length) { await sbFetch(`instellingen?id=eq.${id}`,'PATCH',data); }
       else { await sbFetch('instellingen','POST',{id,...data}); }
     }
-  } catch(e) { console.warn('Instellingen opslaan mislukt:', e); }
+  } catch(e) { _opslagFout(e,'instellingen'); }
 }
 
 // ── Export / import ───────────────────────────────────────────
