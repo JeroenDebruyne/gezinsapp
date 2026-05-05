@@ -62,7 +62,7 @@
     </div>
   </div>
 </header>
-<button class="fab" onclick="openReceptModal()" title="Recept toevoegen">＋</button>
+<button class="fab" onclick="openKeuzeModal()" title="Recept toevoegen">＋</button>
 
 <nav class="bottom-nav" id="sidebar">
   <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
@@ -72,6 +72,7 @@
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
 
   <div class="sidebar-footer">
@@ -177,6 +178,55 @@
       <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Probeer opnieuw</button>
       <button class="modal-btn modal-btn-primary" onclick="openReceptModal();closeImportModal()">Manueel invoeren</button>
     </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: Keuze nieuw recept ══ -->
+<div class="modal-bg" id="keuze-modal-bg">
+<div class="modal" style="max-width:360px;">
+  <div class="modal-handle"></div>
+  <h3>Recept toevoegen</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Hoe wil je het recept toevoegen?</p>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <button class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
+      onclick="sluitKeuzeModal();openReceptModal()">
+      <span style="font-size:24px;">✏️</span>
+      <div style="text-align:left;">
+        <div style="font-weight:700;">Manueel invoeren</div>
+        <div style="font-size:12px;font-weight:400;opacity:.8;">Zelf naam, ingrediënten en bereiding invullen</div>
+      </div>
+    </button>
+    <button class="btn btn-secondary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
+      onclick="sluitKeuzeModal();openLinkModal()">
+      <span style="font-size:24px;">🔗</span>
+      <div style="text-align:left;">
+        <div style="font-weight:700;">Importeren via link</div>
+        <div style="font-size:12px;font-weight:400;opacity:.8;">Plak een URL van een receptensite</div>
+      </div>
+    </button>
+  </div>
+  <div class="modal-actions" style="margin-top:16px;">
+    <button class="modal-btn modal-btn-cancel" onclick="sluitKeuzeModal()">Annuleren</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: Importeren via link ══ -->
+<div class="modal-bg" id="link-modal-bg">
+<div class="modal" style="max-width:420px;">
+  <div class="modal-handle"></div>
+  <h3>Importeren via link</h3>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Werkt met de meeste receptensites (Njam, AH, 15gram, Colruyt…) die Schema.org markup gebruiken.</p>
+  <div class="form-row">
+    <label>Recept URL</label>
+    <input type="url" id="link-url" placeholder="https://www.njam.tv/recepten/…"
+      onkeydown="if(event.key==='Enter')startScrape()"/>
+  </div>
+  <div id="link-status" style="font-size:13px;color:var(--muted);min-height:20px;margin-top:4px;"></div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="sluitLinkModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" id="btn-scrape" onclick="startScrape()">🔍 Importeren</button>
   </div>
 </div>
 </div>
@@ -636,9 +686,111 @@ function openReceptVanImport(){
   setTimeout(()=>openReceptModal(geimporteerdRecept,true),100);
 }
 
+// ── Keuze modal ───────────────────────────────────────────────
+function openKeuzeModal(){
+  document.getElementById('keuze-modal-bg').classList.add('open');
+}
+function sluitKeuzeModal(){ document.getElementById('keuze-modal-bg').classList.remove('open'); }
+
+// ── Link/scrape modal ─────────────────────────────────────────
+function openLinkModal(){
+  document.getElementById('link-url').value='';
+  document.getElementById('link-status').textContent='';
+  document.getElementById('btn-scrape').disabled=false;
+  document.getElementById('btn-scrape').textContent='🔍 Importeren';
+  document.getElementById('link-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('link-url').focus(),150);
+}
+function sluitLinkModal(){ document.getElementById('link-modal-bg').classList.remove('open'); }
+
+async function startScrape(){
+  const url=document.getElementById('link-url').value.trim();
+  if(!url||!url.startsWith('http')){ alert('Plak een geldige URL (begin met https://)'); return; }
+  const statusEl=document.getElementById('link-status');
+  const btn=document.getElementById('btn-scrape');
+  btn.disabled=true; btn.textContent='⏳ Bezig…';
+  statusEl.textContent='Pagina ophalen via corsproxy…';
+  try{
+    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(url);
+    const res=await fetch(proxyUrl);
+    if(!res.ok) throw new Error('Kon pagina niet laden ('+res.status+')');
+    const html=await res.text();
+    const recept=parseJsonLd(html,url);
+    if(!recept) throw new Error('NO_JSON_LD');
+    sluitLinkModal();
+    setTimeout(()=>openReceptModal(recept,true),100);
+  }catch(e){
+    if(e.message==='NO_JSON_LD'){
+      statusEl.innerHTML='⚠️ Geen gestructureerde receptdata gevonden op deze site.<br><a href="#" onclick="event.preventDefault();sluitLinkModal();openImportModal()" style="color:var(--accent);font-weight:600;">Probeer via AI-import (vereist API key) →</a>';
+    } else {
+      statusEl.textContent='❌ '+e.message;
+    }
+    btn.disabled=false; btn.textContent='🔍 Importeren';
+  }
+}
+
+function parseJsonLd(html,url){
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(html,'text/html');
+  const scripts=[...doc.querySelectorAll('script[type="application/ld+json"]')];
+  for(const s of scripts){
+    try{
+      const data=JSON.parse(s.textContent);
+      const recipe=vindRecipe(data);
+      if(recipe) return maakReceptVanJsonLd(recipe,url);
+    }catch(e){}
+  }
+  return null;
+}
+
+function vindRecipe(data){
+  if(!data) return null;
+  const t=data['@type'];
+  if(t==='Recipe'||( Array.isArray(t)&&t.includes('Recipe'))) return data;
+  if(data['@graph']){ for(const i of data['@graph']){ const r=vindRecipe(i); if(r) return r; } }
+  if(Array.isArray(data)){ for(const i of data){ const r=vindRecipe(i); if(r) return r; } }
+  return null;
+}
+
+function parseerDuur(iso){
+  if(!iso) return null;
+  const m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  return m?(parseInt(m[1]||0)*60+parseInt(m[2]||0)):null;
+}
+
+function parseerIngredienten(lijst){
+  return(lijst||[]).map(ing=>{
+    const s=String(ing).trim();
+    const m=s.match(/^([\d.,½¼¾]+)?\s*(g|kg|ml|l|el|tl|tsp|tbsp|cup|dl|oz|stuks?|blik|pak|snuf)?\s*(.+)/i);
+    const naam=m?m[3].trim():s;
+    return{ naam, hoev:m?m[1]?.replace(',','.')||'':'', eenheid:m?m[2]?.toLowerCase()||'':'', winkel:zoekStandaardWinkel(naam)||'' };
+  });
+}
+
+function maakReceptVanJsonLd(data,url){
+  const tijd=parseerDuur(data.cookTime)||parseerDuur(data.totalTime)||parseerDuur(data.prepTime)||30;
+  const porties=parseInt(String(data.recipeYield||'4').match(/\d+/)?.[0])||4;
+  const inst=Array.isArray(data.recipeInstructions)
+    ?data.recipeInstructions.map(i=>typeof i==='string'?i:(i.text||'')).join('\n\n')
+    :String(data.recipeInstructions||'');
+  return{
+    naam:data.name||'',
+    types:[], type:'avond',
+    tijd, porties,
+    moeilijk:'Normaal',
+    bron:url,
+    bereiding:inst.slice(0,3000),
+    ingredienten:parseerIngredienten(data.recipeIngredient||[]),
+    tags:[], wie:['jeroen','kelly','nora','odiel'], prive:false,
+  };
+}
+
 // Sluit modals bij klik op achtergrond
-['recept-modal-bg','import-modal-bg'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id)){closeReceptModal();closeImportModal();}});
+['recept-modal-bg','import-modal-bg','keuze-modal-bg','link-modal-bg'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('click',e=>{
+    if(e.target===el){ closeReceptModal();closeImportModal();sluitKeuzeModal();sluitLinkModal(); }
+  });
 });
 </script>
 <script>
