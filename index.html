@@ -266,19 +266,28 @@ function homeVoerToolUit(naam,input){
   return homeToolLogica(naam,input);
 }
 function homeToolLogica(naam,input){
-  switch(naam){
-    case'get_rooster':return JSON.stringify(activiteiten.map(a=>({naam:a.naam,wie:(a.wie||[]).map(w=>PLABEL[w]||w),dagen:a.dagen,start:a.start,eind:a.eindUur,locatie:a.locatie})));
-    case'get_recepten':{let r=recepten;if(input.type)r=r.filter(x=>x.type===input.type);if(input.max_tijd)r=r.filter(x=>x.tijd<=input.max_tijd);return JSON.stringify(r.map(x=>({id:x.id,naam:x.naam,type:x.type,tijd:x.tijd})));}
-    case'get_weekplanning':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>{const k=fDateISO(dt);const dag=planning[k]||{};return{dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],datum:fDate(dt),ontbijt:getNaamH(dag.ontbijt),lunch:getNaamH(dag.lunch),avond:getNaamH(dag.avond)};}));}
-    case'get_drukte_week':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>({dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],drukte:getDagDrukte(fDateISO(dt))})));}
-    case'get_todos':return JSON.stringify(todos.filter(t=>!t.gedaan).map(t=>({titel:t.titel,deadline:t.deadline,wie:(t.wie||[]).map(w=>PLABEL[w]||w)})));
-    case'stel_weekmenu_in':{if(input.menu&&Array.isArray(input.menu)){const d=getWeekDates(0);const dg=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];input.menu.forEach(dd=>{const idx=dg.findIndex(x=>x===dd.dag||x.startsWith(dd.dag));if(idx<0)return;const k=fDateISO(d[idx]);if(!planning[k])planning[k]={};['ontbijt','lunch','avond'].forEach(s=>{if(dd[s]!==undefined)planning[k][s]=dd[s];});});slaLokaalOp();return'✅ Weekmenu ingesteld!';}return'Fout formaat';}
-    case'voeg_todo_toe':{const t={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false};todos.push(t);slaLokaalOp();renderTodosPreview(Auth.profiel());return'✅ To-do toegevoegd: '+input.titel;}
-    case'get_boodschappenlijst':{const res={};WINKELS.forEach(w=>res[w]=[]);Object.values(planning).forEach(dag=>{Object.values(dag).forEach(k=>{if(k&&!SPEC[k]){const r=recepten.find(r=>r.id===k||r.id==k);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push(ing.naam);});}});});return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));}
-    default:return'Onbekende tool';
+  try{
+    const acts=Array.isArray(activiteiten)?activiteiten:[];
+    const recs=Array.isArray(recepten)?recepten:[];
+    const tds=Array.isArray(todos)?todos:[];
+    const plan=planning&&typeof planning==='object'?planning:{};
+    switch(naam){
+      case'get_rooster':return JSON.stringify(acts.map(a=>({naam:a.naam,wie:(a.wie||[]).map(w=>PLABEL[w]||w),dagen:a.dagen,start:a.start,eind:a.eindUur,locatie:a.locatie})));
+      case'get_recepten':{let r=[...recs];if(input.type)r=r.filter(x=>x.type===input.type);if(input.max_tijd)r=r.filter(x=>x.tijd<=input.max_tijd);return JSON.stringify(r.map(x=>({id:x.id,naam:x.naam,type:x.type,tijd:x.tijd})));}
+      case'get_weekplanning':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>{const k=fDateISO(dt);const dag=plan[k]||{};return{dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],datum:fDate(dt),ontbijt:getNaamH(dag.ontbijt,recs),lunch:getNaamH(dag.lunch,recs),avond:getNaamH(dag.avond,recs)};}));}
+      case'get_drukte_week':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>({dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],drukte:getDagDrukte(fDateISO(dt))})));}
+      case'get_todos':return JSON.stringify(tds.filter(t=>!t.gedaan).map(t=>({titel:t.titel,deadline:t.deadline,wie:(t.wie||[]).map(w=>PLABEL[w]||w)})));
+      case'stel_weekmenu_in':{if(input.menu&&Array.isArray(input.menu)){const d=getWeekDates(0);const dg=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];input.menu.forEach(dd=>{const idx=dg.findIndex(x=>x===dd.dag||x.startsWith(dd.dag));if(idx<0)return;const k=fDateISO(d[idx]);if(!planning[k])planning[k]={};['ontbijt','lunch','avond'].forEach(s=>{if(dd[s]!==undefined)planning[k][s]=dd[s];});});slaLokaalOp();return'✅ Weekmenu ingesteld!';}return'Fout formaat';}
+      case'voeg_todo_toe':{const t={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false};todos.push(t);slaLokaalOp();renderTodosPreview(Auth.profiel());return'✅ To-do toegevoegd: '+input.titel;}
+      case'get_boodschappenlijst':{const res={};(WINKELS||[]).forEach(w=>res[w]=[]);Object.values(plan).forEach(dag=>{Object.values(dag).forEach(k=>{if(k&&!SPEC[k]){const r=recs.find(r=>r.id===k||r.id==k);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push(ing.naam);});}});});return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));}
+      default:return'Onbekende tool: '+naam;
+    }
+  }catch(e){
+    console.error('Tool fout ['+naam+']:', e);
+    return'Fout bij uitvoeren van '+naam+': '+e.message;
   }
 }
-function getNaamH(k){if(!k)return'–';if(SPEC[k])return SPEC[k];const r=recepten.find(r=>r.id===k||r.id==k);return r?r.naam:'?';}
+function getNaamH(k,recs){const r=(recs||recepten||[]);if(!k)return'–';if(SPEC[k])return SPEC[k];const rec=r.find(x=>x.id===k||x.id==k);return rec?rec.naam:'?';}
 
 function homeBevestig(kanaal){
   const panel=document.getElementById('home-bevestiging-'+kanaal);
