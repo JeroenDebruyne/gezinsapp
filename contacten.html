@@ -81,12 +81,31 @@
   </div>
 </div>
 <main class="main-content">
-<div class="page-content">
-  <input type="text" id="crm-search" placeholder="🔍 Zoeken…" oninput="renderCrm()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;"/>
-  <div id="verjaardag-alerts"></div>
-  <div id="crm-lijst"></div>
+<div class="crm-layout">
+  <!-- Linker kolom: lijst + zoek -->
+  <div class="crm-kolom-lijst">
+    <input type="text" id="crm-search" placeholder="🔍 Zoeken…" oninput="renderCrm()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;"/>
+    <div id="verjaardag-alerts"></div>
+    <div id="crm-lijst"></div>
+  </div>
+  <!-- Rechter kolom: contactfiche (alleen desktop) -->
+  <div class="crm-kolom-detail" id="crm-kolom-detail">
+    <div class="fiche-placeholder" id="crm-fiche-placeholder">
+      <span style="font-size:48px;">👥</span>
+      <p>Kies een contact uit de lijst</p>
+    </div>
+    <div id="crm-fiche" style="display:none;"></div>
+  </div>
 </div>
 </main>
+
+<!-- Mobile contactfiche overlay -->
+<div class="recept-fiche-overlay" id="crm-fiche-overlay" onclick="sluitContactFiche(event)">
+  <div class="recept-fiche-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="crm-fiche-mobiel"></div>
+  </div>
+</div>
 
 <!-- Modal -->
 <div class="modal-bg" id="crm-modal-bg">
@@ -115,7 +134,8 @@
 <script src="data.js"></script>
 <script>
 Auth.initPagina('contacten');
-if(!Auth.kan('kanContactenBeheren'))document.getElementById('btn-nieuw-contact').style.display='none';
+
+let actieveContactId=null;
 
 laadOp().then(renderCrm).catch(()=>{laadLokaal();renderCrm();});
 
@@ -127,27 +147,97 @@ function renderCrm(){
   let filtered=contacten;
   if(search)filtered=filtered.filter(c=>c.naam.toLowerCase().includes(search.toLowerCase())||(c.partner||'').toLowerCase().includes(search.toLowerCase()));
   const el=document.getElementById('crm-lijst');
-  const kanBewerken=Auth.kan('kanContactenBeheren');
   if(!filtered.length){el.innerHTML=`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;return;}
-  el.innerHTML=filtered.map(c=>`
-    <div class="crm-card">
-      <div class="crm-card-header">
-        <div>
-          <div class="crm-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
-          ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(c.partner)}</div>`:''}
-          ${parseInt(c.kinderen)>0?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👧 ${escHtml(c.kinderenNamen||parseInt(c.kinderen)+' kinderen')}</div>`:''}
-        </div>
-        ${kanBewerken?`<div style="display:flex;gap:6px;">
-          <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="verwijderContact(${c.id})">🗑️</button>
-        </div>`:''}
+  el.innerHTML=filtered.map(c=>{
+    const isActief=actieveContactId!=null&&actieveContactId==c.id;
+    return `
+    <div class="crm-card${isActief?' actief':''}" data-id="${c.id}" onclick="openContactFiche(${c.id})">
+      <div class="crm-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
+      ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(c.partner)}</div>`:''}
+      ${parseInt(c.kinderen)>0?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">👧 ${escHtml(c.kinderenNamen||parseInt(c.kinderen)+' kinderen')}</div>`:''}
+      <div style="margin-top:7px;">
+        <span style="font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--bg-2)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--muted)'};">🎄 ${c.kerstmis==='ja'?'Kerstmis':'Geen kerstmis'}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-        <span style="font-size:12px;padding:3px 10px;border-radius:99px;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--druk-bg)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--druk-clr)'};font-weight:600;">🎄 Kerstmis: ${c.kerstmis==='ja'?'Ja':'Nee'}</span>
-      </div>
-      ${c.cadeauNj?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">🎊 Nieuwjaar: ${escHtml(c.cadeauNj)}</div>`:''}
-      ${c.cadeauVj?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">🎂 Verjaardag: ${escHtml(c.cadeauVj)}</div>`:''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
+  // Herlaad fiche na re-render
+  if(actieveContactId){
+    const c=contacten.find(c=>c.id==actieveContactId);
+    if(c) _renderContactFicheDesktop(c);
+    else { actieveContactId=null; _clearContactFiche(); }
+  }
+}
+
+// ── Contactfiche ──────────────────────────────────────────────
+function openContactFiche(id){
+  actieveContactId=id;
+  const c=contacten.find(c=>c.id==id);
+  if(!c) return;
+  _renderContactFicheDesktop(c);
+  if(window.innerWidth<768){
+    document.getElementById('crm-fiche-mobiel').innerHTML=renderContactFicheHtml(c,true);
+    document.getElementById('crm-fiche-overlay').classList.add('open');
+  }
+  document.querySelectorAll('.crm-card').forEach(el=>el.classList.toggle('actief',el.dataset.id==id));
+}
+
+function _renderContactFicheDesktop(c){
+  const el=document.getElementById('crm-fiche');
+  const ph=document.getElementById('crm-fiche-placeholder');
+  if(!el) return;
+  el.innerHTML=renderContactFicheHtml(c,false);
+  el.style.display='block';
+  if(ph) ph.style.display='none';
+}
+
+function _clearContactFiche(){
+  const el=document.getElementById('crm-fiche');
+  const ph=document.getElementById('crm-fiche-placeholder');
+  if(el){el.innerHTML='';el.style.display='none';}
+  if(ph) ph.style.display='flex';
+}
+
+function renderContactFicheHtml(c, metSluitknop){
+  const kanBewerken=Auth.kan('kanContactenBeheren');
+  return `
+  <div class="fiche-header">
+    <div class="fiche-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
+    <div class="fiche-acties">
+      ${kanBewerken?`
+        <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})" title="Bewerken">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="verwijderContact(${c.id})" title="Verwijderen">🗑️</button>
+      `:''}
+      ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitContactFiche()" title="Sluiten">✕</button>`:''}
+    </div>
+  </div>
+  ${c.partner?`<div style="font-size:14px;color:var(--muted);margin-bottom:6px;">👫 ${escHtml(c.partner)}</div>`:''}
+  ${parseInt(c.kinderen)>0?`
+    <div style="font-size:14px;color:var(--muted);margin-bottom:.75rem;">
+      👧 ${parseInt(c.kinderen)} ${parseInt(c.kinderen)===1?'kind':'kinderen'}
+      ${c.kinderenNamen?`<span style="color:var(--ink);font-weight:500;"> — ${escHtml(c.kinderenNamen)}</span>`:''}
+    </div>
+  `:''}
+  <div class="fiche-meta">
+    <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--bg-2)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstmis: ${c.kerstmis==='ja'?'Ja':'Nee'}</span>
+  </div>
+  ${c.cadeauNj||c.cadeauVj?`<div class="fiche-sectie-label">Cadeaus</div>`:''}
+  ${c.cadeauNj?`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎊 NIEUWJAAR</div>
+      <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div>
+    </div>
+  `:''}
+  ${c.cadeauVj?`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎂 VERJAARDAG</div>
+      <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div>
+    </div>
+  `:''}`;
+}
+
+function sluitContactFiche(event){
+  if(event&&event.target!==document.getElementById('crm-fiche-overlay')) return;
+  document.getElementById('crm-fiche-overlay').classList.remove('open');
 }
 function openCrmModal(contact){
   document.getElementById('crm-modal-titel').textContent=contact?'Contact bewerken':'Contact toevoegen';
@@ -185,6 +275,7 @@ function verwijderContact(id){
   if(!confirm('Contact verwijderen?'))return;
   const c=contacten.find(c=>c.id===id||c.id==id);
   contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
+  if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
   renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);
 }
 document.getElementById('crm-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('crm-modal-bg'))closeCrmModal();});
