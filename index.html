@@ -81,86 +81,32 @@
 </div>
 
 <main class="main-content">
-<div class="page-content home-layout">
+<div class="page-content">
 
-  <!-- Linker kolom: homepage content -->
-  <div class="home-left">
-    <div class="dag-overzicht-card">
+  <!-- Compacte begroeting -->
+  <div class="dag-overzicht-compact">
+    <div class="dag-overzicht-links">
       <div class="dag-overzicht-datum" id="dag-datum"></div>
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
-      <div class="dag-overzicht-drukte" id="dag-drukte" style="margin-top:10px;">
-        <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
-      </div>
     </div>
-
-    <div class="section-label">Bekijk als</div>
-    <div class="avatar-strip" id="persoon-strip"></div>
-
-    <div class="section-label">Snel toevoegen</div>
-    <div class="snelle-actie-grid">
-      <button class="snelle-actie-btn" onclick="location.href='todos.html'">
-        <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
-      </button>
-      <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
-        <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
-      </button>
-      <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
-        <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
-      </button>
-      <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
-        <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
-      </button>
-    </div>
-
-    <div class="section-label">Vandaag</div>
-    <div id="vandaag-lijst"><div class="spinner"></div></div>
-
-    <div class="section-label">Openstaande to-do's</div>
-    <div id="todos-preview"><div class="spinner"></div></div>
-
-    <!-- Agent sectie (alleen mobiel, ingeklapt) -->
-    <div class="home-agent-mobile" id="home-agent-mobile">
-      <div class="home-agent-mobile-header" onclick="toggleMobielAgent()">
-        <span>🤖 Gezinsassistent</span>
-        <span class="home-agent-chevron" id="home-agent-chevron">›</span>
-      </div>
-      <div class="home-agent-mobile-body" id="home-agent-mobile-body">
-        <div class="home-agent-snelvragen">
-          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
-          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Maak een weekmenu voor deze week.')">🍽️ Weekmenu</button>
-          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
-        </div>
-        <div class="home-chat-berichten" id="home-chat-berichten-mobile">
-          <div style="align-self:flex-start;"><div class="chat-bubble-bot">Hallo! 👋 Waarmee kan ik helpen?</div></div>
-        </div>
-        <div id="home-bevestiging-mobile" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:0 0 8px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
-          <div id="home-bevestiging-tekst-mobile" style="font-size:13px;color:var(--ink-2);margin-bottom:10px;"></div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="homeBevestig('mobile')">✅ Ja</button>
-            <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('mobile')">❌ Nee</button>
-          </div>
-        </div>
-        <div class="home-chat-input-row">
-          <input type="text" id="home-chat-input-mobile" placeholder="Stel een vraag…"
-            onkeydown="if(event.key==='Enter')homeStuurBericht('mobile')"/>
-          <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('mobile')">→</button>
-        </div>
-      </div>
+    <div class="dag-overzicht-drukte" id="dag-drukte">
+      <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
     </div>
   </div>
 
-  <!-- Rechter kolom: agent paneel (alleen desktop) -->
-  <aside class="home-agent-panel">
+  <!-- Agent — hoofdfocus -->
+  <div class="home-agent-panel">
     <div class="home-agent-header">
       <span>🤖 Gezinsassistent</span>
-      <button onclick="homeWisChat()" title="Wis chat" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;">🗑️</button>
-    </div>
-    <div class="home-agent-snelvragen" style="padding:10px 12px 0;">
-      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
-      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Maak een weekmenu voor deze week.')">🍽️ Weekmenu</button>
-      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
-      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Genereer boodschappenlijst op basis van weekmenu.')">🛒 Boodschappen</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="home-agent-snelvragen" style="padding:0;">
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Maak een weekmenu voor deze week.')">🍽️ Weekmenu</button>
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Genereer boodschappenlijst op basis van weekmenu.')">🛒 Boodschappen</button>
+        </div>
+        <button onclick="homeWisChat()" title="Wis chat" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;flex-shrink:0;">🗑️</button>
+      </div>
     </div>
     <div class="home-chat-berichten" id="home-chat-berichten-desktop">
       <div style="align-self:flex-start;"><div class="chat-bubble-bot">Hallo! 👋 Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div></div>
@@ -178,7 +124,33 @@
         onkeydown="if(event.key==='Enter')homeStuurBericht('desktop')"/>
       <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;">→</button>
     </div>
-  </aside>
+  </div>
+
+  <!-- Secundaire content -->
+  <div class="section-label">Bekijk als</div>
+  <div class="avatar-strip" id="persoon-strip"></div>
+
+  <div class="section-label">Snel toevoegen</div>
+  <div class="snelle-actie-grid">
+    <button class="snelle-actie-btn" onclick="location.href='todos.html'">
+      <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
+      <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
+      <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
+    </button>
+    <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
+      <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
+    </button>
+  </div>
+
+  <div class="section-label">Vandaag</div>
+  <div id="vandaag-lijst"><div class="spinner"></div></div>
+
+  <div class="section-label">Openstaande to-do's</div>
+  <div id="todos-preview"><div class="spinner"></div></div>
 
 </div>
 </main>
@@ -369,9 +341,8 @@ async function homeStuurBericht(kanaal){
 }
 
 function stuurVoorbeeldHome(tekst){
-  const kanaal=homeMobielOpen?'mobile':'desktop';
-  document.getElementById('home-chat-input-'+kanaal).value=tekst;
-  homeStuurBericht(kanaal);
+  document.getElementById('home-chat-input-desktop').value=tekst;
+  homeStuurBericht('desktop');
 }
 
 function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){

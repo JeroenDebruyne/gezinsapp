@@ -406,6 +406,7 @@ body{
 .dag-overzicht-datum{font-size:13px;opacity:0.65;margin-bottom:4px;}
 .dag-overzicht-titel{font-size:22px;font-weight:700;margin-bottom:10px;letter-spacing:-0.3px;}
 .dag-overzicht-drukte{display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,0.15);font-weight:500;}
+/* .dag-overzicht-card wordt niet meer gebruikt op homepage (vervangen door .dag-overzicht-compact) */
 .snelle-actie-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem;}
 .snelle-actie-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;cursor:pointer;transition:all .15s;text-align:left;box-shadow:var(--shadow-sm);}
 .snelle-actie-btn:hover{box-shadow:var(--shadow);border-color:var(--accent);}
@@ -535,40 +536,51 @@ body{
 .chat-bubble-user{align-self:flex-end;max-width:80%;background:var(--accent);color:#fff;border-radius:18px 18px 4px 18px;padding:11px 15px;font-size:14px;line-height:1.5;}
 .chat-bubble-bot{align-self:flex-start;max-width:80%;background:var(--surface);border:1.5px solid var(--border);border-radius:18px 18px 18px 4px;padding:11px 15px;font-size:14px;line-height:1.5;box-shadow:var(--shadow-sm);}
 
-/* ── Homepage agent integratie ───────────────────────────────── */
-.home-layout{display:block;}
-.home-agent-panel{display:none;}
+/* ── Homepage: compacte begroeting ───────────────────────────── */
+.dag-overzicht-compact{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--accent);color:#fff;
+  border-radius:var(--radius);padding:12px 16px;margin-bottom:1rem;
+}
+.dag-overzicht-compact .dag-overzicht-links{flex:1;}
+.dag-overzicht-compact .dag-overzicht-datum{font-size:11px;opacity:0.65;margin-bottom:2px;}
+.dag-overzicht-compact .dag-overzicht-titel{font-size:16px;font-weight:700;letter-spacing:-0.2px;}
+.dag-overzicht-compact .dag-overzicht-drukte{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;padding:4px 10px;border-radius:99px;
+  background:rgba(255,255,255,0.15);font-weight:500;white-space:nowrap;flex-shrink:0;
+}
 
-/* Mobiel agent paneel */
-.home-agent-mobile{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:1.5rem;}
-.home-agent-mobile-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;font-size:15px;font-weight:600;user-select:none;}
-.home-agent-mobile-header:hover{background:var(--bg-2);}
-.home-agent-chevron{font-size:18px;color:var(--muted);}
-.home-agent-mobile-body{display:none;border-top:1px solid var(--border);}
-.home-agent-mobile-body.open{display:flex;flex-direction:column;}
-.home-agent-snelvragen{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;}
-.home-chat-berichten{display:flex;flex-direction:column;gap:8px;padding:12px;min-height:180px;max-height:340px;overflow-y:auto;background:var(--bg-2);}
-.home-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface);}
-.home-chat-input-row input{flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;}
+/* ── Homepage agent — hoofdfocus ─────────────────────────────── */
+.home-agent-panel{
+  display:flex;flex-direction:column;
+  background:var(--surface);border:1.5px solid var(--accent);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:1.5rem;
+  box-shadow:var(--shadow);
+}
+.home-agent-header{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  font-size:15px;font-weight:700;flex-shrink:0;background:var(--bg-2);
+}
+.home-agent-snelvragen{display:flex;flex-wrap:wrap;gap:6px;}
+.home-chat-berichten{
+  display:flex;flex-direction:column;gap:8px;padding:14px;
+  min-height:260px;max-height:420px;overflow-y:auto;background:var(--bg-2);
+  border-bottom:1px solid var(--border);
+}
+.home-chat-input-row{
+  display:flex;gap:8px;padding:10px 12px;background:var(--surface);flex-shrink:0;
+}
+.home-chat-input-row input{
+  flex:1;padding:10px 16px;border:1.5px solid var(--border);
+  border-radius:99px;font-size:14px;font-family:inherit;
+  background:var(--bg);color:var(--ink);outline:none;
+}
 .home-chat-input-row input:focus{border-color:var(--accent);}
 
 @media(min-width:768px){
-  .home-layout{display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start;}
-  .home-agent-mobile{display:none;}
-  .home-agent-panel{
-    display:flex;flex-direction:column;
-    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
-    overflow:hidden;position:sticky;top:calc(var(--topbar-h) + 1rem);
-    max-height:calc(100vh - var(--topbar-h) - 2rem);
-  }
-  .home-agent-header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:13px 16px;border-bottom:1px solid var(--border);
-    font-size:15px;font-weight:700;flex-shrink:0;
-  }
-  .home-agent-panel .home-chat-berichten{flex:1;min-height:200px;max-height:none;overflow-y:auto;}
-  .home-agent-panel .home-chat-input-row{flex-shrink:0;}
-  .home-agent-panel .home-agent-snelvragen{flex-shrink:0;}
+  .home-chat-berichten{min-height:320px;max-height:500px;}
 }
 
 /* ── To-do pagina specifiek ─────────────────────────────────── */
