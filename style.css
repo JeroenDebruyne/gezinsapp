@@ -407,7 +407,8 @@ body{
 .dag-overzicht-titel{font-size:22px;font-weight:700;margin-bottom:10px;letter-spacing:-0.3px;}
 .dag-overzicht-drukte{display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,0.15);font-weight:500;}
 /* .dag-overzicht-card wordt niet meer gebruikt op homepage (vervangen door .dag-overzicht-compact) */
-.snelle-actie-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem;}
+.snelle-actie-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem;}
+@media(max-width:600px){.snelle-actie-grid{grid-template-columns:repeat(2,1fr);}}
 .snelle-actie-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;cursor:pointer;transition:all .15s;text-align:left;box-shadow:var(--shadow-sm);}
 .snelle-actie-btn:hover{box-shadow:var(--shadow);border-color:var(--accent);}
 .snelle-actie-icon{font-size:24px;}
