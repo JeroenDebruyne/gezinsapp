@@ -35,6 +35,7 @@
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
 
   <div class="sidebar-footer">
@@ -89,8 +90,16 @@
       <div class="dag-overzicht-datum" id="dag-datum"></div>
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
-    <div class="dag-overzicht-drukte" id="dag-drukte">
-      <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a id="weer-widget" href="https://www.buienradar.nl/weer/ardooie/be" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;flex-shrink:0;" title="Weer in Ardooie — Buienradar">
+        <span id="weer-icon">🌤️</span>
+        <span id="weer-temp">…</span>
+        <span style="font-size:11px;font-weight:400;opacity:.85;" id="weer-regen"></span>
+      </a>
+      <div class="dag-overzicht-drukte" id="dag-drukte">
+        <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
+      </div>
     </div>
   </div>
 
@@ -132,10 +141,10 @@
 
   <div class="section-label">Snel toevoegen</div>
   <div class="snelle-actie-grid">
-    <button class="snelle-actie-btn" onclick="location.href='todos.html'">
+    <button class="snelle-actie-btn" onclick="openHomeTodoModal()">
       <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
     </button>
-    <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
+    <button class="snelle-actie-btn" onclick="openHomeActModal()">
       <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
     </button>
     <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
@@ -154,6 +163,86 @@
 
 </div>
 </main>
+
+<!-- ══ MODAL: Snelle todo ══ -->
+<div class="modal-bg" id="home-todo-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>Nieuwe to-do</h3>
+  <div class="form-row">
+    <label>Wat moet er gedaan worden?</label>
+    <input type="text" id="ht-titel" placeholder="Beschrijving…"/>
+  </div>
+  <div class="form-grid">
+    <div class="form-row">
+      <label>Deadline</label>
+      <input type="date" id="ht-deadline"/>
+    </div>
+    <div class="form-row">
+      <label>Prioriteit</label>
+      <select id="ht-prio">
+        <option value="hoog">🔴 Hoog</option>
+        <option value="middel" selected>🟡 Middel</option>
+        <option value="laag">🟢 Laag</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <label>Voor wie</label>
+    <div class="persoon-ms" id="ht-wie-ms"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="sluitHomeTodoModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="slaHomeTodoOp()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: Snelle activiteit ══ -->
+<div class="modal-bg" id="home-act-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>Nieuwe activiteit</h3>
+  <div class="form-row">
+    <label>Activiteit</label>
+    <input type="text" id="ha-naam" placeholder="Naam van de activiteit…"/>
+  </div>
+  <div class="form-row">
+    <label>Voor wie</label>
+    <div class="persoon-ms" id="ha-wie-ms"></div>
+  </div>
+  <div class="form-grid">
+    <div class="form-row">
+      <label>Datum</label>
+      <input type="date" id="ha-datum"/>
+    </div>
+    <div class="form-row">
+      <label>Frequentie</label>
+      <select id="ha-freq">
+        <option value="eenmalig">Eenmalig</option>
+        <option value="wekelijks">Wekelijks</option>
+        <option value="tweewekelijks">Tweewekelijks</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Startuur</label>
+      <input type="time" id="ha-start"/>
+    </div>
+    <div class="form-row">
+      <label>Einduur</label>
+      <input type="time" id="ha-eind"/>
+    </div>
+  </div>
+  <div class="form-row">
+    <label>Locatie</label>
+    <input type="text" id="ha-locatie" placeholder="Locatie (optioneel)"/>
+  </div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="sluitHomeActModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="slaHomeActOp()">Opslaan</button>
+  </div>
+</div>
+</div>
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
@@ -380,6 +469,120 @@ function toggleMobielAgent(){
   document.getElementById('home-agent-mobile-body').classList.toggle('open',homeMobielOpen);
   document.getElementById('home-agent-chevron').textContent=homeMobielOpen?'▾':'›';
 }
+
+// ── Buienradar / Weer (Open-Meteo) ────────────────────────────
+async function laadWeer(){
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.97&longitude=3.19&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels');
+    const d=await r.json();
+    const temp=Math.round(d.current.temperature_2m);
+    const regen=d.current.precipitation_probability??0;
+    const code=d.current.weather_code??0;
+    const icon=weerIcon(code);
+    document.getElementById('weer-icon').textContent=icon;
+    document.getElementById('weer-temp').textContent=temp+'°C';
+    document.getElementById('weer-regen').textContent='🌧 '+regen+'%';
+  }catch(e){ document.getElementById('weer-temp').textContent='—'; }
+}
+function weerIcon(code){
+  if(code===0)return'☀️';
+  if(code<=2)return'⛅';
+  if(code<=3)return'☁️';
+  if(code<=67)return'🌧️';
+  if(code<=77)return'🌨️';
+  if(code<=82)return'🌦️';
+  if(code<=99)return'⛈️';
+  return'🌤️';
+}
+laadWeer();
+
+// ── Snelle todo modal ─────────────────────────────────────────
+let htWie=[];
+function openHomeTodoModal(){
+  htWie=[Auth.profiel()?.persoonKey||'jeroen'];
+  document.getElementById('ht-titel').value='';
+  document.getElementById('ht-deadline').value='';
+  document.getElementById('ht-prio').value='middel';
+  renderHtWie();
+  document.getElementById('home-todo-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('ht-titel').focus(),100);
+}
+function sluitHomeTodoModal(){ document.getElementById('home-todo-modal-bg').classList.remove('open'); }
+function renderHtWie(){
+  document.getElementById('ht-wie-ms').innerHTML=PERSONEN.map(p=>
+    `<div class="persoon-chip${htWie.includes(p)?' selected':''}" onclick="toggleHtWie('${p}')">${PEMOJI[p]} ${PLABEL[p]}</div>`
+  ).join('');
+}
+function toggleHtWie(p){ htWie=htWie.includes(p)?htWie.filter(x=>x!==p):[...htWie,p]; renderHtWie(); }
+async function slaHomeTodoOp(){
+  const titel=document.getElementById('ht-titel').value.trim();
+  if(!titel){alert('Geef een beschrijving in.');return;}
+  const todo={
+    id:String(Date.now()), titel,
+    deadline:document.getElementById('ht-deadline').value||null,
+    prioriteit:document.getElementById('ht-prio').value,
+    wie:htWie, gedaan:false, prive:false,
+    aangemaaktDoor:Auth.profiel()?.persoonKey,
+    aangemaaktOp:fDateISO(new Date()),
+  };
+  todos.push(todo);
+  slaLokaalOp();
+  sbSaveTodo(todo);
+  sluitHomeTodoModal();
+  renderTodosPreview(Auth.profiel());
+  toonOpslagStatus('✅ To-do toegevoegd');
+}
+
+// ── Snelle activiteit modal ───────────────────────────────────
+let haWie=[];
+const JSDAGMAP_H={0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'};
+function openHomeActModal(){
+  haWie=[Auth.profiel()?.persoonKey||'jeroen'];
+  document.getElementById('ha-naam').value='';
+  document.getElementById('ha-datum').value=fDateISO(new Date());
+  document.getElementById('ha-freq').value='eenmalig';
+  document.getElementById('ha-start').value='';
+  document.getElementById('ha-eind').value='';
+  document.getElementById('ha-locatie').value='';
+  renderHaWie();
+  document.getElementById('home-act-modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('ha-naam').focus(),100);
+}
+function sluitHomeActModal(){ document.getElementById('home-act-modal-bg').classList.remove('open'); }
+function renderHaWie(){
+  document.getElementById('ha-wie-ms').innerHTML=PERSONEN.map(p=>
+    `<div class="persoon-chip${haWie.includes(p)?' selected':''}" onclick="toggleHaWie('${p}')">${PEMOJI[p]} ${PLABEL[p]}</div>`
+  ).join('');
+}
+function toggleHaWie(p){ haWie=haWie.includes(p)?haWie.filter(x=>x!==p):[...haWie,p]; renderHaWie(); }
+async function slaHomeActOp(){
+  const naam=document.getElementById('ha-naam').value.trim();
+  if(!naam){alert('Geef een naam in.');return;}
+  if(!haWie.length){alert('Selecteer minstens één persoon.');return;}
+  const datum=document.getElementById('ha-datum').value||fDateISO(new Date());
+  const d=new Date(datum+'T12:00:00');
+  const dagKey=JSDAGMAP_H[d.getDay()];
+  const start=document.getElementById('ha-start').value;
+  const eindUur=document.getElementById('ha-eind').value;
+  const freq=document.getElementById('ha-freq').value;
+  const act={
+    id:Date.now(), naam, wie:haWie, prive:false,
+    start, eindUur, duur:start&&eindUur?Math.max(0,tijdMinuten(eindUur)-tijdMinuten(start)):60,
+    reisHeen:0, reisTerug:0, meerdaags:false,
+    locatie:document.getElementById('ha-locatie').value,
+    freq, dagen:[dagKey],
+    beginDatum:datum, eindDatum:freq==='eenmalig'?datum:'',
+    prep:'',
+    brengtNora:'',haaltNora:'',eetGrooNora:false,
+    brengtOdiel:'',haaltOdiel:'',eetGrooOdiel:false,
+  };
+  activiteiten.push(act);
+  slaLokaalOp();
+  sbSaveActiviteit(act);
+  sluitHomeActModal();
+  renderVandaag(fDateISO(new Date()), Auth.profiel());
+  toonOpslagStatus('✅ Activiteit toegevoegd');
+}
 </script>
 <script>
 // ── Sidebar (desktop) ────────────────────────────────────────
@@ -419,6 +622,11 @@ document.addEventListener('DOMContentLoaded', function(){
       if(rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
     }
   }
+  // ── Backdrop-klik sluit modals ───────────────────────────────
+  ['home-todo-modal-bg','home-act-modal-bg'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+  });
   // ── Sluitknop injecteren in alle modals ──────────────────────
   document.querySelectorAll('.modal-bg .modal').forEach(modal => {
     if(modal.querySelector('.modal-sluit-btn')) return;
