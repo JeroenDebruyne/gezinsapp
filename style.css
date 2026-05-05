@@ -422,37 +422,39 @@ body{
 .drukte-dot.normaal{background:var(--normaal-dot);}
 .drukte-dot.druk{background:var(--druk-dot);}
 
-/* Weekplanner */
-.planner-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
-.dag-col{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.dag-col.weekend{border-color:var(--c-jeroen);}
-.dag-col.vandaag{border:2px solid var(--accent);}
-.dag-head{padding:7px 8px;border-bottom:1px solid var(--border);}
-.dag-naam{font-size:11px;font-weight:700;}
-.dag-datum{font-size:9px;color:var(--muted);}
-.dag-head.wknd{background:var(--c-jeroen);}
-.dag-head.wknd .dag-naam{color:var(--c-jeroen-t);}
-.drukte-strip{display:flex;align-items:center;gap:5px;padding:3px 7px;border-bottom:1px solid var(--border);}
-.slot{padding:6px 7px;border-bottom:1px solid var(--bg);min-height:48px;cursor:pointer;transition:background .12s;}
-.slot:last-child{border-bottom:none;}
-.slot:hover{background:var(--surface-2);}
-.slot-lbl{font-size:9px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
-.slot-leeg{font-size:11px;color:var(--muted-2);font-style:italic;}
-.slot-naam{font-size:11px;color:var(--ink);line-height:1.3;font-weight:500;}
-.slot-tijd{font-size:9px;color:var(--muted);}
-.special-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;}
+/* Weekplanner — verticale daglijst */
+.planner-grid{display:flex;flex-direction:column;gap:6px;}
+.dag-rij{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .15s;}
+.dag-rij.vandaag{border-color:var(--accent);}
+.dag-rij.weekend{background:var(--bg-2);}
+.dag-rij-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;transition:background .12s;}
+.dag-rij-header:hover{background:var(--bg-2);}
+.dag-rij.vandaag .dag-rij-header{background:rgba(29,158,117,.07);}
+.dag-rij-links{display:flex;align-items:center;gap:8px;min-width:120px;}
+.dag-rij-naam{font-size:14px;font-weight:700;color:var(--ink);min-width:32px;}
+.dag-rij.vandaag .dag-rij-naam{color:var(--accent);}
+.dag-rij-datum{font-size:12px;color:var(--muted);}
+.dag-rij-preview{flex:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dag-rij-rechts{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.dag-rij-chevron{font-size:18px;color:var(--muted);line-height:1;transition:transform .2s;}
+.dag-rij-body{display:none;border-top:1px solid var(--border);padding:10px 14px;}
+.dag-rij-body.open{display:block;}
+.dag-slots{display:flex;flex-direction:column;gap:6px;}
+.slot{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px solid var(--border);cursor:pointer;min-height:48px;transition:border-color .12s;}
+.slot:hover{border-color:var(--accent);}
+.slot-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:62px;flex-shrink:0;}
+.slot-leeg{font-size:13px;color:var(--muted-2);}
+.slot-naam{font-size:14px;color:var(--ink);font-weight:500;}
+.slot-tijd{font-size:11px;color:var(--muted);}
+.special-badge{font-size:12px;padding:3px 9px;border-radius:99px;font-weight:600;}
 .sb-shake{background:var(--c-jeroen);color:var(--c-jeroen-t);}
 .sb-uiteten{background:var(--c-nora);color:var(--c-nora-t);}
 .sb-afhalen{background:var(--c-odiel);color:var(--c-odiel-t);}
 .sb-restjes{background:var(--bg-2);color:var(--ink-2);}
-.eetgroo-badge{font-size:9px;padding:1px 5px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);margin-left:auto;font-weight:600;}
-.warn{color:var(--druk-clr);font-size:9px;}
+.drukte-strip{display:flex;align-items:center;gap:5px;}
+.eetgroo-badge{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);font-weight:600;}
+.warn{color:var(--druk-clr);font-size:11px;}
 .act-eet{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);display:inline-block;margin-top:4px;font-weight:600;}
-@media(max-width:767px){
-  .planner-grid{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;padding-bottom:8px;scroll-snap-type:x mandatory;}
-  .planner-grid .dag-col{min-width:132px;flex-shrink:0;scroll-snap-align:start;}
-  .slot{min-height:56px;}
-}
 
 /* Recepten */
 .recept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;}

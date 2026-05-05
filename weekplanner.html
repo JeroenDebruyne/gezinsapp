@@ -141,11 +141,19 @@ function renderPlanner(){
   const dates=getWeekDates(weekOffsetP);
   document.getElementById('week-lbl-p').textContent=wLabel(dates);
   const today=fDateISO(new Date());
+  const weekHeeftVandaag=dates.some(d=>fDateISO(d)===today);
   document.getElementById('planner-grid').innerHTML=dates.map((date,i)=>{
     const key=fDateISO(date);const isW=i>=4&&i<=5;
     const dagPlan=planning[key]||{};
     const drukte=getDagDrukte(key);
     const eetGroo=activiteiten.some(a=>(a.eetGrooNora||a.eetGrooOdiel)&&(a.dagen||[]).includes(DAGKEYS_WP[i]));
+    const isOpen=weekHeeftVandaag?(key===today):(i===0);
+    const previewItems=SLOTS.map(slot=>{
+      const k=dagPlan[slot.key];if(!k)return null;
+      if(SPEC[k])return SPEC[k];
+      const r=recepten.find(r=>r.id===k||r.id===parseInt(k));return r?r.naam:null;
+    }).filter(Boolean);
+    const preview=previewItems.join(' · ');
     const slotsHtml=SLOTS.map(slot=>{
       const keuze=dagPlan[slot.key];
       let badge='';
@@ -154,16 +162,31 @@ function renderPlanner(){
       else{const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));if(r){const w=r.tijd>DRUKTE_MAX[drukte];badge=`<div class="slot-naam">${r.naam}${w?' <span class="warn">⚠️</span>':''}</div><div class="slot-tijd">${r.tijd}m</div>`;}}
       return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${badge}</div>`;
     }).join('');
-    return `<div class="dag-col${isW?' weekend':''}${key===today?' vandaag':''}">
-      <div class="dag-head${isW?' wknd':''}"><div class="dag-naam">${DAGKORT_WP[i]}</div><div class="dag-datum">${fDate(date)}</div></div>
-      <div class="drukte-strip">
-        <div class="drukte-dot ${drukte}"></div>
-        <span style="font-size:9px;color:var(--muted);">${drukte.charAt(0).toUpperCase()+drukte.slice(1)}</span>
-        ${eetGroo?`<span class="eetgroo-badge">Bij opa/oma</span>`:''}
+    return `<div class="dag-rij${isW?' weekend':''}${key===today?' vandaag':''}" id="dag-rij-${key}">
+      <div class="dag-rij-header" onclick="toggleDag('${key}')">
+        <div class="dag-rij-links">
+          <span class="dag-rij-naam">${DAGKORT_WP[i]}</span>
+          <span class="dag-rij-datum">${fDate(date)}</span>
+          ${eetGroo?`<span class="eetgroo-badge">Bij opa/oma</span>`:''}
+        </div>
+        <div class="dag-rij-preview">${preview}</div>
+        <div class="dag-rij-rechts">
+          <div class="drukte-strip"><div class="drukte-dot ${drukte}"></div></div>
+          <span class="dag-rij-chevron">${isOpen?'▾':'›'}</span>
+        </div>
       </div>
-      ${slotsHtml}
+      <div class="dag-rij-body${isOpen?' open':''}">
+        <div class="dag-slots">${slotsHtml}</div>
+      </div>
     </div>`;
   }).join('');
+}
+function toggleDag(key){
+  const rij=document.getElementById('dag-rij-'+key);
+  const body=rij.querySelector('.dag-rij-body');
+  const chevron=rij.querySelector('.dag-rij-chevron');
+  const isOpen=body.classList.toggle('open');
+  chevron.textContent=isOpen?'▾':'›';
 }
 
 const DAGKORT_WP=['Di','Wo','Do','Vr','Za','Zo','Ma'];
