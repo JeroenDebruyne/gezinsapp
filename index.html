@@ -81,39 +81,105 @@
 </div>
 
 <main class="main-content">
-<div class="page-content">
-  <div class="dag-overzicht-card">
-    <div class="dag-overzicht-datum" id="dag-datum"></div>
-    <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
-    <div class="dag-overzicht-drukte" id="dag-drukte" style="margin-top:10px;">
-      <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
+<div class="page-content home-layout">
+
+  <!-- Linker kolom: homepage content -->
+  <div class="home-left">
+    <div class="dag-overzicht-card">
+      <div class="dag-overzicht-datum" id="dag-datum"></div>
+      <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
+      <div class="dag-overzicht-drukte" id="dag-drukte" style="margin-top:10px;">
+        <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
+      </div>
+    </div>
+
+    <div class="section-label">Bekijk als</div>
+    <div class="avatar-strip" id="persoon-strip"></div>
+
+    <div class="section-label">Snel toevoegen</div>
+    <div class="snelle-actie-grid">
+      <button class="snelle-actie-btn" onclick="location.href='todos.html'">
+        <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
+      </button>
+      <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
+        <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
+      </button>
+      <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
+        <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
+      </button>
+      <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
+        <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
+      </button>
+    </div>
+
+    <div class="section-label">Vandaag</div>
+    <div id="vandaag-lijst"><div class="spinner"></div></div>
+
+    <div class="section-label">Openstaande to-do's</div>
+    <div id="todos-preview"><div class="spinner"></div></div>
+
+    <!-- Agent sectie (alleen mobiel, ingeklapt) -->
+    <div class="home-agent-mobile" id="home-agent-mobile">
+      <div class="home-agent-mobile-header" onclick="toggleMobielAgent()">
+        <span>🤖 Gezinsassistent</span>
+        <span class="home-agent-chevron" id="home-agent-chevron">›</span>
+      </div>
+      <div class="home-agent-mobile-body" id="home-agent-mobile-body">
+        <div class="home-agent-snelvragen">
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Maak een weekmenu voor deze week.')">🍽️ Weekmenu</button>
+          <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
+        </div>
+        <div class="home-chat-berichten" id="home-chat-berichten-mobile">
+          <div style="align-self:flex-start;"><div class="chat-bubble-bot">Hallo! 👋 Waarmee kan ik helpen?</div></div>
+        </div>
+        <div id="home-bevestiging-mobile" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:0 0 8px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
+          <div id="home-bevestiging-tekst-mobile" style="font-size:13px;color:var(--ink-2);margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="homeBevestig('mobile')">✅ Ja</button>
+            <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('mobile')">❌ Nee</button>
+          </div>
+        </div>
+        <div class="home-chat-input-row">
+          <input type="text" id="home-chat-input-mobile" placeholder="Stel een vraag…"
+            onkeydown="if(event.key==='Enter')homeStuurBericht('mobile')"/>
+          <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('mobile')">→</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="section-label">Bekijk als</div>
-  <div class="avatar-strip" id="persoon-strip"></div>
+  <!-- Rechter kolom: agent paneel (alleen desktop) -->
+  <aside class="home-agent-panel">
+    <div class="home-agent-header">
+      <span>🤖 Gezinsassistent</span>
+      <button onclick="homeWisChat()" title="Wis chat" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;">🗑️</button>
+    </div>
+    <div class="home-agent-snelvragen" style="padding:10px 12px 0;">
+      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
+      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Maak een weekmenu voor deze week.')">🍽️ Weekmenu</button>
+      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
+      <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Genereer boodschappenlijst op basis van weekmenu.')">🛒 Boodschappen</button>
+    </div>
+    <div class="home-chat-berichten" id="home-chat-berichten-desktop">
+      <div style="align-self:flex-start;"><div class="chat-bubble-bot">Hallo! 👋 Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div></div>
+    </div>
+    <div id="home-bevestiging-desktop" style="display:none;background:var(--bg-2);border-top:1px solid var(--border);padding:12px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
+      <div id="home-bevestiging-tekst-desktop" style="font-size:13px;color:var(--ink-2);margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="homeBevestig('desktop')">✅ Ja</button>
+        <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('desktop')">❌ Nee</button>
+      </div>
+    </div>
+    <div class="home-chat-input-row">
+      <input type="text" id="home-chat-input-desktop" placeholder="Stel een vraag of geef een opdracht…"
+        onkeydown="if(event.key==='Enter')homeStuurBericht('desktop')"/>
+      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;">→</button>
+    </div>
+  </aside>
 
-  <div class="section-label">Snel toevoegen</div>
-  <div class="snelle-actie-grid">
-    <button class="snelle-actie-btn" onclick="location.href='todos.html'">
-      <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
-    </button>
-    <button class="snelle-actie-btn" onclick="location.href='agenda.html'">
-      <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
-    </button>
-    <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
-      <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
-    </button>
-    <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
-      <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
-    </button>
-  </div>
-
-  <div class="section-label">Vandaag</div>
-  <div id="vandaag-lijst"><div class="spinner"></div></div>
-
-  <div class="section-label">Openstaande to-do's</div>
-  <div id="todos-preview"><div class="spinner"></div></div>
 </div>
 </main>
 
@@ -197,6 +263,142 @@ function renderTodosPreview(p){
 function toggleTodo(id){
   const t=todos.find(x=>x.id==id);
   if(t){t.gedaan=!t.gedaan;slaLokaalOp();renderHomepage();}
+}
+
+// ── Agent op homepage ─────────────────────────────────────────
+let homeChatGeschiedenis=[];
+let homePendingActie=null;
+let homeMobielOpen=false;
+
+const HOME_AGENT_TOOLS=[
+  {name:'get_rooster',description:'Haal alle activiteiten op.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_recepten',description:'Haal recepten op.',input_schema:{type:'object',properties:{type:{type:'string'},max_tijd:{type:'number'}},required:[]}},
+  {name:'get_weekplanning',description:'Haal de huidige weekplanning op.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_drukte_week',description:'Drukte per dag voor de huidige week.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_todos',description:'Alle openstaande to-do\'s.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'stel_weekmenu_in',description:'Stel het weekmenu in. Vraag ALTIJD bevestiging.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+  {name:'voeg_todo_toe',description:'Voeg een to-do toe. Vraag ALTIJD bevestiging.',input_schema:{type:'object',properties:{titel:{type:'string'},deadline:{type:'string'},wie:{type:'array',items:{type:'string'}},prioriteit:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
+  {name:'get_boodschappenlijst',description:'Boodschappenlijst per winkel.',input_schema:{type:'object',properties:{},required:[]}}
+];
+const HOME_SYSTEEMPROMPT=`Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere.
+Gezin: Jeroen (vader, admin), Kelly (moeder), Nora (6j), Odiel (3j).
+Week loopt van dinsdag tot maandag. Doordeweeks eten kindjes op school.
+BELANGRIJK: Vraag ALTIJD bevestiging voor je iets aanpast (bevestiging_vereist:true).
+Antwoord in het Nederlands, kort en direct.`;
+
+function homeVoerToolUit(naam,input){
+  if(input.bevestiging_vereist){
+    homePendingActie={naam,input:JSON.parse(JSON.stringify(input))};
+    return'WACHT_OP_BEVESTIGING';
+  }
+  return homeToolLogica(naam,input);
+}
+function homeToolLogica(naam,input){
+  switch(naam){
+    case'get_rooster':return JSON.stringify(activiteiten.map(a=>({naam:a.naam,wie:(a.wie||[]).map(w=>PLABEL[w]||w),dagen:a.dagen,start:a.start,eind:a.eindUur,locatie:a.locatie})));
+    case'get_recepten':{let r=recepten;if(input.type)r=r.filter(x=>x.type===input.type);if(input.max_tijd)r=r.filter(x=>x.tijd<=input.max_tijd);return JSON.stringify(r.map(x=>({id:x.id,naam:x.naam,type:x.type,tijd:x.tijd})));}
+    case'get_weekplanning':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>{const k=fDateISO(dt);const dag=planning[k]||{};return{dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],datum:fDate(dt),ontbijt:getNaamH(dag.ontbijt),lunch:getNaamH(dag.lunch),avond:getNaamH(dag.avond)};}));}
+    case'get_drukte_week':{const d=getWeekDates(0);return JSON.stringify(d.map((dt,i)=>({dag:['Di','Wo','Do','Vr','Za','Zo','Ma'][i],drukte:getDagDrukte(fDateISO(dt))})));}
+    case'get_todos':return JSON.stringify(todos.filter(t=>!t.gedaan).map(t=>({titel:t.titel,deadline:t.deadline,wie:(t.wie||[]).map(w=>PLABEL[w]||w)})));
+    case'stel_weekmenu_in':{if(input.menu&&Array.isArray(input.menu)){const d=getWeekDates(0);const dg=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];input.menu.forEach(dd=>{const idx=dg.findIndex(x=>x===dd.dag||x.startsWith(dd.dag));if(idx<0)return;const k=fDateISO(d[idx]);if(!planning[k])planning[k]={};['ontbijt','lunch','avond'].forEach(s=>{if(dd[s]!==undefined)planning[k][s]=dd[s];});});slaLokaalOp();return'✅ Weekmenu ingesteld!';}return'Fout formaat';}
+    case'voeg_todo_toe':{const t={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false};todos.push(t);slaLokaalOp();renderTodosPreview(Auth.profiel());return'✅ To-do toegevoegd: '+input.titel;}
+    case'get_boodschappenlijst':{const res={};WINKELS.forEach(w=>res[w]=[]);Object.values(planning).forEach(dag=>{Object.values(dag).forEach(k=>{if(k&&!SPEC[k]){const r=recepten.find(r=>r.id===k||r.id==k);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push(ing.naam);});}});});return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));}
+    default:return'Onbekende tool';
+  }
+}
+function getNaamH(k){if(!k)return'–';if(SPEC[k])return SPEC[k];const r=recepten.find(r=>r.id===k||r.id==k);return r?r.naam:'?';}
+
+function homeBevestig(kanaal){
+  const panel=document.getElementById('home-bevestiging-'+kanaal);
+  if(panel)panel.style.display='none';
+  if(!homePendingActie)return;
+  const{naam,input}=homePendingActie;homePendingActie=null;
+  const result=homeToolLogica(naam,input);
+  homeVoegBerichtToe(kanaal,'assistant','✅ '+result);
+}
+function homeAnnuleer(kanaal){
+  const panel=document.getElementById('home-bevestiging-'+kanaal);
+  if(panel)panel.style.display='none';
+  homePendingActie=null;
+  homeVoegBerichtToe(kanaal,'assistant','❌ Geannuleerd.');
+}
+
+async function homeStuurBericht(kanaal){
+  const input=document.getElementById('home-chat-input-'+kanaal);
+  const tekst=input.value.trim();if(!tekst)return;
+  let apiKey=localStorage.getItem('anthropic_api_key')||'';
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  input.value='';
+  homeVoegBerichtToe(kanaal,'user',tekst);
+  homeChatGeschiedenis.push({role:'user',content:tekst});
+  const typingEl=homeVoegBerichtToe(kanaal,'assistant','⏳…',true);
+  try{
+    let resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis})});
+    let data=await resp.json();
+    while(data.stop_reason==='tool_use'){
+      const results=[];
+      for(const b of data.content){
+        if(b.type==='tool_use'){
+          const res=homeVoerToolUit(b.name,b.input);
+          if(res==='WACHT_OP_BEVESTIGING'){
+            typingEl?.remove();
+            const panel=document.getElementById('home-bevestiging-'+kanaal);
+            const tekst=document.getElementById('home-bevestiging-tekst-'+kanaal);
+            if(tekst)tekst.textContent=homePendingActie?.input?.bevestiging_bericht||'Wil je dit uitvoeren?';
+            if(panel)panel.style.display='block';
+            homeChatGeschiedenis.push({role:'assistant',content:data.content});
+            return;
+          }
+          results.push({type:'tool_result',tool_use_id:b.id,content:res});
+        }
+      }
+      homeChatGeschiedenis.push({role:'assistant',content:data.content});
+      homeChatGeschiedenis.push({role:'user',content:results});
+      resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis})});
+      data=await resp.json();
+    }
+    const finaal=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    typingEl?.remove();
+    homeVoegBerichtToe(kanaal,'assistant',finaal);
+    homeChatGeschiedenis.push({role:'assistant',content:finaal});
+  }catch(e){
+    typingEl?.remove();
+    homeVoegBerichtToe(kanaal,'assistant','❌ Fout: '+e.message);
+    if(e.message.includes('401'))localStorage.removeItem('anthropic_api_key');
+  }
+}
+
+function stuurVoorbeeldHome(tekst){
+  const kanaal=homeMobielOpen?'mobile':'desktop';
+  document.getElementById('home-chat-input-'+kanaal).value=tekst;
+  homeStuurBericht(kanaal);
+}
+
+function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){
+  const container=document.getElementById('home-chat-berichten-'+kanaal);
+  if(!container)return null;
+  const wrap=document.createElement('div');
+  wrap.style.cssText='align-self:'+(rol==='user'?'flex-end':'flex-start')+';max-width:90%;';
+  const bubble=document.createElement('div');
+  bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
+  bubble.innerHTML=rol==='user'?tekst:tekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  wrap.appendChild(bubble);container.appendChild(wrap);
+  container.scrollTop=container.scrollHeight;
+  return isTyping?wrap:null;
+}
+
+function homeWisChat(){
+  homeChatGeschiedenis=[];
+  ['mobile','desktop'].forEach(k=>{
+    const c=document.getElementById('home-chat-berichten-'+k);
+    if(c)c.innerHTML='<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. 👋 Waarmee kan ik helpen?</div></div>';
+  });
+}
+
+function toggleMobielAgent(){
+  homeMobielOpen=!homeMobielOpen;
+  document.getElementById('home-agent-mobile-body').classList.toggle('open',homeMobielOpen);
+  document.getElementById('home-agent-chevron').textContent=homeMobielOpen?'▾':'›';
 }
 </script>
 <script>
