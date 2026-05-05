@@ -1,0 +1,3 @@
+Configuration,Language,File Path,Successfully Extracted,Failure Reason
+/language:javascript-typescript,JavaScript,auth.js,true,""
+/language:javascript-typescript,JavaScript,data.js,true,""
