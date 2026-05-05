@@ -212,6 +212,7 @@
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
 
   <div class="sidebar-footer">
@@ -374,30 +375,40 @@
   <!-- Transport kindje -->
   <div class="kindje-sectie-modal" id="kindje-sectie" style="display:none;">
     <div class="kindje-sectie-lbl">🚗 Transport kindje</div>
-    <div class="form-grid">
-      <div class="form-row" style="margin:0 0 10px;">
-        <label>Nora — wie brengt?</label>
-        <select id="a-brengt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+
+    <!-- Nora -->
+    <div id="transport-nora" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👧 Nora</div>
+      <div class="form-grid">
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie brengt?</label>
+          <select id="a-brengt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+        </div>
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie haalt?</label>
+          <select id="a-haalt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+        </div>
       </div>
-      <div class="form-row" style="margin:0 0 10px;">
-        <label>Nora — wie haalt?</label>
-        <select id="a-haalt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
-      </div>
-      <div class="form-row" style="margin:0 0 10px;">
-        <label>Odiel — wie brengt?</label>
-        <select id="a-brengt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
-      </div>
-      <div class="form-row" style="margin:0;">
-        <label>Odiel — wie haalt?</label>
-        <select id="a-haalt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;">
-        <input type="checkbox" id="a-eet-groo-nora" style="width:auto;accent-color:var(--accent);"/> Nora eet bij grootouders
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
+        <input type="checkbox" id="a-eet-groo-nora" style="width:auto;accent-color:var(--accent);"/> Eet bij grootouders
       </label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;">
-        <input type="checkbox" id="a-eet-groo-odiel" style="width:auto;accent-color:var(--accent);"/> Odiel eet bij grootouders
+    </div>
+
+    <!-- Odiel -->
+    <div id="transport-odiel" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👦 Odiel</div>
+      <div class="form-grid">
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie brengt?</label>
+          <select id="a-brengt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+        </div>
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie haalt?</label>
+          <select id="a-haalt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
+        <input type="checkbox" id="a-eet-groo-odiel" style="width:auto;accent-color:var(--accent);"/> Eet bij grootouders
       </label>
     </div>
   </div>
@@ -745,8 +756,12 @@ function togglePersoon(p){
   renderPersonenMS();checkKindjeSection();
 }
 function checkKindjeSection(){
-  const heeftKind=geselecteerdePersonen.includes('nora')||geselecteerdePersonen.includes('odiel');
+  const heeftNora=geselecteerdePersonen.includes('nora');
+  const heeftOdiel=geselecteerdePersonen.includes('odiel');
+  const heeftKind=heeftNora||heeftOdiel;
   document.getElementById('kindje-sectie').style.display=heeftKind?'block':'none';
+  document.getElementById('transport-nora').style.display=heeftNora?'block':'none';
+  document.getElementById('transport-odiel').style.display=heeftOdiel?'block':'none';
 }
 function togglePrive(){priveAan=!priveAan;updatePriveSwitch();}
 function updatePriveSwitch(){document.getElementById('prive-switch').className='ios-switch'+(priveAan?' on':'');}
