@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gezinsapp">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Kinderlogistiek</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.kl-dag-rij{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:6px;}
+.kl-dag-rij.vandaag{border-color:var(--accent);}
+.kl-dag-rij.weekend{opacity:.7;}
+.kl-dag-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;}
+.kl-dag-naam{font-weight:700;font-size:15px;color:var(--ink);min-width:28px;}
+.kl-dag-datum{font-size:13px;color:var(--muted);}
+.kl-dag-badges{display:flex;gap:5px;flex:1;flex-wrap:wrap;}
+.kl-dag-chevron{color:var(--muted);font-size:14px;margin-left:auto;flex-shrink:0;}
+.kl-dag-body{display:none;border-top:1px solid var(--border);padding:12px 14px;}
+.kl-dag-body.open{display:block;}
+.kl-kind-sectie{margin-bottom:12px;}
+.kl-kind-sectie:last-child{margin-bottom:0;}
+.kl-kind-titel{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.kl-transport-rij{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.kl-transport-veld label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+.kl-transport-veld select{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--ink);cursor:pointer;}
+.kl-transport-veld select.override{border-color:var(--accent);background:var(--accent-l);color:var(--accent);font-weight:600;}
+.kl-eetgroo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer;padding:4px 0;}
+.kl-act-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg-2);color:var(--muted);border:1px solid var(--border);}
+.kl-vakantie-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);font-weight:600;}
+.kl-reset-btn{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+@media(min-width:768px){
+  .kl-transport-rij{grid-template-columns:1fr 1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">🚸 Kinderlogistiek</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <div class="topbar-user-wrap">
+      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+        <span class="avatar" id="topbar-emoji">🧑</span>
+        <span class="naam" id="topbar-naam">…</span>
+      </div>
+      <div class="profiel-menu" id="profiel-menu">
+        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="bottom-nav" id="sidebar">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
+  <div class="sidebar-footer">
+    <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
+    <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen"><span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span></a>
+    <div class="sidebar-user">
+      <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-naam" id="sidebar-naam">…</span>
+        <span class="sidebar-user-sub" id="sidebar-rol">…</span>
+      </div>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+    </div>
+  </div>
+</nav>
+<nav class="bottom-nav-mobile">
+  <a class="mobile-nav-item" href="index.html" data-pagina="index">
+    <span class="mobile-nav-icon">🏠</span><span class="mobile-nav-label">Home</span>
+  </a>
+  <button class="mobile-nav-item" onclick="toggleModules()">
+    <span class="mobile-nav-icon">⊞</span><span class="mobile-nav-label">Alles</span>
+  </button>
+</nav>
+
+<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
+  <div class="module-sheet" onclick="event.stopPropagation()">
+    <div class="module-sheet-handle"></div>
+    <div class="module-tiles">
+      <a class="module-tile" href="agenda.html"><span class="module-tile-icon">📅</span><span class="module-tile-naam">Agenda</span></a>
+      <a class="module-tile" href="todos.html"><span class="module-tile-icon">✅</span><span class="module-tile-naam">To-do's</span></a>
+      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
+      <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
+      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
+      <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
+      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">🚸</span><span class="module-tile-naam">Kinderen</span></a>
+      <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
+      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+<div class="page-content">
+
+  <div class="page-header">
+    <div class="week-nav-row" style="margin-bottom:0;">
+      <button class="nav-btn" onclick="changeWeekKL(-1)">&#8592;</button>
+      <span class="week-lbl" id="week-lbl-kl"></span>
+      <button class="nav-btn" onclick="changeWeekKL(1)">&#8594;</button>
+    </div>
+  </div>
+
+  <!-- Kind filter -->
+  <div class="filter-tabs" id="kl-filter-tabs" style="margin-bottom:1rem;">
+    <button class="filter-tab active" onclick="setKindFilter('beide',this)">👨‍👩‍👧‍👦 Beide</button>
+    <button class="filter-tab" onclick="setKindFilter('nora',this)">👧 Nora</button>
+    <button class="filter-tab" onclick="setKindFilter('odiel',this)">👦 Odiel</button>
+  </div>
+
+  <div id="kl-grid"></div>
+
+</div>
+</main>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('kinderlogistiek');
+
+const TRANSPORT_OPTIES = ['','Kelly','Jeroen','Geert & Nadine','Patrick','Anne','Tine','Andere'];
+const KL_DAGMAP = {0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'};
+const KL_DAGKORT = ['Di','Wo','Do','Vr','Za','Zo','Ma'];
+const KL_DAGLANG = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
+
+let weekOffsetKL = 0;
+let kindFilter = 'beide';
+
+laadOp().then(renderKL).catch(()=>{ laadLokaal(); renderKL(); });
+
+function changeWeekKL(dir){ weekOffsetKL+=dir; renderKL(); }
+
+function setKindFilter(filter, el){
+  kindFilter=filter;
+  document.querySelectorAll('#kl-filter-tabs .filter-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderKL();
+}
+
+function getTransport(datum, kind){
+  const dagKey = KL_DAGMAP[new Date(datum+'T12:00:00').getDay()];
+  const std = standaardTransport[kind]?.[dagKey] || {};
+  const uitz = transportUitzonderingen[datum]?.[kind] || {};
+  return {
+    brengt: uitz.brengt !== undefined ? uitz.brengt : (std.brengt||''),
+    haalt:  uitz.haalt  !== undefined ? uitz.haalt  : (std.haalt||''),
+    eetGroo: uitz.eetGroo !== undefined ? uitz.eetGroo : (std.eetGroo||false),
+    isOverride: Object.keys(uitz).length > 0,
+  };
+}
+
+function isSchoolDag(datum){
+  const d = new Date(datum+'T12:00:00');
+  const dw = d.getDay();
+  if(dw===0||dw===6) return false;
+  if(isSchoolvakantie(datum)) return false;
+  return true;
+}
+
+function renderKL(){
+  const dates = getWeekDates(weekOffsetKL);
+  document.getElementById('week-lbl-kl').textContent = wLabel(dates);
+  const today = fDateISO(new Date());
+  const weekHeeftVandaag = dates.some(d=>fDateISO(d)===today);
+
+  document.getElementById('kl-grid').innerHTML = dates.map((date,i)=>{
+    const datum = fDateISO(date);
+    const dagKey = KL_DAGMAP[date.getDay()];
+    const isW = date.getDay()===0||date.getDay()===6;
+    const isVandaag = datum===today;
+    const isOpen = weekHeeftVandaag?(datum===today):(i===0);
+    const school = isSchoolDag(datum);
+    const vakantie = isSchoolvakantie(datum);
+
+    // Activiteiten voor de kinderen vandaag
+    const kinderen = kindFilter==='beide'?['nora','odiel']:kindFilter==='nora'?['nora']:['odiel'];
+    const kindActs = activiteiten.filter(a=>
+      isActiefOpDatum(a,datum) && (a.wie||[]).some(w=>kinderen.includes(w))
+    );
+
+    // Badges in header
+    let badgesHtml = '';
+    if(vakantie) badgesHtml+=`<span class="kl-vakantie-badge">🏖️ ${getVakantieNaam(datum)}</span>`;
+    else if(school) badgesHtml+=`<span class="kl-act-badge">🏫 School</span>`;
+    kindActs.forEach(a=>`<span class="kl-act-badge">📌 ${escHtml(a.naam)}</span>`);
+
+    // Per-kind body
+    const kindBodyHtml = kinderen.map(kind=>{
+      if(isW) return `<div class="kl-kind-sectie"><div class="kl-kind-titel">${PEMOJI[kind]} ${PLABEL[kind]}<span style="font-weight:400;font-size:11px;color:var(--muted);">— Weekend</span></div></div>`;
+      const t = getTransport(datum, kind);
+      const heeftOverride = t.isOverride;
+
+      // Activiteiten voor dit kind
+      const kindActsHtml = activiteiten
+        .filter(a=>isActiefOpDatum(a,datum)&&(a.wie||[]).includes(kind))
+        .map(a=>`<span class="kl-act-badge">📌 ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>`)
+        .join('');
+
+      const dagKeyStr = `${datum}_${kind}`;
+      return `
+      <div class="kl-kind-sectie">
+        <div class="kl-kind-titel">
+          ${PEMOJI[kind]} ${PLABEL[kind]}
+          ${kindActsHtml?`<span style="margin-left:4px;">${kindActsHtml}</span>`:''}
+          ${heeftOverride?`<button class="kl-reset-btn" onclick="resetTransport('${datum}','${kind}')">Herstel standaard</button>`:''}
+        </div>
+        <div class="kl-transport-rij">
+          <div class="kl-transport-veld">
+            <label>🚗→ Wie brengt?</label>
+            <select id="brengt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
+              class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.brengt!==undefined?'override':''}">
+              ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.brengt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
+            </select>
+          </div>
+          <div class="kl-transport-veld">
+            <label>←🚗 Wie haalt?</label>
+            <select id="haalt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
+              class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.haalt!==undefined?'override':''}">
+              ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.haalt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
+            </select>
+          </div>
+          <div class="kl-transport-veld" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+            <label class="kl-eetgroo" onclick="toggleEetGroo('${datum}','${kind}')">
+              <div class="ios-switch${t.eetGroo?' on':''}" id="eetgroo-${dagKeyStr}" style="flex-shrink:0;"></div>
+              <span>🍽️ Eet bij grootouders</span>
+            </label>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="kl-dag-rij${isVandaag?' vandaag':''}${isW?' weekend':''}">
+      <div class="kl-dag-header" onclick="toggleKLDag('${datum}')">
+        <span class="kl-dag-naam">${KL_DAGKORT[i]}</span>
+        <span class="kl-dag-datum">${fDate(date)}</span>
+        <div class="kl-dag-badges">${badgesHtml}</div>
+        <span class="kl-dag-chevron">${isOpen?'▾':'›'}</span>
+      </div>
+      <div class="kl-dag-body${isOpen?' open':''}" id="kl-body-${datum}">
+        ${isW&&!vakantie
+          ? `<div style="font-size:13px;color:var(--muted);padding:4px 0;">Weekend — geen schooltransport</div>`
+          : kindBodyHtml
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleKLDag(datum){
+  const body = document.getElementById('kl-body-'+datum);
+  const rij = body?.closest('.kl-dag-rij');
+  if(!body) return;
+  const isOpen = body.classList.toggle('open');
+  rij?.querySelector('.kl-dag-chevron').textContent = isOpen?'▾':'›';
+}
+
+function slaTransportOp(datum, kind){
+  const dagKeyStr = `${datum}_${kind}`;
+  const brengt = document.getElementById('brengt-'+dagKeyStr)?.value ?? '';
+  const haalt  = document.getElementById('haalt-'+dagKeyStr)?.value ?? '';
+  const eetGrooEl = document.getElementById('eetgroo-'+dagKeyStr);
+  const eetGroo = eetGrooEl ? eetGrooEl.classList.contains('on') : false;
+
+  if(!transportUitzonderingen[datum]) transportUitzonderingen[datum]={};
+  transportUitzonderingen[datum][kind] = { brengt, haalt, eetGroo };
+  slaLokaalOp();
+  sbSaveInstellingen();
+  // Accent kleur bij override
+  document.getElementById('brengt-'+dagKeyStr)?.classList.toggle('override', true);
+  document.getElementById('haalt-'+dagKeyStr)?.classList.toggle('override', true);
+  toonOpslagStatus('✅ Transport opgeslagen');
+}
+
+function toggleEetGroo(datum, kind){
+  const dagKeyStr = `${datum}_${kind}`;
+  const el = document.getElementById('eetgroo-'+dagKeyStr);
+  if(!el) return;
+  el.classList.toggle('on');
+  slaTransportOp(datum, kind);
+}
+
+function resetTransport(datum, kind){
+  if(!confirm('Standaard transport herstellen voor '+PLABEL[kind]+' op '+datum+'?')) return;
+  if(transportUitzonderingen[datum]) delete transportUitzonderingen[datum][kind];
+  if(transportUitzonderingen[datum]&&!Object.keys(transportUitzonderingen[datum]).length)
+    delete transportUitzonderingen[datum];
+  slaLokaalOp();
+  sbSaveInstellingen();
+  renderKL();
+}
+</script>
+<script>
+function toggleProfielMenu(e){ e&&e.stopPropagation(); document.getElementById('profiel-menu')?.classList.toggle('open'); }
+document.addEventListener('click',function(){ document.getElementById('profiel-menu')?.classList.remove('open'); });
+function toggleModules(){ document.getElementById('module-overlay')?.classList.toggle('open'); }
+function sluitModules(e){ if(e.target===document.getElementById('module-overlay')) document.getElementById('module-overlay').classList.remove('open'); }
+(function(){ const p=window.location.pathname.split('/').pop().replace('.html','')||'index'; document.querySelectorAll('.mobile-nav-item[data-pagina],.bottom-nav-item[data-pagina]').forEach(el=>el.classList.toggle('active',el.dataset.pagina===p)); })();
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof Auth!=='undefined'){ const p=Auth.profiel(); if(p){ const av=document.getElementById('sidebar-avatar'); const nm=document.getElementById('sidebar-naam'); const rl=document.getElementById('sidebar-rol'); if(av)av.textContent=p.emoji||'🧑'; if(nm)nm.textContent=p.naam||''; if(rl)rl.textContent=Auth.ROLLEN[p.rol]?.label||p.rol||''; } }
+  const _orig=window.toonOpslagStatus;
+  window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); };
+});
+</script>
+</body>
+</html>

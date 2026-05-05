@@ -112,6 +112,7 @@
       <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
       <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
       <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
+      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">🚸</span><span class="module-tile-naam">Kinderen</span></a>
       <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
       <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
     </div>
@@ -119,18 +120,37 @@
 </div>
 
 <main class="main-content">
-<div class="page-content">
-  <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
-  <div class="pill-tabs" id="recept-type-tabs">
-    <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
-    <button class="ptab" onclick="filterRType('avond',this)">🍝 Avond</button>
-    <button class="ptab" onclick="filterRType('lunch',this)">🥗 Lunch</button>
-    <button class="ptab" onclick="filterRType('weekend',this)">🍖 Weekend</button>
-    <button class="ptab" onclick="filterRType('ontbijt',this)">🥐 Ontbijt</button>
+<div class="recept-layout">
+  <!-- Linker kolom: lijst + zoek + filter -->
+  <div class="recept-kolom-lijst">
+    <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
+    <div class="pill-tabs" id="recept-type-tabs">
+      <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
+      <button class="ptab" onclick="filterRType('avond',this)">🍝 Avond</button>
+      <button class="ptab" onclick="filterRType('lunch',this)">🥗 Lunch</button>
+      <button class="ptab" onclick="filterRType('weekend',this)">🍖 Weekend</button>
+      <button class="ptab" onclick="filterRType('ontbijt',this)">🥐 Ontbijt</button>
+    </div>
+    <div class="recept-grid" id="recipes-grid"></div>
   </div>
-  <div class="recept-grid" id="recipes-grid"></div>
+  <!-- Rechter kolom: fiche (alleen desktop) -->
+  <div class="recept-kolom-detail" id="recept-kolom-detail">
+    <div class="fiche-placeholder" id="fiche-placeholder">
+      <span style="font-size:48px;">📖</span>
+      <p>Kies een recept uit de lijst</p>
+    </div>
+    <div id="recept-fiche" style="display:none;"></div>
+  </div>
 </div>
 </main>
+
+<!-- Mobile fiche overlay -->
+<div class="recept-fiche-overlay" id="recept-fiche-overlay" onclick="sluitFiche(event)">
+  <div class="recept-fiche-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="recept-fiche-mobiel"></div>
+  </div>
+</div>
 
 <!-- ══ MODAL: Importeer via link ══ -->
 <div class="modal-bg" id="import-modal-bg">
@@ -304,23 +324,19 @@
 <script src="data.js"></script>
 <script>
 Auth.initPagina('recepten');
-if(!Auth.kan('kanReceptenBeheren')){
-  document.getElementById('btn-nieuw-recept').style.display='none';
-  document.getElementById('btn-import-recept').style.display='none';
-}
 
 let activeRType='alle';
 let geimporteerdRecept=null;
-let geselecteerdeTypes=[];   // array van geselecteerde types
+let geselecteerdeTypes=[];
+let actieveFicheId=null;
 
 laadOp().then(()=>{
   renderRecepten();
-  // Auto-open bewerken als we terugkomen van de fiche
   const params=new URLSearchParams(location.search);
   const bewerkId=params.get('bewerk');
   if(bewerkId){
     const r=recepten.find(r=>String(r.id)===bewerkId);
-    if(r) setTimeout(()=>openReceptModal(r),300);
+    if(r){ actieveFicheId=r.id; setTimeout(()=>{openReceptModal(r);openFiche(r.id);},300); }
   }
 }).catch(()=>{laadLokaal();renderRecepten();});
 
@@ -337,39 +353,119 @@ function renderRecepten(){
   let filtered=recepten;
   if(activeRType!=='alle'){
     filtered=filtered.filter(r=>{
-      // Ondersteuning voor zowel oud 'type' veld als nieuw 'types' array
       const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
       return types.includes(activeRType);
     });
   }
   if(search) filtered=filtered.filter(r=>r.naam.toLowerCase().includes(search.toLowerCase())||(r.tags||[]).some(t=>t.toLowerCase().includes(search.toLowerCase())));
-  const kanBewerken=Auth.kan('kanReceptenBeheren');
+  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
   document.getElementById('recipes-grid').innerHTML=filtered.map(r=>{
     const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
     const eersteType=types[0]||'avond';
-    const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+    const isActief=actieveFicheId!=null&&actieveFicheId==r.id;
     return `
-    <div class="recept-card" onclick="location.href='recept-detail.html?id=${r.id}'" style="cursor:pointer;">
+    <div class="recept-card${isActief?' actief':''}" data-id="${r.id}" onclick="openFiche(${r.id})">
       <div class="recept-thumb thumb-${eersteType}">${EMOJIS[eersteType]||'🍽️'}</div>
       <div class="recept-info">
-        <div class="recept-naam">${r.naam}</div>
+        <div class="recept-naam">${escHtml(r.naam)}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
           ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
           ${r.porties?`<span>🍽 ${r.porties}p</span>`:''}
-          ${r.moeilijk?`<span>${r.moeilijk}</span>`:''}
+          ${r.moeilijk?`<span>${escHtml(r.moeilijk)}</span>`:''}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">
           ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
-          ${(r.tags||[]).map(t=>`<span class="tag-pill">${t}</span>`).join('')}
+          ${(r.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}
         </div>
-        ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.bron}">📎 ${r.bron.replace(/^https?:\/\//,'').split('/')[0]}</div>`:''}
-        ${kanBewerken?`<div style="display:flex;gap:5px;margin-top:10px;" onclick="event.stopPropagation()">
-          <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openReceptModal(recepten.find(r=>r.id==${r.id}))">✏️ Bewerk</button>
-          <button class="btn btn-danger btn-sm" style="flex:1;" onclick="verwijderRecept(${r.id})">🗑️</button>
-        </div>`:''}
       </div>
     </div>`;
   }).join('')||`<div class="empty-state"><span class="empty-icon">📖</span><p>Geen recepten gevonden</p></div>`;
+  // Herlaad fiche als actief recept nog bestaat
+  if(actieveFicheId){
+    const r=recepten.find(r=>r.id==actieveFicheId);
+    if(r) _renderFicheInDesktop(r);
+    else { actieveFicheId=null; _clearFiche(); }
+  }
+}
+
+// ── Recept fiche ─────────────────────────────────────────────
+function openFiche(id){
+  actieveFicheId=id;
+  const r=recepten.find(r=>r.id==id);
+  if(!r) return;
+  // Desktop fiche
+  _renderFicheInDesktop(r);
+  // Mobile overlay (alleen als viewport klein)
+  if(window.innerWidth<768){
+    document.getElementById('recept-fiche-mobiel').innerHTML=renderFicheHtml(r,true);
+    document.getElementById('recept-fiche-overlay').classList.add('open');
+  }
+  // Highlight actieve kaart
+  document.querySelectorAll('.recept-card').forEach(c=>{
+    c.classList.toggle('actief',c.dataset.id==id);
+  });
+}
+
+function _renderFicheInDesktop(r){
+  const el=document.getElementById('recept-fiche');
+  const ph=document.getElementById('fiche-placeholder');
+  if(!el) return;
+  el.innerHTML=renderFicheHtml(r,false);
+  el.style.display='block';
+  if(ph) ph.style.display='none';
+}
+
+function _clearFiche(){
+  const el=document.getElementById('recept-fiche');
+  const ph=document.getElementById('fiche-placeholder');
+  if(el){el.innerHTML='';el.style.display='none';}
+  if(ph) ph.style.display='flex';
+}
+
+function renderFicheHtml(r, metSluitknop){
+  const kanBewerken=Auth.kan('kanReceptenBeheren');
+  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+  const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
+  const bronDom=r.bron?`<a href="${escHtml(r.bron)}" target="_blank" rel="noopener" style="color:var(--accent);">${escHtml(r.bron.replace(/^https?:\/\//,'').split('/').slice(0,2).join('/'))}</a>`:'';
+  return `
+  <div class="fiche-header">
+    <div class="fiche-naam">${escHtml(r.naam)}</div>
+    <div class="fiche-acties">
+      ${kanBewerken?`
+        <button class="btn btn-secondary btn-sm" onclick="openReceptModal(recepten.find(r=>r.id==${r.id}))" title="Bewerken">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="verwijderRecept(${r.id})" title="Verwijderen">🗑️</button>
+      `:''}
+      ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitFiche()" title="Sluiten">✕</button>`:''}
+    </div>
+  </div>
+  <div class="fiche-meta">
+    ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
+    ${r.tijd?`<span class="fiche-meta-item">⏱ ${r.tijd} min</span>`:''}
+    ${r.porties?`<span class="fiche-meta-item">🍽 ${r.porties} p.</span>`:''}
+    ${r.moeilijk?`<span class="fiche-meta-item">📊 ${escHtml(r.moeilijk)}</span>`:''}
+  </div>
+  ${(r.tags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1rem;">${r.tags.map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}</div>`:''}
+  ${bronDom?`<div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;">📎 ${bronDom}</div>`:''}
+  ${(r.ingredienten||[]).length?`
+    <div class="fiche-sectie-label">Ingrediënten (${r.ingredienten.length})</div>
+    <div>
+      ${r.ingredienten.map(i=>`
+        <div class="fiche-ing-rij">
+          <span class="fiche-ing-hoev">${i.hoev?escHtml(i.hoev)+(i.eenheid?' '+escHtml(i.eenheid):''):''}</span>
+          <span class="fiche-ing-naam">${escHtml(i.naam)}</span>
+          ${i.winkel?`<span class="fiche-ing-winkel">🏪 ${escHtml(i.winkel)}</span>`:''}
+        </div>`).join('')}
+    </div>
+  `:''}
+  ${r.bereiding?`
+    <div class="fiche-sectie-label">Bereiding</div>
+    <div class="fiche-bereiding">${escHtml(r.bereiding)}</div>
+  `:''}`;
+}
+
+function sluitFiche(event){
+  if(event&&event.target!==document.getElementById('recept-fiche-overlay')&&event.type==='click') return;
+  document.getElementById('recept-fiche-overlay').classList.remove('open');
 }
 
 // ── Type multiselect ──────────────────────────────────────────
@@ -581,6 +677,7 @@ function verwijderRecept(id){
   if(!confirm('Recept verwijderen?'))return;
   const r=recepten.find(r=>r.id===id||r.id==id);
   recepten=recepten.filter(r=>r.id!==id&&r.id!=id);
+  if(actieveFicheId==id){ actieveFicheId=null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
   renderRecepten();slaLokaalOp();if(r?._sbId)sbDeleteRecept(r._sbId);
 }
 
