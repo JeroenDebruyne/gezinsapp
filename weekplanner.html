@@ -26,7 +26,6 @@
   </div>
 </header>
 <nav class="bottom-nav" id="sidebar">
-  <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Menu inklappen">&#9664;</button>
   <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
   <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
   <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
@@ -36,6 +35,21 @@
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
   <a class="bottom-nav-item" data-pagina="instellingen" href="instellingen.html"><span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span></a>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
+    <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span>
+    </a>
+    <div class="sidebar-user">
+      <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-naam" id="sidebar-naam">…</span>
+        <span class="sidebar-user-sub" id="sidebar-rol">…</span>
+      </div>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+    </div>
+  </div>
 </nav>
 <nav class="bottom-nav-mobile">
   <a class="mobile-nav-item" href="index.html" data-pagina="index">
@@ -229,14 +243,6 @@ function pasAiMenuToe(){document.getElementById('ai-suggestie-panel').style.disp
 </script>
 <script>
 // ── Sidebar (desktop) ────────────────────────────────────────
-(function(){
-  if(localStorage.getItem('sidebar-expanded') !== 'false')
-    document.body.classList.add('sidebar-expanded');
-})();
-function toggleSidebar(){
-  const exp = document.body.classList.toggle('sidebar-expanded');
-  localStorage.setItem('sidebar-expanded', exp);
-}
 // ── Profiel dropdown ─────────────────────────────────────────
 function toggleProfielMenu(e){
   e && e.stopPropagation();
@@ -256,10 +262,43 @@ function sluitModules(e){
 // ── Actieve pagina in mobiele nav ─────────────────────────────
 (function(){
   const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
-  document.querySelectorAll('.mobile-nav-item[data-pagina]').forEach(el => {
-    if(el.dataset.pagina === pagina) el.classList.add('active');
+  document.querySelectorAll('.mobile-nav-item[data-pagina], .bottom-nav-item[data-pagina]').forEach(el => {
+    el.classList.toggle('active', el.dataset.pagina === pagina);
   });
 })();
+// ── Sidebar footer vullen met gebruikersinfo ─────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  if(typeof Auth !== 'undefined'){
+    const p = Auth.profiel();
+    if(p){
+      const av = document.getElementById('sidebar-avatar');
+      const nm = document.getElementById('sidebar-naam');
+      const rl = document.getElementById('sidebar-rol');
+      if(av) av.textContent = p.emoji || '🧑';
+      if(nm) nm.textContent = p.naam || '';
+      if(rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
+    }
+  }
+  // ── Sluitknop injecteren in alle modals ──────────────────────
+  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
+    if(modal.querySelector('.modal-sluit-btn')) return;
+    const bg = modal.closest('.modal-bg');
+    const btn = document.createElement('button');
+    btn.className = 'modal-sluit-btn';
+    btn.setAttribute('aria-label', 'Sluiten');
+    btn.textContent = '✕';
+    btn.onclick = function(e){
+      e.stopPropagation();
+      if(bg) bg.classList.remove('open');
+    };
+    modal.insertBefore(btn, modal.firstChild);
+  });
+});
+// ── Sync status ook in sidebar bijwerken ─────────────────────
+const _origToonOpslag = window.toonOpslagStatus;
+window.toonOpslagStatus = function(tekst){
+  document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
+};
 </script>
 </body>
 </html>
