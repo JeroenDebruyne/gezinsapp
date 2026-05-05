@@ -599,13 +599,13 @@ function renderDagDetail(datumISO){
             <div class="act-kleur-balk" style="background:${balk};${a.meerdaags?'border-radius:2px;':''}" ></div>
             <div class="act-rij-body">
               <div class="act-rij-naam${a.prive?' prive':''}">
-                ${a.meerdaags?'📆 ':''}${a.naam}${a.prive?' 🔒':''}
+                ${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}
               </div>
               <div class="act-rij-meta">
-                ${a.meerdaags&&a.beginDatum?`${a.beginDatum} → ${a.eindDatum}`:
-                  a.start?`${a.start}${a.eindUur?' – '+a.eindUur:''}`:''}
-                ${a.locatie?` · 📍 ${a.locatie}`:''}
-                ${a.prep?` · ⚠️ ${a.prep}`:''}
+                ${a.meerdaags&&a.beginDatum?`${escHtml(a.beginDatum)} → ${escHtml(a.eindDatum)}`:
+                  a.start?`${escHtml(a.start)}${a.eindUur?' – '+escHtml(a.eindUur):''}`:''}
+                ${a.locatie?` · 📍 ${escHtml(a.locatie)}`:''}
+                ${a.prep?` · ⚠️ ${escHtml(a.prep)}`:''}
               </div>
               ${badges?`<div class="act-rij-badges">${badges}</div>`:''}
               ${transportHtml}

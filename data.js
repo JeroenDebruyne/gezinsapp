@@ -3,6 +3,13 @@
  * Laad na auth.js, voor pagina-specifieke scripts
  */
 
+// ── HTML escaping helper (voorkomt XSS in innerHTML templates) ──
+function escHtml(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── Constanten ────────────────────────────────────────────────
 const SUPABASE_URL = 'https://rdessctmorraeeipysct.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';

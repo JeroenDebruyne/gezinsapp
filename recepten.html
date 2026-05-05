@@ -365,15 +365,15 @@ function filterIngCombo(input, rowId){
   const dd=document.getElementById('dd-'+rowId);
   const matches=standaardIngredienten.filter(i=>i.naam.toLowerCase().includes(zoek)).slice(0,8);
   let html=matches.map(i=>`
-    <div class="ing-combo-option" onmousedown="kiesIng('${rowId}','${i.naam.replace(/'/g,"\\'")}','${i.winkel}')">
-      <span>${i.naam}</span>
-      <span class="winkel-hint">🏪 ${i.winkel}</span>
+    <div class="ing-combo-option" onmousedown="kiesIng('${rowId}','${escHtml(i.naam).replace(/'/g,"\\'")}','${escHtml(i.winkel)}')">
+      <span>${escHtml(i.naam)}</span>
+      <span class="winkel-hint">🏪 ${escHtml(i.winkel)}</span>
     </div>`).join('');
   // "Nieuw aanmaken" optie als naam niet exact bestaat
   const bestaatExact=standaardIngredienten.some(i=>i.naam.toLowerCase()===zoek);
   if(zoek&&!bestaatExact){
-    html+=`<div class="ing-combo-nieuw" onmousedown="maakNieuwIng('${rowId}','${input.value.replace(/'/g,"\\'")}')">
-      ✨ Nieuw ingrediënt: <strong>${input.value}</strong>
+    html+=`<div class="ing-combo-nieuw" onmousedown="maakNieuwIng('${rowId}','${escHtml(input.value).replace(/'/g,"\\'")}')">
+      ✨ Nieuw ingrediënt: <strong>${escHtml(input.value)}</strong>
     </div>`;
   }
   dd.innerHTML=html;
@@ -550,8 +550,8 @@ function naarStap(n){
 async function startImport(){
   const url=document.getElementById('import-url').value.trim();
   if(!url||!url.startsWith('http')){ alert('Plak een geldige URL.'); return; }
-  let apiKey=localStorage.getItem('anthropic_api_key')||'';
-  if(!apiKey){ apiKey=prompt('Anthropic API key (sk-ant-…):'); if(!apiKey)return; localStorage.setItem('anthropic_api_key',apiKey); }
+  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
+  if(!apiKey){ apiKey=prompt('Anthropic API key (sk-ant-…):'); if(!apiKey)return; localStorage.setItem('anthropic_api_key',apiKey); } // CodeQL[js/clear-text-storage-of-sensitive-information]
   naarStap(2);
   document.getElementById('import-loader-tekst').textContent='Recept ophalen van '+url.replace(/^https?:\/\//,'').split('/')[0]+'…';
   try{
@@ -603,7 +603,7 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
     toonImportPreview(recept);
     naarStap(3);
   }catch(e){
-    document.getElementById('import-error-tekst').innerHTML=`<strong>❌ Import mislukt</strong><br><br>${e.message}`;
+    document.getElementById('import-error-tekst').innerHTML=`<strong>❌ Import mislukt</strong><br><br>${escHtml(e.message)}`;
     naarStap(4);
   }
 }
@@ -611,11 +611,11 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
 function toonImportPreview(r){
   const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
   const types=(r.types||[r.type]).filter(Boolean).map(t=>typeLabels[t]||t).join(', ');
-  const ingLijst=(r.ingredienten||[]).slice(0,8).map(i=>`<span>${i.hoev?i.hoev+' '+i.eenheid+' ':''}${i.naam}</span>`).join('');
+  const ingLijst=(r.ingredienten||[]).slice(0,8).map(i=>`<span>${i.hoev?escHtml(i.hoev)+' '+escHtml(i.eenheid)+' ':''}${escHtml(i.naam)}</span>`).join('');
   const meer=(r.ingredienten||[]).length>8?`<span style="color:var(--muted);">+${r.ingredienten.length-8} meer</span>`:'';
   document.getElementById('import-preview').innerHTML=`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
-      <div class="import-preview-naam">${r.naam}</div>
+      <div class="import-preview-naam">${escHtml(r.naam)}</div>
       <span class="import-success-badge">✅ Gevonden</span>
     </div>
     <div class="import-preview-meta">

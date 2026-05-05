@@ -131,9 +131,9 @@ function renderCrm(){
     <div class="crm-card">
       <div class="crm-card-header">
         <div>
-          <div class="crm-naam">👨‍👩‍👧 ${c.naam}</div>
-          ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${c.partner}</div>`:''}
-          ${parseInt(c.kinderen)>0?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👧 ${c.kinderenNamen||parseInt(c.kinderen)+' kinderen'}</div>`:''}
+          <div class="crm-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
+          ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(c.partner)}</div>`:''}
+          ${parseInt(c.kinderen)>0?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👧 ${escHtml(c.kinderenNamen||parseInt(c.kinderen)+' kinderen')}</div>`:''}
         </div>
         ${kanBewerken?`<div style="display:flex;gap:6px;">
           <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})">✏️</button>
@@ -143,8 +143,8 @@ function renderCrm(){
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
         <span style="font-size:12px;padding:3px 10px;border-radius:99px;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--druk-bg)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--druk-clr)'};font-weight:600;">🎄 Kerstmis: ${c.kerstmis==='ja'?'Ja':'Nee'}</span>
       </div>
-      ${c.cadeauNj?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">🎊 Nieuwjaar: ${c.cadeauNj}</div>`:''}
-      ${c.cadeauVj?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">🎂 Verjaardag: ${c.cadeauVj}</div>`:''}
+      ${c.cadeauNj?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">🎊 Nieuwjaar: ${escHtml(c.cadeauNj)}</div>`:''}
+      ${c.cadeauVj?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">🎂 Verjaardag: ${escHtml(c.cadeauVj)}</div>`:''}
     </div>`).join('');
 }
 function openCrmModal(contact){

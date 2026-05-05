@@ -326,8 +326,8 @@ function homeAnnuleer(kanaal){
 async function homeStuurBericht(kanaal){
   const input=document.getElementById('home-chat-input-'+kanaal);
   const tekst=input.value.trim();if(!tekst)return;
-  let apiKey=localStorage.getItem('anthropic_api_key')||'';
-  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
   input.value='';
   homeVoegBerichtToe(kanaal,'user',tekst);
   homeChatGeschiedenis.push({role:'user',content:tekst});
@@ -381,7 +381,7 @@ function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){
   wrap.style.cssText='align-self:'+(rol==='user'?'flex-end':'flex-start')+';max-width:90%;';
   const bubble=document.createElement('div');
   bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  bubble.innerHTML=rol==='user'?tekst:tekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  if(rol==='user'){bubble.textContent=tekst;}else{bubble.innerHTML=escHtml(tekst).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');}
   wrap.appendChild(bubble);container.appendChild(wrap);
   container.scrollTop=container.scrollHeight;
   return isTyping?wrap:null;

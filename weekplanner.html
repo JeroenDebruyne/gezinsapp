@@ -234,8 +234,8 @@ document.getElementById('plan-modal-bg').addEventListener('click',e=>{if(e.targe
 function openAiSuggestie(){document.getElementById('ai-suggestie-panel').style.display='block';}
 
 async function genereerAiMenu(){
-  let apiKey=localStorage.getItem('anthropic_api_key')||'';
-  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-...):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-...):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
   const btn=document.getElementById('btn-genereer');
   btn.textContent='⏳ Bezig…';btn.disabled=true;
   document.getElementById('ai-suggestie-inhoud').textContent='De agent denkt na over jullie week…';

@@ -224,8 +224,8 @@ function annuleerActie(){
 async function stuurBericht(){
   const input=document.getElementById('chat-input');
   const tekst=input.value.trim();if(!tekst)return;
-  let apiKey=localStorage.getItem('anthropic_api_key')||'';
-  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);}
+  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side only, no backend available
+  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
   input.value='';
   voegBerichtToe('user',tekst);
   chatGeschiedenis.push({role:'user',content:tekst});
@@ -274,7 +274,7 @@ function voegBerichtToe(rol,tekst,isTyping=false){
   wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};max-width:82%;`;
   const bubble=document.createElement('div');
   bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  bubble.innerHTML=rol==='user'?tekst:formateerAntwoord(tekst);
+  if(rol==='user'){bubble.textContent=tekst;}else{bubble.innerHTML=formateerAntwoord(escHtml(tekst));}
   wrap.appendChild(bubble);container.appendChild(wrap);
   container.scrollTop=container.scrollHeight;
   return isTyping?wrap:null;
