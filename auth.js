@@ -9,9 +9,9 @@ const Auth = (() => {
   // DEV_MODE = false → login.html vereist
   const DEV_MODE = false;
 
-  const SUPABASE_URL = 'https://rdessctmorraeeipysct.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_bKCmI021FVOaOMhGKU-6eg_jTerhSWq';
-  const SESSION_KEY  = 'sb-rdessctmorraeeipysct-auth-token';
+  const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
+  const SESSION_KEY  = 'sb-ceeplmghvcaqvlpicwyi-auth-token';
   const KIND_KEY     = 'gezinsapp-kind-sessie';
 
   const ROLLEN = {
