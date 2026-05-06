@@ -569,7 +569,21 @@ async function maakGezinAan() {
     if (!authRes.ok || authData.error)
       throw new Error(authData.error_description || authData.msg || authData.error || 'Aanmaken mislukt');
 
-    const token = authData.access_token;
+    // Geen token? (e-mailbevestiging aan in Supabase) → onmiddellijk inloggen als fallback
+    let sessionData = authData;
+    if (!authData.access_token) {
+      const loginRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw })
+      });
+      const loginData = await loginRes.json();
+      if (!loginRes.ok || !loginData.access_token)
+        throw new Error('Zet "Confirm email" uit in Supabase → Authentication → Providers → Email, en probeer opnieuw.');
+      sessionData = loginData;
+    }
+
+    const token = sessionData.access_token;
     const h = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
     // 2. Gezin aanmaken in gezinnen tabel
@@ -592,7 +606,7 @@ async function maakGezinAan() {
     });
 
     // 4. Sessie opslaan + doorsturen naar app
-    saveSession(authData);
+    saveSession(sessionData);
     localStorage.removeItem('gezinsapp-kind-sessie');
     window.location.replace('index.html');
 
