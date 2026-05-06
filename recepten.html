@@ -309,7 +309,7 @@
 
   <!-- Ingrediënten -->
   <div class="section-label">Ingrediënten</div>
-  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.6fr) minmax(0,0.6fr) minmax(0,1.4fr) 28px;gap:5px;margin-bottom:4px;padding:0 2px;">
+  <div style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;margin-bottom:4px;padding:0 2px;">
     <span style="font-size:11px;color:var(--muted);font-weight:600;">NAAM</span>
     <span style="font-size:11px;color:var(--muted);font-weight:600;text-align:center;">AANT.</span>
     <span style="font-size:11px;color:var(--muted);font-weight:600;">EENHEID</span>
@@ -493,7 +493,7 @@ function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
   const w=winkel||zoekStandaardWinkel(naam);
   const rowId='ing-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
   const baseI='padding:8px 5px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;box-sizing:border-box;width:100%;background:var(--surface);color:var(--ink);font-family:inherit;min-width:0;';
-  return `<div id="${rowId}" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.6fr) minmax(0,0.6fr) minmax(0,1.4fr) 28px;gap:5px;align-items:center;margin-bottom:8px;">
+  return `<div id="${rowId}" style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;align-items:center;margin-bottom:8px;">
     <div class="ing-combo-wrap" style="min-width:0;position:relative;">
       <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${naam}"
         oninput="filterIngCombo(this,'${rowId}')"
