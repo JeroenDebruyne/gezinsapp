@@ -573,15 +573,18 @@ body{
     align-items:center;
     padding:15px 0 !important;
     margin:0 !important;
+    /* Gesloten: lijn onder de titel */
     border-bottom:1.5px solid var(--border);
     -webkit-tap-highlight-color:transparent;
   }
+  /* Open: lijn niet meer onder de titel maar onder de inhoud */
+  .section-label.sect-open{ border-bottom:none; }
   .sect-chevron{
     font-size:13px;color:var(--muted);margin-left:8px;flex-shrink:0;
     transition:transform .25s;
   }
   .sect-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
-  .sect-body.open{max-height:9999px;}
+  .sect-body.open{max-height:9999px;border-bottom:1.5px solid var(--border);padding-bottom:8px;}
 
   /* Rooster dag-rij: gestapeld op mobiel */
   .rooster-dag-rij{display:block !important;padding:10px 0 8px !important;border-bottom:1px solid var(--border);}
