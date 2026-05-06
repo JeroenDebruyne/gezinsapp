@@ -476,6 +476,7 @@ async function maakNieuwAccount() {
       persoon_key: key,
       email: email || null,
       is_kind: isKind,
+      gezin_id: Auth.getGezinId(),
     });
 
     toonMsg(`✅ ${naam} aangemaakt!`, true);

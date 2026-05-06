@@ -75,12 +75,7 @@ const SCHOOLVAKANTIES = [
 
 // ── App state ─────────────────────────────────────────────────
 let activiteiten = [];
-let recepten = [
-  { id:1, naam:'Spaghetti bolognese', type:'avond', tijd:35, moeilijk:'Normaal', wie:['jeroen','kelly','nora','odiel'], score:5, bron:'', bereiding:'', prive:false, tags:['Restjes-proof','Meal prep'], ingredienten:[{naam:'Gehakt',hoev:'500',eenheid:'gram',winkel:'Beenhouwerij'},{naam:'Spaghetti',hoev:'400',eenheid:'gram',winkel:'Colruyt'},{naam:'Tomatenblokjes',hoev:'2',eenheid:'blik',winkel:'Lidl'},{naam:'Ui',hoev:'2',eenheid:'stuks',winkel:'Markt'}] },
-  { id:2, naam:'Griekse salade met kip', type:'lunch', tijd:15, moeilijk:'Snel', wie:['jeroen','kelly'], score:4, bron:'', bereiding:'', prive:false, tags:['Restjes-proof'], ingredienten:[{naam:'Kipfilet',hoev:'300',eenheid:'gram',winkel:'Delhaize'},{naam:'Feta',hoev:'150',eenheid:'gram',winkel:'Albert Heijn'},{naam:'Komkommer',hoev:'1',eenheid:'stuk',winkel:'Markt'}] },
-  { id:3, naam:'Pancakes met fruit', type:'weekend', tijd:25, moeilijk:'Snel', wie:['jeroen','kelly','nora','odiel'], score:5, bron:'', bereiding:'', prive:false, tags:['Kindvriendelijk','Eenpansgerecht'], ingredienten:[{naam:'Bloem',hoev:'200',eenheid:'gram',winkel:'Colruyt'},{naam:'Eieren',hoev:'3',eenheid:'stuks',winkel:'Lidl'},{naam:'Aardbeien',hoev:'250',eenheid:'gram',winkel:'Markt'}] },
-  { id:4, naam:'Granola met yoghurt', type:'ontbijt', tijd:5, moeilijk:'Snel', wie:['jeroen','kelly'], score:4, bron:'', bereiding:'', prive:false, tags:['Meal prep'], ingredienten:[{naam:'Granola',hoev:'80',eenheid:'gram',winkel:'Albert Heijn'},{naam:'Griekse yoghurt',hoev:'150',eenheid:'gram',winkel:'Delhaize'},{naam:'Honing',hoev:'1',eenheid:'el',winkel:'Colruyt'}] },
-];
+let recepten = [];
 let planning = {};
 let extraItems = [];
 let drukteOverride = {};
@@ -172,9 +167,14 @@ async function laadOp() {
     await Auth.laadProfielen();
     herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
     const [r,i,a,p,b,c,d,t] = await Promise.all([
-      sbFetch('recepten'), sbFetch('ingredienten'), sbFetch('activiteiten'),
-      sbFetch('planning'), sbFetch('boodschappen_extra'), sbFetch('contacten'),
-      sbFetch('drukte_override'), sbFetch('todos').catch(()=>[]),
+      sbFetch(`recepten${_gidQ('?order=naam')}`),
+      sbFetch(`ingredienten${_gidQ('?order=naam')}`),
+      sbFetch(`activiteiten${_gidQ('?order=naam')}`),
+      sbFetch(`planning${_gidQ('')}`),
+      sbFetch(`boodschappen_extra${_gidQ('?order=naam')}`),
+      sbFetch(`contacten${_gidQ('?order=naam')}`),
+      sbFetch(`drukte_override${_gidQ('')}`),
+      sbFetch(`todos${_gidQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
     if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
     if (i.length) standaardIngredienten = i;
@@ -196,7 +196,7 @@ async function laadOp() {
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
     if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
-    const inst = await sbFetch('instellingen').catch(()=>[]);
+    const inst = await sbFetch(`instellingen${_gidQ('')}`).catch(()=>[]);
     inst.forEach(r=>{
       if (r.id==='vasteRoosters'&&r.waarde) vasteRoosters={...vasteRoosters,...r.waarde};
       if (r.id==='uitzonderingen'&&r.waarde) uitzonderingen=r.waarde;
@@ -236,6 +236,15 @@ function slaLokaalOp() {
   try { localStorage.setItem('gezinsapp_data', JSON.stringify(data)); } catch(e) {}
 }
 
+// Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties
+function _gid() { return Auth.getGezinId() || null; }
+// Voegt gezin_id toe aan een query string: _gidQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
+function _gidQ(base = '') {
+  const id = _gid();
+  if (!id) return base;
+  return base ? `${base}&gezin_id=eq.${id}` : `?gezin_id=eq.${id}`;
+}
+
 function toonOpslagStatus(tekst) {
   document.querySelectorAll('.opslag-status').forEach(el => el.textContent = tekst);
 }
@@ -265,7 +274,7 @@ async function sbSaveRecept(recept) {
   };
   try {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('recepten','POST',data); if(res[0]) recept._sbId=res[0].id; }
+    else { const res=await sbFetch('recepten','POST',{...data,gezin_id:_gid()}); if(res[0]) recept._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'recept'); }
 }
@@ -285,7 +294,7 @@ async function sbSaveActiviteit(act) {
   };
   try {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('activiteiten','POST',data); if(res[0]) act._sbId=res[0].id; }
+    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:_gid()}); if(res[0]) act._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'activiteit'); }
 }
@@ -300,17 +309,19 @@ async function sbSaveTodo(todo) {
   };
   try {
     if (todo._sbId) { await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('todos','POST',data); if(res[0]) todo._sbId=res[0].id; }
+    else { const res=await sbFetch('todos','POST',{...data,gezin_id:_gid()}); if(res[0]) todo._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'todo'); }
 }
 async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
-  const bestaand = await sbFetch(`planning?datum=eq.${datum}`).catch(()=>[]);
+  const gid = _gid();
+  const pf = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
+  const bestaand = await sbFetch(`planning${pf}`).catch(()=>[]);
   try {
-    if (bestaand.length) { await sbFetch(`planning?datum=eq.${datum}`,'PATCH',{[slot]:waarde,porties:porties||{}}); }
-    else { await sbFetch('planning','POST',{datum,[slot]:waarde,porties:porties||{}}); }
+    if (bestaand.length) { await sbFetch(`planning${pf}`,'PATCH',{[slot]:waarde,porties:porties||{}}); }
+    else { await sbFetch('planning','POST',{datum,[slot]:waarde,porties:porties||{},gezin_id:gid}); }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'planning'); }
 }
@@ -319,7 +330,7 @@ async function sbSaveIngredient(ing) {
   const data = { naam:ing.naam, winkel:ing.winkel, categorie:ing.categorie };
   try {
     if (ing._sbId) { await sbFetch(`ingredienten?id=eq.${ing._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('ingredienten','POST',data); if(res[0]) ing._sbId=res[0].id; }
+    else { const res=await sbFetch('ingredienten','POST',{...data,gezin_id:_gid()}); if(res[0]) ing._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'ingredient'); }
 }
@@ -329,34 +340,38 @@ async function sbSaveContact(contact) {
   const data = { naam:contact.naam, partner:contact.partner, kinderen:parseInt(contact.kinderen)||0, kinderen_namen:contact.kinderenNamen, kerstmis:contact.kerstmis, cadeau_nj:contact.cadeauNj, cadeau_vj:contact.cadeauVj };
   try {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('contacten','POST',data); if(res[0]) contact._sbId=res[0].id; }
+    else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gid()}); if(res[0]) contact._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'contact'); }
 }
 async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'contact-delete');} }
 
 async function sbSaveExtra(item) {
-  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
+  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gid()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
   catch(e) { _opslagFout(e,'extra'); }
 }
 async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }
 
 async function sbSaveDrukte(datum, drukte) {
-  const bestaand = await sbFetch(`drukte_override?datum=eq.${datum}`).catch(()=>[]);
+  const gid = _gid();
+  const df = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
+  const bestaand = await sbFetch(`drukte_override${df}`).catch(()=>[]);
   try {
-    if (bestaand.length) { await sbFetch(`drukte_override?datum=eq.${datum}`,'PATCH',{drukte}); }
-    else { await sbFetch('drukte_override','POST',{datum,drukte}); }
+    if (bestaand.length) { await sbFetch(`drukte_override${df}`,'PATCH',{drukte}); }
+    else { await sbFetch('drukte_override','POST',{datum,drukte,gezin_id:gid}); }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'drukte'); }
 }
 
 async function sbSaveInstellingen() {
   try {
+    const gid = _gid();
     for (const [id, waarde] of [['vasteRoosters',vasteRoosters],['uitzonderingen',uitzonderingen],['transportUitzonderingen',transportUitzonderingen],['standaardTransport',standaardTransport]]) {
-      const bestaand = await sbFetch(`instellingen?id=eq.${id}`).catch(()=>[]);
+      const instF = gid ? `?id=eq.${id}&gezin_id=eq.${gid}` : `?id=eq.${id}`;
+      const bestaand = await sbFetch(`instellingen${instF}`).catch(()=>[]);
       const data = { waarde, updated_at:new Date().toISOString() };
-      if (bestaand.length) { await sbFetch(`instellingen?id=eq.${id}`,'PATCH',data); }
-      else { await sbFetch('instellingen','POST',{id,...data}); }
+      if (bestaand.length) { await sbFetch(`instellingen${instF}`,'PATCH',data); }
+      else { await sbFetch('instellingen','POST',{id,...data,gezin_id:gid}); }
     }
   } catch(e) { _opslagFout(e,'instellingen'); }
 }

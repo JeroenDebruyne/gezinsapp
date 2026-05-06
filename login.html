@@ -474,12 +474,12 @@ async function initialiseerLogin() {
 
     // Gezinsnaam ophalen en tonen
     const gezinRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/instellingen?id=eq.gezin&select=waarde`,
+      `${SUPABASE_URL}/rest/v1/gezinnen?select=naam&limit=1`,
       { headers: { 'apikey': SUPABASE_KEY } }
     );
     if (gezinRes.ok) {
       const d = await gezinRes.json();
-      const naam = d[0]?.waarde?.naam;
+      const naam = d[0]?.naam;
       if (naam) {
         document.getElementById('logo-sub').textContent = naam;
         document.getElementById('login-divider').textContent = `log in als ${naam}`;
@@ -572,16 +572,23 @@ async function maakGezinAan() {
     const token = authData.access_token;
     const h = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
-    // 2. Profiel aanmaken (rol = gezinshoofd, altijd)
+    // 2. Gezin aanmaken in gezinnen tabel
+    const gezinDbRes = await fetch(`${SUPABASE_URL}/rest/v1/gezinnen`, {
+      method: 'POST', headers: h,
+      body: JSON.stringify({ naam: gezinNaam })
+    });
+    if (!gezinDbRes.ok) {
+      const err = await gezinDbRes.json().catch(()=>({}));
+      throw new Error(err.message || 'Gezin opslaan mislukt');
+    }
+    const gezinDbData = await gezinDbRes.json();
+    const gezinId = Array.isArray(gezinDbData) ? gezinDbData[0]?.id : gezinDbData?.id;
+    if (!gezinId) throw new Error('Geen gezin_id ontvangen van database');
+
+    // 3. Profiel aanmaken (rol = gezinshoofd, altijd)
     await fetch(`${SUPABASE_URL}/rest/v1/gezin_profielen`, {
       method: 'POST', headers: h,
-      body: JSON.stringify({ naam, emoji, rol: 'gezinshoofd', persoon_key: key, email, is_kind: false })
-    });
-
-    // 3. Gezinsnaam opslaan
-    await fetch(`${SUPABASE_URL}/rest/v1/instellingen`, {
-      method: 'POST', headers: h,
-      body: JSON.stringify({ id: 'gezin', waarde: { naam: gezinNaam }, updated_at: new Date().toISOString() })
+      body: JSON.stringify({ naam, emoji, rol: 'gezinshoofd', persoon_key: key, email, is_kind: false, gezin_id: gezinId })
     });
 
     // 4. Sessie opslaan + doorsturen naar app

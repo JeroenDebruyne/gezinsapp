@@ -14,9 +14,9 @@ const Auth = (() => {
   const SESSION_KEY  = 'sb-ceeplmghvcaqvlpicwyi-auth-token';
   const KIND_KEY     = 'gezinsapp-kind-sessie';
 
-  // Profielen — leeg bij opstart, gevuld vanuit gezin_profielen tabel
-  // Muteert altijd hetzelfde array-object zodat externe refs (Auth.PROFIELEN) up-to-date blijven
+  // Profielen & gezin — leeg bij opstart, gevuld vanuit database
   const _profielenCache = [];
+  let _gezinId = null;
 
   const ROLLEN = {
     gezinshoofd: {
@@ -94,7 +94,16 @@ const Auth = (() => {
           rol:        p.rol,
           persoonKey: p.persoon_key,
           isKind:     p.is_kind || false,
+          gezinId:    p.gezin_id || null,
         }));
+        // gezin_id ophalen van de ingelogde gebruiker
+        const s = _readSession();
+        const email = s?.user?.email?.toLowerCase();
+        const kindKey = localStorage.getItem(KIND_KEY);
+        const mijn = kindKey
+          ? data.find(p => p.persoon_key === kindKey)
+          : data.find(p => p.email?.toLowerCase() === email);
+        _gezinId = mijn?.gezin_id || data[0]?.gezin_id || null;
       }
     } catch {}
   }
@@ -185,5 +194,5 @@ const Auth = (() => {
     setInterval(refreshIfNeeded, 4*60*1000);
   }
 
-  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, loginAlsKind, laadProfielen, getProfielen: () => _profielenCache, PROFIELEN: _profielenCache, ROLLEN, KIND_KEY };
+  return { isDev, session, profiel, rol, kan, headers, logout, refreshIfNeeded, requireAuth, initPagina, loginAlsKind, laadProfielen, getProfielen: () => _profielenCache, getGezinId: () => _gezinId, PROFIELEN: _profielenCache, ROLLEN, KIND_KEY };
 })();
