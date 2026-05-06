@@ -124,20 +124,15 @@
   <div id="vakantie-lijst"></div>
 
   <!-- iCal import -->
-  <div class="section-label" id="sect-ical" style="margin-top:1.5rem;">📆 Agenda import (iCal)</div>
-  <div class="info-box">Importeer evenementen vanuit een .ics bestand (Google Agenda, Outlook, Apple Calendar…). Terugkerende evenementen worden als één activiteit opgeslagen.</div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
-        <div style="font-size:14px;font-weight:600;">Importeer .ics bestand</div>
-        <div style="font-size:12px;color:var(--muted);">Activiteiten worden toegevoegd aan je agenda</div>
-      </div>
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer;flex-shrink:0;">
-        📆 Kies bestand
-        <input type="file" accept=".ics" onchange="laadIcal(event)" style="display:none;"/>
-      </label>
+  <div class="section-label" id="sect-ical" style="margin-top:1.5rem;">📆 Agenda-abonnementen</div>
+  <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd.</div>
+
+  <!-- Abonnementenlijst -->
+  <div id="ical-abo-lijst-wrap">
+    <div class="card" id="ical-abo-leeg" style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">
+      Geen abonnementen. Voeg er een toe via 📥 in de Agenda.
     </div>
-    <div id="ical-preview" style="margin-top:0;"></div>
+    <div id="ical-abo-kaarten"></div>
   </div>
 
   <!-- Data beheer -->
@@ -273,7 +268,7 @@ const WERKDAGEN_LABELS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
 const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 
-laadOp().then(renderInstellingen).catch(()=>{laadLokaal();renderInstellingen();});
+laadOp().then(()=>{ renderInstellingen(); renderIcalAbonnementen(); }).catch(()=>{laadLokaal();renderInstellingen();});
 
 function renderInstellingen(){
   // Profiel
@@ -745,6 +740,100 @@ function icalEventNaarActiviteit(ev){
     freq, wie:[], prive:false,
     transport:{},
   };
+}
+
+// ── iCal Abonnementen beheer ──────────────────────────────────
+async function renderIcalAbonnementen(){
+  await laadIcalAbonnementen();
+  const kaarten = document.getElementById('ical-abo-kaarten');
+  const leeg    = document.getElementById('ical-abo-leeg');
+  if (!kaarten) return;
+  if (!icalAbonnementen.length) {
+    leeg.style.display = 'block'; kaarten.innerHTML = ''; return;
+  }
+  leeg.style.display = 'none';
+  kaarten.innerHTML = icalAbonnementen.map((abo, i) => {
+    const opgeschort = abo.paused || false;
+    const lastSync   = abo.lastSync ? new Date(abo.lastSync).toLocaleDateString('nl-BE') : '—';
+    const wie        = (abo.wie||[]).map(k => PEMOJI[k]||k).join(' ') || '—';
+    return `
+    <div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;">
+            ${escHtml(abo.naam||abo.url)}
+            ${opgeschort?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);font-weight:600;">Opgeschort</span>':''}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(abo.url)}">${escHtml(abo.url)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Voor: ${wie} &nbsp;·&nbsp; Laatste sync: ${lastSync}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        ${opgeschort
+          ? `<button class="btn btn-primary btn-sm" onclick="aboHervatten(${i})">▶ Hervatten</button>`
+          : `<button class="btn btn-secondary btn-sm" onclick="aboOpschorten(${i})">⏸ Opschorten</button>
+             <button class="btn btn-secondary btn-sm" onclick="aboSyncNu(${i})">↻ Sync nu</button>`
+        }
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="aboVerwijderen(${i})">🗑 Verwijderen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function aboOpschorten(i){
+  const abo = icalAbonnementen[i]; if (!abo) return;
+  if (!confirm(`"${abo.naam||abo.url}" opschorten?\n\nAlle activiteiten uit dit abonnement worden uit je agenda verwijderd.`)) return;
+  toonOpslagStatus('⏳ Opschorten…');
+  await sbVerwijderIcalActiviteiten(abo.url);
+  icalAbonnementen[i].paused = true;
+  await slaIcalAbonnementenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Abonnement opgeschort, activiteiten verwijderd');
+  renderIcalAbonnementen();
+}
+
+async function aboHervatten(i){
+  const abo = icalAbonnementen[i]; if (!abo) return;
+  toonOpslagStatus('⏳ Hervatten en synchroniseren…');
+  try {
+    const text   = await icalFetchUrl(abo.url);
+    const events = parseIcal(text, abo.url);
+    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url);
+    icalAbonnementen[i].paused   = false;
+    icalAbonnementen[i].lastSync = new Date().toISOString();
+    await slaIcalAbonnementenOp();
+    slaLokaalOp();
+    toonOpslagStatus(`✅ Hervat: ${nieuw} toegevoegd, ${geupdate} bijgewerkt`);
+    renderIcalAbonnementen();
+  } catch(e) {
+    toonOpslagStatus('❌ ' + e.message);
+  }
+}
+
+async function aboSyncNu(i){
+  const abo = icalAbonnementen[i]; if (!abo || abo.paused) return;
+  toonOpslagStatus('⏳ Synchroniseren…');
+  try {
+    const text   = await icalFetchUrl(abo.url);
+    const events = parseIcal(text, abo.url);
+    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url);
+    icalAbonnementen[i].lastSync = new Date().toISOString();
+    await slaIcalAbonnementenOp();
+    slaLokaalOp();
+    toonOpslagStatus(`✅ ${abo.naam||'Agenda'}: ${nieuw} nieuw, ${geupdate} bijgewerkt`);
+    renderIcalAbonnementen();
+  } catch(e) { toonOpslagStatus('❌ ' + e.message); }
+}
+
+async function aboVerwijderen(i){
+  const abo = icalAbonnementen[i]; if (!abo) return;
+  const metActiviteiten = confirm(`"${abo.naam||abo.url}" verwijderen?\n\nKlik OK om ook alle bijhorende activiteiten te wissen.\nKlik Annuleren om alleen het abonnement te verwijderen maar de activiteiten te bewaren.`);
+  if (metActiviteiten) await sbVerwijderIcalActiviteiten(abo.url);
+  icalAbonnementen.splice(i, 1);
+  await slaIcalAbonnementenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Abonnement verwijderd');
+  renderIcalAbonnementen();
 }
 </script>
 <script>
