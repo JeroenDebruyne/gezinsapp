@@ -594,27 +594,31 @@ async function slaGebruikerOp(id) {
 function scrollNaar(sectionId){
   const el=document.getElementById(sectionId);
   if(!el) return;
-  // Scroll altijd via het document (inst-inhoud is geen aparte scroller meer)
-  const OFFSET = 64; // topbar (52px) + buffer (12px)
-  const top = el.getBoundingClientRect().top + window.pageYOffset - OFFSET;
-  window.scrollTo({top, behavior:'smooth'});
-  // Highlight actief nav-item
+  const scroller=document.querySelector('.main-content');
+  if(scroller && window.innerWidth>=768){
+    // Scroll binnen main-content (de echte scroller op desktop)
+    const top=el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 16;
+    scroller.scrollTo({top, behavior:'smooth'});
+  } else {
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
   document.querySelectorAll('.inst-nav-item').forEach(btn=>{
     btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(sectionId));
   });
 }
 
-// Highlight nav-item op scroll (document scroll)
+// Highlight nav-item op scroll
 (function(){
+  const scroller=document.querySelector('.main-content');
+  if(!scroller) return;
   const secties=['sect-profiel','sect-roosters','sect-vakanties','sect-ical','sect-data','sect-ingredienten','sect-api','sect-gebruikers'];
-  document.addEventListener('scroll',()=>{
-    if(window.innerWidth<768) return;
+  scroller.addEventListener('scroll',()=>{
     let actief='sect-profiel';
     for(const id of secties){
       const el=document.getElementById(id);
       if(!el) continue;
-      const top=el.getBoundingClientRect().top;
-      if(top<=80) actief=id;
+      const top=el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      if(top<=40) actief=id;
     }
     document.querySelectorAll('.inst-nav-item').forEach(btn=>{
       btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(actief));
