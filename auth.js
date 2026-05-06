@@ -88,13 +88,14 @@ const Auth = (() => {
       if (Array.isArray(data) && data.length) {
         _profielenCache.length = 0;
         data.forEach(p => _profielenCache.push({
-          email:      p.email || null,
-          naam:       p.naam,
-          emoji:      p.emoji || '👤',
-          rol:        p.rol,
-          persoonKey: p.persoon_key,
-          isKind:     p.is_kind || false,
-          gezinId:    p.gezin_id || null,
+          email:         p.email || null,
+          naam:          p.naam,
+          emoji:         p.emoji || '👤',
+          rol:           p.rol,
+          persoonKey:    p.persoon_key,
+          isKind:        p.is_kind || false,
+          gezinId:       p.gezin_id || null,
+          geboortedatum: p.geboortedatum || null,
         }));
         // gezin_id ophalen van de ingelogde gebruiker
         const s = _readSession();

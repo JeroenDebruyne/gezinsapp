@@ -243,6 +243,10 @@
           <div class="form-row"><label>Wachtwoord</label><input type="password" id="nu-pw" placeholder="min. 8 tekens"/></div>
         </div>
         <div class="form-row">
+          <label>Verjaardag <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel)</span></label>
+          <input type="date" id="nu-verjaardag"/>
+        </div>
+        <div class="form-row">
           <label>Persoon-ID <span style="font-size:11px;font-weight:400;color:var(--muted);">(unieke sleutel, kleine letters)</span></label>
           <input type="text" id="nu-key" placeholder="bijv. thomas" style="font-family:monospace;"/>
         </div>
@@ -347,7 +351,8 @@ function toggleVastDag(persoon,dag,actief){
   if(!vasteRoosters[persoon])vasteRoosters[persoon]={};
   if(!vasteRoosters[persoon][dag])vasteRoosters[persoon][dag]={van:'08:00',tot:'17:00'};
   vasteRoosters[persoon][dag].actief=actief;
-  renderVastRoosterPersoon(persoon,persoon==='jeroen');
+  const p=Auth.getProfielen().find(p=>p.persoonKey===persoon);
+  renderVastRoosterPersoon(persoon, p?.rol==='gezinshoofd');
 }
 function updateVastRooster(persoon,dag,veld,waarde){
   if(!vasteRoosters[persoon])vasteRoosters[persoon]={};
@@ -438,13 +443,14 @@ function toggleKindVelden() {
 document.getElementById('nu-key').addEventListener('input', function(){ this.dataset.manualEdit = '1'; });
 
 async function maakNieuwAccount() {
-  const naam   = document.getElementById('nu-naam').value.trim();
-  const emoji  = document.getElementById('nu-emoji').value.trim() || '👤';
-  const rol    = document.getElementById('nu-rol').value;
-  const key    = document.getElementById('nu-key').value.trim().toLowerCase().replace(/\s+/g,'_');
-  const isKind = rol === 'kind';
-  const email  = isKind ? null : document.getElementById('nu-email').value.trim();
-  const pw     = isKind ? null : document.getElementById('nu-pw').value;
+  const naam        = document.getElementById('nu-naam').value.trim();
+  const emoji       = document.getElementById('nu-emoji').value.trim() || '👤';
+  const rol         = document.getElementById('nu-rol').value;
+  const key         = document.getElementById('nu-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const isKind      = rol === 'kind';
+  const email       = isKind ? null : document.getElementById('nu-email').value.trim();
+  const pw          = isKind ? null : document.getElementById('nu-pw').value;
+  const verjaardag  = document.getElementById('nu-verjaardag').value || null;
   const msgEl  = document.getElementById('nu-msg');
   const btnEl  = document.getElementById('nu-btn');
 
@@ -476,6 +482,7 @@ async function maakNieuwAccount() {
       persoon_key: key,
       email: email || null,
       is_kind: isKind,
+      geboortedatum: verjaardag,
       gezin_id: Auth.getGezinId(),
     });
 
@@ -483,6 +490,7 @@ async function maakNieuwAccount() {
     document.getElementById('nu-naam').value = '';
     document.getElementById('nu-emoji').value = '👤';
     document.getElementById('nu-key').value = '';
+    document.getElementById('nu-verjaardag').value = '';
     delete document.getElementById('nu-key').dataset.manualEdit;
     if (!isKind) { document.getElementById('nu-email').value = ''; document.getElementById('nu-pw').value = ''; }
     await Auth.laadProfielen();
@@ -498,48 +506,115 @@ async function laadGebruikersLijst() {
     if (!profielen.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>'; return; }
     const ROLKLEUR = { gezinshoofd:'var(--druk-bg)', jeugd:'var(--normaal-bg)', kind:'var(--rustig-bg)' };
     const ROLTXT   = { gezinshoofd:'var(--druk-clr)', jeugd:'var(--normaal-clr)', kind:'var(--rustig-clr)' };
-    el.innerHTML = profielen.map(p => `
-      <div class="card" style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:6px;">
-        <div style="font-size:24px;">${escHtml(p.emoji||'👤')}</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:600;">${escHtml(p.naam)}</div>
-          <div style="font-size:12px;color:var(--muted);">${p.is_kind ? '👶 Kind-sessie (geen login)' : escHtml(p.email||'')}</div>
+    const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };
+    el.innerHTML = profielen.map(p => {
+      const verjaardag = p.geboortedatum ? '🎂 ' + new Date(p.geboortedatum+'T12:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'}) : '';
+      return `
+      <div class="card" id="gcard-${escHtml(p.id)}" style="margin-bottom:8px;padding:12px 14px;">
+        <!-- Weergave modus -->
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:26px;line-height:1;">${escHtml(p.emoji||'👤')}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;">${escHtml(p.naam)}</div>
+            <div style="font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;">
+              ${p.is_kind ? '<span>👶 Kind-sessie</span>' : `<span>${escHtml(p.email||'')}</span>`}
+              ${verjaardag ? `<span>${verjaardag}</span>` : ''}
+            </div>
+          </div>
+          <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;flex-shrink:0;">${ROLLABEL[p.rol]||p.rol}</span>
+          <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')" style="flex-shrink:0;">✏️ Bewerken</button>
         </div>
-        <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;">${Auth.ROLLEN[p.rol]?.label||p.rol}</span>
-      </div>`).join('');
+        <!-- Bewerk modus (verborgen) -->
+        <div id="gedit-${escHtml(p.id)}" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="form-grid">
+            <div class="form-row">
+              <label>Naam</label>
+              <input type="text" id="gedit-naam-${escHtml(p.id)}" value="${escHtml(p.naam)}"/>
+            </div>
+            <div class="form-row">
+              <label>Emoji</label>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;">
+                ${['🧑','👩','👧','👦','🧒','👶','👨','👵'].map(e=>`<button type="button" onclick="document.getElementById('gedit-emoji-${escHtml(p.id)}').value='${e}'" class="btn btn-secondary btn-sm">${e}</button>`).join('')}
+              </div>
+              <input type="text" id="gedit-emoji-${escHtml(p.id)}" value="${escHtml(p.emoji||'👤')}" style="max-width:70px;font-size:18px;text-align:center;"/>
+            </div>
+            <div class="form-row">
+              <label>Rol</label>
+              <select id="gedit-rol-${escHtml(p.id)}">
+                <option value="gezinshoofd"${p.rol==='gezinshoofd'?' selected':''}>Gezinshoofd</option>
+                <option value="jeugd"${p.rol==='jeugd'?' selected':''}>Jeugd</option>
+                <option value="kind"${p.rol==='kind'?' selected':''}>Kind (logt in zonder account)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Verjaardag</label>
+              <input type="date" id="gedit-verjaardag-${escHtml(p.id)}" value="${escHtml(p.geboortedatum||'')}"/>
+            </div>
+          </div>
+          <div id="gedit-msg-${escHtml(p.id)}" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;margin-top:10px;"></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')">Annuleren</button>
+            <button class="btn btn-primary" onclick="slaGebruikerOp('${escHtml(p.id)}')">💾 Opslaan</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   } catch(e) { if (el) el.innerHTML = '<div style="font-size:13px;color:var(--muted);">Kan lijst niet laden.</div>'; }
+}
+
+function toggleGebruikerEdit(id) {
+  const editEl = document.getElementById('gedit-' + id);
+  if (!editEl) return;
+  editEl.style.display = editEl.style.display === 'none' ? 'block' : 'none';
+}
+
+async function slaGebruikerOp(id) {
+  const naam       = document.getElementById('gedit-naam-' + id)?.value.trim();
+  const emoji      = document.getElementById('gedit-emoji-' + id)?.value.trim() || '👤';
+  const rol        = document.getElementById('gedit-rol-' + id)?.value;
+  const verjaardag = document.getElementById('gedit-verjaardag-' + id)?.value || null;
+  const msgEl      = document.getElementById('gedit-msg-' + id);
+
+  function toonEditMsg(tekst, ok) {
+    msgEl.textContent = tekst; msgEl.style.display = 'block';
+    msgEl.style.background = ok ? 'var(--rustig-bg)' : 'var(--druk-bg)';
+    msgEl.style.color = ok ? 'var(--rustig-clr)' : 'var(--druk-clr)';
+  }
+
+  if (!naam) { toonEditMsg('Vul een naam in.', false); return; }
+  try {
+    await sbFetch(`gezin_profielen?id=eq.${id}`, 'PATCH', { naam, emoji, rol, is_kind: rol==='kind', geboortedatum: verjaardag });
+    await Auth.laadProfielen();
+    laadGebruikersLijst();
+    toonOpslagStatus('✅ Opgeslagen');
+  } catch(e) { toonEditMsg('❌ ' + e.message, false); }
 }
 
 // ── Topics nav: scroll naar sectie ───────────────────────────
 function scrollNaar(sectionId){
   const el=document.getElementById(sectionId);
   if(!el) return;
-  const inhoud=document.getElementById('inst-inhoud');
-  if(inhoud && window.innerWidth>=768){
-    // Scroll binnen de rechterkolom
-    const topRel=el.getBoundingClientRect().top - inhoud.getBoundingClientRect().top;
-    inhoud.scrollBy({top:topRel-16, behavior:'smooth'});
-  } else {
-    el.scrollIntoView({behavior:'smooth', block:'start'});
-  }
+  // Scroll altijd via het document (inst-inhoud is geen aparte scroller meer)
+  const OFFSET = 64; // topbar (52px) + buffer (12px)
+  const top = el.getBoundingClientRect().top + window.pageYOffset - OFFSET;
+  window.scrollTo({top, behavior:'smooth'});
   // Highlight actief nav-item
   document.querySelectorAll('.inst-nav-item').forEach(btn=>{
     btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(sectionId));
   });
 }
 
-// Highlight nav-item op scroll (desktop)
+// Highlight nav-item op scroll (document scroll)
 (function(){
-  const inhoud=document.getElementById('inst-inhoud');
-  if(!inhoud) return;
   const secties=['sect-profiel','sect-roosters','sect-vakanties','sect-ical','sect-data','sect-ingredienten','sect-api','sect-gebruikers'];
-  inhoud.addEventListener('scroll',()=>{
+  document.addEventListener('scroll',()=>{
+    if(window.innerWidth<768) return;
     let actief='sect-profiel';
     for(const id of secties){
       const el=document.getElementById(id);
       if(!el) continue;
-      const top=el.getBoundingClientRect().top - inhoud.getBoundingClientRect().top;
-      if(top<=40) actief=id;
+      const top=el.getBoundingClientRect().top;
+      if(top<=80) actief=id;
     }
     document.querySelectorAll('.inst-nav-item').forEach(btn=>{
       btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(actief));
@@ -664,8 +739,7 @@ function icalEventNaarActiviteit(ev){
     tot:ev.end?.allDay?'':ev.end?.time||'',
     locatie:ev.location||'',
     freq, wie:[], prive:false,
-    brengtNora:'',haaltNora:'',eetGrooNora:false,
-    brengtOdiel:'',haaltOdiel:'',eetGrooOdiel:false,
+    transport:{},
   };
 }
 </script>
