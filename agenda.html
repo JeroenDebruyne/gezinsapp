@@ -273,6 +273,7 @@
     <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
     <span class="maand-nav-label" id="maand-nav-label"></span>
     <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
+    <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;margin-left:8px;">📥</button>
   </div>
 
   <!-- Weekdagen header: Ma t/m Zo -->
@@ -435,6 +436,69 @@
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="closeDOModal()">Annuleren</button>
     <button class="modal-btn modal-btn-primary" onclick="saveDOModal()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: iCal import ══ -->
+<div class="modal-bg" id="ical-modal-bg">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h3>📥 Agenda importeren</h3>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px;">
+    <button id="ical-tab-btn-bestand" onclick="icalTab('bestand')"
+      style="flex:1;padding:9px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:13px;">
+      📁 Bestand
+    </button>
+    <button id="ical-tab-btn-url" onclick="icalTab('url')"
+      style="flex:1;padding:9px;border:none;background:var(--surface-2);color:var(--muted);font-weight:600;cursor:pointer;font-size:13px;">
+      🔗 Via link
+    </button>
+  </div>
+
+  <!-- Bestand tab -->
+  <div id="ical-pane-bestand">
+    <div class="form-row">
+      <label>Kies een .ics bestand</label>
+      <input type="file" id="ical-file" accept=".ics,.ical" onchange="icalLaadBestand(this)"/>
+    </div>
+  </div>
+
+  <!-- URL tab -->
+  <div id="ical-pane-url" style="display:none;">
+    <div class="form-row">
+      <label>iCal-link (webcal:// of https://)</label>
+      <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
+        style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
+    <p style="font-size:11px;color:var(--muted);margin:4px 0 0;">
+      Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
+      Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
+    </p>
+  </div>
+
+  <!-- Laadstatus -->
+  <div id="ical-status" style="font-size:13px;color:var(--muted);margin:8px 0;min-height:18px;"></div>
+
+  <!-- Preview -->
+  <div id="ical-preview" style="display:none;">
+    <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px;" id="ical-preview-titel"></div>
+    <div class="form-row" style="margin-bottom:10px;">
+      <label>Voor wie importeren?</label>
+      <div class="persoon-ms" id="ical-wie-ms"></div>
+    </div>
+    <div id="ical-event-lijst"
+      style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
+    </div>
+  </div>
+
+  <div class="modal-actions" style="margin-top:16px;">
+    <button class="modal-btn modal-btn-cancel" onclick="closeIcalModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" id="ical-import-btn"
+      style="display:none;" onclick="icalImporteer()">Importeren</button>
   </div>
 </div>
 </div>
@@ -845,8 +909,239 @@ function closeDOModal(){
 
 // Sluit modals bij klik achtergrond
 document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();closeDOModal();}});
+  bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();closeDOModal();closeIcalModal();}});
 });
+
+// ── iCal import ───────────────────────────────────────────────
+let _icalEvents = [];
+let _icalWie    = [];
+
+function openIcalModal(){
+  _icalEvents=[]; _icalWie=[];
+  document.getElementById('ical-file').value='';
+  document.getElementById('ical-url').value='';
+  document.getElementById('ical-status').textContent='';
+  document.getElementById('ical-preview').style.display='none';
+  document.getElementById('ical-import-btn').style.display='none';
+  icalTab('bestand');
+  document.getElementById('ical-modal-bg').classList.add('open');
+}
+function closeIcalModal(){ document.getElementById('ical-modal-bg').classList.remove('open'); }
+
+function icalTab(tab){
+  ['bestand','url'].forEach(t=>{
+    document.getElementById(`ical-pane-${t}`).style.display = t===tab?'block':'none';
+    const btn=document.getElementById(`ical-tab-btn-${t}`);
+    btn.style.background = t===tab?'var(--accent)':'var(--surface-2)';
+    btn.style.color      = t===tab?'#fff':'var(--muted)';
+  });
+}
+
+function icalLaadBestand(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ icalVerwerk(e.target.result, file.name); };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function icalLaadUrl(){
+  let url=document.getElementById('ical-url').value.trim();
+  if(!url){ alert('Vul een URL in.'); return; }
+  url=url.replace(/^webcal:\/\//i,'https://');
+  document.getElementById('ical-status').textContent='⏳ Laden…';
+  try {
+    // Probeer direct (werkt als CORS-headers aanwezig zijn)
+    let text=null;
+    try {
+      const res=await fetch(url);
+      if(res.ok) text=await res.text();
+    } catch(_){}
+    // Fallback: CORS-proxy
+    if(!text){
+      const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const res=await fetch(proxy);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      text=await res.text();
+    }
+    if(!text.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand.');
+    icalVerwerk(text, url.split('/').pop()||'agenda');
+  } catch(e){
+    document.getElementById('ical-status').textContent='❌ '+e.message;
+  }
+}
+
+function icalVerwerk(text, bronNaam){
+  document.getElementById('ical-status').textContent='⏳ Verwerken…';
+  try {
+    _icalEvents=parseIcal(text);
+    if(!_icalEvents.length){
+      document.getElementById('ical-status').textContent='⚠️ Geen activiteiten gevonden in dit bestand.';
+      return;
+    }
+    document.getElementById('ical-status').textContent='';
+    _icalWie=[Auth.profiel()?.persoonKey].filter(Boolean);
+    icalToonPreview();
+  } catch(e){
+    document.getElementById('ical-status').textContent='❌ Parsefout: '+e.message;
+  }
+}
+
+function icalToonPreview(){
+  const n=_icalEvents.length;
+  document.getElementById('ical-preview-titel').textContent=`${n} activiteit${n!==1?'en':''} gevonden`;
+
+  // Persoon-picker
+  document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
+    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" onclick="icalToggleWie('${p}')">
+      ${PEMOJI[p]||''} ${PLABEL[p]||p}
+    </div>`).join('');
+
+  // Eventlijst (max 15 tonen)
+  const toon=_icalEvents.slice(0,15);
+  document.getElementById('ical-event-lijst').innerHTML=
+    toon.map(a=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);">
+        <span style="font-size:11px;color:var(--muted);min-width:80px;flex-shrink:0;">${a.beginDatum}${a.meerdaags&&a.eindDatum!==a.beginDatum?' → '+a.eindDatum.slice(5):''}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.naam)}</span>
+        <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${a.start||''}</span>
+      </div>`).join('')
+    +(n>15?`<div style="padding:7px 10px;font-size:12px;color:var(--muted);">… en nog ${n-15} meer</div>`:'');
+
+  document.getElementById('ical-preview').style.display='block';
+  const btn=document.getElementById('ical-import-btn');
+  btn.style.display='inline-flex';
+  btn.textContent=`Importeer ${n} activiteit${n!==1?'en':''}`;
+}
+
+function icalToggleWie(p){
+  _icalWie=_icalWie.includes(p)?_icalWie.filter(x=>x!==p):[..._icalWie,p];
+  document.getElementById('ical-wie-ms').querySelectorAll('.persoon-chip').forEach(el=>{
+    const key=el.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+    el.classList.toggle('selected',_icalWie.includes(key));
+  });
+}
+
+async function icalImporteer(){
+  if(!_icalEvents.length) return;
+  const btn=document.getElementById('ical-import-btn');
+  btn.disabled=true; btn.textContent='Bezig…';
+  let ok=0;
+  for(const act of _icalEvents){
+    act.wie=_icalWie.length?[..._icalWie]:[Auth.profiel()?.persoonKey].filter(Boolean);
+    activiteiten.push(act);
+    await sbSaveActiviteit(act);
+    ok++;
+  }
+  closeIcalModal();
+  slaLokaalOp();
+  renderAlles();
+  toonOpslagStatus(`✅ ${ok} activiteiten geïmporteerd`);
+}
+
+// ── iCal parser ───────────────────────────────────────────────
+function parseIcal(icsText){
+  // Unfold gevouwen regels (RFC 5545)
+  const text=icsText
+    .replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+    .replace(/\n[ \t]/g,'');
+
+  const events=[];
+  const blocks=text.split('BEGIN:VEVENT');
+  for(let bi=1;bi<blocks.length;bi++){
+    const block=blocks[bi].split('END:VEVENT')[0];
+    const prop={};
+    for(const line of block.split('\n')){
+      const ci=line.indexOf(':');
+      if(ci<0) continue;
+      const fullKey=line.slice(0,ci).toUpperCase();
+      const val=line.slice(ci+1).trimEnd();
+      const baseKey=fullKey.split(';')[0];
+      if(!prop[baseKey]) prop[baseKey]={val, fullKey};
+    }
+
+    const summary=_icalUnescape(prop['SUMMARY']?.val||'');
+    if(!summary) continue;
+    const location=_icalUnescape(prop['LOCATION']?.val||'');
+
+    const dtsFull =prop['DTSTART']?.fullKey||'';
+    const dtsVal  =prop['DTSTART']?.val||'';
+    const dteVal  =prop['DTEND']?.val||'';
+    const allDay  =dtsFull.includes('VALUE=DATE')||/^\d{8}$/.test(dtsVal);
+
+    let beginDatum,eindDatum,startTijd='',eindTijd='';
+    if(allDay){
+      beginDatum=_icalD(dtsVal);
+      let ed=_icalD(dteVal||dtsVal);
+      // DTEND is exclusief bij all-day → 1 dag aftrekken
+      if(ed&&ed>beginDatum){
+        const d=new Date(ed+'T12:00:00'); d.setDate(d.getDate()-1);
+        ed=fDateISO(d);
+      }
+      eindDatum=ed||beginDatum;
+    } else {
+      const ps=_icalDT(dtsVal); const pe=_icalDT(dteVal);
+      beginDatum=ps?.date||null; eindDatum=pe?.date||beginDatum;
+      startTijd=ps?.time||''; eindTijd=pe?.time||'';
+    }
+    if(!beginDatum) continue;
+
+    // RRULE
+    let freq='eenmalig',dagen=[],rruleEind=null;
+    if(prop['RRULE']){
+      const rp={};
+      prop['RRULE'].val.split(';').forEach(s=>{ const [k,v]=s.split('='); if(k&&v) rp[k]=v; });
+      const interval=parseInt(rp['INTERVAL']||'1');
+      const dm={MO:'ma',TU:'di',WE:'wo',TH:'do',FR:'vr',SA:'za',SU:'zo'};
+      if(rp['FREQ']==='WEEKLY'){
+        freq=interval===2?'tweewekelijks':'wekelijks';
+        if(rp['BYDAY']) dagen=rp['BYDAY'].split(',').map(d=>dm[d.trim()]).filter(Boolean);
+      } else if(rp['FREQ']==='MONTHLY'){
+        freq='maandelijks';
+      } else if(rp['FREQ']==='DAILY'){
+        freq='wekelijks'; dagen=['ma','di','wo','do','vr','za','zo'];
+      }
+      if(rp['UNTIL']) rruleEind=_icalD(rp['UNTIL'].slice(0,8));
+    }
+    // Geen dagen opgegeven → dag van beginDatum gebruiken
+    if(freq!=='eenmalig'&&dagen.length===0&&beginDatum){
+      dagen=[['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
+    }
+
+    const meerdaags=allDay&&beginDatum!==(rruleEind||eindDatum)&&freq==='eenmalig';
+    events.push({
+      id:Date.now()+Math.random(),
+      naam:summary, wie:[], locatie:location, prep:'',
+      prive:false, meerdaags,
+      beginDatum, eindDatum:rruleEind||eindDatum,
+      start:startTijd, eindUur:eindTijd,
+      freq, dagen:meerdaags?[]:dagen,
+      duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
+      reisHeen:0, reisTerug:0, transport:{},
+    });
+  }
+  return events;
+}
+
+function _icalD(val){
+  if(!val||val.length<8) return null;
+  const s=val.slice(0,8);
+  return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+}
+function _icalDT(val){
+  if(!val||val.length<8) return {date:_icalD(val),time:''};
+  const date=_icalD(val);
+  if(val.length<15) return {date,time:''};
+  const isUTC=val.endsWith('Z');
+  const h=val.slice(9,11),m=val.slice(11,13);
+  if(isUTC){
+    const d=new Date(`${date}T${h}:${m}:00Z`);
+    return {date:d.toLocaleDateString('sv'),time:d.toTimeString().slice(0,5)};
+  }
+  return {date, time:`${h}:${m}`};
+}
+function _icalUnescape(s){
+  return s.replace(/\\n/g,' ').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+}
 </script>
 <script>
 // ── Sidebar (desktop) ────────────────────────────────────────
