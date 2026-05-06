@@ -116,9 +116,7 @@
 
   <!-- Kind filter -->
   <div class="filter-tabs" id="kl-filter-tabs" style="margin-bottom:1rem;">
-    <button class="filter-tab active" onclick="setKindFilter('beide',this)">👨‍👩‍👧‍👦 Beide</button>
-    <button class="filter-tab" onclick="setKindFilter('nora',this)">👧 Nora</button>
-    <button class="filter-tab" onclick="setKindFilter('odiel',this)">👦 Odiel</button>
+    <button class="filter-tab active" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>
   </div>
 
   <div id="kl-grid"></div>
@@ -137,9 +135,18 @@ const KL_DAGKORT = ['Di','Wo','Do','Vr','Za','Zo','Ma'];
 const KL_DAGLANG = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
 
 let weekOffsetKL = 0;
-let kindFilter = 'beide';
+let kindFilter = 'alle';
 
-laadOp().then(renderKL).catch(()=>{ laadLokaal(); renderKL(); });
+laadOp().then(()=>{ renderKindFilterTabs(); renderKL(); }).catch(()=>{ laadLokaal(); renderKindFilterTabs(); renderKL(); });
+
+function renderKindFilterTabs(){
+  const kinderen = Auth.getProfielen().filter(p=>p.isKind);
+  const container = document.getElementById('kl-filter-tabs');
+  if(!container) return;
+  container.innerHTML =
+    `<button class="filter-tab${kindFilter==='alle'?' active':''}" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>` +
+    kinderen.map(k=>`<button class="filter-tab${kindFilter===k.persoonKey?' active':''}" onclick="setKindFilter('${k.persoonKey}',this)">${k.emoji||'👧'} ${k.naam}</button>`).join('');
+}
 
 function changeWeekKL(dir){ weekOffsetKL+=dir; renderKL(); }
 
@@ -186,7 +193,8 @@ function renderKL(){
     const vakantie = isSchoolvakantie(datum);
 
     // Activiteiten voor de kinderen vandaag
-    const kinderen = kindFilter==='beide'?['nora','odiel']:kindFilter==='nora'?['nora']:['odiel'];
+    const alleKinderen = Auth.getProfielen().filter(p=>p.isKind).map(p=>p.persoonKey);
+    const kinderen = kindFilter==='alle' ? alleKinderen : [kindFilter];
     const kindActs = activiteiten.filter(a=>
       isActiefOpDatum(a,datum) && (a.wie||[]).some(w=>kinderen.includes(w))
     );

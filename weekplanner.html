@@ -154,7 +154,7 @@ function renderPlanner(){
     const key=fDateISO(date);const isW=i>=4&&i<=5;
     const dagPlan=planning[key]||{};
     const drukte=getDagDrukte(key);
-    const eetGroo=activiteiten.some(a=>(a.eetGrooNora||a.eetGrooOdiel)&&(a.dagen||[]).includes(DAGKEYS_WP[i]));
+    const eetGroo=activiteiten.some(a=>(a.dagen||[]).includes(DAGKEYS_WP[i])&&Object.values(a.transport||{}).some(t=>t?.eetGroo));
     const isOpen=weekHeeftVandaag?(key===today):(i===0);
     const previewItems=SLOTS.map(slot=>{
       const k=dagPlan[slot.key];if(!k)return null;

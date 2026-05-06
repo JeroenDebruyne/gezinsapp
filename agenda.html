@@ -444,7 +444,7 @@
 <script>
 // ── Init ──────────────────────────────────────────────────────
 Auth.initPagina('agenda');
-if (!Auth.kan('kanActiviteitenBeheren')) document.getElementById('btn-nieuw-act').style.display='none';
+if (!Auth.kan('kanActiviteitenBeheren')) { const b=document.querySelector('.fab'); if(b) b.style.display='none'; }
 
 // ── State ─────────────────────────────────────────────────────
 let huidigJaar   = new Date().getFullYear();
@@ -639,7 +639,7 @@ function renderTransportDetail(act,datumISO){
   // Standaard transport ophalen (uit vasteRoosters/standaardTransport)
   const dagKey=JSDAGMAP[new Date(datumISO+'T12:00:00').getDay()];
   const stdTransport=standaardTransport||{};
-  const uitzondering=(transportUitzonderingen||[]).find(u=>u.datum===datumISO);
+  const uitzondering=(transportUitzonderingen||{})[datumISO];
 
   let html='';
   ['nora','odiel'].forEach(kind=>{
@@ -681,24 +681,8 @@ function magZien(act){
   return(act.wie||[]).includes(Auth.profiel()?.persoonKey);
 }
 
-// ── Standaard transport (wordt geladen uit instellingen) ──────
-let standaardTransport={
-  nora:{
-    ma:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    di:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    wo:{brengt:'Kelly',haalt:'Kelly',eetGroo:false},
-    do:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    vr:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-  },
-  odiel:{
-    ma:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    di:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    wo:{brengt:'Kelly',haalt:'Kelly',eetGroo:false},
-    do:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-    vr:{brengt:'Kelly',haalt:'Geert & Nadine',eetGroo:true},
-  }
-};
-let transportUitzonderingen=[];
+// standaardTransport en transportUitzonderingen zijn gedeclareerd in data.js
+// en worden gevuld via laadOp() vanuit de database.
 
 // ── Modal: Activiteit ─────────────────────────────────────────
 function openActModal(act){

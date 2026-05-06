@@ -575,8 +575,7 @@ async function slaHomeActOp(){
     freq, dagen:[dagKey],
     beginDatum:datum, eindDatum:freq==='eenmalig'?datum:'',
     prep:'',
-    brengtNora:'',haaltNora:'',eetGrooNora:false,
-    brengtOdiel:'',haaltOdiel:'',eetGrooOdiel:false,
+    transport:{},
   };
   activiteiten.push(act);
   slaLokaalOp();

@@ -183,12 +183,7 @@ async function laadOp() {
       dagen:x.dagen||[], wie:Array.isArray(x.wie)?x.wie:[x.wie].filter(Boolean),
       reisHeen:x.reis_heen, reisTerug:x.reis_terug, eindUur:x.eind_uur,
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
-      brengtNora:  x.transport?.nora?.brengt  ?? '',
-      haaltNora:   x.transport?.nora?.haalt   ?? '',
-      eetGrooNora: x.transport?.nora?.eetGroo ?? false,
-      brengtOdiel:  x.transport?.odiel?.brengt  ?? '',
-      haaltOdiel:   x.transport?.odiel?.haalt   ?? '',
-      eetGrooOdiel: x.transport?.odiel?.eetGroo ?? false,
+      transport: x.transport || {},
     }));
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
     if (b.length) extraItems = b;
@@ -287,10 +282,7 @@ async function sbSaveActiviteit(act) {
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
     eind_datum:act.eindDatum||null, prep:act.prep, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
-    transport: {
-      nora:  { brengt:act.brengtNora||'',  haalt:act.haaltNora||'',  eetGroo:act.eetGrooNora||false  },
-      odiel: { brengt:act.brengtOdiel||'', haalt:act.haaltOdiel||'', eetGroo:act.eetGrooOdiel||false },
-    },
+    transport: act.transport || {},
   };
   try {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
