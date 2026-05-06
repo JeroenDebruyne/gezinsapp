@@ -468,11 +468,11 @@ async function homeStuurBericht(kanaal){
   homeChatGeschiedenis.push({role:'user',content:tekst});
   const typingEl=homeVoegBerichtToe(kanaal,'assistant','⏳…',true);
   try{
-    let resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis})});
-    let data=await resp.json();
+    const _hFetch=async(body)=>{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;};
+    let data=await _hFetch({model:'claude-sonnet-4-5',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const results=[];
-      for(const b of data.content){
+      for(const b of (data.content||[])){
         if(b.type==='tool_use'){
           const res=homeVoerToolUit(b.name,b.input);
           if(res==='WACHT_OP_BEVESTIGING'){
@@ -489,10 +489,9 @@ async function homeStuurBericht(kanaal){
       }
       homeChatGeschiedenis.push({role:'assistant',content:data.content});
       homeChatGeschiedenis.push({role:'user',content:results});
-      resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis})});
-      data=await resp.json();
+      data=await _hFetch({model:'claude-sonnet-4-5',max_tokens:1500,system:HOME_SYSTEEMPROMPT,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
     }
-    const finaal=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const finaal=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
     homeVoegBerichtToe(kanaal,'assistant',finaal);
     homeChatGeschiedenis.push({role:'assistant',content:finaal});

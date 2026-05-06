@@ -337,7 +337,7 @@ async function genereerAiMenu(){
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Je bent een gezinsassistent. Stel een weekmenu voor op basis van de drukte per dag en beschikbare recepten. Geef een korte toelichting per dag. Recepten: ${context.recepten}`,messages:[{role:'user',content:`Week: ${context.week}\n\nStel een weekmenu voor.`}]})
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:`Je bent een gezinsassistent. Stel een weekmenu voor op basis van de drukte per dag en beschikbare recepten. Geef een korte toelichting per dag. Recepten: ${context.recepten}`,messages:[{role:'user',content:`Week: ${context.week}\n\nStel een weekmenu voor.`}]})
     });
     const data=await res.json();
     const tekst=data.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n')||'Geen antwoord';
