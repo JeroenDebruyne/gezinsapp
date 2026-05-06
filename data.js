@@ -402,14 +402,12 @@ async function sbVerwijderIcalActiviteiten(sourceUrl) {
 }
 
 async function icalFetchUrl(rawUrl) {
+  // Externe iCal-providers hebben zelden CORS-headers, dus altijd via proxy ophalen.
+  // Directe fetch vermijden: dat logt altijd een CORS-error in de console, ook al is hij gevangen.
   const url = rawUrl.replace(/^webcal:\/\//i, 'https://');
-  try {
-    const r = await fetch(url);
-    if (r.ok) { const t = await r.text(); if (t.includes('BEGIN:VCALENDAR')) return t; }
-  } catch(_) {}
   const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
   const r = await fetch(proxy);
-  if (!r.ok) throw new Error(`HTTP ${r.status} via proxy`);
+  if (!r.ok) throw new Error(`Kan agenda niet ophalen (HTTP ${r.status})`);
   const t = await r.text();
   if (!t.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand ontvangen.');
   return t;
