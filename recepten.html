@@ -453,9 +453,8 @@ function renderFicheHtml(r, metSluitknop){
     <div>
       ${r.ingredienten.map(i=>`
         <div class="fiche-ing-rij">
-          <span class="fiche-ing-hoev">${i.hoev?escHtml(i.hoev)+(i.eenheid?' '+escHtml(i.eenheid):''):''}</span>
           <span class="fiche-ing-naam">${escHtml(i.naam)}</span>
-          ${i.winkel?`<span class="fiche-ing-winkel">🏪 ${escHtml(i.winkel)}</span>`:''}
+          ${i.hoev||i.eenheid?`<span class="fiche-ing-hoev">${i.hoev?escHtml(i.hoev):''}${i.eenheid?' '+escHtml(i.eenheid):''}</span>`:''}
         </div>`).join('')}
     </div>
   `:''}
@@ -619,7 +618,7 @@ function saveRecept(){
   const editId=document.getElementById('recept-modal-bg').dataset.editId;
   const tags=[...document.querySelectorAll('#tag-selector span[data-sel="1"]')].map(el=>el.textContent);
 
-  // Ingrediënten ophalen + nieuwe opslaan
+  // Ingrediënten ophalen
   const nieuweIngs=[];
   const ings=[...document.querySelectorAll('#ingredients-container > div[id]')].map(row=>{
     const input=row.querySelector('.ing-combo-input');
@@ -630,18 +629,18 @@ function saveRecept(){
     const eenheid=inputs[2]?inputs[2].value:'';
     const winkel=winkelSel?winkelSel.value:'Colruyt';
     if(!ingNaam)return null;
-    // Nieuw ingrediënt automatisch opslaan
-    if(row.dataset.nieuw==='1'){
-      const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===ingNaam.toLowerCase());
-      if(!bestaatAl) nieuweIngs.push({id:Date.now()+Math.random(),naam:ingNaam,winkel,categorie:''});
-    }
     return{naam:ingNaam,hoev,eenheid,winkel};
   }).filter(Boolean);
 
-  // Nieuwe ingrediënten opslaan in standaardIngredienten
-  nieuweIngs.forEach(ing=>{
-    standaardIngredienten.push(ing);
-    sbSaveIngredient(ing);
+  // Alle onbekende ingrediënten automatisch opslaan in standaardIngredienten
+  ings.forEach(ing=>{
+    const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===ing.naam.toLowerCase());
+    if(!bestaatAl){
+      const nieuwIng={id:Date.now()+Math.random(),naam:ing.naam,winkel:ing.winkel||'Colruyt',categorie:''};
+      standaardIngredienten.push(nieuwIng);
+      sbSaveIngredient(nieuwIng);
+      nieuweIngs.push(nieuwIng);
+    }
   });
 
   const bestaande=editId?recepten.find(r=>r.id==editId):null;

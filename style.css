@@ -500,10 +500,10 @@ body{
 .fiche-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;align-items:center;}
 .fiche-meta-item{font-size:13px;color:var(--muted);}
 .fiche-sectie-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:1.2rem 0 .5rem;}
-.fiche-ing-rij{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;}
-.fiche-ing-hoev{font-weight:600;color:var(--accent);min-width:76px;flex-shrink:0;font-size:13px;}
+.fiche-ing-rij{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;}
 .fiche-ing-naam{flex:1;color:var(--ink);}
-.fiche-ing-winkel{font-size:11px;color:var(--muted-2);}
+.fiche-ing-hoev{font-size:13px;color:var(--muted);white-space:nowrap;flex-shrink:0;text-align:right;}
+.fiche-ing-winkel{font-size:11px;color:var(--muted-2);white-space:nowrap;flex-shrink:0;}
 .fiche-bereiding{font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap;padding-bottom:2rem;}
 /* Mobile fiche overlay */
 .recept-fiche-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(44,41,38,.5);}

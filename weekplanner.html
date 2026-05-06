@@ -212,10 +212,15 @@ function getTop3Recepten(types){
     });
   });
   return recepten
-    .filter(r=>types.includes(r.type))
+    .filter(r=>_receptMatchTypes(r,types))
     .sort((a,b)=>(telling[b.id]||0)-(telling[a.id]||0))
     .slice(0,3)
     .filter(r=>(telling[r.id]||0)>0);
+}
+
+function _receptMatchTypes(r,types){
+  const rt=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
+  return types.some(t=>rt.includes(t));
 }
 
 function openPlanModal(dk,slotKey,dagnaam,dagIndex){
@@ -246,7 +251,7 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
   } else { top3El.style.display='none'; }
 
   // Receptenlijst
-  planReceptenGefilterd=recepten.filter(r=>types.includes(r.type));
+  planReceptenGefilterd=recepten.filter(r=>_receptMatchTypes(r,types));
   document.getElementById('plan-zoek').value='';
   renderPlanRecepten(planReceptenGefilterd);
   document.getElementById('plan-modal-bg').classList.add('open');
