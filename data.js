@@ -281,7 +281,7 @@ async function sbSaveActiviteit(act) {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
-    eind_datum:act.eindDatum||null, prep:act.prep, dagen:act.dagen,
+    eind_datum:act.eindDatum||null, prep: +act.prep || 0, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: act.transport || {},
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
@@ -485,7 +485,7 @@ function parseIcal(icsText, sourceUrl = null) {
       dagen = [['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
     const meerdaags = allDay && beginDatum !== (rruleEind||eindDatum) && freq === 'eenmalig';
     events.push({
-      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:'',
+      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:0,
       prive:false, meerdaags, beginDatum, eindDatum:rruleEind||eindDatum,
       start:startTijd, eindUur:eindTijd, freq, dagen:meerdaags?[]:dagen,
       duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
