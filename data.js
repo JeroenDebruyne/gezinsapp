@@ -279,7 +279,7 @@ async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`
 async function sbSaveActiviteit(act) {
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
-    duur:act.duur, reis_heen:act.reisHeen, reis_terug:act.reisTerug,
+    duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
     eind_datum:act.eindDatum||null, prep:act.prep, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
