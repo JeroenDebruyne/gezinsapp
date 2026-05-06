@@ -214,15 +214,18 @@ function toonBevestiging(bericht){
 function bevestigActie(){
   document.getElementById('bevestiging-panel').style.display='none';
   if(!pendingActie)return;
-  const {naam,input}=pendingActie;
-  pendingActie=null;
+  const {naam,input}=pendingActie;pendingActie=null;
   const result=_voerToolUitZonderBevestiging(naam,input);
-  voegBerichtToe('assistant','✅ Uitgevoerd: '+result);
+  const msg='✅ Uitgevoerd: '+result;
+  voegBerichtToe('assistant',msg);
+  chatGeschiedenis.push({role:'assistant',content:msg});
 }
 function annuleerActie(){
   document.getElementById('bevestiging-panel').style.display='none';
   pendingActie=null;
-  voegBerichtToe('assistant','❌ Geannuleerd.');
+  const msg='❌ Geannuleerd.';
+  voegBerichtToe('assistant',msg);
+  chatGeschiedenis.push({role:'assistant',content:msg});
 }
 
 async function stuurBericht(){
@@ -242,7 +245,14 @@ async function stuurBericht(){
       for(const block of (data.content||[])){
         if(block.type==='tool_use'){
           const result=voerToolUit(block.name,block.input);
-          if(result==='WACHT_OP_BEVESTIGING'){typingEl?.remove();return;}
+          if(result==='WACHT_OP_BEVESTIGING'){
+            typingEl?.remove();
+            pendingActie.toolUseId=block.id;
+            pendingActie.assistantContent=data.content;
+            chatGeschiedenis.push({role:'assistant',content:data.content});
+            chatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
+            return;
+          }
           toolResults.push({type:'tool_result',tool_use_id:block.id,content:result});
         }
       }

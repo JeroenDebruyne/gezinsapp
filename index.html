@@ -448,14 +448,18 @@ function homeBevestig(kanaal){
   if(panel)panel.style.display='none';
   if(!homePendingActie)return;
   const{naam,input}=homePendingActie;homePendingActie=null;
-  const result=homeToolLogica(naam,input);
-  homeVoegBerichtToe(kanaal,'assistant','✅ '+result);
+  const result=homeToolLogica(naam,{...input,bevestiging_vereist:false});
+  const msg='✅ '+result;
+  homeVoegBerichtToe(kanaal,'assistant',msg);
+  homeChatGeschiedenis.push({role:'assistant',content:msg});
 }
 function homeAnnuleer(kanaal){
   const panel=document.getElementById('home-bevestiging-'+kanaal);
   if(panel)panel.style.display='none';
   homePendingActie=null;
-  homeVoegBerichtToe(kanaal,'assistant','❌ Geannuleerd.');
+  const msg='❌ Geannuleerd.';
+  homeVoegBerichtToe(kanaal,'assistant',msg);
+  homeChatGeschiedenis.push({role:'assistant',content:msg});
 }
 
 async function homeStuurBericht(kanaal){
@@ -477,11 +481,17 @@ async function homeStuurBericht(kanaal){
           const res=homeVoerToolUit(b.name,b.input);
           if(res==='WACHT_OP_BEVESTIGING'){
             typingEl?.remove();
+            // Sla tool_use id op zodat we history geldig kunnen afsluiten
+            homePendingActie.toolUseId=b.id;
+            homePendingActie.assistantContent=data.content;
+            homePendingActie.prevResults=[...results];
+            // Voeg geldig paar toe: assistant (tool_use) + user (tool_results + placeholder)
+            homeChatGeschiedenis.push({role:'assistant',content:data.content});
+            homeChatGeschiedenis.push({role:'user',content:[...results,{type:'tool_result',tool_use_id:b.id,content:'Wacht op gebruikersbevestiging.'}]});
             const panel=document.getElementById('home-bevestiging-'+kanaal);
             const tekst=document.getElementById('home-bevestiging-tekst-'+kanaal);
             if(tekst)tekst.textContent=homePendingActie?.input?.bevestiging_bericht||'Wil je dit uitvoeren?';
             if(panel)panel.style.display='block';
-            homeChatGeschiedenis.push({role:'assistant',content:data.content});
             return;
           }
           results.push({type:'tool_result',tool_use_id:b.id,content:res});
