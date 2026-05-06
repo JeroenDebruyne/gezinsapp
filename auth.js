@@ -175,10 +175,18 @@ const Auth = (() => {
       if (!ok) return;
       await laadProfielen();   // eerst profielen laden zodat naam/emoji beschikbaar zijn
       const p = profiel();
+      // Topbar
       const nEl = document.getElementById('topbar-naam');
       const eEl = document.getElementById('topbar-emoji');
       if (nEl && p) nEl.textContent = p.naam;
       if (eEl && p) eEl.textContent = p.emoji;
+      // Sidebar (wordt initieel gevuld vóór profielen geladen zijn — hier corrigeren)
+      const sAvEl = document.getElementById('sidebar-avatar');
+      const sNmEl = document.getElementById('sidebar-naam');
+      const sRlEl = document.getElementById('sidebar-rol');
+      if (sAvEl && p) sAvEl.textContent = p.emoji || '🧑';
+      if (sNmEl && p) sNmEl.textContent = p.naam || '';
+      if (sRlEl)      sRlEl.textContent  = ROLLEN[p?.rol]?.label || p?.rol || '';
       if (DEV_MODE) {
         const d = document.getElementById('dev-badge');
         if (d) d.style.display = 'inline';
