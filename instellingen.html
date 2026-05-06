@@ -269,7 +269,7 @@ const WERKDAGEN_LABELS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
 const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 
-laadOp().then(()=>{ renderInstellingen(); renderIcalAbonnementen(); }).catch(()=>{laadLokaal();renderInstellingen();});
+laadOp().then(()=>{ renderInstellingen(); renderIcalAbonnementen(); initMobileAccordion(); }).catch(()=>{laadLokaal();renderInstellingen();initMobileAccordion();});
 
 function renderInstellingen(){
   // Profiel
@@ -301,6 +301,11 @@ function renderInstellingen(){
     document.getElementById('admin-sectie').style.display='block';
     document.getElementById('nav-gebruikers').style.display='block';
     laadGebruikersLijst();
+    // Accordion voor admin-sectie activeren (is nu zichtbaar)
+    if(window.innerWidth<768){
+      const admin=document.getElementById('admin-sectie');
+      if(admin) _bouwAccordion(admin,false);
+    }
   }
 }
 
@@ -323,22 +328,26 @@ function renderRoosters(){
 function renderVastRoosterPersoon(persoon,metLocatie){
   const el=document.getElementById('rooster-'+persoon);if(!el)return;
   const rooster=vasteRoosters[persoon]||{};
+  const inputStijl='padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);';
   el.innerHTML=WERKDAGEN_KEYS.map((dag,i)=>{
     const d=rooster[dag]||{actief:false,van:'08:00',tot:'17:00'};
-    return `<div style="display:grid;grid-template-columns:130px 1fr${metLocatie?' 120px':''};gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-      <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;">
-        <input type="checkbox" ${d.actief?'checked':''} onchange="toggleVastDag('${persoon}','${dag}',this.checked)" style="width:auto;accent-color:var(--accent);"/>
-        <span style="${d.actief?'font-weight:600;':'color:var(--muted-2);'}">${WERKDAGEN_LABELS[i]}</span>
+    return `
+    <div class="rooster-dag-rij" style="display:grid;grid-template-columns:130px 1fr${metLocatie?' 120px':''};gap:8px;align-items:center;">
+      <label class="rooster-dag-label-wrap" style="font-size:13px;cursor:pointer;${d.actief?'font-weight:600;':'color:var(--muted-2);'}">
+        <input type="checkbox" ${d.actief?'checked':''} onchange="toggleVastDag('${persoon}','${dag}',this.checked)" style="width:auto;accent-color:var(--accent);flex-shrink:0;"/>
+        ${WERKDAGEN_LABELS[i]}
       </label>
-      <div style="display:flex;gap:6px;align-items:center;${d.actief?'':'opacity:.3;pointer-events:none;'}">
-        <input type="time" value="${d.van||'08:00'}" onchange="updateVastRooster('${persoon}','${dag}','van',this.value)" style="flex:1;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);"/>
-        <span style="font-size:12px;color:var(--muted);">→</span>
-        <input type="time" value="${d.tot||'17:00'}" onchange="updateVastRooster('${persoon}','${dag}','tot',this.value)" style="flex:1;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);"/>
+      <div class="rooster-tijden-wrap" style="display:flex;gap:6px;align-items:center;${d.actief?'':'opacity:.3;pointer-events:none;'}">
+        <input type="time" value="${d.van||'08:00'}" onchange="updateVastRooster('${persoon}','${dag}','van',this.value)" style="flex:1;${inputStijl}"/>
+        <span style="font-size:12px;color:var(--muted);flex-shrink:0;">→</span>
+        <input type="time" value="${d.tot||'17:00'}" onchange="updateVastRooster('${persoon}','${dag}','tot',this.value)" style="flex:1;${inputStijl}"/>
       </div>
-      ${metLocatie?`<select onchange="updateVastRooster('${persoon}','${dag}','locatie',this.value)" style="padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink);${d.actief?'':'opacity:.3;'}">
-        <option value="thuis"${(d.locatie||'thuis')==='thuis'?' selected':''}>🏠 Thuis</option>
-        <option value="kantoor"${d.locatie==='kantoor'?' selected':''}>🏢 Kantoor</option>
-      </select>`:''}
+      ${metLocatie?`<div class="rooster-locatie-wrap" style="${d.actief?'':'opacity:.3;'}">
+        <select onchange="updateVastRooster('${persoon}','${dag}','locatie',this.value)" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink);">
+          <option value="thuis"${(d.locatie||'thuis')==='thuis'?' selected':''}>🏠 Thuis</option>
+          <option value="kantoor"${d.locatie==='kantoor'?' selected':''}>🏢 Kantoor</option>
+        </select>
+      </div>`:''}
     </div>`;
   }).join('');
 }
@@ -586,24 +595,70 @@ async function slaGebruikerOp(id) {
   } catch(e) { toonEditMsg('❌ ' + e.message, false); }
 }
 
+// ── Mobile accordion ─────────────────────────────────────────
+function initMobileAccordion(){
+  if(window.innerWidth>=768) return;
+  // Top-level secties in page-content
+  _bouwAccordion(document.querySelector('.page-content'), true);
+  // Admin-sectie (enkel als zichtbaar)
+  const admin=document.getElementById('admin-sectie');
+  if(admin && admin.style.display!=='none') _bouwAccordion(admin, false);
+}
+
+function _bouwAccordion(container, eersteOpen){
+  if(!container) return;
+  const labels=[...container.querySelectorAll(':scope > .section-label')];
+  labels.forEach((label,idx)=>{
+    if(label.dataset.acc==='1') return; // al verwerkt
+    label.dataset.acc='1';
+    // Chevron toevoegen
+    const chev=document.createElement('span');
+    chev.className='sect-chevron';
+    chev.textContent=(eersteOpen&&idx===0)?'▲':'▼';
+    label.appendChild(chev);
+    // Wrapper aanmaken direct na label
+    const body=document.createElement('div');
+    body.className='sect-body'+((eersteOpen&&idx===0)?' open':'');
+    label.after(body);
+    // Siblings verplaatsen naar body (tot volgende section-label)
+    let sib=body.nextElementSibling;
+    while(sib&&!sib.classList.contains('section-label')){
+      const mv=sib; sib=sib.nextElementSibling; body.appendChild(mv);
+    }
+    // Klik-handler
+    label.addEventListener('click',()=>{
+      const open=body.classList.toggle('open');
+      chev.textContent=open?'▲':'▼';
+    });
+  });
+}
+
 // ── Topics nav: scroll naar sectie ───────────────────────────
 function scrollNaar(sectionId){
   const el=document.getElementById(sectionId);
   if(!el) return;
+  // Op mobiel: accordion openen als die gesloten is
+  if(window.innerWidth<768){
+    const body=el.nextElementSibling;
+    if(body&&body.classList.contains('sect-body')&&!body.classList.contains('open')){
+      body.classList.add('open');
+      const chev=el.querySelector('.sect-chevron');
+      if(chev) chev.textContent='▲';
+    }
+    setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),60);
+    return;
+  }
   const scroller=document.querySelector('.main-content');
-  if(scroller && window.innerWidth>=768){
-    // Scroll binnen main-content (de echte scroller op desktop)
-    const top=el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 16;
-    scroller.scrollTo({top, behavior:'smooth'});
-  } else {
-    el.scrollIntoView({behavior:'smooth', block:'start'});
+  if(scroller){
+    const top=el.getBoundingClientRect().top-scroller.getBoundingClientRect().top+scroller.scrollTop-16;
+    scroller.scrollTo({top,behavior:'smooth'});
   }
   document.querySelectorAll('.inst-nav-item').forEach(btn=>{
-    btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(sectionId));
+    btn.classList.toggle('actief',btn.getAttribute('onclick')?.includes(sectionId));
   });
 }
 
-// Highlight nav-item op scroll
+// Highlight nav-item op scroll (desktop)
 (function(){
   const scroller=document.querySelector('.main-content');
   if(!scroller) return;
@@ -613,11 +668,11 @@ function scrollNaar(sectionId){
     for(const id of secties){
       const el=document.getElementById(id);
       if(!el) continue;
-      const top=el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      const top=el.getBoundingClientRect().top-scroller.getBoundingClientRect().top;
       if(top<=40) actief=id;
     }
     document.querySelectorAll('.inst-nav-item').forEach(btn=>{
-      btn.classList.toggle('actief', btn.getAttribute('onclick')?.includes(actief));
+      btn.classList.toggle('actief',btn.getAttribute('onclick')?.includes(actief));
     });
   },{passive:true});
 })();
