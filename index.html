@@ -94,7 +94,7 @@
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <a id="weer-widget" href="https://www.buienradar.nl/weer/ardooie/be" target="_blank" rel="noopener"
+      <a id="weer-widget" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener"
          style="display:flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;flex-shrink:0;" title="Weer in Ardooie — Buienradar">
         <span id="weer-icon">🌤️</span>
         <span id="weer-temp">…</span>
@@ -201,45 +201,107 @@
 </div>
 </div>
 
-<!-- ══ MODAL: Snelle activiteit ══ -->
+<!-- ══ MODAL: Activiteit (volledig) ══ -->
 <div class="modal-bg" id="home-act-modal-bg">
 <div class="modal">
   <div class="modal-handle"></div>
   <h3>Nieuwe activiteit</h3>
+
   <div class="form-row">
     <label>Activiteit</label>
-    <input type="text" id="ha-naam" placeholder="Naam van de activiteit…"/>
+    <input type="text" id="ha-naam" placeholder="Naam van de activiteit"/>
   </div>
   <div class="form-row">
     <label>Voor wie</label>
     <div class="persoon-ms" id="ha-wie-ms"></div>
   </div>
-  <div class="form-grid">
-    <div class="form-row">
-      <label>Datum</label>
-      <input type="date" id="ha-datum"/>
+
+  <!-- Meerdaagse toggle -->
+  <div class="meerdaags-toggle-rij" onclick="toggleHaMeerdaags()">
+    <div>
+      <div style="font-size:15px;font-weight:500;color:var(--ink);">📆 Meerdaagse activiteit</div>
+      <div style="font-size:12px;color:var(--muted);">Bijv. vakantie, schoolkamp, …</div>
+    </div>
+    <div class="ios-switch" id="ha-meerdaags-switch"></div>
+  </div>
+
+  <!-- Eendaagse velden -->
+  <div id="ha-eendaags-velden">
+    <div class="form-grid">
+      <div class="form-row"><label>Startuur</label><input type="time" id="ha-start"/></div>
+      <div class="form-row"><label>Einduur</label><input type="time" id="ha-eind"/></div>
+      <div class="form-row"><label>Reistijd heen (min)</label><input type="number" id="ha-reis-heen" placeholder="0" min="0"/></div>
+      <div class="form-row"><label>Reistijd terug (min)</label><input type="number" id="ha-reis-terug" placeholder="0" min="0"/></div>
     </div>
     <div class="form-row">
       <label>Frequentie</label>
       <select id="ha-freq">
-        <option value="eenmalig">Eenmalig</option>
         <option value="wekelijks">Wekelijks</option>
         <option value="tweewekelijks">Tweewekelijks</option>
+        <option value="maandelijks">Maandelijks</option>
+        <option value="eenmalig" selected>Eenmalig</option>
+        <option value="seizoen">Seizoensgebonden</option>
       </select>
     </div>
-    <div class="form-row">
-      <label>Startuur</label>
-      <input type="time" id="ha-start"/>
+    <div class="form-grid">
+      <div class="form-row"><label>Begindatum</label><input type="date" id="ha-begin"/></div>
+      <div class="form-row"><label>Einddatum</label><input type="date" id="ha-eind-datum"/></div>
     </div>
     <div class="form-row">
-      <label>Einduur</label>
-      <input type="time" id="ha-eind"/>
+      <label>Dagen</label>
+      <div class="dag-checkboxes" id="ha-dag-checkboxes"></div>
     </div>
   </div>
+
+  <!-- Meerdaagse velden -->
+  <div id="ha-meerdaags-velden" style="display:none;">
+    <div class="form-grid">
+      <div class="form-row"><label>Startdatum</label><input type="date" id="ha-md-start-datum"/></div>
+      <div class="form-row"><label>Einddatum</label><input type="date" id="ha-md-eind-datum"/></div>
+      <div class="form-row"><label>Starttijd (optioneel)</label><input type="time" id="ha-md-start-tijd"/></div>
+      <div class="form-row"><label>Eindtijd (optioneel)</label><input type="time" id="ha-md-eind-tijd"/></div>
+    </div>
+  </div>
+
   <div class="form-row">
     <label>Locatie</label>
-    <input type="text" id="ha-locatie" placeholder="Locatie (optioneel)"/>
+    <input type="text" id="ha-locatie" placeholder="Locatie"/>
   </div>
+  <div class="form-row">
+    <label>Voorbereiding</label>
+    <input type="text" id="ha-prep" placeholder="Sporttas, medicatie, …"/>
+  </div>
+
+  <!-- Privé toggle -->
+  <div class="prive-toggle" onclick="toggleHaPrive()">
+    <div class="prive-toggle-left">
+      <span class="prive-toggle-label">🔒 Privé activiteit</span>
+      <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
+    </div>
+    <div class="ios-switch" id="ha-prive-switch"></div>
+  </div>
+
+  <!-- Transport kindje -->
+  <div class="kindje-sectie-modal" id="ha-kindje-sectie" style="display:none;">
+    <div class="kindje-sectie-lbl">🚗 Transport kindje</div>
+    <div id="ha-transport-nora" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👧 Nora</div>
+      <div class="form-grid">
+        <div class="form-row" style="margin:0 0 10px;"><label>Wie brengt?</label><select id="ha-brengt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select></div>
+        <div class="form-row" style="margin:0 0 10px;"><label>Wie haalt?</label><select id="ha-haalt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;"><input type="checkbox" id="ha-eet-groo-nora" style="width:auto;accent-color:var(--accent);"/> Eet bij grootouders</label>
+    </div>
+    <div id="ha-transport-odiel" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👦 Odiel</div>
+      <div class="form-grid">
+        <div class="form-row" style="margin:0 0 10px;"><label>Wie brengt?</label><select id="ha-brengt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select></div>
+        <div class="form-row" style="margin:0 0 10px;"><label>Wie haalt?</label><select id="ha-haalt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;"><input type="checkbox" id="ha-eet-groo-odiel" style="width:auto;accent-color:var(--accent);"/> Eet bij grootouders</label>
+    </div>
+  </div>
+
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="sluitHomeActModal()">Annuleren</button>
     <button class="modal-btn modal-btn-primary" onclick="slaHomeActOp()">Opslaan</button>
@@ -536,18 +598,42 @@ async function slaHomeTodoOp(){
   toonOpslagStatus('✅ To-do toegevoegd');
 }
 
-// ── Snelle activiteit modal ───────────────────────────────────
+// ── Activiteit modal (volledig, gelijkgetrokken met agenda.html) ──
 let haWie=[];
+let haPriveAan=false;
+let haMeerdaagsAan=false;
+const DAGKEYS_H=['ma','di','wo','do','vr','za','zo'];
+const DAGKORT_H=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 const JSDAGMAP_H={0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'};
+
 function openHomeActModal(){
   haWie=[Auth.profiel()?.persoonKey||'jeroen'];
+  haPriveAan=false; haMeerdaagsAan=false;
+  const vandaag=fDateISO(new Date());
   document.getElementById('ha-naam').value='';
-  document.getElementById('ha-datum').value=fDateISO(new Date());
-  document.getElementById('ha-freq').value='eenmalig';
   document.getElementById('ha-start').value='';
   document.getElementById('ha-eind').value='';
+  document.getElementById('ha-reis-heen').value='';
+  document.getElementById('ha-reis-terug').value='';
   document.getElementById('ha-locatie').value='';
-  renderHaWie();
+  document.getElementById('ha-prep').value='';
+  document.getElementById('ha-freq').value='eenmalig';
+  document.getElementById('ha-begin').value=vandaag;
+  document.getElementById('ha-eind-datum').value='';
+  document.getElementById('ha-md-start-datum').value=vandaag;
+  document.getElementById('ha-md-eind-datum').value='';
+  document.getElementById('ha-md-start-tijd').value='';
+  document.getElementById('ha-md-eind-tijd').value='';
+  document.getElementById('ha-dag-checkboxes').innerHTML=DAGKORT_H.map((d,i)=>
+    `<label class="dag-cb"><input type="checkbox" value="${DAGKEYS_H[i]}"> ${d}</label>`
+  ).join('');
+  haUpdatePriveSwitch(); haUpdateMeerdaagsSwitch();
+  renderHaWie(); haCheckKindjeSection();
+  ['nora','odiel'].forEach(k=>{
+    document.getElementById(`ha-brengt-${k}`).value='';
+    document.getElementById(`ha-haalt-${k}`).value='';
+    document.getElementById(`ha-eet-groo-${k}`).checked=false;
+  });
   document.getElementById('home-act-modal-bg').classList.add('open');
   setTimeout(()=>document.getElementById('ha-naam').focus(),100);
 }
@@ -556,31 +642,68 @@ function renderHaWie(){
   document.getElementById('ha-wie-ms').innerHTML=PERSONEN.map(p=>
     `<div class="persoon-chip${haWie.includes(p)?' selected':''}" onclick="toggleHaWie('${p}')">${PEMOJI[p]} ${PLABEL[p]}</div>`
   ).join('');
+  haCheckKindjeSection();
 }
 function toggleHaWie(p){ haWie=haWie.includes(p)?haWie.filter(x=>x!==p):[...haWie,p]; renderHaWie(); }
+function toggleHaPrive(){ haPriveAan=!haPriveAan; haUpdatePriveSwitch(); }
+function haUpdatePriveSwitch(){ document.getElementById('ha-prive-switch').className='ios-switch'+(haPriveAan?' on':''); }
+function toggleHaMeerdaags(){ haMeerdaagsAan=!haMeerdaagsAan; haUpdateMeerdaagsSwitch(); }
+function haUpdateMeerdaagsSwitch(){
+  document.getElementById('ha-meerdaags-switch').className='ios-switch'+(haMeerdaagsAan?' on':'');
+  document.getElementById('ha-eendaags-velden').style.display=haMeerdaagsAan?'none':'block';
+  document.getElementById('ha-meerdaags-velden').style.display=haMeerdaagsAan?'block':'none';
+}
+function haCheckKindjeSection(){
+  const heeftNora=haWie.includes('nora'), heeftOdiel=haWie.includes('odiel');
+  document.getElementById('ha-kindje-sectie').style.display=(heeftNora||heeftOdiel)?'block':'none';
+  document.getElementById('ha-transport-nora').style.display=heeftNora?'block':'none';
+  document.getElementById('ha-transport-odiel').style.display=heeftOdiel?'block':'none';
+}
 async function slaHomeActOp(){
   const naam=document.getElementById('ha-naam').value.trim();
   if(!naam){alert('Geef een naam in.');return;}
   if(!haWie.length){alert('Selecteer minstens één persoon.');return;}
-  const datum=document.getElementById('ha-datum').value||fDateISO(new Date());
-  const d=new Date(datum+'T12:00:00');
-  const dagKey=JSDAGMAP_H[d.getDay()];
-  const start=document.getElementById('ha-start').value;
-  const eindUur=document.getElementById('ha-eind').value;
-  const freq=document.getElementById('ha-freq').value;
-  const act={
-    id:Date.now(), naam, wie:haWie, prive:false,
-    start, eindUur, duur:start&&eindUur?Math.max(0,tijdMinuten(eindUur)-tijdMinuten(start)):60,
-    reisHeen:0, reisTerug:0, meerdaags:false,
-    locatie:document.getElementById('ha-locatie').value,
-    freq, dagen:[dagKey],
-    beginDatum:datum, eindDatum:freq==='eenmalig'?datum:'',
-    prep:'',
-    transport:{},
-  };
+  let act;
+  if(haMeerdaagsAan){
+    const beginDatum=document.getElementById('ha-md-start-datum').value;
+    const eindDatum=document.getElementById('ha-md-eind-datum').value;
+    if(!beginDatum||!eindDatum){alert('Vul start- en einddatum in.');return;}
+    act={
+      id:Date.now(), naam, wie:haWie, prive:haPriveAan, meerdaags:true,
+      beginDatum, eindDatum,
+      start:document.getElementById('ha-md-start-tijd').value,
+      eindUur:document.getElementById('ha-md-eind-tijd').value,
+      locatie:document.getElementById('ha-locatie').value,
+      prep:document.getElementById('ha-prep').value,
+      dagen:[], freq:'eenmalig', duur:0, reisHeen:0, reisTerug:0, transport:{},
+    };
+  } else {
+    const dagen=[...document.querySelectorAll('#ha-dag-checkboxes input:checked')].map(c=>c.value);
+    const start=document.getElementById('ha-start').value;
+    const eindUur=document.getElementById('ha-eind').value;
+    act={
+      id:Date.now(), naam, wie:haWie, prive:haPriveAan, meerdaags:false,
+      start, eindUur,
+      duur:start&&eindUur?Math.max(0,tijdMinuten(eindUur)-tijdMinuten(start)):60,
+      reisHeen:parseInt(document.getElementById('ha-reis-heen').value)||0,
+      reisTerug:parseInt(document.getElementById('ha-reis-terug').value)||0,
+      locatie:document.getElementById('ha-locatie').value,
+      freq:document.getElementById('ha-freq').value,
+      beginDatum:document.getElementById('ha-begin').value,
+      eindDatum:document.getElementById('ha-eind-datum').value,
+      prep:document.getElementById('ha-prep').value,
+      dagen, transport:{},
+    };
+    ['nora','odiel'].forEach(kind=>{
+      if(!haWie.includes(kind)) return;
+      const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
+      act[`brengt${cap}`]=document.getElementById(`ha-brengt-${kind}`).value;
+      act[`haalt${cap}`]=document.getElementById(`ha-haalt-${kind}`).value;
+      act[`eetGroo${cap}`]=document.getElementById(`ha-eet-groo-${kind}`).checked;
+    });
+  }
   activiteiten.push(act);
-  slaLokaalOp();
-  sbSaveActiviteit(act);
+  slaLokaalOp(); sbSaveActiviteit(act);
   sluitHomeActModal();
   renderVandaag(fDateISO(new Date()), Auth.profiel());
   toonOpslagStatus('✅ Activiteit toegevoegd');

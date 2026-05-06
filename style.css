@@ -630,6 +630,10 @@ body{
   .rooster-dag-col{min-width:100px;flex-shrink:0;}
 }
 
+/* ── Voorbeeld-knoppen (agent) ───────────────────────────────── */
+.voorbeeld-btn{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:99px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;font-weight:500;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.voorbeeld-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
+
 /* Chat */
 .chat-bubble-user{align-self:flex-end;max-width:80%;background:var(--accent);color:#fff;border-radius:18px 18px 4px 18px;padding:11px 15px;font-size:14px;line-height:1.5;}
 .chat-bubble-bot{align-self:flex-start;max-width:80%;background:var(--surface);border:1.5px solid var(--border);border-radius:18px 18px 18px 4px;padding:11px 15px;font-size:14px;line-height:1.5;box-shadow:var(--shadow-sm);}

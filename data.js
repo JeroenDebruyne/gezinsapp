@@ -121,8 +121,12 @@ function tijdMinuten(t) {
   const [h,m] = t.split(':').map(Number); return h*60+(m||0);
 }
 function isActiefOpDatum(act, datumStr) {
+  // Meerdaagse activiteiten: toon op elke dag binnen de periode
+  if (act.meerdaags) return !!act.beginDatum && !!act.eindDatum && datumStr >= act.beginDatum && datumStr <= act.eindDatum;
+  // Eenmalige activiteiten: toon enkel op hun exacte begindatum
+  if (act.freq === 'eenmalig') return datumStr === act.beginDatum;
   const datum = new Date(datumStr+'T12:00:00');
-  const dagNr = datum.getDay(); // 0=zo,1=ma,...
+  const dagNr = datum.getDay();
   const dagMap = {1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za',0:'zo'};
   const dagKey = dagMap[dagNr];
   if (!act.dagen || !act.dagen.includes(dagKey)) return false;
