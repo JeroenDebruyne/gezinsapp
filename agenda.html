@@ -747,6 +747,8 @@ function renderTransportDetail(act,datumISO){
 // ── Helpers ───────────────────────────────────────────────────
 function isActiefOp(act,datumISO){
   if(act.meerdaags) return false;
+  // Eenmalige activiteiten: toon enkel op hun exacte begindatum
+  if(act.freq==='eenmalig') return datumISO===act.beginDatum;
   const d=new Date(datumISO+'T12:00:00');
   const dagKey=JSDAGMAP[d.getDay()];
   if(!act.dagen||!act.dagen.includes(dagKey)) return false;
@@ -938,13 +940,19 @@ let _icalEvents = [];
 let _icalWie    = [];
 let _icalSrcUrl = null;   // huidige URL (voor abonnement opslaan)
 
-// ── Auto-sync alle abonnementen ───────────────────────────────
+// ── Auto-sync alle abonnementen (max 1× per 23 uur) ──────────
+const _ICAL_SYNC_KEY = 'gezinsapp-ical-last-sync';
 async function icalAutoSync(){
   await laadIcalAbonnementen();
-  if(!icalAbonnementen.length) return;
+  if(!icalAbonnementen.filter(a=>!a.paused).length) return;
+
+  // Dagelijkse limiet: overslaan als minder dan 23 uur geleden gesynchroniseerd
+  const lastSync=parseInt(localStorage.getItem(_ICAL_SYNC_KEY)||'0');
+  if(Date.now()-lastSync < 23*60*60*1000) return;
+
   let totaalNieuw=0, totaalUpdate=0;
   for(const abo of icalAbonnementen){
-    if(abo.paused) continue;  // opgeschorte abonnementen overslaan
+    if(abo.paused) continue;
     try {
       const text=await icalFetchUrl(abo.url);
       const events=parseIcal(text,abo.url);
@@ -952,6 +960,8 @@ async function icalAutoSync(){
       totaalNieuw+=nieuw; totaalUpdate+=geupdate;
     } catch(e){ console.warn('[iCal sync]',abo.url,e.message); }
   }
+  localStorage.setItem(_ICAL_SYNC_KEY, Date.now().toString());
+
   if(totaalNieuw||totaalUpdate){
     slaLokaalOp(); renderAlles();
     toonOpslagStatus(`🔄 iCal: ${totaalNieuw} nieuw, ${totaalUpdate} bijgewerkt`);
