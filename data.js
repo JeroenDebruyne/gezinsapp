@@ -184,6 +184,7 @@ async function laadOp() {
       reisHeen:x.reis_heen, reisTerug:x.reis_terug, eindUur:x.eind_uur,
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
       transport: x.transport || {},
+      icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
     }));
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
     if (b.length) extraItems = b;
@@ -283,6 +284,7 @@ async function sbSaveActiviteit(act) {
     eind_datum:act.eindDatum||null, prep:act.prep, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: act.transport || {},
+    ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
   };
   try {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }

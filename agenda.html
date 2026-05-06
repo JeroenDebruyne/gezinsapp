@@ -483,12 +483,31 @@
   <!-- Laadstatus -->
   <div id="ical-status" style="font-size:13px;color:var(--muted);margin:8px 0;min-height:18px;"></div>
 
+  <!-- Huidige abonnementen -->
+  <div id="ical-abonnementen-sectie" style="display:none;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🔄 Actieve abonnementen</div>
+    <div id="ical-abonnementen-lijst" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;"></div>
+  </div>
+
   <!-- Preview -->
   <div id="ical-preview" style="display:none;">
     <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px;" id="ical-preview-titel"></div>
     <div class="form-row" style="margin-bottom:10px;">
       <label>Voor wie importeren?</label>
       <div class="persoon-ms" id="ical-wie-ms"></div>
+    </div>
+    <!-- Abonnement bewaren (alleen bij URL-import) -->
+    <div id="ical-abo-rij" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1.5px solid var(--border);">
+      <input type="checkbox" id="ical-abo-check" style="width:auto;accent-color:var(--accent);"
+        onchange="document.getElementById('ical-abo-naam-rij').style.display=this.checked?'block':'none'"/>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);">🔄 Bewaar als abonnement</div>
+        <div style="font-size:11px;color:var(--muted);">Wijzigingen worden automatisch bijgehouden</div>
+      </div>
+    </div>
+    <div id="ical-abo-naam-rij" style="display:none;" class="form-row">
+      <label>Naam abonnement</label>
+      <input type="text" id="ical-abo-naam" placeholder="bijv. Voetbalclub Nora"/>
     </div>
     <div id="ical-event-lijst"
       style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;">
@@ -529,7 +548,7 @@ const DOT_KLEUR  = {jeroen:'dot-jeroen',kelly:'dot-kelly',nora:'dot-nora',odiel:
 const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora:'var(--c-nora-dot)',odiel:'var(--c-odiel-dot)'};
 
 // ── Laden ─────────────────────────────────────────────────────
-laadOp().then(renderAlles).catch(()=>{laadLokaal();renderAlles();});
+laadOp().then(()=>{ renderAlles(); icalAutoSync(); }).catch(()=>{laadLokaal();renderAlles();});
 
 function renderAlles(){
   renderLegenda();
@@ -912,18 +931,104 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();closeDOModal();closeIcalModal();}});
 });
 
-// ── iCal import ───────────────────────────────────────────────
-let _icalEvents = [];
-let _icalWie    = [];
+// ── iCal import & sync ────────────────────────────────────────
+let _icalEvents   = [];
+let _icalWie      = [];
+let _icalSrcUrl   = null;   // huidige URL (voor abonnement opslaan)
+let icalAbonnementen = [];  // [{url, naam, wie}]
 
+// ── Abonnementen laden/opslaan (via instellingen tabel) ───────
+async function laadIcalAbonnementen(){
+  try {
+    const gid=Auth.getGezinId();
+    const f=gid?`?id=eq.icalAbonnementen&gezin_id=eq.${gid}`:`?id=eq.icalAbonnementen`;
+    const rows=await sbFetch(`instellingen${f}`).catch(()=>[]);
+    if(rows[0]?.waarde) icalAbonnementen=rows[0].waarde;
+  } catch(_){}
+}
+async function slaIcalAbonnementenOp(){
+  try {
+    const gid=Auth.getGezinId();
+    const f=gid?`?id=eq.icalAbonnementen&gezin_id=eq.${gid}`:`?id=eq.icalAbonnementen`;
+    const bestaand=await sbFetch(`instellingen${f}`).catch(()=>[]);
+    const data={waarde:icalAbonnementen,updated_at:new Date().toISOString()};
+    if(bestaand.length) await sbFetch(`instellingen${f}`,'PATCH',data);
+    else await sbFetch('instellingen','POST',{id:'icalAbonnementen',...data,gezin_id:gid});
+  } catch(_){}
+}
+
+// ── Fetch helper met CORS-proxy fallback ──────────────────────
+async function icalFetchUrl(rawUrl){
+  const url=rawUrl.replace(/^webcal:\/\//i,'https://');
+  // Probeer direct
+  try {
+    const r=await fetch(url,{signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
+    if(r.ok){ const t=await r.text(); if(t.includes('BEGIN:VCALENDAR')) return t; }
+  } catch(_){}
+  // Fallback: corsproxy.io
+  const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
+  const r=await fetch(proxy);
+  if(!r.ok) throw new Error(`HTTP ${r.status} via proxy`);
+  const t=await r.text();
+  if(!t.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand ontvangen.');
+  return t;
+}
+
+// ── Auto-sync alle abonnementen ───────────────────────────────
+async function icalAutoSync(){
+  await laadIcalAbonnementen();
+  if(!icalAbonnementen.length) return;
+  let totaalNieuw=0, totaalUpdate=0;
+  for(const abo of icalAbonnementen){
+    try {
+      const text=await icalFetchUrl(abo.url);
+      const events=parseIcal(text,abo.url);
+      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+      totaalNieuw+=nieuw; totaalUpdate+=geupdate;
+    } catch(e){ console.warn('[iCal sync]',abo.url,e.message); }
+  }
+  if(totaalNieuw||totaalUpdate){
+    slaLokaalOp(); renderAlles();
+    toonOpslagStatus(`🔄 iCal: ${totaalNieuw} nieuw, ${totaalUpdate} bijgewerkt`);
+  }
+}
+
+// ── Merge: voeg nieuwe events toe, update bestaande op UID ────
+async function icalMerge(parsedEvents, wie, sourceUrl){
+  let nieuw=0, geupdate=0;
+  for(const ev of parsedEvents){
+    if(!ev.icalUid) continue; // events zonder UID kunnen niet gededupliceerd worden
+    ev.wie=wie.length?[...wie]:[Auth.profiel()?.persoonKey].filter(Boolean);
+    const bestaande=activiteiten.find(a=>a.icalUid===ev.icalUid&&a.icalSource===sourceUrl);
+    if(bestaande){
+      // Update naam, datums, tijden — maar bewaar user-aanpassingen aan wie/locatie/prep
+      const changed=bestaande.naam!==ev.naam||bestaande.beginDatum!==ev.beginDatum||
+        bestaande.eindDatum!==ev.eindDatum||bestaande.start!==ev.start;
+      if(changed){
+        Object.assign(bestaande,{naam:ev.naam,beginDatum:ev.beginDatum,eindDatum:ev.eindDatum,
+          start:ev.start,eindUur:ev.eindUur,meerdaags:ev.meerdaags,dagen:ev.dagen,freq:ev.freq});
+        await sbSaveActiviteit(bestaande);
+        geupdate++;
+      }
+    } else {
+      activiteiten.push(ev);
+      await sbSaveActiviteit(ev);
+      nieuw++;
+    }
+  }
+  return {nieuw,geupdate};
+}
+
+// ── Modal openen/sluiten ──────────────────────────────────────
 function openIcalModal(){
-  _icalEvents=[]; _icalWie=[];
+  _icalEvents=[]; _icalWie=[]; _icalSrcUrl=null;
   document.getElementById('ical-file').value='';
   document.getElementById('ical-url').value='';
   document.getElementById('ical-status').textContent='';
   document.getElementById('ical-preview').style.display='none';
   document.getElementById('ical-import-btn').style.display='none';
   icalTab('bestand');
+  icalToonAbonnementen();
   document.getElementById('ical-modal-bg').classList.add('open');
 }
 function closeIcalModal(){ document.getElementById('ical-modal-bg').classList.remove('open'); }
@@ -937,45 +1042,34 @@ function icalTab(tab){
   });
 }
 
+// ── Bestand uploaden ──────────────────────────────────────────
 function icalLaadBestand(input){
   const file=input.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{ icalVerwerk(e.target.result, file.name); };
-  reader.readAsText(file, 'UTF-8');
+  reader.onload=e=>{ icalVerwerk(e.target.result, null); };
+  reader.readAsText(file,'UTF-8');
 }
 
+// ── URL laden ─────────────────────────────────────────────────
 async function icalLaadUrl(){
   let url=document.getElementById('ical-url').value.trim();
   if(!url){ alert('Vul een URL in.'); return; }
-  url=url.replace(/^webcal:\/\//i,'https://');
   document.getElementById('ical-status').textContent='⏳ Laden…';
   try {
-    // Probeer direct (werkt als CORS-headers aanwezig zijn)
-    let text=null;
-    try {
-      const res=await fetch(url);
-      if(res.ok) text=await res.text();
-    } catch(_){}
-    // Fallback: CORS-proxy
-    if(!text){
-      const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-      const res=await fetch(proxy);
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      text=await res.text();
-    }
-    if(!text.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand.');
-    icalVerwerk(text, url.split('/').pop()||'agenda');
+    const text=await icalFetchUrl(url);
+    _icalSrcUrl=url.replace(/^webcal:\/\//i,'https://');
+    icalVerwerk(text, _icalSrcUrl);
   } catch(e){
     document.getElementById('ical-status').textContent='❌ '+e.message;
   }
 }
 
-function icalVerwerk(text, bronNaam){
+function icalVerwerk(text, srcUrl){
   document.getElementById('ical-status').textContent='⏳ Verwerken…';
   try {
-    _icalEvents=parseIcal(text);
+    _icalEvents=parseIcal(text, srcUrl);
     if(!_icalEvents.length){
-      document.getElementById('ical-status').textContent='⚠️ Geen activiteiten gevonden in dit bestand.';
+      document.getElementById('ical-status').textContent='⚠️ Geen activiteiten gevonden.';
       return;
     }
     document.getElementById('ical-status').textContent='';
@@ -986,31 +1080,41 @@ function icalVerwerk(text, bronNaam){
   }
 }
 
+// ── Preview ───────────────────────────────────────────────────
 function icalToonPreview(){
   const n=_icalEvents.length;
-  document.getElementById('ical-preview-titel').textContent=`${n} activiteit${n!==1?'en':''} gevonden`;
+  const bestaandAantal=_icalEvents.filter(e=>e.icalUid&&activiteiten.find(a=>a.icalUid===e.icalUid&&a.icalSource===e.icalSource)).length;
+  const nieuwAantal=n-bestaandAantal;
+  document.getElementById('ical-preview-titel').textContent=
+    `${n} activiteit${n!==1?'en':''} gevonden`+
+    (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
-  // Persoon-picker
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
     `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" onclick="icalToggleWie('${p}')">
       ${PEMOJI[p]||''} ${PLABEL[p]||p}
     </div>`).join('');
 
-  // Eventlijst (max 15 tonen)
+  // Abonnement-optie (alleen bij URL-import)
+  const isAbo=_icalSrcUrl&&!icalAbonnementen.find(a=>a.url===_icalSrcUrl);
+  document.getElementById('ical-abo-rij').style.display=isAbo?'flex':'none';
+  document.getElementById('ical-abo-check').checked=isAbo;
+
   const toon=_icalEvents.slice(0,15);
   document.getElementById('ical-event-lijst').innerHTML=
-    toon.map(a=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);">
-        <span style="font-size:11px;color:var(--muted);min-width:80px;flex-shrink:0;">${a.beginDatum}${a.meerdaags&&a.eindDatum!==a.beginDatum?' → '+a.eindDatum.slice(5):''}</span>
+    toon.map(a=>{
+      const al=a.icalUid&&activiteiten.find(x=>x.icalUid===a.icalUid&&x.icalSource===a.icalSource);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);">
+        ${al?'<span style="font-size:10px;color:var(--normaal-clr);flex-shrink:0;">↻</span>':'<span style="font-size:10px;color:var(--rustig-clr);flex-shrink:0;">＋</span>'}
+        <span style="font-size:11px;color:var(--muted);min-width:80px;flex-shrink:0;">${a.beginDatum}${a.meerdaags&&a.eindDatum!==a.beginDatum?' →'+a.eindDatum.slice(5):''}</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.naam)}</span>
         <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${a.start||''}</span>
-      </div>`).join('')
-    +(n>15?`<div style="padding:7px 10px;font-size:12px;color:var(--muted);">… en nog ${n-15} meer</div>`:'');
+      </div>`;
+    }).join('')+(n>15?`<div style="padding:7px 10px;font-size:12px;color:var(--muted);">… en nog ${n-15} meer</div>`:'');
 
   document.getElementById('ical-preview').style.display='block';
   const btn=document.getElementById('ical-import-btn');
-  btn.style.display='inline-flex';
-  btn.textContent=`Importeer ${n} activiteit${n!==1?'en':''}`;
+  btn.style.display='inline-flex'; btn.disabled=false;
+  btn.textContent=`Importeer ${nieuwAantal} nieuw${bestaandAantal?' + '+bestaandAantal+' bijwerken':''}`;
 }
 
 function icalToggleWie(p){
@@ -1021,25 +1125,70 @@ function icalToggleWie(p){
   });
 }
 
+// ── Importeren ────────────────────────────────────────────────
 async function icalImporteer(){
   if(!_icalEvents.length) return;
   const btn=document.getElementById('ical-import-btn');
   btn.disabled=true; btn.textContent='Bezig…';
-  let ok=0;
-  for(const act of _icalEvents){
-    act.wie=_icalWie.length?[..._icalWie]:[Auth.profiel()?.persoonKey].filter(Boolean);
-    activiteiten.push(act);
-    await sbSaveActiviteit(act);
-    ok++;
+
+  const wie=_icalWie.length?[..._icalWie]:[Auth.profiel()?.persoonKey].filter(Boolean);
+  const src=_icalSrcUrl||null;
+  _icalEvents.forEach(e=>{ e.wie=wie; });
+  const {nieuw,geupdate}=await icalMerge(_icalEvents,wie,src);
+
+  // Abonnement bewaren?
+  if(src&&document.getElementById('ical-abo-check')?.checked){
+    const naam=document.getElementById('ical-abo-naam')?.value.trim()||src.split('/').pop()||'Agenda';
+    if(!icalAbonnementen.find(a=>a.url===src)){
+      icalAbonnementen.push({url:src,naam,wie});
+      await slaIcalAbonnementenOp();
+    }
   }
-  closeIcalModal();
-  slaLokaalOp();
-  renderAlles();
-  toonOpslagStatus(`✅ ${ok} activiteiten geïmporteerd`);
+
+  closeIcalModal(); slaLokaalOp(); renderAlles();
+  toonOpslagStatus(`✅ ${nieuw} toegevoegd, ${geupdate} bijgewerkt`);
+}
+
+// ── Abonnementen weergeven ────────────────────────────────────
+function icalToonAbonnementen(){
+  laadIcalAbonnementen().then(()=>{
+    const el=document.getElementById('ical-abonnementen-sectie');
+    if(!icalAbonnementen.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    document.getElementById('ical-abonnementen-lijst').innerHTML=
+      icalAbonnementen.map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${escHtml(a.naam||a.url)}</span>
+          <button onclick="icalSyncEnkel(${i})" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--accent);">↻ Sync</button>
+          <button onclick="icalVerwijderAbo(${i})" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--druk-clr);">✕</button>
+        </div>`).join('');
+  });
+}
+
+async function icalSyncEnkel(i){
+  const abo=icalAbonnementen[i]; if(!abo) return;
+  toonOpslagStatus('⏳ Synchroniseren…');
+  try {
+    const text=await icalFetchUrl(abo.url);
+    const events=parseIcal(text,abo.url);
+    const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+    icalAbonnementen[i].lastSync=new Date().toISOString();
+    await slaIcalAbonnementenOp();
+    slaLokaalOp(); renderAlles();
+    toonOpslagStatus(`✅ ${abo.naam||'Agenda'}: ${nieuw} nieuw, ${geupdate} bijgewerkt`);
+    icalToonAbonnementen();
+  } catch(e){ toonOpslagStatus('❌ '+e.message); }
+}
+
+async function icalVerwijderAbo(i){
+  if(!confirm('Abonnement verwijderen? De al geïmporteerde activiteiten blijven staan.')) return;
+  icalAbonnementen.splice(i,1);
+  await slaIcalAbonnementenOp();
+  icalToonAbonnementen();
 }
 
 // ── iCal parser ───────────────────────────────────────────────
-function parseIcal(icsText){
+function parseIcal(icsText, sourceUrl=null){
   // Unfold gevouwen regels (RFC 5545)
   const text=icsText
     .replace(/\r\n/g,'\n').replace(/\r/g,'\n')
@@ -1062,6 +1211,7 @@ function parseIcal(icsText){
     const summary=_icalUnescape(prop['SUMMARY']?.val||'');
     if(!summary) continue;
     const location=_icalUnescape(prop['LOCATION']?.val||'');
+    const uid=prop['UID']?.val||null;
 
     const dtsFull =prop['DTSTART']?.fullKey||'';
     const dtsVal  =prop['DTSTART']?.val||'';
@@ -1117,6 +1267,7 @@ function parseIcal(icsText){
       freq, dagen:meerdaags?[]:dagen,
       duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
       reisHeen:0, reisTerug:0, transport:{},
+      icalUid:uid, icalSource:sourceUrl,
     });
   }
   return events;
