@@ -32,6 +32,10 @@
 .type-chip.selected{border-color:var(--accent);background:var(--accent);color:#fff;}
 .type-chip:hover:not(.selected){background:var(--bg-2);}
 
+/* Ingrediënt rij */
+.ing-rij-blok{padding:10px 0;border-bottom:1px solid var(--border);}
+.ing-rij-blok:last-child{border-bottom:none;}
+
 /* Combo ingrediënt input */
 .ing-combo-wrap{position:relative;}
 .ing-combo-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;}
@@ -305,13 +309,6 @@
 
   <!-- Ingrediënten -->
   <div class="section-label">Ingrediënten</div>
-  <div style="display:grid;grid-template-columns:3fr 0.7fr 0.8fr 1.4fr 28px;gap:5px;margin-bottom:6px;padding:0 2px;">
-    <span style="font-size:11px;color:var(--muted);font-weight:600;">INGREDIËNT</span>
-    <span style="font-size:11px;color:var(--muted);font-weight:600;">HOEV.</span>
-    <span style="font-size:11px;color:var(--muted);font-weight:600;">EENHEID</span>
-    <span style="font-size:11px;color:var(--muted);font-weight:600;">WINKEL</span>
-    <span></span>
-  </div>
   <div id="ingredients-container"></div>
   <button onclick="addIngredient()" style="width:100%;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-2)';this.style.color='var(--muted)'">+ Ingrediënt toevoegen</button>
 
@@ -488,22 +485,27 @@ function setTypes(types){
 function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
   const w=winkel||zoekStandaardWinkel(naam);
   const rowId='ing-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
-  return `<div id="${rowId}" style="display:grid;grid-template-columns:3fr 0.7fr 0.8fr 1.4fr 28px;gap:5px;align-items:center;margin-bottom:8px;">
-    <div class="ing-combo-wrap">
-      <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${naam}"
-        oninput="filterIngCombo(this,'${rowId}')"
-        onfocus="filterIngCombo(this,'${rowId}')"
-        onblur="setTimeout(()=>sluitIngCombo('${rowId}'),150)"
-        autocomplete="off"/>
-      ${isNieuw?`<span class="ing-nieuw-badge">Nieuw</span>`:''}
-      <div class="ing-combo-dropdown" id="dd-${rowId}"></div>
+  const iStyle='padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;box-sizing:border-box;width:100%;background:var(--surface);color:var(--ink);font-family:inherit;';
+  return `<div id="${rowId}" class="ing-rij-blok">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+      <div class="ing-combo-wrap" style="flex:1;min-width:0;position:relative;">
+        <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${naam}"
+          oninput="filterIngCombo(this,'${rowId}')"
+          onfocus="filterIngCombo(this,'${rowId}')"
+          onblur="setTimeout(()=>sluitIngCombo('${rowId}'),150)"
+          autocomplete="off"/>
+        ${isNieuw?`<span class="ing-nieuw-badge" style="position:absolute;top:-6px;right:4px;font-size:9px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 5px;border-radius:99px;font-weight:700;">Nieuw</span>`:''}
+        <div class="ing-combo-dropdown" id="dd-${rowId}"></div>
+      </div>
+      <button style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted-2);padding:0 4px;line-height:1;flex-shrink:0;" onclick="this.closest('div[id]').remove()">×</button>
     </div>
-    <input style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" type="text" placeholder="500" value="${hoev}"/>
-    <input style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" type="text" placeholder="gram" value="${eenheid}"/>
-    <select class="winkel-sel" style="padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--ink);">
-      ${WINKELS.map(ww=>`<option${ww===w?' selected':''}>${ww}</option>`).join('')}
-    </select>
-    <button style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted-2);padding:0;" onclick="this.closest('div[id]').remove()">×</button>
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:5px;">
+      <input style="${iStyle}" type="text" placeholder="Aantal" value="${hoev}"/>
+      <input style="${iStyle}" type="text" placeholder="Eenheid" value="${eenheid}"/>
+      <select class="winkel-sel" style="${iStyle}padding:8px 10px;">
+        ${WINKELS.map(ww=>`<option${ww===w?' selected':''}>${ww}</option>`).join('')}
+      </select>
+    </div>
   </div>`;
 }
 
