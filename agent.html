@@ -142,16 +142,19 @@ const AGENT_TOOLS=[
   {name:'get_weekplanning',description:'Haal de huidige weekplanning op.',input_schema:{type:'object',properties:{},required:[]}},
   {name:'get_drukte_week',description:'Haal de drukte per dag op voor de huidige week.',input_schema:{type:'object',properties:{},required:[]}},
   {name:'get_todos',description:'Haal alle openstaande to-do\'s op.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'stel_weekmenu_in',description:'Stel het weekmenu in. VERPLICHT: vraag eerst bevestiging via het bevestiging_vereist veld.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+  {name:'stel_weekmenu_in',description:'Stel het weekmenu in met recept-IDs. VERPLICHT: vraag eerst bevestiging.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{dag:{type:'string'},ontbijt:{type:'number'},lunch:{type:'number'},avond:{type:'number'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
   {name:'voeg_todo_toe',description:'Voeg een to-do toe. VERPLICHT: vraag eerst bevestiging.',input_schema:{type:'object',properties:{titel:{type:'string'},deadline:{type:'string'},wie:{type:'array',items:{type:'string'}},prioriteit:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
+  {name:'voeg_activiteit_toe',description:'Voeg een activiteit toe aan het rooster. VERPLICHT: vraag eerst bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'jeroen,kelly,nora,odiel'},dagen:{type:'array',items:{type:'string'},description:'ma,di,wo,do,vr,za,zo'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks,tweewekelijks,eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','wie']}},
   {name:'get_boodschappenlijst',description:'Genereer de boodschappenlijst per winkel.',input_schema:{type:'object',properties:{},required:[]}}
 ];
 
-const SYSTEEMPROMPT=`Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere. 
+const SYSTEEMPROMPT=`Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere.
 Gezin: Jeroen (vader, admin), Kelly (moeder), Nora (6j), Odiel (3j).
 Week loopt van dinsdag tot maandag. Doordeweeks eten kindjes op school.
 
-BELANGRIJK: Als je iets wil toevoegen of aanpassen (weekmenu, to-do's), moet je ALTIJD eerst bevestiging vragen via het 'bevestiging_vereist: true' veld in de tool. Geef een duidelijk 'bevestiging_bericht' wat je gaat doen.
+BELANGRIJK: Vraag ALTIJD bevestiging voor je iets toevoegt of aanpast (bevestiging_vereist:true).
+Bij stel_weekmenu_in: gebruik het numerieke id uit get_recepten, NIET de naam.
+Personen: jeroen, kelly, nora, odiel. Dagen: ma, di, wo, do, vr, za, zo.
 Antwoord altijd in het Nederlands. Wees kort en direct.`;
 
 function voerToolUit(naam,input){
@@ -190,13 +193,24 @@ function _voerToolUitZonderBevestiging(naam,input){
           const idx=dagNamenM.findIndex(d=>d===dagData.dag||d.startsWith(dagData.dag));
           if(idx<0)return;
           const key=fDateISO(datesM[idx]);if(!planning[key])planning[key]={};
-          ['ontbijt','lunch','avond'].forEach(slot=>{if(dagData[slot]!==undefined)planning[key][slot]=dagData[slot];});
+          ['ontbijt','lunch','avond'].forEach(slot=>{
+            if(dagData[slot]===undefined||dagData[slot]===null)return;
+            let val=dagData[slot];
+            if(typeof val==='string'&&isNaN(Number(val))){const rec=recepten.find(r=>r.naam.toLowerCase()===val.toLowerCase());val=rec?rec.id:val;}
+            else if(typeof val==='string'){val=Number(val)||val;}
+            planning[key][slot]=val;
+            sbSavePlanning(key,slot,val,planning[key].porties||{});
+          });
         });
         slaLokaalOp();return'✅ Weekmenu ingesteld!';
       }return'Fout formaat';
     case 'voeg_todo_toe':
       const todo={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:fDateISO(new Date())};
-      todos.push(todo);slaLokaalOp();return'✅ To-do toegevoegd: '+input.titel;
+      todos.push(todo);slaLokaalOp();sbSaveTodo(todo);return'✅ To-do toegevoegd: '+input.titel;
+    case 'voeg_activiteit_toe': {
+      const act={id:Date.now(),naam:input.naam,wie:input.wie||[],dagen:input.dagen||[],start:input.start||null,eindUur:input.eind_uur||null,duur:0,reisHeen:0,reisTerug:0,prep:0,locatie:input.locatie||'',freq:input.freq||'wekelijks',beginDatum:input.begin_datum||null,eindDatum:null,meerdaags:false,prive:false,transport:{}};
+      activiteiten.push(act);slaLokaalOp();sbSaveActiviteit(act);return'✅ Activiteit toegevoegd: '+input.naam;
+    }
     case 'get_boodschappenlijst':
       const res={};WINKELS.forEach(w=>res[w]=[]);
       Object.values(planning).forEach(dag=>{Object.values(dag).forEach(keuze=>{if(keuze&&!SPEC[keuze]){const r=recepten.find(r=>r.id===keuze||r.id==keuze);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push({naam:ing.naam,hoev:ing.hoev,eenheid:ing.eenheid,recept:r.naam});});}});});
