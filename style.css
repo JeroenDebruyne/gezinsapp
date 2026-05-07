@@ -450,9 +450,11 @@ body{
 .dag-rij-body{display:none;border-top:1px solid var(--border);padding:10px 14px;}
 .dag-rij-body.open{display:block;}
 .dag-slots{display:flex;flex-direction:column;gap:6px;}
-.slot{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px solid var(--border);cursor:pointer;min-height:48px;transition:border-color .12s;}
+.slot{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1.5px solid var(--border);cursor:pointer;min-height:48px;transition:border-color .12s;position:relative;}
 .slot:hover{border-color:var(--accent);}
 .slot-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:62px;flex-shrink:0;}
+.slot-wis-btn{margin-left:auto;flex-shrink:0;width:24px;height:24px;border-radius:50%;border:none;background:var(--border);color:var(--muted);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.slot-wis-btn:hover{background:var(--druk-bg);color:var(--druk-clr);}
 .slot-leeg{font-size:13px;color:var(--muted-2);}
 .slot-naam{font-size:14px;color:var(--ink);font-weight:500;}
 .slot-tijd{font-size:11px;color:var(--muted);}

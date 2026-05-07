@@ -119,6 +119,15 @@
   <div class="modal-handle"></div>
   <h3 id="plan-titel"></h3>
   <div id="drukte-info-box" style="margin-bottom:12px;"></div>
+  <div id="huidig-sectie" style="display:none;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Huidig</div>
+        <div id="huidig-waarde" style="font-size:14px;font-weight:600;color:var(--ink);"></div>
+      </div>
+      <button onclick="wisSlot()" style="display:flex;align-items:center;gap:5px;padding:8px 14px;border:1.5px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:13px;font-weight:600;cursor:pointer;">🗑️ Wissen</button>
+    </div>
+  </div>
   <div class="section-label">Snelle opties</div>
   <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
   <div id="top3-sectie" style="display:none;margin-bottom:4px;">
@@ -169,7 +178,8 @@ function renderPlanner(){
       if(!keuze) badge=`<span class="slot-leeg">+ Toevoegen</span>`;
       else if(SPEC[keuze]) badge=`<span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>`;
       else{const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));if(r){const w=r.tijd>DRUKTE_MAX[drukte];badge=`<div class="slot-naam">${r.naam}${w?' <span class="warn">⚠️</span>':''}</div><div class="slot-tijd">${r.tijd}m</div>`;}}
-      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${badge}</div>`;
+      const wisBtn=keuze?`<button class="slot-wis-btn" onclick="event.stopPropagation();wisSlotDirect('${key}','${slot.key}')" title="Wissen">×</button>`:'';
+      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${badge}${wisBtn}</div>`;
     }).join('');
     return `<div class="dag-rij${isW?' weekend':''}${key===today?' vandaag':''}" id="dag-rij-${key}">
       <div class="dag-rij-header" onclick="toggleDag('${key}')">
@@ -227,6 +237,14 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
   activeSlot={dagKey:dk,slotKey,dagIndex};
   const drukte=getDagDrukte(dk);
   document.getElementById('plan-titel').textContent=dagnaam+' — '+SLOTS.find(s=>s.key===slotKey).lbl;
+  // Toon huidige waarde + wis-knop als slot al ingevuld is
+  const huidig=(planning[dk]||{})[slotKey];
+  const huidigSectie=document.getElementById('huidig-sectie');
+  if(huidig){
+    const huidigNaam=SPEC[huidig]||recepten.find(r=>r.id===huidig||r.id===parseInt(huidig))?.naam||huidig;
+    document.getElementById('huidig-waarde').textContent=huidigNaam;
+    huidigSectie.style.display='block';
+  } else { huidigSectie.style.display='none'; }
   document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">${{rustig:'🟢 Rustige dag',normaal:'🟡 Drukke dag',druk:'🔴 Zeer drukke dag'}[drukte]}</div>`;
   const isW=dagIndex>=4&&dagIndex<=5;
   const slot=SLOTS.find(s=>s.key===slotKey);
@@ -282,6 +300,21 @@ function kiesPlanK(k){
   sbSavePlanning(activeSlot.dagKey,activeSlot.slotKey,k,planning[activeSlot.dagKey].porties);
 }
 
+function wisSlot(){
+  if(!activeSlot) return;
+  const dk=activeSlot.dagKey, sk=activeSlot.slotKey;
+  if(planning[dk]) delete planning[dk][sk];
+  closePlanModal();
+  renderPlanner();
+  slaLokaalOp();
+  sbSavePlanning(dk,sk,null,(planning[dk]||{}).porties);
+}
+function wisSlotDirect(dagKey,slotKey){
+  if(planning[dagKey]) delete planning[dagKey][slotKey];
+  renderPlanner();
+  slaLokaalOp();
+  sbSavePlanning(dagKey,slotKey,null,(planning[dagKey]||{}).porties);
+}
 function closePlanModal(){
   document.getElementById('plan-modal-bg').classList.remove('open');
   activeSlot=null;
