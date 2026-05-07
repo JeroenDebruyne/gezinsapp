@@ -123,6 +123,8 @@ function tijdMinuten(t) {
 function isActiefOpDatum(act, datumStr) {
   // Meerdaagse activiteiten: toon op elke dag binnen de periode
   if (act.meerdaags) return !!act.beginDatum && !!act.eindDatum && datumStr >= act.beginDatum && datumStr <= act.eindDatum;
+  // Check uitgesloten dates (enkel-herhaling-verwijderd)
+  if ((act.uitgesloten||[]).includes(datumStr)) return false;
   // Eenmalige activiteiten: toon enkel op hun exacte begindatum
   if (act.freq === 'eenmalig') return datumStr === act.beginDatum;
   const datum = new Date(datumStr+'T12:00:00');
@@ -188,11 +190,24 @@ async function laadOp() {
       reisHeen:x.reis_heen, reisTerug:x.reis_terug, eindUur:x.eind_uur,
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
       transport: x.transport || {},
+      uitgesloten: (x.transport||{}).uitgesloten || [],
       icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
     }));
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
     if (b.length) extraItems = b;
-    if (c.length) contacten = c.map(x=>({...x, _sbId:x.id, kinderenNamen:x.kinderen_namen,cadeauNj:x.cadeau_nj,cadeauVj:x.cadeau_vj,kerstmis:x.kerstmis}));
+    if (c.length) contacten = c.map(x=>{
+      const _p=(v)=>{if(!v) return null; if(typeof v==='object') return v; try{return JSON.parse(v);}catch{return null;}};
+      const partnerData=_p(x.partner); // {p1:{...}, p2:{...}} of oud formaat
+      const isNieuwFormaat=partnerData&&(partnerData.p1||partnerData.p2);
+      return {
+        ...x, _sbId:x.id,
+        partner1: isNieuwFormaat ? (partnerData.p1||null) : (partnerData||null),
+        partner2: isNieuwFormaat ? (partnerData.p2||null) : null,
+        kinderenData: _p(x.kinderen_namen)||[],
+        kerstmis: x.kerstmis===true||x.kerstmis==='ja'||x.kerstmis===1,
+        cadeauNj: x.cadeau_nj, cadeauVj: x.cadeau_vj,
+      };
+    });
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
     if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
@@ -287,7 +302,7 @@ async function sbSaveActiviteit(act) {
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
     eind_datum:act.eindDatum||null, prep: +act.prep || 0, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
-    transport: act.transport || {},
+    transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
   };
   try {
@@ -335,10 +350,25 @@ async function sbSaveIngredient(ing) {
 async function sbDeleteIngredient(sbId) { try{await sbFetch(`ingredienten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'ingredient-delete');} }
 
 async function sbSaveContact(contact) {
-  const data = { naam:contact.naam, partner:contact.partner, kinderen:parseInt(contact.kinderen)||0, kinderen_namen:contact.kinderenNamen, kerstmis:contact.kerstmis, cadeau_nj:contact.cadeauNj, cadeau_vj:contact.cadeauVj };
+  // Serialiseer nieuwe structuur naar bestaande kolommen
+  // partner1+partner2 worden opgeslagen als JSON in de 'partner' kolom
+  const p1 = contact.partner1||null;
+  const p2 = contact.partner2||null;
+  const partnerJson = JSON.stringify({p1, p2});
+  const kinderenData = Array.isArray(contact.kinderenData) ? contact.kinderenData : [];
+  const kerstmis = contact.kerstmis===true||contact.kerstmis==='ja'||contact.kerstmis===1;
+  const data = {
+    naam: contact.naam,
+    partner: partnerJson,
+    kinderen: kinderenData.length,
+    kinderen_namen: JSON.stringify(kinderenData),
+    kerstmis: kerstmis,
+    cadeau_nj: contact.cadeauNj||null,
+    cadeau_vj: contact.cadeauVj||null,
+  };
   try {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gid()}); if(res[0]) contact._sbId=res[0].id; }
+    else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gid()}); if(res&&res[0]) contact._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'contact'); }
 }

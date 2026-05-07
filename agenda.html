@@ -522,6 +522,29 @@
 </div>
 </div>
 
+<!-- ══ MODAL: Verwijder herhaling ══ -->
+<div class="modal-bg" id="verwijder-modal-bg">
+<div class="modal" style="max-width:360px;">
+  <div class="modal-handle"></div>
+  <h3>🗑️ Activiteit verwijderen</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:18px;">
+    "<span id="vd-act-naam"></span>" is een herhalende activiteit.
+    Wat wil je verwijderen?
+  </p>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <button onclick="verwijderEnkelHerhaling()" style="padding:14px;border:2px solid #e0a020;border-radius:var(--radius-sm);background:#fff8e7;color:#7a5c00;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+      🗓️ Alleen deze dag<br>
+      <span style="font-size:12px;font-weight:400;color:#a07820;">Verwijder enkel deze ene herhaling</span>
+    </button>
+    <button onclick="verwijderVolleActiviteit()" style="padding:14px;border:2px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+      🗑️ Volledige activiteit<br>
+      <span style="font-size:12px;font-weight:400;">Verwijder alle herhalingen definitief</span>
+    </button>
+    <button onclick="closeVerwijderModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
+  </div>
+</div>
+</div>
+
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
@@ -613,11 +636,11 @@ function renderMaand(){
     const isVandaag=cel.datum===vandaagISO;
     const isGeselecteerd=cel.datum===geselecteerdeDatum;
     const actsOpDag=getActsOpDatum(cel.datum);
-    const dots=maakDots(actsOpDag);
+    const dots=maakDots(actsOpDag,cel.datum);
     const meerdaagsActs=getMeerdaagsOpDatum(cel.datum);
     const vakantie=isSchoolvakantie(cel.datum)&&!cel.andereMaand;
     return `<div class="dag-cel${cel.andereMaand?' andere-maand':''}${isGeselecteerd?' geselecteerd':''}"
-        onclick="selecteerDag('${cel.datum}')">
+        onclick="selecteerDag('${cel.datum}')" ondblclick="event.stopPropagation();openActModalVoorDatum('${cel.datum}')">
       <div class="dag-num${isVandaag?' vandaag':''}${isWeekend&&!isVandaag?' weekend':''}">${cel.dagNr}</div>
       ${meerdaagsActs.slice(0,2).map(a=>{
         const kleur=KLEUR_BALK[(a.wie||[])[0]]||'var(--accent)';
@@ -645,12 +668,13 @@ function getMeerdaagsOpDatum(datumISO){
     return datumISO>=a.beginDatum&&datumISO<=a.eindDatum;
   });
 }
-function maakDots(acts){
+function maakDots(acts,datumISO){
   const personen=new Set();const heeftPrive=acts.some(a=>a.prive);
   acts.forEach(a=>(a.wie||[]).forEach(w=>personen.add(w)));
   let html='';
   personen.forEach(p=>{if(DOT_KLEUR[p])html+=`<div class="dot ${DOT_KLEUR[p]}"></div>`;});
   if(heeftPrive)html+=`<div class="dot dot-prive"></div>`;
+  if(datumISO&&getVerjaardagsOpDatum(datumISO).length>0)html+=`<div class="dot" style="background:#f5c842;"></div>`;
   return html;
 }
 function selecteerDag(datum){geselecteerdeDatum=datum;renderMaand();renderDagDetail(datum);}
@@ -681,6 +705,14 @@ function renderDagDetail(datumISO){
       </div>
     </div>
     ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:12px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
+    ${getVerjaardagsOpDatum(datumISO).map(v=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:linear-gradient(135deg,#fff8e7,#ffefc0);border:1.5px solid #f5c842;border-radius:var(--radius-sm);margin-bottom:8px;">
+        <span style="font-size:20px;">🎂</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:#7a5c00;">${escHtml(v.naam)}</div>
+          ${v.leeftijd?`<div style="font-size:12px;color:#a07820;">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div style="font-size:12px;color:#a07820;">🎉 Verjaardag!</div>'}
+        </div>
+      </div>`).join('')}
     ${alleActs.length===0
       ?`<div class="leeg"><span class="empty-icon">📅</span><p>Geen activiteiten</p></div>`
       :alleActs.map(a=>{
@@ -707,7 +739,7 @@ function renderDagDetail(datumISO){
               ${transportHtml}
             </div>
             ${kanBewerken?`<div class="act-rij-acties">
-              <button class="act-icon-btn" onclick="event.stopPropagation();verwijderActiviteit(${a.id})">🗑️</button>
+              <button class="act-icon-btn" onclick="event.stopPropagation();verwijderActiviteit(${a.id},'${datumISO}')">🗑️</button>
             </div>`:''}
           </div>`;
         }).join('')
@@ -747,6 +779,8 @@ function renderTransportDetail(act,datumISO){
 // ── Helpers ───────────────────────────────────────────────────
 function isActiefOp(act,datumISO){
   if(act.meerdaags) return false;
+  // Check uitgesloten dates (enkel-herhaling-verwijderd)
+  if((act.uitgesloten||[]).includes(datumISO)) return false;
   // Eenmalige activiteiten: toon enkel op hun exacte begindatum
   if(act.freq==='eenmalig') return datumISO===act.beginDatum;
   const d=new Date(datumISO+'T12:00:00');
@@ -766,6 +800,43 @@ function magZien(act){
   return(act.wie||[]).includes(Auth.profiel()?.persoonKey);
 }
 
+// ── Verjaardagen ──────────────────────────────────────────────
+function getVerjaardagsOpDatum(datumISO){
+  const [,mm,dd]=datumISO.split('-');
+  const jaar=parseInt(datumISO.split('-')[0]);
+  const result=[];
+  // Gezinsleden (profielen)
+  Auth.getProfielen().forEach(p=>{
+    if(!p.geboortedatum) return;
+    const [by,bm,bd]=p.geboortedatum.split('-');
+    if(bm===mm&&bd===dd){
+      result.push({naam:p.naam,emoji:p.emoji||'🎂',leeftijd:jaar-parseInt(by),type:'gezin'});
+    }
+  });
+  // Contacten
+  contacten.forEach(c=>{
+    const _chk=(naam,verjaardag)=>{
+      if(!verjaardag) return;
+      const parts=verjaardag.split('-');
+      if(parts.length<3) return;
+      const [by,bm,bd]=parts;
+      if(bm===mm&&bd===dd){
+        const leeftijd=by&&by!=='0000'?jaar-parseInt(by):null;
+        result.push({naam,emoji:'🎂',leeftijd,type:'contact'});
+      }
+    };
+    // Partner1/Partner2 (nieuw formaat)
+    const p1=c.partner1&&typeof c.partner1==='object'?c.partner1:(c.partner1?_tryParse(c.partner1):null);
+    const p2=c.partner2&&typeof c.partner2==='object'?c.partner2:(c.partner2?_tryParse(c.partner2):null);
+    if(p1){_chk(((p1.voornaam||'')+' '+(p1.achternaam||'')).trim()||c.naam,p1.verjaardag);}
+    if(p2){_chk(((p2.voornaam||'')+' '+(p2.achternaam||'')).trim(),p2.verjaardag);}
+    const kids=c.kinderenData&&typeof c.kinderenData==='object'?c.kinderenData:(c.kinderenData?_tryParse(c.kinderenData):null);
+    (kids||[]).forEach(k=>_chk(((k.voornaam||'')+' '+(k.achternaam||'')).trim()||'Kind',k.verjaardag));
+  });
+  return result;
+}
+function _tryParse(s){try{return JSON.parse(s);}catch{return null;}}
+
 // standaardTransport en transportUitzonderingen zijn gedeclareerd in data.js
 // en worden gevuld via laadOp() vanuit de database.
 
@@ -784,7 +855,7 @@ function openActModal(act){
   document.getElementById('a-reis-terug').value=act?.reisTerug||'';
   document.getElementById('a-locatie').value=act?.locatie||'';
   document.getElementById('a-prep').value=act?.prep||'';
-  document.getElementById('a-freq').value=act?.freq||'wekelijks';
+  document.getElementById('a-freq').value=act?.freq||'eenmalig';
   document.getElementById('a-begin').value=act?.beginDatum||geselecteerdeDatum;
   document.getElementById('a-eind').value=act?.eindDatum||'';
   document.getElementById('a-md-start-datum').value=act?.beginDatum||geselecteerdeDatum;
@@ -809,7 +880,9 @@ function openActModal(act){
     document.getElementById(`a-eet-groo-${kind}`).checked=act?.[`eetGroo${cap}`]||false;
   });
 
-  document.getElementById('act-modal-bg').classList.add('open');
+  const _actModalEl=document.getElementById('act-modal-bg');
+  _actModalEl.classList.add('open');
+  _actModalEl.querySelector('.modal').scrollTop=0;
 }
 function openActModalVoorDatum(datum){geselecteerdeDatum=datum;openActModal();}
 function editActiviteit(id){openActModal(activiteiten.find(a=>a.id===id));}
@@ -899,19 +972,49 @@ function saveActiviteit(){
   closeActModal();slaLokaalOp();sbSaveActiviteit(act);renderAlles();
 }
 
-function verwijderActiviteit(id){
-  if(!confirm('Activiteit verwijderen?'))return;
+let _verwijderActId=null,_verwijderDatum=null;
+function verwijderActiviteit(id,datumISO){
+  const act=activiteiten.find(a=>a.id===id);
+  if(!act) return;
+  const isHerhaling=(act.freq&&act.freq!=='eenmalig')&&(act.dagen||[]).length>0;
+  if(isHerhaling&&datumISO){
+    _verwijderActId=id;_verwijderDatum=datumISO;
+    document.getElementById('vd-act-naam').textContent=act.naam;
+    const el=document.getElementById('verwijder-modal-bg');
+    el.classList.add('open');el.querySelector('.modal').scrollTop=0;
+  } else {
+    if(!confirm('Activiteit verwijderen?'))return;
+    _doVerwijderVolledig(id);
+  }
+}
+function verwijderEnkelHerhaling(){
+  const act=activiteiten.find(a=>a.id===_verwijderActId);
+  if(!act||!_verwijderDatum) return;
+  act.uitgesloten=(act.uitgesloten||[]).filter(d=>d!==_verwijderDatum).concat(_verwijderDatum);
+  closeVerwijderModal();slaLokaalOp();sbSaveActiviteit(act);renderAlles();
+}
+function verwijderVolleActiviteit(){
+  closeVerwijderModal();
+  setTimeout(()=>{
+    if(!confirm('Volledige activiteit definitief verwijderen?'))return;
+    _doVerwijderVolledig(_verwijderActId);
+  },200);
+}
+function _doVerwijderVolledig(id){
   const act=activiteiten.find(a=>a.id===id);
   activiteiten=activiteiten.filter(a=>a.id!==id);
   slaLokaalOp();if(act?._sbId)sbDeleteActiviteit(act._sbId);renderAlles();
 }
+function closeVerwijderModal(){document.getElementById('verwijder-modal-bg').classList.remove('open');}
 
 // ── Modal: Drukte ─────────────────────────────────────────────
 function openDOModal(key,label){
   doKey=key;tempOverride=null;
   document.getElementById('do-titel').textContent=label;
   document.querySelectorAll('.do-btn').forEach(b=>b.style.opacity='.6');
-  document.getElementById('drukte-modal-bg').classList.add('open');
+  const _doEl=document.getElementById('drukte-modal-bg');
+  _doEl.classList.add('open');
+  _doEl.querySelector('.modal').scrollTop=0;
 }
 function selectOverride(d,el){
   tempOverride=d;
@@ -978,7 +1081,9 @@ function openIcalModal(){
   document.getElementById('ical-import-btn').style.display='none';
   icalTab('bestand');
   icalToonAbonnementen();
-  document.getElementById('ical-modal-bg').classList.add('open');
+  const _icalEl=document.getElementById('ical-modal-bg');
+  _icalEl.classList.add('open');
+  _icalEl.querySelector('.modal').scrollTop=0;
 }
 function closeIcalModal(){ document.getElementById('ical-modal-bg').classList.remove('open'); }
 

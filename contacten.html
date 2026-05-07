@@ -114,17 +114,43 @@
 <div class="modal">
   <div class="modal-handle"></div>
   <h3 id="crm-modal-titel">Contact toevoegen</h3>
-  <div class="form-grid">
-    <div class="form-row"><label>Naam / familie</label><input type="text" id="c-naam" placeholder="Familie Janssen"/></div>
-    <div class="form-row"><label>Partner</label><input type="text" id="c-partner" placeholder="Optioneel"/></div>
-    <div class="form-row"><label>Aantal kinderen</label><input type="number" id="c-kinderen" min="0" value="0" onchange="checkKinderenVelden()"/></div>
-    <div class="form-row"><label>Kerstmis</label><select id="c-kerstmis"><option value="ja">Ja</option><option value="nee">Nee</option></select></div>
+
+  <!-- Partner 1 -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👤 Partner 1</div>
+  <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="form-row"><label>Voornaam</label><input type="text" id="c-p1-voornaam" placeholder="Voornaam"/></div>
+    <div class="form-row"><label>Achternaam</label><input type="text" id="c-p1-achternaam" placeholder="Achternaam"/></div>
   </div>
-  <div id="c-kinderen-namen-veld" style="display:none;">
-    <div class="form-row"><label>Namen kinderen</label><input type="text" id="c-kinderen-namen" placeholder="Lotte, Pieter"/></div>
+  <div class="form-row"><label>Verjaardag</label><input type="date" id="c-p1-verjaardag"/></div>
+
+  <!-- Partner 2 -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">👤 Partner 2 <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
+  <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="form-row"><label>Voornaam</label><input type="text" id="c-p2-voornaam" placeholder="Voornaam"/></div>
+    <div class="form-row"><label>Achternaam</label><input type="text" id="c-p2-achternaam" placeholder="Achternaam"/></div>
   </div>
-  <div class="form-row"><label>Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
-  <div class="form-row"><label>Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
+  <div class="form-row"><label>Verjaardag</label><input type="date" id="c-p2-verjaardag"/></div>
+
+  <!-- Kinderen -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">👧 Kinderen <span style="font-weight:400;text-transform:none;">(max. 5)</span></div>
+  <div id="c-kinderen-rijen"></div>
+  <button type="button" onclick="voegKindToe()" id="c-kind-add-btn"
+    style="width:100%;padding:10px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:14px;">
+    + Kind toevoegen
+  </button>
+
+  <!-- Kerstkaart -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;cursor:pointer;" onclick="toggleKerstkaart()">
+    <div>
+      <div style="font-size:15px;font-weight:500;color:var(--ink);">🎄 Kerstkaart sturen</div>
+    </div>
+    <div class="ios-switch" id="c-kerstkaart-switch"></div>
+  </div>
+
+  <!-- Cadeaus -->
+  <div class="form-row"><label>🎊 Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
+  <div class="form-row"><label>🎂 Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
+
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="closeCrmModal()">Annuleren</button>
     <button class="modal-btn modal-btn-primary" onclick="saveContact()">Opslaan</button>
@@ -138,31 +164,125 @@
 Auth.initPagina('contacten');
 
 let actieveContactId=null;
+let _kerstkaartAan=true;
+let _aantalKinderen=0;
 
 laadOp().then(renderCrm).catch(()=>{laadLokaal();renderCrm();});
 
-function checkKinderenVelden(){
-  document.getElementById('c-kinderen-namen-veld').style.display=parseInt(document.getElementById('c-kinderen').value)>0?'block':'none';
+// ── Helpers ───────────────────────────────────────────────────
+function _parseObj(v){ if(!v) return null; if(typeof v==='object') return v; try{return JSON.parse(v);}catch{return null;} }
+function _formatVerjaardag(d){
+  if(!d) return '';
+  try{
+    const dt=new Date(d+'T12:00:00');
+    return dt.toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'});
+  }catch{return d;}
 }
+function _familieNaam(c){
+  const p1=_parseObj(c.partner1);
+  const p2=_parseObj(c.partner2);
+  const ach1=(p1?.achternaam||'').trim();
+  const ach2=(p2?.achternaam||'').trim();
+  const vn1=(p1?.voornaam||'').trim();
+  if(!vn1&&!ach1) return c.naam||'Onbekend';
+  if(ach1&&ach2&&ach1!==ach2) return `Familie ${ach1} ${ach2}`;
+  if(ach1) return `Familie ${ach1}`;
+  return `${vn1}`.trim()||c.naam||'Onbekend';
+}
+
+// ── Kerstkaart toggle ─────────────────────────────────────────
+function toggleKerstkaart(){
+  _kerstkaartAan=!_kerstkaartAan;
+  document.getElementById('c-kerstkaart-switch').className='ios-switch'+(_kerstkaartAan?' on':'');
+}
+
+// ── Kinderen velden ───────────────────────────────────────────
+function _renderKinderenRijen(kinderen){
+  const el=document.getElementById('c-kinderen-rijen');
+  el.innerHTML='';
+  kinderen.forEach((k,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;position:relative;';
+    row.innerHTML=`
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Kind ${i+1}
+        <button onclick="verwijderKind(${i})" style="float:right;background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:14px;padding:0;">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div class="form-row" style="margin:0;"><label>Voornaam</label><input type="text" id="c-kind-vn-${i}" value="${escHtml(k.voornaam||'')}" placeholder="Voornaam"/></div>
+        <div class="form-row" style="margin:0;"><label>Achternaam</label><input type="text" id="c-kind-ach-${i}" value="${escHtml(k.achternaam||'')}" placeholder="Achternaam"/></div>
+      </div>
+      <div class="form-row" style="margin:0;"><label>Verjaardag</label><input type="date" id="c-kind-vj-${i}" value="${escHtml(k.verjaardag||'')}"/></div>
+    `;
+    el.appendChild(row);
+  });
+  document.getElementById('c-kind-add-btn').style.display=kinderen.length>=5?'none':'block';
+  _aantalKinderen=kinderen.length;
+}
+function _leesKinderenVelden(){
+  const kids=[];
+  for(let i=0;i<_aantalKinderen;i++){
+    const vn=document.getElementById(`c-kind-vn-${i}`)?.value.trim()||'';
+    const ach=document.getElementById(`c-kind-ach-${i}`)?.value.trim()||'';
+    const vj=document.getElementById(`c-kind-vj-${i}`)?.value||'';
+    if(vn||ach||vj) kids.push({voornaam:vn,achternaam:ach,verjaardag:vj});
+  }
+  return kids;
+}
+function voegKindToe(){
+  if(_aantalKinderen>=5) return;
+  const huidige=_leesKinderenVelden();
+  // Read current fields first, then append new empty
+  const kids=[...huidige,{voornaam:'',achternaam:'',verjaardag:''}];
+  _renderKinderenRijen(kids);
+}
+function verwijderKind(index){
+  const huidige=_leesKinderenVelden();
+  // Re-read all fields
+  const alle=[];
+  for(let i=0;i<_aantalKinderen;i++){
+    const vn=document.getElementById(`c-kind-vn-${i}`)?.value.trim()||'';
+    const ach=document.getElementById(`c-kind-ach-${i}`)?.value.trim()||'';
+    const vj=document.getElementById(`c-kind-vj-${i}`)?.value||'';
+    alle.push({voornaam:vn,achternaam:ach,verjaardag:vj});
+  }
+  alle.splice(index,1);
+  _renderKinderenRijen(alle);
+}
+
+// ── Render lijst ──────────────────────────────────────────────
 function renderCrm(){
   const search=(document.getElementById('crm-search')||{}).value||'';
   let filtered=contacten;
-  if(search)filtered=filtered.filter(c=>c.naam.toLowerCase().includes(search.toLowerCase())||(c.partner||'').toLowerCase().includes(search.toLowerCase()));
+  const sq=search.toLowerCase();
+  if(search) filtered=filtered.filter(c=>{
+    const nm=c.naam||_familieNaam(c)||'';
+    const p1=_parseObj(c.partner1);const p2=_parseObj(c.partner2);
+    return nm.toLowerCase().includes(sq)||
+      (p1?.voornaam||'').toLowerCase().includes(sq)||
+      (p1?.achternaam||'').toLowerCase().includes(sq)||
+      (p2?.voornaam||'').toLowerCase().includes(sq)||
+      (p2?.achternaam||'').toLowerCase().includes(sq);
+  });
   const el=document.getElementById('crm-lijst');
   if(!filtered.length){el.innerHTML=`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;return;}
   el.innerHTML=filtered.map(c=>{
     const isActief=actieveContactId!=null&&actieveContactId==c.id;
+    const nm=c.naam||_familieNaam(c);
+    const p1=_parseObj(c.partner1);const p2=_parseObj(c.partner2);
+    const kids=_parseObj(c.kinderenData)||[];
+    const kerstmis=c.kerstmis===true||c.kerstmis==='ja'||c.kerstmis===1;
+    const partnerLijn=[p1,p2].filter(Boolean).map(p=>((p.voornaam||'')+' '+(p.achternaam||'')).trim()).filter(Boolean).join(' & ');
+    const kindNamen=kids.map(k=>(k.voornaam||k.naam||'').trim()).filter(Boolean).join(', ');
     return `
     <div class="crm-card${isActief?' actief':''}" data-id="${c.id}" onclick="openContactFiche(${c.id})">
-      <div class="crm-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
-      ${c.partner?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(c.partner)}</div>`:''}
-      ${parseInt(c.kinderen)>0?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">👧 ${escHtml(c.kinderenNamen||parseInt(c.kinderen)+' kinderen')}</div>`:''}
+      <div class="crm-naam">👨‍👩‍👧 ${escHtml(nm)}</div>
+      ${partnerLijn?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(partnerLijn)}</div>`:''}
+      ${kindNamen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">👧 ${escHtml(kindNamen)}</div>`:''}
       <div style="margin-top:7px;">
-        <span style="font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--bg-2)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--muted)'};">🎄 ${c.kerstmis==='ja'?'Kerstmis':'Geen kerstmis'}</span>
+        <span style="font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 ${kerstmis?'Kerstkaart':'Geen kerstkaart'}</span>
       </div>
     </div>`;
   }).join('');
-  // Herlaad fiche na re-render
   if(actieveContactId){
     const c=contacten.find(c=>c.id==actieveContactId);
     if(c) _renderContactFicheDesktop(c);
@@ -182,28 +302,50 @@ function openContactFiche(id){
   }
   document.querySelectorAll('.crm-card').forEach(el=>el.classList.toggle('actief',el.dataset.id==id));
 }
-
 function _renderContactFicheDesktop(c){
-  const el=document.getElementById('crm-fiche');
-  const ph=document.getElementById('crm-fiche-placeholder');
+  const el=document.getElementById('crm-fiche');const ph=document.getElementById('crm-fiche-placeholder');
   if(!el) return;
   el.innerHTML=renderContactFicheHtml(c,false);
-  el.style.display='block';
-  if(ph) ph.style.display='none';
+  el.style.display='block';if(ph) ph.style.display='none';
 }
-
 function _clearContactFiche(){
-  const el=document.getElementById('crm-fiche');
-  const ph=document.getElementById('crm-fiche-placeholder');
-  if(el){el.innerHTML='';el.style.display='none';}
-  if(ph) ph.style.display='flex';
+  const el=document.getElementById('crm-fiche');const ph=document.getElementById('crm-fiche-placeholder');
+  if(el){el.innerHTML='';el.style.display='none';}if(ph) ph.style.display='flex';
 }
 
-function renderContactFicheHtml(c, metSluitknop){
+function renderContactFicheHtml(c,metSluitknop){
   const kanBewerken=Auth.kan('kanContactenBeheren');
+  const nm=c.naam||_familieNaam(c);
+  const p1=_parseObj(c.partner1);const p2=_parseObj(c.partner2);
+  const kids=_parseObj(c.kinderenData)||[];
+  const kerstmis=c.kerstmis===true||c.kerstmis==='ja'||c.kerstmis===1;
+
+  const personenHtml=[p1,p2].filter(Boolean).map((p,i)=>{
+    const naam=((p.voornaam||'')+' '+(p.achternaam||'')).trim();
+    if(!naam&&!p.verjaardag) return '';
+    return `<div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Partner ${i+1}</div>
+      ${naam?`<div style="font-size:15px;font-weight:600;color:var(--ink);">${escHtml(naam)}</div>`:''}
+      ${p.verjaardag?`<div style="font-size:12px;color:var(--muted);margin-top:3px;">🎂 ${_formatVerjaardag(p.verjaardag)}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const kinderenHtml=kids.length?`
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px;">Kinderen</div>
+    ${kids.map(k=>{
+      const kn=((k.voornaam||'')+' '+(k.achternaam||'')).trim();
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:16px;">👧</span>
+        <div><div style="font-size:14px;font-weight:500;color:var(--ink);">${escHtml(kn||'Kind')}</div>
+        ${k.verjaardag?`<div style="font-size:12px;color:var(--muted);">🎂 ${_formatVerjaardag(k.verjaardag)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  `:'';
+
   return `
   <div class="fiche-header">
-    <div class="fiche-naam">👨‍👩‍👧 ${escHtml(c.naam)}</div>
+    <div class="fiche-naam">👨‍👩‍👧 ${escHtml(nm)}</div>
     <div class="fiche-acties">
       ${kanBewerken?`
         <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})" title="Bewerken">✏️</button>
@@ -212,66 +354,90 @@ function renderContactFicheHtml(c, metSluitknop){
       ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitContactFiche()" title="Sluiten">✕</button>`:''}
     </div>
   </div>
-  ${c.partner?`<div style="font-size:14px;color:var(--muted);margin-bottom:6px;">👫 ${escHtml(c.partner)}</div>`:''}
-  ${parseInt(c.kinderen)>0?`
-    <div style="font-size:14px;color:var(--muted);margin-bottom:.75rem;">
-      👧 ${parseInt(c.kinderen)} ${parseInt(c.kinderen)===1?'kind':'kinderen'}
-      ${c.kinderenNamen?`<span style="color:var(--ink);font-weight:500;"> — ${escHtml(c.kinderenNamen)}</span>`:''}
-    </div>
-  `:''}
-  <div class="fiche-meta">
-    <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${c.kerstmis==='ja'?'var(--rustig-bg)':'var(--bg-2)'};color:${c.kerstmis==='ja'?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstmis: ${c.kerstmis==='ja'?'Ja':'Nee'}</span>
+  ${personenHtml}
+  ${kinderenHtml}
+  <div class="fiche-meta" style="margin-top:10px;">
+    <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstkaart: ${kerstmis?'Ja':'Nee'}</span>
   </div>
-  ${c.cadeauNj||c.cadeauVj?`<div class="fiche-sectie-label">Cadeaus</div>`:''}
-  ${c.cadeauNj?`
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎊 NIEUWJAAR</div>
-      <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div>
-    </div>
-  `:''}
-  ${c.cadeauVj?`
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎂 VERJAARDAG</div>
-      <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div>
-    </div>
-  `:''}`;
+  ${c.cadeauNj||c.cadeauVj?`<div class="fiche-sectie-label" style="margin-top:14px;">Cadeaus</div>`:''}
+  ${c.cadeauNj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎊 NIEUWJAAR</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div></div>`:''}
+  ${c.cadeauVj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎂 VERJAARDAG</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div></div>`:''}
+  `;
 }
 
 function sluitContactFiche(event){
   if(event&&event.target!==document.getElementById('crm-fiche-overlay')) return;
   document.getElementById('crm-fiche-overlay').classList.remove('open');
 }
+
+// ── Modal openen ──────────────────────────────────────────────
 function openCrmModal(contact){
   document.getElementById('crm-modal-titel').textContent=contact?'Contact bewerken':'Contact toevoegen';
-  document.getElementById('c-naam').value=contact?.naam||'';
-  document.getElementById('c-partner').value=contact?.partner||'';
-  document.getElementById('c-kinderen').value=contact?.kinderen||'0';
-  document.getElementById('c-kinderen-namen').value=contact?.kinderenNamen||'';
-  document.getElementById('c-kinderen-namen-veld').style.display=(contact&&parseInt(contact.kinderen)>0)?'block':'none';
-  document.getElementById('c-kerstmis').value=contact?.kerstmis||'ja';
+  // Partner 1
+  const p1=_parseObj(contact?.partner1)||{};
+  document.getElementById('c-p1-voornaam').value=p1.voornaam||'';
+  document.getElementById('c-p1-achternaam').value=p1.achternaam||'';
+  document.getElementById('c-p1-verjaardag').value=p1.verjaardag||'';
+  // Partner 2
+  const p2=_parseObj(contact?.partner2)||{};
+  document.getElementById('c-p2-voornaam').value=p2.voornaam||'';
+  document.getElementById('c-p2-achternaam').value=p2.achternaam||'';
+  document.getElementById('c-p2-verjaardag').value=p2.verjaardag||'';
+  // Kinderen
+  const kids=_parseObj(contact?.kinderenData)||[];
+  _renderKinderenRijen(kids);
+  // Kerstkaart
+  _kerstkaartAan=contact?contact.kerstmis===true||contact.kerstmis==='ja'||contact.kerstmis===1:true;
+  document.getElementById('c-kerstkaart-switch').className='ios-switch'+(_kerstkaartAan?' on':'');
+  // Cadeaus
   document.getElementById('c-cadeau-nj').value=contact?.cadeauNj||'';
   document.getElementById('c-cadeau-vj').value=contact?.cadeauVj||'';
   document.getElementById('crm-modal-bg').dataset.editId=contact?.id||'';
-  document.getElementById('crm-modal-bg').classList.add('open');
+  const el=document.getElementById('crm-modal-bg');
+  el.classList.add('open');
+  el.querySelector('.modal').scrollTop=0;
 }
 function closeCrmModal(){document.getElementById('crm-modal-bg').classList.remove('open');}
+
 function saveContact(){
-  const naam=document.getElementById('c-naam').value.trim();if(!naam)return;
+  const p1v=document.getElementById('c-p1-voornaam').value.trim();
+  const p1a=document.getElementById('c-p1-achternaam').value.trim();
+  if(!p1v&&!p1a){alert('Vul minstens de voornaam of achternaam van Partner 1 in.');return;}
+
+  const partner1={voornaam:p1v,achternaam:p1a,verjaardag:document.getElementById('c-p1-verjaardag').value||''};
+  const p2v=document.getElementById('c-p2-voornaam').value.trim();
+  const p2a=document.getElementById('c-p2-achternaam').value.trim();
+  const p2vj=document.getElementById('c-p2-verjaardag').value||'';
+  const partner2=(p2v||p2a||p2vj)?{voornaam:p2v,achternaam:p2a,verjaardag:p2vj}:null;
+
+  const kinderenData=_leesKinderenVelden();
   const editId=document.getElementById('crm-modal-bg').dataset.editId;
   const bestaande=editId?contacten.find(c=>c.id==editId):null;
+
+  // Auto-generate family name
+  const ach1=partner1.achternaam||'';
+  const ach2=partner2?.achternaam||'';
+  const naam=(ach1&&ach2&&ach1!==ach2)?`Familie ${ach1} ${ach2}`:
+             ach1?`Familie ${ach1}`:
+             `${partner1.voornaam} ${partner1.achternaam}`.trim();
+
   const contact={
-    id:editId?parseInt(editId)||editId:Date.now(),_sbId:bestaande?._sbId,
-    naam,partner:document.getElementById('c-partner').value,
-    kinderen:document.getElementById('c-kinderen').value,
-    kinderenNamen:document.getElementById('c-kinderen-namen').value,
-    kerstmis:document.getElementById('c-kerstmis').value,
+    id:editId?parseInt(editId)||editId:Date.now(),
+    _sbId:bestaande?._sbId,
+    naam,
+    partner1,
+    partner2:partner2||null,
+    kinderenData,
+    kerstmis:_kerstkaartAan,
     cadeauNj:document.getElementById('c-cadeau-nj').value,
     cadeauVj:document.getElementById('c-cadeau-vj').value,
   };
+
   if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
   else contacten.push(contact);
   closeCrmModal();renderCrm();slaLokaalOp();sbSaveContact(contact);
 }
+
 function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
 function verwijderContact(id){
   if(!confirm('Contact verwijderen?'))return;
