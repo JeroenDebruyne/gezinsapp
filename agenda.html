@@ -80,6 +80,7 @@
 .dot-odiel{background:var(--c-odiel-dot);}
 .dot-prive{background:var(--muted-2);}
 .dot-meerdaags{background:var(--accent);border-radius:2px;width:12px;height:6px;}
+.dot-familie{background:var(--accent);border-radius:3px;width:14px;height:6px;}
 
 /* Meerdaagse balk */
 .meerdaags-balk{
@@ -671,8 +672,16 @@ function getMeerdaagsOpDatum(datumISO){
 function maakDots(acts,datumISO){
   const personen=new Set();const heeftPrive=acts.some(a=>a.prive);
   acts.forEach(a=>(a.wie||[]).forEach(w=>personen.add(w)));
+  // Als alle gezinsleden aanwezig in één of meer activiteiten → familie-dot
+  const isFamiliedag=PERSONEN.length>1&&PERSONEN.every(p=>personen.has(p));
   let html='';
-  personen.forEach(p=>{if(DOT_KLEUR[p])html+=`<div class="dot ${DOT_KLEUR[p]}"></div>`;});
+  if(isFamiliedag){
+    html+=`<div class="dot dot-familie"></div>`;
+    // Toon nog losse dots voor niet-gezinsleden (externe personen)
+    personen.forEach(p=>{if(!PERSONEN.includes(p)&&DOT_KLEUR[p])html+=`<div class="dot ${DOT_KLEUR[p]}"></div>`;});
+  } else {
+    personen.forEach(p=>{if(DOT_KLEUR[p])html+=`<div class="dot ${DOT_KLEUR[p]}"></div>`;});
+  }
   if(heeftPrive)html+=`<div class="dot dot-prive"></div>`;
   if(datumISO&&getVerjaardagsOpDatum(datumISO).length>0)html+=`<div class="dot" style="background:#f5c842;"></div>`;
   return html;
@@ -716,11 +725,15 @@ function renderDagDetail(datumISO){
     ${alleActs.length===0
       ?`<div class="leeg"><span class="empty-icon">📅</span><p>Geen activiteiten</p></div>`
       :alleActs.map(a=>{
-          const balk=KLEUR_BALK[(a.wie||[])[0]]||'var(--muted-2)';
-          const badges=(a.wie||[]).map(w=>`
-            <span class="act-rij-badge" style="background:${KLEUR_BALK[w]||'var(--bg-2)'}22;color:${KLEUR_BALK[w]||'var(--muted)'};border:1px solid ${KLEUR_BALK[w]||'var(--border)'}44;">
-              ${PEMOJI[w]||''} ${PLABEL[w]||w}
-            </span>`).join('');
+          const wie=a.wie||[];
+          const isFamilie=PERSONEN.length>1&&PERSONEN.every(p=>wie.includes(p));
+          const balk=isFamilie?'var(--accent)':(KLEUR_BALK[wie[0]]||'var(--muted-2)');
+          const badges=isFamilie
+            ?`<span class="act-rij-badge" style="background:var(--accent-l);color:var(--accent);border:1px solid var(--accent)55;">👨‍👩‍👧 Familie</span>`
+            :wie.map(w=>`
+              <span class="act-rij-badge" style="background:${KLEUR_BALK[w]||'var(--bg-2)'}22;color:${KLEUR_BALK[w]||'var(--muted)'};border:1px solid ${KLEUR_BALK[w]||'var(--border)'}44;">
+                ${PEMOJI[w]||''} ${PLABEL[w]||w}
+              </span>`).join('');
           const transportHtml=renderTransportDetail(a,datumISO);
           return `
           <div class="act-rij" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
@@ -750,6 +763,13 @@ function renderDagDetail(datumISO){
 function renderTransportDetail(act,datumISO){
   const heeftKind=(act.wie||[]).includes('nora')||(act.wie||[]).includes('odiel');
   if(!heeftKind&&!act.meerdaags) return '';
+  // Als een gezinshoofd (niet-kind) aanwezig is: geen transport nodig
+  const profielen=Auth.getProfielen();
+  const heeftGezinsHoofd=(act.wie||[]).some(w=>{
+    const p=profielen.find(pr=>pr.persoonKey===w);
+    return p&&!p.isKind;
+  });
+  if(heeftGezinsHoofd) return '';
 
   // Standaard transport ophalen (uit vasteRoosters/standaardTransport)
   const dagKey=JSDAGMAP[new Date(datumISO+'T12:00:00').getDay()];
