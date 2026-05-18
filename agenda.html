@@ -976,6 +976,7 @@ function saveActiviteit(){
       eindDatum:document.getElementById('a-eind').value,
       prep:document.getElementById('a-prep').value,
       dagen,
+      uitgesloten: bestaande?.uitgesloten||[],
     };
     // Transport per kind
     ['nora','odiel'].forEach(kind=>{

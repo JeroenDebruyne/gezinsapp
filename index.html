@@ -388,7 +388,7 @@ function renderTodosPreview(p){
 
 function toggleTodo(id){
   const t=todos.find(x=>x.id==id);
-  if(t){t.gedaan=!t.gedaan;slaLokaalOp();renderHomepage();}
+  if(t){t.gedaan=!t.gedaan;t.gedaanOp=t.gedaan?fDateISO(new Date()):null;slaLokaalOp();sbSaveTodo(t);renderHomepage();}
 }
 
 // ── Agent op homepage ─────────────────────────────────────────
