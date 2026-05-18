@@ -143,13 +143,13 @@ function isActiefOpDatum(act, datumStr) {
 }
 
 // ── Supabase fetch ────────────────────────────────────────────
-async function sbFetch(tabel, methode='GET', body=null, filter='') {
+async function sbFetch(tabel, methode='GET', body=null, filter='', prefer=null) {
   await Auth.refreshIfNeeded();
   const url = `${SUPABASE_URL}/rest/v1/${tabel}${filter}`;
-  const opts = {
-    method: methode,
-    headers: { ...Auth.headers(), ...(methode==='POST'?{'Prefer':'return=representation'}:{}) }
-  };
+  const preferValue = prefer !== null ? prefer : (methode==='POST' ? 'return=representation' : null);
+  const headers = { ...Auth.headers() };
+  if (preferValue) headers['Prefer'] = preferValue;
+  const opts = { method: methode, headers };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
   if (res.status===401) {
@@ -163,7 +163,7 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
     throw new Error(msg);
   }
   if (methode==='DELETE'||res.status===204) return [];
-  return res.json();
+  return res.json().catch(()=>[]);
 }
 
 // ── Data laden ────────────────────────────────────────────────
@@ -364,11 +364,11 @@ async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DEL
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
   const gid = _gid();
-  const pf = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
-  const bestaand = await sbFetch(`planning${pf}`).catch(()=>[]);
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    if (bestaand.length) { await sbFetch(`planning${pf}`,'PATCH',{[slot]:waarde,porties:porties||{}}); }
-    else { await sbFetch('planning','POST',{datum,[slot]:waarde,porties:porties||{},gezin_id:gid}); }
+    await sbFetch('planning','POST',
+      {datum,[slot]:waarde,porties:porties||{},gezin_id:gid},
+      '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'planning'); }
 }
@@ -416,24 +416,23 @@ async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq
 
 async function sbSaveDrukte(datum, drukte) {
   const gid = _gid();
-  const df = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
-  const bestaand = await sbFetch(`drukte_override${df}`).catch(()=>[]);
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    if (bestaand.length) { await sbFetch(`drukte_override${df}`,'PATCH',{drukte}); }
-    else { await sbFetch('drukte_override','POST',{datum,drukte,gezin_id:gid}); }
+    await sbFetch('drukte_override','POST',
+      {datum,drukte,gezin_id:gid},
+      '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'drukte'); }
 }
 
 async function sbSaveInstellingen() {
+  const gid = _gid();
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    const gid = _gid();
     for (const [id, waarde] of [['vasteRoosters',vasteRoosters],['uitzonderingen',uitzonderingen],['transportUitzonderingen',transportUitzonderingen],['standaardTransport',standaardTransport]]) {
-      const instF = gid ? `?id=eq.${id}&gezin_id=eq.${gid}` : `?id=eq.${id}`;
-      const bestaand = await sbFetch(`instellingen${instF}`).catch(()=>[]);
-      const data = { waarde, updated_at:new Date().toISOString() };
-      if (bestaand.length) { await sbFetch(`instellingen${instF}`,'PATCH',data); }
-      else { await sbFetch('instellingen','POST',{id,...data,gezin_id:gid}); }
+      await sbFetch('instellingen','POST',
+        {id,waarde,updated_at:new Date().toISOString(),gezin_id:gid},
+        '','resolution=merge-duplicates');
     }
   } catch(e) { _opslagFout(e,'instellingen'); }
 }
@@ -450,13 +449,12 @@ async function laadIcalAbonnementen() {
   } catch(_) {}
 }
 async function slaIcalAbonnementenOp() {
+  const gid = _gid();
+  if (!gid) return;
   try {
-    const gid = _gid();
-    const f = gid ? `?id=eq.icalAbonnementen&gezin_id=eq.${gid}` : `?id=eq.icalAbonnementen`;
-    const bestaand = await sbFetch(`instellingen${f}`).catch(() => []);
-    const data = { waarde: icalAbonnementen, updated_at: new Date().toISOString() };
-    if (bestaand.length) await sbFetch(`instellingen${f}`, 'PATCH', data);
-    else await sbFetch('instellingen', 'POST', { id:'icalAbonnementen', ...data, gezin_id: gid });
+    await sbFetch('instellingen','POST',
+      {id:'icalAbonnementen',waarde:icalAbonnementen,updated_at:new Date().toISOString(),gezin_id:gid},
+      '','resolution=merge-duplicates');
   } catch(_) {}
 }
 
