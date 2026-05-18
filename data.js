@@ -227,21 +227,16 @@ async function laadOp() {
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
-    if (_pendingActs.length) {
-      _pendingActs.forEach(act => {
-        if (!activiteiten.some(x => x.id === act.id)) {
-          activiteiten.push(act);
-          sbSaveActiviteit(act);
-        }
-      });
-    }
-    if (_pendingTodos.length) {
-      _pendingTodos.forEach(todo => {
-        if (!todos.some(x => x.id === todo.id)) {
-          todos.push(todo);
-          sbSaveTodo(todo);
-        }
-      });
+    const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
+    const toSyncTodos = _pendingTodos.filter(t => !todos.some(x => x.id === t.id));
+    toSyncActs.forEach(a => activiteiten.push(a));
+    toSyncTodos.forEach(t => todos.push(t));
+    if (toSyncActs.length || toSyncTodos.length) {
+      await Promise.all([
+        ...toSyncActs.map(a => sbSaveActiviteit(a)),
+        ...toSyncTodos.map(t => sbSaveTodo(t)),
+      ]);
+      slaLokaalOp();
     }
     toonOpslagStatus('✅ Gesynchroniseerd');
   } catch(e) {

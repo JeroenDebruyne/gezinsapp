@@ -990,7 +990,7 @@ async function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);
+  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);slaLokaalOp();
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
