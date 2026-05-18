@@ -169,6 +169,14 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
 // ── Data laden ────────────────────────────────────────────────
 async function laadOp() {
   toonOpslagStatus('⏳ Data laden...');
+  // Bewaar lokaal opgeslagen items die nog niet naar Supabase zijn gesynchroniseerd
+  // (items zonder _sbId werden lokaal aangemaakt maar de write werd onderbroken)
+  let _pendingActs = [], _pendingTodos = [];
+  try {
+    const _local = JSON.parse(localStorage.getItem('gezinsapp_data') || '{}');
+    _pendingActs  = (_local.activiteiten || []).filter(a => !a._sbId);
+    _pendingTodos = (_local.todos        || []).filter(t => !t._sbId);
+  } catch {}
   try {
     await Auth.laadProfielen();
     herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
@@ -218,6 +226,23 @@ async function laadOp() {
       if (r.id==='transportUitzonderingen'&&r.waarde) transportUitzonderingen=r.waarde;
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
     });
+    // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
+    if (_pendingActs.length) {
+      _pendingActs.forEach(act => {
+        if (!activiteiten.some(x => x.id === act.id)) {
+          activiteiten.push(act);
+          sbSaveActiviteit(act);
+        }
+      });
+    }
+    if (_pendingTodos.length) {
+      _pendingTodos.forEach(todo => {
+        if (!todos.some(x => x.id === todo.id)) {
+          todos.push(todo);
+          sbSaveTodo(todo);
+        }
+      });
+    }
     toonOpslagStatus('✅ Gesynchroniseerd');
   } catch(e) {
     console.warn('Laden mislukt:', e);
@@ -300,7 +325,7 @@ async function sbSaveActiviteit(act) {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
-    eind_datum:act.eindDatum||null, prep: +act.prep || 0, dagen:act.dagen,
+    eind_datum:act.eindDatum||null, prep: act.prep||null, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,

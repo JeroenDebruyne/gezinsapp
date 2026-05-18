@@ -121,7 +121,7 @@
       </div>
     </div>
     <div class="home-chat-berichten" id="home-chat-berichten-desktop">
-      <div style="align-self:flex-start;"><div class="chat-bubble-bot">Hallo! 👋 Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div></div>
+      <div style="align-self:flex-start;" id="home-chat-welkom"></div>
     </div>
     <div id="home-bevestiging-desktop" style="display:none;background:var(--bg-2);border-top:1px solid var(--border);padding:12px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
@@ -314,6 +314,14 @@
 <script>
 Auth.initPagina('index');
 laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+(function(){
+  const welkom=document.getElementById('home-chat-welkom');
+  if(!welkom) return;
+  const heeftKey=!!localStorage.getItem('anthropic_api_key');
+  welkom.innerHTML=heeftKey
+    ?'<div class="chat-bubble-bot">Hallo! 👋 Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div>'
+    :'<div class="chat-bubble-bot">🔑 Gezinsassistent is niet actief. Stel je API key in via ⚙️ Instellingen om mij te activeren.</div>';
+})();
 
 function renderHomepage(){
   const nu=new Date(); const datumISO=fDateISO(nu); const p=Auth.profiel();
@@ -468,8 +476,13 @@ function homeAnnuleer(kanaal){
 async function homeStuurBericht(kanaal){
   const input=document.getElementById('home-chat-input-'+kanaal);
   const tekst=input.value.trim();if(!tekst)return;
-  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
-  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
+  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
+  if(!apiKey){
+    homeVoegBerichtToe(kanaal,'user',tekst);
+    homeVoegBerichtToe(kanaal,'assistant','🔑 Geen API key ingesteld. Ga naar ⚙️ **Instellingen** om de gezinsassistent te activeren.');
+    input.value='';
+    return;
+  }
   input.value='';
   homeVoegBerichtToe(kanaal,'user',tekst);
   homeChatGeschiedenis.push({role:'user',content:tekst});
@@ -715,10 +728,10 @@ async function slaHomeActOp(){
     });
   }
   activiteiten.push(act);
-  slaLokaalOp(); sbSaveActiviteit(act);
+  slaLokaalOp();
   sluitHomeActModal();
   renderVandaag(fDateISO(new Date()), Auth.profiel());
-  toonOpslagStatus('✅ Activiteit toegevoegd');
+  await sbSaveActiviteit(act);
 }
 </script>
 <script>
