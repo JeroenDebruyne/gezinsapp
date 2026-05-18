@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f7f5f0">
+<title>Gezinsapp — Ingrediënten</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-title">🥦 Ingrediënten</div>
+  <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
+    <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
+    <div class="topbar-user-wrap">
+      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+        <span class="avatar" id="topbar-emoji">🧑</span>
+        <span class="naam" id="topbar-naam">…</span>
+      </div>
+      <div class="profiel-menu" id="profiel-menu">
+        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+      </div>
+    </div>
+  </div>
+</header>
+<nav class="bottom-nav" id="sidebar">
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="ingredienten" href="ingredienten.html"><span class="nav-icon">🥦</span><span class="nav-label">Ingrediënten</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
+    <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span>
+    </a>
+    <div class="sidebar-user">
+      <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-naam" id="sidebar-naam">…</span>
+        <span class="sidebar-user-sub" id="sidebar-rol">…</span>
+      </div>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+    </div>
+  </div>
+</nav>
+<nav class="bottom-nav-mobile">
+  <a class="mobile-nav-item" href="index.html" data-pagina="index">
+    <span class="mobile-nav-icon">🏠</span>
+    <span class="mobile-nav-label">Home</span>
+  </a>
+  <button class="mobile-nav-item" onclick="toggleModules()">
+    <span class="mobile-nav-icon">⊞</span>
+    <span class="mobile-nav-label">Alles</span>
+  </button>
+</nav>
+
+<!-- Module grid (mobiel) -->
+<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
+  <div class="module-sheet" onclick="event.stopPropagation()">
+    <div class="module-sheet-handle"></div>
+    <div class="module-tiles">
+      <a class="module-tile" href="agenda.html"><span class="module-tile-icon">📅</span><span class="module-tile-naam">Agenda</span></a>
+      <a class="module-tile" href="todos.html"><span class="module-tile-icon">✅</span><span class="module-tile-naam">To-do's</span></a>
+      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
+      <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
+      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
+      <a class="module-tile" href="ingredienten.html"><span class="module-tile-icon">🥦</span><span class="module-tile-naam">Ingrediënten</span></a>
+      <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
+      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">🚸</span><span class="module-tile-naam">Kinderen</span></a>
+      <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
+      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+<div class="page-content">
+  <div class="page-header">
+    <div style="display:flex;gap:8px;align-items:center;flex:1;">
+      <input type="text" id="ing-search" placeholder="🔍 Zoek ingrediënt…" oninput="renderIngredienten()"
+        style="flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"/>
+      <button class="btn btn-primary" onclick="openIngModal()">+ Toevoegen</button>
+    </div>
+  </div>
+
+  <div class="pill-tabs" id="ing-winkel-filter" style="margin-bottom:12px;"></div>
+  <div id="ingredienten-lijst"></div>
+</div>
+</main>
+
+<!-- Modal: Ingrediënt -->
+<div class="modal-bg" id="ing-modal-bg">
+<div class="modal" style="max-width:420px;">
+  <div class="modal-handle"></div>
+  <h3 id="ing-modal-titel">Ingrediënt toevoegen</h3>
+  <div class="form-row">
+    <label>Naam</label>
+    <input type="text" id="i-naam" placeholder="bijv. gehakt"/>
+  </div>
+  <div class="form-row">
+    <label>Standaard winkel</label>
+    <select id="i-winkel">
+      <option>Colruyt</option><option>Delhaize</option><option>Lidl</option>
+      <option>Albert Heijn</option><option>Beenhouwerij</option><option>Markt</option><option>Andere</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Productlink <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel)</span></label>
+    <input type="url" id="i-link" placeholder="https://www.colruyt.be/…" style="font-size:13px;"/>
+  </div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" onclick="closeIngModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" onclick="saveIngredient()">Opslaan</button>
+  </div>
+</div>
+</div>
+
+<script src="auth.js"></script>
+<script src="data.js"></script>
+<script>
+Auth.initPagina('ingredienten');
+laadOp().then(renderIngredienten).catch(()=>{laadLokaal();renderIngredienten();});
+
+let activeIngWinkelFilter = 'alle';
+
+function renderIngredienten() {
+  const search = (document.getElementById('ing-search')||{}).value || '';
+  const winkels = ['alle', ...new Set(standaardIngredienten.map(i => i.winkel).filter(Boolean))];
+  document.getElementById('ing-winkel-filter').innerHTML = winkels.map(w =>
+    `<button class="ptab${activeIngWinkelFilter===w?' active':''}" onclick="filterIngWinkel('${escHtml(w)}')">${w==='alle'?'Alle winkels':escHtml(w)}</button>`
+  ).join('');
+  let filtered = standaardIngredienten;
+  if (activeIngWinkelFilter !== 'alle') filtered = filtered.filter(i => i.winkel === activeIngWinkelFilter);
+  if (search) filtered = filtered.filter(i => i.naam.toLowerCase().includes(search.toLowerCase()));
+  filtered = [...filtered].sort((a, b) => a.naam.localeCompare(b.naam));
+  const el = document.getElementById('ingredienten-lijst');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🥦</span><p>Geen ingrediënten gevonden</p></div>`;
+    return;
+  }
+  const perWinkel = {};
+  filtered.forEach(i => { if (!perWinkel[i.winkel]) perWinkel[i.winkel] = []; perWinkel[i.winkel].push(i); });
+  el.innerHTML = Object.entries(perWinkel).map(([winkel, items]) => `
+    <div style="margin-bottom:1.2rem;">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid var(--border);">🏪 ${escHtml(winkel)}</div>
+      ${items.map(i => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bg-2);">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(i.naam)}</span>
+            ${i.productLink ? `<a href="${escHtml(i.productLink)}" target="_blank" rel="noopener" title="Productlink openen" style="color:var(--accent);font-size:16px;line-height:1;flex-shrink:0;">🔗</a>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px;">
+            <select style="font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;" onchange="wijzigWinkel(${i.id},this.value)">
+              ${WINKELS.map(w => `<option${w===i.winkel?' selected':''}>${escHtml(w)}</option>`).join('')}
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="openIngModal(standaardIngredienten.find(x=>x.id===${i.id}))">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="verwijderIngredient(${i.id})">×</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function filterIngWinkel(w) { activeIngWinkelFilter = w; renderIngredienten(); }
+
+function openIngModal(ing) {
+  document.getElementById('ing-modal-titel').textContent = ing ? 'Ingrediënt bewerken' : 'Ingrediënt toevoegen';
+  document.getElementById('i-naam').value = ing ? ing.naam : '';
+  document.getElementById('i-winkel').value = ing ? ing.winkel : 'Colruyt';
+  document.getElementById('i-link').value = ing ? (ing.productLink || '') : '';
+  document.getElementById('ing-modal-bg').dataset.editId = ing ? ing.id : '';
+  document.getElementById('ing-modal-bg').classList.add('open');
+  setTimeout(() => document.getElementById('i-naam').focus(), 150);
+}
+function closeIngModal() { document.getElementById('ing-modal-bg').classList.remove('open'); }
+
+function saveIngredient() {
+  const naam = document.getElementById('i-naam').value.trim();
+  if (!naam) return;
+  const editId = document.getElementById('ing-modal-bg').dataset.editId;
+  const winkel = document.getElementById('i-winkel').value;
+  const productLink = document.getElementById('i-link').value.trim() || null;
+  if (editId) {
+    const ing = standaardIngredienten.find(i => i.id == editId);
+    if (ing) { ing.naam = naam; ing.winkel = winkel; ing.productLink = productLink; sbSaveIngredient(ing); }
+  } else {
+    const n = { id: Date.now(), naam, winkel, categorie: '', productLink };
+    standaardIngredienten.push(n);
+    sbSaveIngredient(n);
+  }
+  closeIngModal();
+  slaLokaalOp();
+  renderIngredienten();
+}
+
+function wijzigWinkel(id, winkel) {
+  const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
+  if (ing) { ing.winkel = winkel; slaLokaalOp(); sbSaveIngredient(ing); }
+}
+
+function verwijderIngredient(id) {
+  if (!confirm('Ingrediënt verwijderen?')) return;
+  const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
+  standaardIngredienten = standaardIngredienten.filter(i => i.id !== id && i.id != id);
+  slaLokaalOp();
+  if (ing?._sbId) sbDeleteIngredient(ing._sbId);
+  renderIngredienten();
+}
+
+document.getElementById('ing-modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('ing-modal-bg')) closeIngModal();
+});
+</script>
+<script>
+// ── Sidebar / nav helpers ─────────────────────────────────────
+function toggleProfielMenu(e){
+  e && e.stopPropagation();
+  document.getElementById('profiel-menu')?.classList.toggle('open');
+}
+document.addEventListener('click', function(){
+  document.getElementById('profiel-menu')?.classList.remove('open');
+});
+function toggleModules(){
+  document.getElementById('module-overlay')?.classList.toggle('open');
+}
+function sluitModules(e){
+  if(e.target === document.getElementById('module-overlay'))
+    document.getElementById('module-overlay').classList.remove('open');
+}
+(function(){
+  const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
+  document.querySelectorAll('.mobile-nav-item[data-pagina], .bottom-nav-item[data-pagina]').forEach(el => {
+    el.classList.toggle('active', el.dataset.pagina === pagina);
+  });
+})();
+document.addEventListener('DOMContentLoaded', function(){
+  if(typeof Auth !== 'undefined'){
+    const p = Auth.profiel();
+    if(p){
+      const av = document.getElementById('sidebar-avatar');
+      const nm = document.getElementById('sidebar-naam');
+      const rl = document.getElementById('sidebar-rol');
+      if(av) av.textContent = p.emoji || '🧑';
+      if(nm) nm.textContent = p.naam || '';
+      if(rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
+    }
+  }
+  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
+    if(modal.querySelector('.modal-sluit-btn')) return;
+    const bg = modal.closest('.modal-bg');
+    const btn = document.createElement('button');
+    btn.className = 'modal-sluit-btn';
+    btn.setAttribute('aria-label', 'Sluiten');
+    btn.textContent = '✕';
+    btn.onclick = function(e){ e.stopPropagation(); if(bg) bg.classList.remove('open'); };
+    modal.insertBefore(btn, modal.firstChild);
+  });
+});
+const _origToonOpslag = window.toonOpslagStatus;
+window.toonOpslagStatus = function(tekst){
+  document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
+};
+</script>
+</body>
+</html>

@@ -191,7 +191,7 @@ async function laadOp() {
       sbFetch(`todos${_gidQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
     if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
-    if (i.length) standaardIngredienten = i;
+    if (i.length) standaardIngredienten = i.map(x => ({...x, productLink: x.product_link || null}));
     if (a.length) activiteiten = a.map(x=>({
       ...x, _sbId:x.id,
       dagen:x.dagen||[], wie:Array.isArray(x.wie)?x.wie:[x.wie].filter(Boolean),
@@ -374,7 +374,7 @@ async function sbSavePlanning(datum, slot, waarde, porties) {
 }
 
 async function sbSaveIngredient(ing) {
-  const data = { naam:ing.naam, winkel:ing.winkel, categorie:ing.categorie };
+  const data = { naam:ing.naam, winkel:ing.winkel, categorie:ing.categorie, product_link:ing.productLink||null };
   try {
     if (ing._sbId) { await sbFetch(`ingredienten?id=eq.${ing._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('ingredienten','POST',{...data,gezin_id:_gid()}); if(res[0]) ing._sbId=res[0].id; }

@@ -34,6 +34,7 @@
   <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
   <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
   <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="ingredienten" href="ingredienten.html"><span class="nav-icon">🥦</span><span class="nav-label">Ingrediënten</span></a>
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
   <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
@@ -74,6 +75,7 @@
       <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
       <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
       <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
+      <a class="module-tile" href="ingredienten.html"><span class="module-tile-icon">🥦</span><span class="module-tile-naam">Ingrediënten</span></a>
       <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
       <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">🚸</span><span class="module-tile-naam">Kinderen</span></a>
       <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
@@ -92,7 +94,7 @@
   <button class="inst-nav-item" onclick="scrollNaar('sect-vakanties')">🏖️ Schoolvakanties</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-ical')">📆 Agenda import</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-data')">💾 Data beheer</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-ingredienten')">🥦 Ingrediënten</button>
+  <a class="inst-nav-item" href="ingredienten.html" style="text-decoration:none;">🥦 Ingrediënten</a>
   <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutel</button>
   <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')">👥 Gebruikers</button>
 </nav>
@@ -155,36 +157,15 @@
     </div>
   </div>
 
-  <!-- Ingrediënten beheer -->
+  <!-- Ingrediënten -->
   <div class="section-label" id="sect-ingredienten" style="margin-top:1.5rem;">🥦 Ingrediënten</div>
-  <div class="info-box">Beheer hier de standaard ingrediëntenlijst. Nieuwe ingrediënten worden automatisch toegevoegd als je ze in een recept invoert.</div>
-
-  <div style="display:flex;gap:8px;margin-bottom:10px;">
-    <input type="text" id="ing-search" placeholder="🔍 Zoeken…" oninput="renderIngredienten()"
-      style="flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"/>
-    <button class="btn btn-primary btn-sm" onclick="openIngModal()">+ Ingrediënt</button>
-  </div>
-  <div class="pill-tabs" id="ing-winkel-filter"></div>
-  <div id="ingredienten-lijst"></div>
-
-  <!-- Modal: Ingrediënt -->
-  <div class="modal-bg" id="ing-modal-bg">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-handle"></div>
-    <h3 id="ing-modal-titel">Ingrediënt toevoegen</h3>
-    <div class="form-row"><label>Naam</label><input type="text" id="i-naam" placeholder="bijv. gehakt"/></div>
-    <div class="form-row"><label>Standaard winkel</label>
-      <select id="i-winkel">
-        <option>Colruyt</option><option>Delhaize</option><option>Lidl</option>
-        <option>Albert Heijn</option><option>Beenhouwerij</option><option>Markt</option><option>Andere</option>
-      </select>
+  <a href="ingredienten.html" class="card" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:inherit;">
+    <div>
+      <div style="font-size:14px;font-weight:600;">Ingrediënten beheren</div>
+      <div style="font-size:12px;color:var(--muted);">Standaardlijst, winkel per ingredient en productlinks</div>
     </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeIngModal()">Annuleren</button>
-      <button class="modal-btn modal-btn-primary" onclick="saveIngredient()">Opslaan</button>
-    </div>
-  </div>
-  </div>
+    <span style="font-size:20px;color:var(--muted);">›</span>
+  </a>
 
   <!-- API key -->
   <div class="section-label" id="sect-api" style="margin-top:1.5rem;">🔑 API instellingen</div>
@@ -367,68 +348,6 @@ function updateVastRooster(persoon,dag,veld,waarde){
 function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');setTimeout(()=>toonOpslagStatus('💾 Automatisch opgeslagen'),2000);}
 
 function resetApiKey(){localStorage.removeItem('anthropic_api_key');renderInstellingen();}
-
-// ── Ingrediënten beheer ───────────────────────────────────────
-let activeIngWinkelFilter='alle';
-
-function renderIngredienten(){
-  const search=(document.getElementById('ing-search')||{}).value||'';
-  const winkels=['alle',...new Set(standaardIngredienten.map(i=>i.winkel).filter(Boolean))];
-  document.getElementById('ing-winkel-filter').innerHTML=winkels.map(w=>
-    `<button class="ptab${activeIngWinkelFilter===w?' active':''}" onclick="filterIngWinkel('${w}')">${w==='alle'?'Alle winkels':w}</button>`
-  ).join('');
-  let filtered=standaardIngredienten;
-  if(activeIngWinkelFilter!=='alle') filtered=filtered.filter(i=>i.winkel===activeIngWinkelFilter);
-  if(search) filtered=filtered.filter(i=>i.naam.toLowerCase().includes(search.toLowerCase()));
-  filtered=[...filtered].sort((a,b)=>a.naam.localeCompare(b.naam));
-  const el=document.getElementById('ingredienten-lijst');
-  if(!filtered.length){el.innerHTML=`<div class="empty-state"><span class="empty-icon">🥦</span><p>Geen ingrediënten gevonden</p></div>`;return;}
-  const perWinkel={};
-  filtered.forEach(i=>{if(!perWinkel[i.winkel])perWinkel[i.winkel]=[];perWinkel[i.winkel].push(i);});
-  el.innerHTML=Object.entries(perWinkel).map(([winkel,items])=>`
-    <div style="margin-bottom:1rem;">
-      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid var(--border);">🏪 ${winkel}</div>
-      ${items.map(i=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg-2);">
-          <span style="font-size:14px;font-weight:500;">${i.naam}</span>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <select style="font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;" onchange="wijzigWinkel(${i.id},this.value)">
-              ${WINKELS.map(w=>`<option${w===i.winkel?' selected':''}>${w}</option>`).join('')}
-            </select>
-            <button class="btn btn-secondary btn-sm" onclick="openIngModal(standaardIngredienten.find(i=>i.id===${i.id}))">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="verwijderIngredient(${i.id})">×</button>
-          </div>
-        </div>`).join('')}
-    </div>`).join('');
-}
-function filterIngWinkel(w){activeIngWinkelFilter=w;renderIngredienten();}
-function openIngModal(ing){
-  document.getElementById('ing-modal-titel').textContent=ing?'Ingrediënt bewerken':'Ingrediënt toevoegen';
-  document.getElementById('i-naam').value=ing?ing.naam:'';
-  document.getElementById('i-winkel').value=ing?ing.winkel:'Colruyt';
-  document.getElementById('ing-modal-bg').dataset.editId=ing?ing.id:'';
-  document.getElementById('ing-modal-bg').classList.add('open');
-}
-function closeIngModal(){document.getElementById('ing-modal-bg').classList.remove('open');}
-function saveIngredient(){
-  const naam=document.getElementById('i-naam').value.trim();if(!naam)return;
-  const editId=document.getElementById('ing-modal-bg').dataset.editId;
-  const winkel=document.getElementById('i-winkel').value;
-  if(editId){const ing=standaardIngredienten.find(i=>i.id==editId);if(ing){ing.naam=naam;ing.winkel=winkel;sbSaveIngredient(ing);}}
-  else{const n={id:Date.now(),naam,winkel,categorie:''};standaardIngredienten.push(n);sbSaveIngredient(n);}
-  closeIngModal();slaLokaalOp();renderIngredienten();
-}
-function wijzigWinkel(id,winkel){
-  const ing=standaardIngredienten.find(i=>i.id===id||i.id==id);
-  if(ing){ing.winkel=winkel;slaLokaalOp();sbSaveIngredient(ing);}
-}
-function verwijderIngredient(id){
-  if(!confirm('Ingrediënt verwijderen?'))return;
-  const ing=standaardIngredienten.find(i=>i.id===id||i.id==id);
-  standaardIngredienten=standaardIngredienten.filter(i=>i.id!==id&&i.id!=id);
-  slaLokaalOp();if(ing?._sbId)sbDeleteIngredient(ing._sbId);renderIngredienten();
-}
-document.getElementById('ing-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('ing-modal-bg'))closeIngModal();});
 
 // ── Admin: hulpfuncties nieuw account ────────────────────────
 function kiesEmoji(emoji) {
