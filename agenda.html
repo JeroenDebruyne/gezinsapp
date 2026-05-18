@@ -325,14 +325,14 @@
   <!-- Eendaagse velden -->
   <div id="eendaags-velden">
     <div class="form-grid">
-      <div class="form-row"><label>Startuur</label><input type="time" id="a-start"/></div>
-      <div class="form-row"><label>Einduur</label><input type="time" id="a-eind-uur"/></div>
+      <div class="form-row"><label>Startuur</label><input type="time" id="a-start" oninput="checkNachtspan()"/></div>
+      <div class="form-row"><label>Einduur <span id="nachtspan-hint" style="display:none;font-size:11px;font-weight:400;color:var(--muted);">(volgende dag)</span></label><input type="time" id="a-eind-uur" oninput="checkNachtspan()"/></div>
       <div class="form-row"><label>Reistijd heen (min)</label><input type="number" id="a-reis-heen" placeholder="0" min="0"/></div>
       <div class="form-row"><label>Reistijd terug (min)</label><input type="number" id="a-reis-terug" placeholder="0" min="0"/></div>
     </div>
     <div class="form-row">
       <label>Frequentie</label>
-      <select id="a-freq">
+      <select id="a-freq" onchange="checkNachtspan()">
         <option value="wekelijks">Wekelijks</option>
         <option value="tweewekelijks">Tweewekelijks</option>
         <option value="maandelijks">Maandelijks</option>
@@ -341,7 +341,7 @@
       </select>
     </div>
     <div class="form-grid">
-      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin"/></div>
+      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" oninput="checkNachtspan()"/></div>
       <div class="form-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
     </div>
     <div class="form-row">
@@ -885,6 +885,7 @@ function openActModal(act){
   document.getElementById('a-md-start-tijd').value=act?.start||'';
   document.getElementById('a-md-eind-tijd').value=act?.eindUur||'';
 
+  checkNachtspan();
   updatePriveSwitch();
   updateMeerdaagsSwitch();
   renderPersonenMS();
@@ -938,6 +939,22 @@ function updateMeerdaagsSwitch(){
   document.getElementById('meerdaags-velden').style.display=meerdaagsAan?'block':'none';
 }
 
+function checkNachtspan(){
+  const start=document.getElementById('a-start').value;
+  const eindUur=document.getElementById('a-eind-uur').value;
+  const isNacht=start&&eindUur&&tijdMinuten(eindUur)<tijdMinuten(start);
+  document.getElementById('nachtspan-hint').style.display=isNacht?'inline':'none';
+  // Voor eenmalige activiteiten: zet eindDatum automatisch op beginDatum+1
+  if(isNacht&&document.getElementById('a-freq').value==='eenmalig'){
+    const beginDatum=document.getElementById('a-begin').value;
+    const eindDatumEl=document.getElementById('a-eind');
+    if(beginDatum&&(!eindDatumEl.value||eindDatumEl.value===beginDatum)){
+      const d=new Date(beginDatum+'T12:00:00');d.setDate(d.getDate()+1);
+      eindDatumEl.value=fDateISO(d);
+    }
+  }
+}
+
 async function saveActiviteit(){
   const naam=document.getElementById('a-naam').value.trim();
   if(!naam){alert('Geef een naam in.');return;}
@@ -966,7 +983,8 @@ async function saveActiviteit(){
     const dagen=[...document.querySelectorAll('#dag-checkboxes input:checked')].map(c=>c.value);
     const start=document.getElementById('a-start').value;
     const eindUur=document.getElementById('a-eind-uur').value;
-    const duur=start&&eindUur?Math.max(0,tijdMinuten(eindUur)-tijdMinuten(start)):60;
+    const tStart=tijdMinuten(start), tEind=tijdMinuten(eindUur);
+    const duur=start&&eindUur?(tEind>=tStart?tEind-tStart:24*60-tStart+tEind):60;
     act={
       id:actEditId||Date.now(),_sbId:bestaande?._sbId,
       naam,wie:geselecteerdePersonen,start,eindUur,duur,prive:priveAan,meerdaags:false,
