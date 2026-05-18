@@ -936,7 +936,7 @@ function updateMeerdaagsSwitch(){
   document.getElementById('meerdaags-velden').style.display=meerdaagsAan?'block':'none';
 }
 
-function saveActiviteit(){
+async function saveActiviteit(){
   const naam=document.getElementById('a-naam').value.trim();
   if(!naam){alert('Geef een naam in.');return;}
   if(!geselecteerdePersonen.length){alert('Selecteer minstens één persoon.');return;}
@@ -990,7 +990,7 @@ function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  closeActModal();slaLokaalOp();sbSaveActiviteit(act);renderAlles();
+  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
@@ -1008,11 +1008,11 @@ function verwijderActiviteit(id,datumISO){
     _doVerwijderVolledig(id);
   }
 }
-function verwijderEnkelHerhaling(){
+async function verwijderEnkelHerhaling(){
   const act=activiteiten.find(a=>a.id===_verwijderActId);
   if(!act||!_verwijderDatum) return;
   act.uitgesloten=(act.uitgesloten||[]).filter(d=>d!==_verwijderDatum).concat(_verwijderDatum);
-  closeVerwijderModal();slaLokaalOp();sbSaveActiviteit(act);renderAlles();
+  closeVerwijderModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);
 }
 function verwijderVolleActiviteit(){
   closeVerwijderModal();

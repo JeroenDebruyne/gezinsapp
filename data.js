@@ -148,7 +148,8 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
   const url = `${SUPABASE_URL}/rest/v1/${tabel}${filter}`;
   const opts = {
     method: methode,
-    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' }
+    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' },
+    ...(methode !== 'GET' ? { keepalive: true } : {})
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
@@ -300,7 +301,7 @@ async function sbSaveActiviteit(act) {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
-    eind_datum:act.eindDatum||null, prep: +act.prep || 0, dagen:act.dagen,
+    eind_datum:act.eindDatum||null, prep: act.prep||null, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
