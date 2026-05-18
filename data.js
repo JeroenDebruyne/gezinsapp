@@ -277,7 +277,8 @@ function slaLokaalOp() {
 }
 
 // Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties
-function _gid() { return Auth.getGezinId() || null; }
+// Fallback op localStorage zodat saves ook werken als laadProfielen faalde
+function _gid() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
 // Voegt gezin_id toe aan een query string: _gidQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
 function _gidQ(base = '') {
   const id = _gid();
@@ -321,18 +322,20 @@ async function sbSaveRecept(recept) {
 async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
 
 async function sbSaveActiviteit(act) {
+  const gid = _gid();
+  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
-    eind_datum:act.eindDatum||null, prep: act.prep||null, dagen:act.dagen,
+    eind_datum:act.eindDatum||null, prep: +act.prep || null, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
   };
   try {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:_gid()}); if(res[0]) act._sbId=res[0].id; }
+    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:gid}); if(res[0]) act._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'activiteit'); }
 }
@@ -342,7 +345,7 @@ async function sbSaveTodo(todo) {
   const data = {
     titel:todo.titel, notitie:todo.notitie||null, deadline:todo.deadline||null,
     duur:todo.duur||null, prioriteit:todo.prioriteit||'middel', wie:todo.wie||[],
-    prive:todo.prive||false, gedaan:todo.gedaan||false, gedaan_op:todo.gedaanOp||null,
+    prive:todo.prive||false, gedaan:todo.gedaan||false, gedaan_op:todo.gedaanOp ? new Date(todo.gedaanOp).toISOString() : null,
     aangemaakt_door:todo.aangemaaktDoor||null, aangemaakt_op:todo.aangemaaktOp||null,
   };
   try {
@@ -544,7 +547,7 @@ function parseIcal(icsText, sourceUrl = null) {
       dagen = [['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
     const meerdaags = allDay && beginDatum !== (rruleEind||eindDatum) && freq === 'eenmalig';
     events.push({
-      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:0,
+      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:null,
       prive:false, meerdaags, beginDatum, eindDatum:rruleEind||eindDatum,
       start:startTijd, eindUur:eindTijd, freq, dagen:meerdaags?[]:dagen,
       duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
