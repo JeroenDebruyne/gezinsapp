@@ -148,7 +148,7 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
   const url = `${SUPABASE_URL}/rest/v1/${tabel}${filter}`;
   const opts = {
     method: methode,
-    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' }
+    headers: { ...Auth.headers(), ...(methode==='POST'?{'Prefer':'return=representation'}:{}) }
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
@@ -231,14 +231,15 @@ async function laadOp() {
     const toSyncTodos = _pendingTodos.filter(t => !todos.some(x => x.id === t.id));
     toSyncActs.forEach(a => activiteiten.push(a));
     toSyncTodos.forEach(t => todos.push(t));
+    let syncOk = true;
     if (toSyncActs.length || toSyncTodos.length) {
-      await Promise.all([
+      const results = await Promise.all([
         ...toSyncActs.map(a => sbSaveActiviteit(a)),
         ...toSyncTodos.map(t => sbSaveTodo(t)),
       ]);
-      slaLokaalOp();
+      syncOk = results.every(r => r !== false);
     }
-    toonOpslagStatus('✅ Gesynchroniseerd');
+    if (syncOk) toonOpslagStatus('✅ Gesynchroniseerd');
   } catch(e) {
     console.warn('Laden mislukt:', e);
     toonOpslagStatus('⚠️ Offline');
@@ -318,7 +319,7 @@ async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`
 
 async function sbSaveActiviteit(act) {
   const gid = _gid();
-  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
+  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return false; }
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
@@ -329,10 +330,15 @@ async function sbSaveActiviteit(act) {
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
   };
   try {
-    if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:gid}); if(res[0]) act._sbId=res[0].id; }
+    if (act._sbId) {
+      await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data);
+    } else {
+      const res = await sbFetch('activiteiten','POST',{...data,gezin_id:gid});
+      if (res[0]) { act._sbId = res[0].id; slaLokaalOp(); }
+    }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { _opslagFout(e,'activiteit'); }
+    return true;
+  } catch(e) { _opslagFout(e,'activiteit'); return false; }
 }
 async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'activiteit-delete');} }
 
@@ -344,10 +350,15 @@ async function sbSaveTodo(todo) {
     aangemaakt_door:todo.aangemaaktDoor||null, aangemaakt_op:todo.aangemaaktOp||null,
   };
   try {
-    if (todo._sbId) { await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('todos','POST',{...data,gezin_id:_gid()}); if(res[0]) todo._sbId=res[0].id; }
+    if (todo._sbId) {
+      await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data);
+    } else {
+      const res = await sbFetch('todos','POST',{...data,gezin_id:_gid()});
+      if (res[0]) { todo._sbId = res[0].id; slaLokaalOp(); }
+    }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { _opslagFout(e,'todo'); }
+    return true;
+  } catch(e) { _opslagFout(e,'todo'); return false; }
 }
 async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
 
