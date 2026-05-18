@@ -148,8 +148,7 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
   const url = `${SUPABASE_URL}/rest/v1/${tabel}${filter}`;
   const opts = {
     method: methode,
-    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' },
-    ...(methode !== 'GET' ? { keepalive: true } : {})
+    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' }
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
@@ -170,6 +169,14 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
 // ── Data laden ────────────────────────────────────────────────
 async function laadOp() {
   toonOpslagStatus('⏳ Data laden...');
+  // Bewaar lokaal opgeslagen items die nog niet naar Supabase zijn gesynchroniseerd
+  // (items zonder _sbId werden lokaal aangemaakt maar de write werd onderbroken)
+  let _pendingActs = [], _pendingTodos = [];
+  try {
+    const _local = JSON.parse(localStorage.getItem('gezinsapp_data') || '{}');
+    _pendingActs  = (_local.activiteiten || []).filter(a => !a._sbId);
+    _pendingTodos = (_local.todos        || []).filter(t => !t._sbId);
+  } catch {}
   try {
     await Auth.laadProfielen();
     herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
@@ -219,6 +226,23 @@ async function laadOp() {
       if (r.id==='transportUitzonderingen'&&r.waarde) transportUitzonderingen=r.waarde;
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
     });
+    // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
+    if (_pendingActs.length) {
+      _pendingActs.forEach(act => {
+        if (!activiteiten.some(x => x.id === act.id)) {
+          activiteiten.push(act);
+          sbSaveActiviteit(act);
+        }
+      });
+    }
+    if (_pendingTodos.length) {
+      _pendingTodos.forEach(todo => {
+        if (!todos.some(x => x.id === todo.id)) {
+          todos.push(todo);
+          sbSaveTodo(todo);
+        }
+      });
+    }
     toonOpslagStatus('✅ Gesynchroniseerd');
   } catch(e) {
     console.warn('Laden mislukt:', e);
