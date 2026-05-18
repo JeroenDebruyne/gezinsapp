@@ -76,6 +76,7 @@ const Auth = (() => {
 
   async function laadProfielen() {
     try {
+      await refreshIfNeeded();
       const h = { 'apikey': SUPABASE_KEY };
       const s = _readSession();
       if (s?.access_token) h['Authorization'] = 'Bearer ' + s.access_token;
@@ -105,6 +106,7 @@ const Auth = (() => {
           ? data.find(p => p.persoon_key === kindKey)
           : data.find(p => p.email?.toLowerCase() === email);
         _gezinId = mijn?.gezin_id || data[0]?.gezin_id || null;
+        if (_gezinId) localStorage.setItem('gezinsapp_gezin_id', _gezinId);
       }
     } catch {}
   }

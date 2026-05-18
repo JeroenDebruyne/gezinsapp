@@ -277,7 +277,8 @@ function slaLokaalOp() {
 }
 
 // Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties
-function _gid() { return Auth.getGezinId() || null; }
+// Fallback op localStorage zodat saves ook werken als laadProfielen faalde
+function _gid() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
 // Voegt gezin_id toe aan een query string: _gidQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
 function _gidQ(base = '') {
   const id = _gid();
@@ -321,6 +322,8 @@ async function sbSaveRecept(recept) {
 async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
 
 async function sbSaveActiviteit(act) {
+  const gid = _gid();
+  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
@@ -332,7 +335,7 @@ async function sbSaveActiviteit(act) {
   };
   try {
     if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:_gid()}); if(res[0]) act._sbId=res[0].id; }
+    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:gid}); if(res[0]) act._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'activiteit'); }
 }
