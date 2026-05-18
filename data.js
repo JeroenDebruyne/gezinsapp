@@ -325,7 +325,7 @@ async function sbSaveActiviteit(act) {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
-    eind_datum:act.eindDatum||null, prep: act.prep||null, dagen:act.dagen,
+    eind_datum:act.eindDatum||null, prep: +act.prep || null, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
@@ -342,7 +342,7 @@ async function sbSaveTodo(todo) {
   const data = {
     titel:todo.titel, notitie:todo.notitie||null, deadline:todo.deadline||null,
     duur:todo.duur||null, prioriteit:todo.prioriteit||'middel', wie:todo.wie||[],
-    prive:todo.prive||false, gedaan:todo.gedaan||false, gedaan_op:todo.gedaanOp||null,
+    prive:todo.prive||false, gedaan:todo.gedaan||false, gedaan_op:todo.gedaanOp ? new Date(todo.gedaanOp).toISOString() : null,
     aangemaakt_door:todo.aangemaaktDoor||null, aangemaakt_op:todo.aangemaaktOp||null,
   };
   try {
@@ -544,7 +544,7 @@ function parseIcal(icsText, sourceUrl = null) {
       dagen = [['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
     const meerdaags = allDay && beginDatum !== (rruleEind||eindDatum) && freq === 'eenmalig';
     events.push({
-      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:0,
+      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:null,
       prive:false, meerdaags, beginDatum, eindDatum:rruleEind||eindDatum,
       start:startTijd, eindUur:eindTijd, freq, dagen:meerdaags?[]:dagen,
       duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
