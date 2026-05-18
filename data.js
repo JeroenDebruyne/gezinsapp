@@ -143,13 +143,13 @@ function isActiefOpDatum(act, datumStr) {
 }
 
 // ── Supabase fetch ────────────────────────────────────────────
-async function sbFetch(tabel, methode='GET', body=null, filter='') {
+async function sbFetch(tabel, methode='GET', body=null, filter='', prefer=null) {
   await Auth.refreshIfNeeded();
   const url = `${SUPABASE_URL}/rest/v1/${tabel}${filter}`;
-  const opts = {
-    method: methode,
-    headers: { ...Auth.headers(), 'Prefer': methode==='POST'?'return=representation':'' }
-  };
+  const preferValue = prefer !== null ? prefer : (methode==='POST' ? 'return=representation' : null);
+  const headers = { ...Auth.headers() };
+  if (preferValue) headers['Prefer'] = preferValue;
+  const opts = { method: methode, headers };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
   if (res.status===401) {
@@ -163,7 +163,7 @@ async function sbFetch(tabel, methode='GET', body=null, filter='') {
     throw new Error(msg);
   }
   if (methode==='DELETE'||res.status===204) return [];
-  return res.json();
+  return res.json().catch(()=>[]);
 }
 
 // ── Data laden ────────────────────────────────────────────────
@@ -227,23 +227,19 @@ async function laadOp() {
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
-    if (_pendingActs.length) {
-      _pendingActs.forEach(act => {
-        if (!activiteiten.some(x => x.id === act.id)) {
-          activiteiten.push(act);
-          sbSaveActiviteit(act);
-        }
-      });
+    const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
+    const toSyncTodos = _pendingTodos.filter(t => !todos.some(x => x.id === t.id));
+    toSyncActs.forEach(a => activiteiten.push(a));
+    toSyncTodos.forEach(t => todos.push(t));
+    let syncOk = true;
+    if (toSyncActs.length || toSyncTodos.length) {
+      const results = await Promise.all([
+        ...toSyncActs.map(a => sbSaveActiviteit(a)),
+        ...toSyncTodos.map(t => sbSaveTodo(t)),
+      ]);
+      syncOk = results.every(r => r !== false);
     }
-    if (_pendingTodos.length) {
-      _pendingTodos.forEach(todo => {
-        if (!todos.some(x => x.id === todo.id)) {
-          todos.push(todo);
-          sbSaveTodo(todo);
-        }
-      });
-    }
-    toonOpslagStatus('✅ Gesynchroniseerd');
+    if (syncOk) toonOpslagStatus('✅ Gesynchroniseerd');
   } catch(e) {
     console.warn('Laden mislukt:', e);
     toonOpslagStatus('⚠️ Offline');
@@ -323,7 +319,7 @@ async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`
 
 async function sbSaveActiviteit(act) {
   const gid = _gid();
-  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
+  if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return false; }
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
@@ -334,10 +330,15 @@ async function sbSaveActiviteit(act) {
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
   };
   try {
-    if (act._sbId) { await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('activiteiten','POST',{...data,gezin_id:gid}); if(res[0]) act._sbId=res[0].id; }
+    if (act._sbId) {
+      await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data);
+    } else {
+      const res = await sbFetch('activiteiten','POST',{...data,gezin_id:gid});
+      if (res[0]) { act._sbId = res[0].id; slaLokaalOp(); }
+    }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { _opslagFout(e,'activiteit'); }
+    return true;
+  } catch(e) { _opslagFout(e,'activiteit'); return false; }
 }
 async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'activiteit-delete');} }
 
@@ -349,20 +350,25 @@ async function sbSaveTodo(todo) {
     aangemaakt_door:todo.aangemaaktDoor||null, aangemaakt_op:todo.aangemaaktOp||null,
   };
   try {
-    if (todo._sbId) { await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('todos','POST',{...data,gezin_id:_gid()}); if(res[0]) todo._sbId=res[0].id; }
+    if (todo._sbId) {
+      await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data);
+    } else {
+      const res = await sbFetch('todos','POST',{...data,gezin_id:_gid()});
+      if (res[0]) { todo._sbId = res[0].id; slaLokaalOp(); }
+    }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { _opslagFout(e,'todo'); }
+    return true;
+  } catch(e) { _opslagFout(e,'todo'); return false; }
 }
 async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
   const gid = _gid();
-  const pf = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
-  const bestaand = await sbFetch(`planning${pf}`).catch(()=>[]);
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    if (bestaand.length) { await sbFetch(`planning${pf}`,'PATCH',{[slot]:waarde,porties:porties||{}}); }
-    else { await sbFetch('planning','POST',{datum,[slot]:waarde,porties:porties||{},gezin_id:gid}); }
+    await sbFetch('planning','POST',
+      {datum,[slot]:waarde,porties:porties||{},gezin_id:gid},
+      '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'planning'); }
 }
@@ -410,24 +416,23 @@ async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq
 
 async function sbSaveDrukte(datum, drukte) {
   const gid = _gid();
-  const df = gid ? `?datum=eq.${datum}&gezin_id=eq.${gid}` : `?datum=eq.${datum}`;
-  const bestaand = await sbFetch(`drukte_override${df}`).catch(()=>[]);
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    if (bestaand.length) { await sbFetch(`drukte_override${df}`,'PATCH',{drukte}); }
-    else { await sbFetch('drukte_override','POST',{datum,drukte,gezin_id:gid}); }
+    await sbFetch('drukte_override','POST',
+      {datum,drukte,gezin_id:gid},
+      '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'drukte'); }
 }
 
 async function sbSaveInstellingen() {
+  const gid = _gid();
+  if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    const gid = _gid();
     for (const [id, waarde] of [['vasteRoosters',vasteRoosters],['uitzonderingen',uitzonderingen],['transportUitzonderingen',transportUitzonderingen],['standaardTransport',standaardTransport]]) {
-      const instF = gid ? `?id=eq.${id}&gezin_id=eq.${gid}` : `?id=eq.${id}`;
-      const bestaand = await sbFetch(`instellingen${instF}`).catch(()=>[]);
-      const data = { waarde, updated_at:new Date().toISOString() };
-      if (bestaand.length) { await sbFetch(`instellingen${instF}`,'PATCH',data); }
-      else { await sbFetch('instellingen','POST',{id,...data,gezin_id:gid}); }
+      await sbFetch('instellingen','POST',
+        {id,waarde,updated_at:new Date().toISOString(),gezin_id:gid},
+        '','resolution=merge-duplicates');
     }
   } catch(e) { _opslagFout(e,'instellingen'); }
 }
@@ -444,13 +449,12 @@ async function laadIcalAbonnementen() {
   } catch(_) {}
 }
 async function slaIcalAbonnementenOp() {
+  const gid = _gid();
+  if (!gid) return;
   try {
-    const gid = _gid();
-    const f = gid ? `?id=eq.icalAbonnementen&gezin_id=eq.${gid}` : `?id=eq.icalAbonnementen`;
-    const bestaand = await sbFetch(`instellingen${f}`).catch(() => []);
-    const data = { waarde: icalAbonnementen, updated_at: new Date().toISOString() };
-    if (bestaand.length) await sbFetch(`instellingen${f}`, 'PATCH', data);
-    else await sbFetch('instellingen', 'POST', { id:'icalAbonnementen', ...data, gezin_id: gid });
+    await sbFetch('instellingen','POST',
+      {id:'icalAbonnementen',waarde:icalAbonnementen,updated_at:new Date().toISOString(),gezin_id:gid},
+      '','resolution=merge-duplicates');
   } catch(_) {}
 }
 
