@@ -292,12 +292,13 @@ function zoekRecepten(q){
 
 function kiesPlanK(k){
   if(!activeSlot) return;
-  if(!planning[activeSlot.dagKey]) planning[activeSlot.dagKey]={};
-  planning[activeSlot.dagKey][activeSlot.slotKey]=k;
+  const dagKey=activeSlot.dagKey, slotKey=activeSlot.slotKey;
+  if(!planning[dagKey]) planning[dagKey]={};
+  planning[dagKey][slotKey]=k;
   closePlanModal();
   renderPlanner();
   slaLokaalOp();
-  sbSavePlanning(activeSlot.dagKey,activeSlot.slotKey,k,planning[activeSlot.dagKey].porties);
+  sbSavePlanning(dagKey,slotKey,k,planning[dagKey].porties);
 }
 
 function wisSlot(){
