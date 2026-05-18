@@ -18,6 +18,7 @@
 <header class="topbar">
   <div class="topbar-title">✅ To-do's</div>
   <div class="topbar-actions">
+    <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;">🔧 dev</span>
     <div class="topbar-user-wrap">
       <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
@@ -416,40 +417,7 @@ function verwijderTodo(id) {
   renderTodos();
 }
 
-// ── Supabase todo functies ────────────────────────────────────
-async function sbSaveTodo(todo) {
-  const data = {
-    titel:todo.titel, notitie:todo.notitie, deadline:todo.deadline||null,
-    duur:todo.duur, prioriteit:todo.prioriteit, wie:todo.wie,
-    prive:todo.prive, gedaan:todo.gedaan, gedaan_op:todo.gedaanOp||null,
-    aangemaakt_door:todo.aangemaaktDoor, aangemaakt_op:todo.aangemaaktOp,
-  };
-  try {
-    if (todo._sbId) {
-      await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data);
-    } else {
-      const res = await sbFetch('todos','POST',data);
-      if (res[0]) todo._sbId = res[0].id;
-    }
-    toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { toonOpslagStatus('⚠️ Offline'); }
-}
-async function sbDeleteTodo(sbId) {
-  try { await sbFetch(`todos?id=eq.${sbId}`,'DELETE'); } catch(e) {}
-}
-
-// Laad todos van Supabase (uitbreiding van laadOp in data.js)
-const _origLaadOp = laadOp;
-laadOp = async function() {
-  await _origLaadOp();
-  try {
-    const t = await sbFetch('todos');
-    if (t.length) todos = t.map(x=>({
-      ...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op,
-      aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op,
-    }));
-  } catch(e) { /* gebruik lokale data */ }
-};
+// sbSaveTodo en sbDeleteTodo zijn gedefinieerd in data.js (inclusief gezin_id)
 
 // Sluit modal bij klik op achtergrond
 document.getElementById('todo-modal-bg').addEventListener('click', e=>{

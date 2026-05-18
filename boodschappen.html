@@ -208,7 +208,7 @@ function voegExtraToe(){
   document.getElementById('extra-naam').value='';
   renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
 }
-function verwijderExtra(id){extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();}
+function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
 </script>
 <script>
 // ── Sidebar (desktop) ────────────────────────────────────────

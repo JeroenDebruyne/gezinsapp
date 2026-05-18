@@ -204,7 +204,7 @@ function renderKL(){
     let badgesHtml = '';
     if(vakantie) badgesHtml+=`<span class="kl-vakantie-badge">🏖️ ${getVakantieNaam(datum)}</span>`;
     else if(school) badgesHtml+=`<span class="kl-act-badge">🏫 School</span>`;
-    kindActs.forEach(a=>`<span class="kl-act-badge">📌 ${escHtml(a.naam)}</span>`);
+    kindActs.forEach(a=>{badgesHtml+=`<span class="kl-act-badge">📌 ${escHtml(a.naam)}</span>`;});
 
     // Per-kind body
     const kindBodyHtml = kinderen.map(kind=>{

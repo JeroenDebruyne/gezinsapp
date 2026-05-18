@@ -658,7 +658,7 @@ function saveRecept(){
     tijd:parseInt(document.getElementById('f-tijd').value)||30,
     porties:parseInt(document.getElementById('f-porties').value)||4,
     moeilijk:document.getElementById('f-moeilijk').value,
-    wie:['jeroen','kelly','nora','odiel'],
+    wie:PERSONEN.length?[...PERSONEN]:['jeroen','kelly','nora','odiel'],
     bron:document.getElementById('f-bron').value,
     bereiding:document.getElementById('f-bereiding').value,
     tags,
