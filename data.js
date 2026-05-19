@@ -227,6 +227,9 @@ async function laadOp() {
       if (r.id==='uitzonderingen'&&r.waarde) uitzonderingen=r.waarde;
       if (r.id==='transportUitzonderingen'&&r.waarde) transportUitzonderingen=r.waarde;
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
+      if (r.id==='googleMapsKey'&&r.waarde) localStorage.setItem('google_maps_key', r.waarde);
+      if (r.id==='thuisadres'&&r.waarde) localStorage.setItem('gezinsapp_thuisadres', r.waarde);
+      if (r.id==='anthropicApiKey'&&r.waarde) localStorage.setItem('anthropic_api_key', r.waarde);
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
     const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
@@ -446,7 +449,12 @@ async function sbSaveInstellingen() {
   const gid = _gid();
   if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
-    for (const [id, waarde] of [['vasteRoosters',vasteRoosters],['uitzonderingen',uitzonderingen],['transportUitzonderingen',transportUitzonderingen],['standaardTransport',standaardTransport]]) {
+    const extra = [
+      ['googleMapsKey',  localStorage.getItem('google_maps_key')      || null],
+      ['thuisadres',     localStorage.getItem('gezinsapp_thuisadres')  || null],
+      ['anthropicApiKey',localStorage.getItem('anthropic_api_key')     || null],
+    ].filter(([,v]) => v !== null);
+    for (const [id, waarde] of [['vasteRoosters',vasteRoosters],['uitzonderingen',uitzonderingen],['transportUitzonderingen',transportUitzonderingen],['standaardTransport',standaardTransport],...extra]) {
       await sbFetch('instellingen','POST',
         {id,waarde,updated_at:new Date().toISOString(),gezin_id:gid},
         '','resolution=merge-duplicates');
