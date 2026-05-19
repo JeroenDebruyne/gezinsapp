@@ -176,6 +176,9 @@ function renderBoodschappen(){
           ${item.gebruiken.map(g=>`<div style="font-size:12px;color:var(--muted);display:flex;justify-content:space-between;"><span>${g.recept}</span><span style="font-weight:500;">${g.hoev} ${item.eenheid}</span></div>`).join('')}
           ${item.gebruiken.length>1?`<div style="font-size:11px;color:var(--muted-2);margin-top:2px;">${item.gebruiken.length}× nodig</div>`:''}
         </div>
+        <select onclick="event.stopPropagation()" onchange="wijzigIngWinkel('${item.naam.replace(/'/g,"\\'")}',this.value)" style="font-size:11px;padding:3px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;margin-left:8px;flex-shrink:0;">
+          ${WINKELS.map(w=>`<option${w===activeWinkel?' selected':''}>${w}</option>`).join('')}
+        </select>
       </div>`;
     }).join('');
 }
@@ -211,6 +214,12 @@ function voegExtraToe(){
   renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
 }
 function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
+function wijzigIngWinkel(naam, nieuweWinkel){
+  const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
+  if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);}
+  activeWinkel=nieuweWinkel;
+  renderWinkelTabs();renderBoodschappen();renderExtraItems();
+}
 </script>
 <script>
 // ── Sidebar (desktop) ────────────────────────────────────────
