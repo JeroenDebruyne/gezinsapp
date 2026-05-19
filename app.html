@@ -858,6 +858,7 @@ function slaLokaalOp(){
 function toonOpslagStatus(tekst){
   const el=document.getElementById('opslag-status');
   if(el) el.textContent=tekst;
+  if(tekst&&tekst.startsWith('✅'))_flashGreen(_lastClickedBtn);
 }
 
 async function slaOp(){

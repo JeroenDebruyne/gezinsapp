@@ -323,7 +323,7 @@ function sluitModules(e){ if(e.target===document.getElementById('module-overlay'
 document.addEventListener('DOMContentLoaded',function(){
   if(typeof Auth!=='undefined'){ const p=Auth.profiel(); if(p){ const av=document.getElementById('sidebar-avatar'); const nm=document.getElementById('sidebar-naam'); const rl=document.getElementById('sidebar-rol'); if(av)av.textContent=p.emoji||'🧑'; if(nm)nm.textContent=p.naam||''; if(rl)rl.textContent=Auth.ROLLEN[p.rol]?.label||p.rol||''; } }
   const _orig=window.toonOpslagStatus;
-  window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); };
+  window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); if(t&&t.startsWith('✅'))_flashGreen(_lastClickedBtn); };
 });
 </script>
 </body>

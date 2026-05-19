@@ -521,6 +521,7 @@ document.addEventListener('DOMContentLoaded', function(){
 const _origToonOpslag = window.toonOpslagStatus;
 window.toonOpslagStatus = function(tekst){
   document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
+  if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 };
 </script>
 </body>
