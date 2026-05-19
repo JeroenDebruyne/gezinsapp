@@ -274,6 +274,7 @@ body{
 .btn-secondary{background:var(--surface);border:1.5px solid var(--border-2);color:var(--ink);}
 .btn-secondary:hover{background:var(--bg-2);}
 .btn-danger{background:none;border:1.5px solid #f09595;color:var(--druk-clr);}
+.btn-saved{background:#1d9e75!important;color:#fff!important;border-color:#1d9e75!important;transition:background .3s,color .3s,border-color .3s;}
 .btn-sm{padding:6px 12px;font-size:12px;}
 .btn-icon{padding:8px;border-radius:var(--radius-sm);}
 @media(max-width:767px){.btn{padding:11px 20px;font-size:15px;}.btn-sm{padding:8px 14px;font-size:13px;}}

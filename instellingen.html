@@ -94,8 +94,7 @@
   <button class="inst-nav-item" onclick="scrollNaar('sect-vakanties')">🏖️ Schoolvakanties</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-ical')">📆 Agenda import</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-data')">💾 Data beheer</button>
-  <a class="inst-nav-item" href="ingredienten.html" style="text-decoration:none;">🥦 Ingrediënten</a>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutel</button>
+<button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutel</button>
   <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')">👥 Gebruikers</button>
 </nav>
 
@@ -365,7 +364,10 @@ function updateVastRooster(persoon,dag,veld,waarde){
 }
 function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');setTimeout(()=>toonOpslagStatus('💾 Automatisch opgeslagen'),2000);}
 
-function resetApiKey(){localStorage.removeItem('anthropic_api_key');renderInstellingen();}
+function resetApiKey(){
+  const key=prompt('Anthropic API key (sk-ant-...):');
+  if(key!==null){if(key.trim())localStorage.setItem('anthropic_api_key',key.trim());else localStorage.removeItem('anthropic_api_key');renderInstellingen();}
+}
 function resetMapsKey(){
   const key=prompt('Google Maps API key:');
   if(key!==null){localStorage.setItem(Maps.KEY_KEY,key.trim());renderInstellingen();}
@@ -785,6 +787,7 @@ document.addEventListener('DOMContentLoaded', function(){
 const _origToonOpslag = window.toonOpslagStatus;
 window.toonOpslagStatus = function(tekst){
   document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
+  if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 };
 </script>
 </body>

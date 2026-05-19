@@ -284,8 +284,21 @@ function _gidQ(base = '') {
   return base ? `${base}&gezin_id=eq.${id}` : `?gezin_id=eq.${id}`;
 }
 
+let _lastClickedBtn = null;
+document.addEventListener('mousedown', e => {
+  const btn = e.target.closest('button');
+  if (btn) _lastClickedBtn = btn;
+}, true);
+
+function _flashGreen(btn) {
+  if (!btn) return;
+  btn.classList.add('btn-saved');
+  setTimeout(() => btn.classList.remove('btn-saved'), 1800);
+}
+
 function toonOpslagStatus(tekst) {
   document.querySelectorAll('.opslag-status').forEach(el => el.textContent = tekst);
+  if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 }
 
 // Uniforme fout-afhandeling: log + toon in UI
