@@ -16,6 +16,16 @@
 .boodschap-cirkel{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
 .boodschap-cirkel.gedaan{background:var(--rustig-dot);border-color:var(--rustig-dot);}
 .boodschap-cirkel.gedaan::after{content:'✓';color:#fff;font-size:13px;font-weight:700;}
+.ing-combo-wrap{position:relative;}
+.ing-combo-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;box-sizing:border-box;}
+.ing-combo-input:focus{border-color:var(--accent);}
+.ing-combo-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--accent);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);z-index:50;max-height:200px;overflow-y:auto;box-shadow:var(--shadow);}
+.ing-combo-dropdown.open{display:block;}
+.ing-combo-option{padding:10px 13px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.ing-combo-option:hover{background:var(--accent-l);}
+.ing-combo-option .winkel-hint{font-size:11px;color:var(--muted);}
+.ing-combo-nieuw{padding:10px 13px;font-size:14px;cursor:pointer;color:var(--accent);font-weight:600;border-top:1px solid var(--border);}
+.ing-combo-nieuw:hover{background:var(--accent-l);}
 </style>
 </head>
 <body>
@@ -96,8 +106,20 @@
   <div class="pill-tabs" id="winkel-tabs"></div>
 
   <!-- Extra item toevoegen -->
-  <div style="display:flex;gap:8px;margin-bottom:1rem;">
-    <input type="text" id="extra-naam" placeholder="Extra item toevoegen…" style="flex:1;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;" onkeydown="if(event.key==='Enter')voegExtraToe()"/>
+  <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:flex-start;">
+    <div style="flex:1;min-width:0;">
+      <div class="ing-combo-wrap">
+        <input class="ing-combo-input" id="bood-combo-input" type="text"
+          placeholder="Ingrediënt zoeken of toevoegen…"
+          oninput="filterBoodCombo()"
+          onfocus="filterBoodCombo()"
+          onblur="setTimeout(sluitBoodCombo,150)"
+          onkeydown="if(event.key==='Enter')voegExtraToe()"
+          autocomplete="off"/>
+        <div class="ing-combo-dropdown" id="bood-combo-dd"></div>
+      </div>
+    </div>
+    <select id="bood-winkel-sel" style="padding:10px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--surface);color:var(--ink);flex-shrink:0;"></select>
     <button class="btn btn-primary" onclick="voegExtraToe()">+ Voeg toe</button>
   </div>
 
@@ -127,7 +149,7 @@ Auth.initPagina('boodschappen');
 let activeWinkel='Colruyt';
 let afgevinkt={};
 
-laadOp().then(()=>{renderWinkelTabs();renderBoodschappen();renderExtraItems();}).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();});
+laadOp().then(()=>{renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();}).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();});
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=WINKELS.map(w=>
@@ -206,15 +228,73 @@ function verwijderAfgevinkt(){
   Object.keys(afgevinkt).forEach(k=>{delete afgevinkt[k];});
   slaLokaalOp();renderBoodschappen();renderExtraItems();
 }
+function initBoodWinkelSel(){
+  const sel=document.getElementById('bood-winkel-sel');
+  if(!sel)return;
+  sel.innerHTML=WINKELS.map(w=>`<option${w===activeWinkel?' selected':''}>${w}</option>`).join('');
+}
+
+function filterBoodCombo(){
+  const input=document.getElementById('bood-combo-input');
+  const dd=document.getElementById('bood-combo-dd');
+  const zoek=(input.value||'').toLowerCase().trim();
+  const matches=standaardIngredienten.filter(i=>i.naam.toLowerCase().includes(zoek)).slice(0,8);
+  let html=matches.map(i=>`
+    <div class="ing-combo-option" onmousedown="kiesBoodIng('${escHtml(i.naam).replace(/'/g,"\\'")}','${escHtml(i.winkel)}')">
+      <span>${escHtml(i.naam)}</span>
+      <span class="winkel-hint">🏪 ${escHtml(i.winkel)}</span>
+    </div>`).join('');
+  const bestaatExact=standaardIngredienten.some(i=>i.naam.toLowerCase()===zoek);
+  if(zoek&&!bestaatExact){
+    html+=`<div class="ing-combo-nieuw" onmousedown="kiesBoodNieuw('${escHtml(input.value).replace(/'/g,"\\'")}')">
+      ✨ Nieuw ingrediënt: <strong>${escHtml(input.value)}</strong>
+    </div>`;
+  }
+  dd.innerHTML=html;
+  dd.classList.toggle('open',html.length>0);
+}
+
+function kiesBoodIng(naam,winkel){
+  document.getElementById('bood-combo-input').value=naam;
+  const sel=document.getElementById('bood-winkel-sel');
+  if(sel&&winkel){for(let o of sel.options){if(o.value===winkel){sel.value=winkel;break;}}}
+  sluitBoodCombo();
+}
+
+function kiesBoodNieuw(naam){
+  document.getElementById('bood-combo-input').value=naam;
+  sluitBoodCombo();
+}
+
+function sluitBoodCombo(){
+  document.getElementById('bood-combo-dd')?.classList.remove('open');
+}
+
 function voegExtraToe(){
-  const naam=document.getElementById('extra-naam').value.trim();if(!naam)return;
-  const nieuwItem={id:Date.now(),naam,winkel:activeWinkel};
+  const input=document.getElementById('bood-combo-input');
+  const naam=(input?.value||'').trim();
+  if(!naam)return;
+  const winkel=document.getElementById('bood-winkel-sel')?.value||activeWinkel;
+  // Sla op als nieuw standaard-ingrediënt als het nog niet bestaat
+  const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase());
+  if(!bestaatAl){
+    const nieuwIng={id:Date.now(),naam,winkel,categorie:'',productLink:null};
+    standaardIngredienten.push(nieuwIng);
+    sbSaveIngredient(nieuwIng);
+  } else {
+    // Update winkel als die veranderd is
+    const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
+    if(ing&&ing.winkel!==winkel){ing.winkel=winkel;sbSaveIngredient(ing);}
+  }
+  const nieuwItem={id:Date.now()+1,naam,winkel};
   extraItems.push(nieuwItem);
-  document.getElementById('extra-naam').value='';
+  if(input)input.value='';
   renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
 }
+
 function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
-function wijzigIngWinkel(naam, nieuweWinkel){
+
+function wijzigIngWinkel(naam,nieuweWinkel){
   const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
   if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);}
   activeWinkel=nieuweWinkel;
