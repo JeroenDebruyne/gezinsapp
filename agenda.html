@@ -362,8 +362,24 @@
 
   <div class="form-row">
     <label>Locatie</label>
-    <input type="text" id="a-locatie" placeholder="Locatie"/>
+    <div style="display:flex;gap:6px;">
+      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" oninput="renderContactKeuze()"/>
+      <button type="button" id="btn-reistijd-auto" onclick="berekenReistijdAuto()" title="Reistijd berekenen via Google Maps"
+        style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;">🗺️</button>
+    </div>
+    <div id="locatie-contact-wrap" style="margin-top:6px;"></div>
   </div>
+
+  <!-- Maaltijd thuis -->
+  <div class="form-row">
+    <label>Maaltijd niet thuis <span style="font-size:11px;font-weight:400;color:var(--muted);">(auto-berekend op basis van tijdstip)</span></label>
+    <div style="display:flex;gap:14px;margin-top:6px;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> 🥐 Ontbijt</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> 🥗 Lunch</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> 🍽️ Avond</label>
+    </div>
+  </div>
+
   <div class="form-row">
     <label>Voorbereiding</label>
     <input type="text" id="a-prep" placeholder="Sporttas, medicatie, …"/>
@@ -550,6 +566,7 @@
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="maps.js"></script>
 <script>
 // ── Init ──────────────────────────────────────────────────────
 Auth.initPagina('agenda');
@@ -885,6 +902,21 @@ function openActModal(act){
   document.getElementById('a-md-start-tijd').value=act?.start||'';
   document.getElementById('a-md-eind-tijd').value=act?.eindUur||'';
 
+  // Maaltijd thuis toggles
+  const mt=act?.maaltijdThuis||{};
+  document.getElementById('a-mt-ontbijt').checked=mt.ontbijt||false;
+  document.getElementById('a-mt-lunch').checked=mt.lunch||false;
+  document.getElementById('a-mt-avond').checked=mt.avond||false;
+  // Als geen bestaande waarde: auto-suggest op basis van tijdstip
+  if(!act?.maaltijdThuis) suggestMaaltijdThuis();
+
+  // Contact-keuzelijst voor locatie
+  renderContactKeuze();
+  // Google Places autocomplete op locatieveld
+  Maps.autocomplete(document.getElementById('a-locatie'), adres => {
+    document.getElementById('a-locatie').value=adres;
+  });
+
   checkNachtspan();
   updatePriveSwitch();
   updateMeerdaagsSwitch();
@@ -953,6 +985,53 @@ function checkNachtspan(){
       eindDatumEl.value=fDateISO(d);
     }
   }
+  suggestMaaltijdThuis();
+}
+
+// ── Maaltijd thuis auto-suggest ───────────────────────────────
+function suggestMaaltijdThuis(){
+  const start=document.getElementById('a-start').value;
+  const eindUur=document.getElementById('a-eind-uur').value;
+  if(!start||!eindUur) return;
+  const s=tijdMinuten(start);
+  const e=tijdMinuten(eindUur)<s?tijdMinuten(eindUur)+24*60:tijdMinuten(eindUur);
+  // Slot: [begin, einde] in minuten — activiteit die overlapt → niet thuis (checkbox aan)
+  const slots={ontbijt:[7*60,9*60],lunch:[12*60,14*60],avond:[18*60,20*60]};
+  Object.entries(slots).forEach(([slot,[b,en]])=>{
+    document.getElementById('a-mt-'+slot).checked = s<en&&e>b;
+  });
+}
+
+// ── Locatie: contacten met adres als keuze ────────────────────
+function renderContactKeuze(){
+  const wrap=document.getElementById('locatie-contact-wrap');
+  if(!wrap) return;
+  const metAdres=contacten.filter(c=>c.adres);
+  if(!metAdres.length){wrap.innerHTML='';return;}
+  wrap.innerHTML=`<select onchange="kiesLocatieContact(this.value)"
+    style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;max-width:100%;">
+    <option value="">📋 Adres van contact kiezen…</option>
+    ${metAdres.map(c=>`<option value="${escHtml(c.adres)}">${escHtml(c.naam)}</option>`).join('')}
+  </select>`;
+}
+function kiesLocatieContact(adres){
+  if(!adres)return;
+  document.getElementById('a-locatie').value=adres;
+}
+
+// ── Reistijd berekenen via Google Maps ────────────────────────
+async function berekenReistijdAuto(){
+  const locatie=document.getElementById('a-locatie').value.trim();
+  if(!locatie){alert('Vul eerst een locatie in.');return;}
+  if(!Maps.getThuisadres()){alert('Stel eerst je thuisadres in via Instellingen → API instellingen.');return;}
+  const btn=document.getElementById('btn-reistijd-auto');
+  const orig=btn.textContent; btn.textContent='⏳'; btn.disabled=true;
+  const mins=await Maps.reistijd(locatie);
+  btn.textContent=orig; btn.disabled=false;
+  if(mins===null){alert('Kon reistijd niet berekenen. Controleer thuisadres en Google Maps key in Instellingen.');return;}
+  document.getElementById('a-reis-heen').value=mins;
+  document.getElementById('a-reis-terug').value=mins;
+  toonOpslagStatus('🗺️ Reistijd: '+mins+' min');
 }
 
 async function saveActiviteit(){
@@ -969,6 +1048,12 @@ async function saveActiviteit(){
     const eindDatum=document.getElementById('a-md-eind-datum').value;
     if(!beginDatum||!eindDatum){alert('Vul start- en einddatum in.');return;}
     if(eindDatum<beginDatum){alert('Einddatum moet na begindatum zijn.');return;}
+    const _maaltijdThuis={
+      ontbijt:document.getElementById('a-mt-ontbijt').checked,
+      lunch:document.getElementById('a-mt-lunch').checked,
+      avond:document.getElementById('a-mt-avond').checked,
+    };
+    const _mt=Object.values(_maaltijdThuis).some(Boolean)?_maaltijdThuis:null;
     act={
       id:actEditId||Date.now(),_sbId:bestaande?._sbId,
       naam,wie:geselecteerdePersonen,prive:priveAan,meerdaags:true,
@@ -978,6 +1063,7 @@ async function saveActiviteit(){
       locatie:document.getElementById('a-locatie').value,
       prep:document.getElementById('a-prep').value,
       dagen:[],freq:'eenmalig',duur:0,reisHeen:0,reisTerug:0,
+      maaltijdThuis:_mt,
     };
   } else {
     const dagen=[...document.querySelectorAll('#dag-checkboxes input:checked')].map(c=>c.value);
@@ -985,6 +1071,12 @@ async function saveActiviteit(){
     const eindUur=document.getElementById('a-eind-uur').value;
     const tStart=tijdMinuten(start), tEind=tijdMinuten(eindUur);
     const duur=start&&eindUur?(tEind>=tStart?tEind-tStart:24*60-tStart+tEind):60;
+    const _maaltijdThuis={
+      ontbijt:document.getElementById('a-mt-ontbijt').checked,
+      lunch:document.getElementById('a-mt-lunch').checked,
+      avond:document.getElementById('a-mt-avond').checked,
+    };
+    const _mt=Object.values(_maaltijdThuis).some(Boolean)?_maaltijdThuis:null;
     act={
       id:actEditId||Date.now(),_sbId:bestaande?._sbId,
       naam,wie:geselecteerdePersonen,start,eindUur,duur,prive:priveAan,meerdaags:false,
@@ -997,6 +1089,7 @@ async function saveActiviteit(){
       prep:document.getElementById('a-prep').value,
       dagen,
       uitgesloten: bestaande?.uitgesloten||[],
+      maaltijdThuis:_mt,
     };
     // Transport per kind
     ['nora','odiel'].forEach(kind=>{

@@ -176,6 +176,20 @@
     </div>
     <button class="btn btn-secondary btn-sm" onclick="resetApiKey()">🔑 Wijzigen</button>
   </div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+    <div>
+      <div style="font-size:14px;font-weight:600;">Google Maps API key</div>
+      <div style="font-size:12px;color:var(--muted);" id="maps-key-status">Laden…</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="resetMapsKey()">🗺️ Wijzigen</button>
+  </div>
+  <div class="card" style="margin-top:8px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🏠 Thuisadres</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt voor automatische reistijdberekening in de Agenda.</div>
+    <input type="text" id="inst-thuisadres" placeholder="Straat, huisnummer, gemeente"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
+    <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
+  </div>
 
   <!-- Admin: gebruikersbeheer (alleen gezinshoofd) -->
   <div id="admin-sectie" style="display:none;">
@@ -242,6 +256,7 @@
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="maps.js"></script>
 <script>
 Auth.initPagina('instellingen');
 
@@ -261,9 +276,12 @@ function renderInstellingen(){
     document.getElementById('profiel-rol').textContent=Auth.ROLLEN[p.rol]?.label||p.rol;
     document.getElementById('profiel-email').textContent=p.email;
   }
-  // API key
+  // API keys
   const apiKey=localStorage.getItem('anthropic_api_key');
   document.getElementById('api-key-status').textContent=apiKey?'✅ Ingesteld (sk-ant-…'+apiKey.slice(-6)+')'  :'❌ Nog niet ingesteld';
+  const mapsKey=Maps.getKey();
+  document.getElementById('maps-key-status').textContent=mapsKey?'✅ Ingesteld':'❌ Nog niet ingesteld';
+  document.getElementById('inst-thuisadres').value=Maps.getThuisadres();
   // Roosters
   renderRoosters();
   // Vakanties
@@ -348,6 +366,22 @@ function updateVastRooster(persoon,dag,veld,waarde){
 function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');setTimeout(()=>toonOpslagStatus('💾 Automatisch opgeslagen'),2000);}
 
 function resetApiKey(){localStorage.removeItem('anthropic_api_key');renderInstellingen();}
+function resetMapsKey(){
+  const key=prompt('Google Maps API key:');
+  if(key!==null){localStorage.setItem(Maps.KEY_KEY,key.trim());renderInstellingen();}
+}
+function slaaThuisadresOp(){
+  const adres=document.getElementById('inst-thuisadres').value.trim();
+  localStorage.setItem(Maps.THUIS_KEY,adres);
+  toonOpslagStatus('✅ Thuisadres opgeslagen');
+}
+// Autocomplete op thuisadres-veld na paginalading
+document.addEventListener('DOMContentLoaded',()=>{
+  Maps.autocomplete(document.getElementById('inst-thuisadres'), adres=>{
+    localStorage.setItem(Maps.THUIS_KEY,adres);
+    toonOpslagStatus('✅ Thuisadres opgeslagen');
+  });
+});
 
 // ── Admin: hulpfuncties nieuw account ────────────────────────
 function kiesEmoji(emoji) {

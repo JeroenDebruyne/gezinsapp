@@ -149,6 +149,12 @@
     <div class="ios-switch" id="c-kerstkaart-switch"></div>
   </div>
 
+  <!-- Adres -->
+  <div class="form-row">
+    <label>🏠 Adres <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel — voor reistijdberekening)</span></label>
+    <input type="text" id="c-adres" placeholder="Straat, huisnr, gemeente"/>
+  </div>
+
   <!-- Cadeaus -->
   <div class="form-row"><label>🎊 Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
   <div class="form-row"><label>🎂 Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
@@ -162,6 +168,7 @@
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="maps.js"></script>
 <script>
 Auth.initPagina('contacten');
 
@@ -391,6 +398,8 @@ function openCrmModal(contact){
   // Kerstkaart
   _kerstkaartAan=contact?contact.kerstmis===true||contact.kerstmis==='ja'||contact.kerstmis===1:true;
   document.getElementById('c-kerstkaart-switch').className='ios-switch'+(_kerstkaartAan?' on':'');
+  // Adres
+  document.getElementById('c-adres').value=contact?.adres||'';
   // Cadeaus
   document.getElementById('c-cadeau-nj').value=contact?.cadeauNj||'';
   document.getElementById('c-cadeau-vj').value=contact?.cadeauVj||'';
@@ -398,6 +407,10 @@ function openCrmModal(contact){
   const el=document.getElementById('crm-modal-bg');
   el.classList.add('open');
   el.querySelector('.modal').scrollTop=0;
+  // Google Places autocomplete op adresveld
+  Maps.autocomplete(document.getElementById('c-adres'), adres => {
+    document.getElementById('c-adres').value = adres;
+  });
 }
 function closeCrmModal(){document.getElementById('crm-modal-bg').classList.remove('open');}
 
@@ -433,6 +446,7 @@ function saveContact(){
     kerstmis:_kerstkaartAan,
     cadeauNj:document.getElementById('c-cadeau-nj').value,
     cadeauVj:document.getElementById('c-cadeau-vj').value,
+    adres:document.getElementById('c-adres').value.trim()||null,
   };
 
   if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
