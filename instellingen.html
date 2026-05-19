@@ -366,20 +366,31 @@ function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus(
 
 function resetApiKey(){
   const key=prompt('Anthropic API key (sk-ant-...):');
-  if(key!==null){if(key.trim())localStorage.setItem('anthropic_api_key',key.trim());else localStorage.removeItem('anthropic_api_key');renderInstellingen();}
+  if(key!==null){
+    if(key.trim()) localStorage.setItem('anthropic_api_key',key.trim());
+    else localStorage.removeItem('anthropic_api_key');
+    sbSaveInstellingen();
+    renderInstellingen();
+  }
 }
 function resetMapsKey(){
   const key=prompt('Google Maps API key:');
-  if(key!==null){localStorage.setItem(Maps.KEY_KEY,key.trim());renderInstellingen();}
+  if(key!==null){
+    localStorage.setItem(Maps.KEY_KEY,key.trim());
+    sbSaveInstellingen();
+    renderInstellingen();
+  }
 }
 function slaaThuisadresOp(){
   const adres=document.getElementById('inst-thuisadres').value.trim();
   localStorage.setItem(Maps.THUIS_KEY,adres);
+  sbSaveInstellingen();
   toonOpslagStatus('✅ Thuisadres opgeslagen');
 }
 document.addEventListener('DOMContentLoaded',()=>{
   Maps.autocomplete(document.getElementById('inst-thuisadres'), adres=>{
     localStorage.setItem(Maps.THUIS_KEY,adres);
+    sbSaveInstellingen();
     toonOpslagStatus('✅ Thuisadres opgeslagen');
   });
 });
