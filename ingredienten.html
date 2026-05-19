@@ -190,6 +190,10 @@ function saveIngredient() {
   const editId = document.getElementById('ing-modal-bg').dataset.editId;
   const winkel = document.getElementById('i-winkel').value;
   const productLink = document.getElementById('i-link').value.trim() || null;
+  if (standaardIngredienten.some(i => i.naam.toLowerCase() === naam.toLowerCase() && String(i.id) !== String(editId))) {
+    alert(`"${naam}" bestaat al in de ingrediëntenlijst.`);
+    return;
+  }
   if (editId) {
     const ing = standaardIngredienten.find(i => i.id == editId);
     if (ing) { ing.naam = naam; ing.winkel = winkel; ing.productLink = productLink; sbSaveIngredient(ing); }

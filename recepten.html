@@ -493,6 +493,7 @@ function setTypes(types){
 // ── Ingrediënten combo-input ──────────────────────────────────
 function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
   const w=winkel||zoekStandaardWinkel(naam);
+  const bestaatAl=naam?standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase()):false;
   const rowId='ing-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
   const baseI='padding:8px 5px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;box-sizing:border-box;width:100%;background:var(--surface);color:var(--ink);font-family:inherit;min-width:0;';
   return `<div id="${rowId}" style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;align-items:center;margin-bottom:8px;">
@@ -507,7 +508,7 @@ function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
     </div>
     <input style="${baseI}text-align:center;" type="text" placeholder="…" value="${hoev}"/>
     <input style="${baseI}" type="text" placeholder="gram" value="${eenheid}"/>
-    <select class="winkel-sel" style="${baseI}">
+    <select class="winkel-sel" style="${baseI}${bestaatAl?'opacity:.6;':''}" ${bestaatAl?'disabled title="Wijzig winkel via Ingrediënten"':''}>
       ${WINKELS.map(ww=>`<option${ww===w?' selected':''}>${ww}</option>`).join('')}
     </select>
     <button style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted-2);padding:0;" onclick="this.closest('div[id]').remove()">×</button>
@@ -539,6 +540,7 @@ function kiesIng(rowId, naam, winkel){
   row.querySelector('.ing-combo-input').value=naam;
   const sel=row.querySelector('.winkel-sel');
   if(sel&&winkel){for(let o of sel.options){if(o.value===winkel){sel.value=winkel;break;}}}
+  if(sel){sel.disabled=true;sel.style.opacity='.6';}
   sluitIngCombo(rowId);
 }
 
@@ -546,10 +548,10 @@ function maakNieuwIng(rowId, naam){
   const row=document.getElementById(rowId);
   const input=row.querySelector('.ing-combo-input');
   input.value=naam;
-  // Markeer als nieuw — wordt opgeslagen bij saveRecept
   row.dataset.nieuw='1';
   row.dataset.nieuwNaam=naam;
-  // Toon nieuw-badge
+  const sel=row.querySelector('.winkel-sel');
+  if(sel){sel.disabled=false;sel.style.opacity='1';}
   let badge=row.querySelector('.ing-nieuw-badge');
   if(!badge){
     badge=document.createElement('span');
