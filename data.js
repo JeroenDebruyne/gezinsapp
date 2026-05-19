@@ -200,6 +200,7 @@ async function laadOp() {
       transport: x.transport || {},
       uitgesloten: (x.transport||{}).uitgesloten || [],
       icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
+      maaltijdThuis: x.maaltijd_thuis || null,
     }));
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
     if (b.length) extraItems = b;
@@ -214,6 +215,7 @@ async function laadOp() {
         kinderenData: _p(x.kinderen_namen)||[],
         kerstmis: x.kerstmis===true||x.kerstmis==='ja'||x.kerstmis===1,
         cadeauNj: x.cadeau_nj, cadeauVj: x.cadeau_vj,
+        adres: x.adres||null,
       };
     });
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
@@ -328,6 +330,7 @@ async function sbSaveActiviteit(act) {
     meerdaags:act.meerdaags||false, prive:act.prive||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
+    maaltijd_thuis: act.maaltijdThuis||null,
   };
   try {
     if (act._sbId) {
@@ -399,6 +402,7 @@ async function sbSaveContact(contact) {
     kerstmis: kerstmis,
     cadeau_nj: contact.cadeauNj||null,
     cadeau_vj: contact.cadeauVj||null,
+    adres: contact.adres||null,
   };
   try {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
