@@ -375,7 +375,6 @@ function slaaThuisadresOp(){
   localStorage.setItem(Maps.THUIS_KEY,adres);
   toonOpslagStatus('✅ Thuisadres opgeslagen');
 }
-// Autocomplete op thuisadres-veld na paginalading
 document.addEventListener('DOMContentLoaded',()=>{
   Maps.autocomplete(document.getElementById('inst-thuisadres'), adres=>{
     localStorage.setItem(Maps.THUIS_KEY,adres);
