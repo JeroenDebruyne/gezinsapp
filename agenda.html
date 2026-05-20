@@ -395,6 +395,15 @@
     <div class="ios-switch" id="prive-switch"></div>
   </div>
 
+  <!-- Informatief toggle -->
+  <div class="prive-toggle" onclick="toggleInformatief()">
+    <div class="prive-toggle-left">
+      <span class="prive-toggle-label">📌 Informatieve activiteit</span>
+      <span class="prive-toggle-sub">Geen impact op drukte (schoolreis, herinnering, …)</span>
+    </div>
+    <div class="ios-switch" id="informatief-switch"></div>
+  </div>
+
   <!-- Transport kindje -->
   <div class="kindje-sectie-modal" id="kindje-sectie" style="display:none;">
     <div class="kindje-sectie-lbl">🚗 Transport kindje</div>
@@ -580,6 +589,7 @@ let geselecteerdeDatum = fDateISO(new Date());
 let actEditId    = null;
 let priveAan     = false;
 let meerdaagsAan = false;
+let informatiefAan = false;
 let geselecteerdePersonen = [];
 let doKey=null, tempOverride=null;
 let actievePersoonFilter = 'alle';
@@ -756,11 +766,11 @@ function renderDagDetail(datumISO){
               </span>`).join('');
           const transportHtml=renderTransportDetail(a,datumISO);
           return `
-          <div class="act-rij" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
-            <div class="act-kleur-balk" style="background:${balk};${a.meerdaags?'border-radius:2px;':''}" ></div>
+          <div class="act-rij${a.informatief?' informatief-rij':''}" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
+            <div class="act-kleur-balk" style="background:${a.informatief?'var(--muted-2)':balk};${a.meerdaags?'border-radius:2px;':''}${a.informatief?'opacity:0.5;':''}" ></div>
             <div class="act-rij-body">
               <div class="act-rij-naam${a.prive?' prive':''}">
-                ${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}
+                ${a.informatief?'📌 ':''}${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}${a.informatief?'&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span>':''}
               </div>
               <div class="act-rij-meta">
                 ${a.meerdaags&&a.beginDatum?`${escHtml(a.beginDatum)} → ${escHtml(a.eindDatum)}`:
@@ -885,6 +895,7 @@ function openActModal(act){
   actEditId=act?.id||null;
   priveAan=act?.prive||false;
   meerdaagsAan=act?.meerdaags||false;
+  informatiefAan=act?.informatief||false;
   geselecteerdePersonen=act?[...(act.wie||[])]:[Auth.profiel()?.persoonKey||'jeroen'];
 
   document.getElementById('act-modal-titel').textContent=act?'Activiteit bewerken':'Nieuwe activiteit';
@@ -921,6 +932,7 @@ function openActModal(act){
   checkNachtspan();
   updatePriveSwitch();
   updateMeerdaagsSwitch();
+  updateInformatiefSwitch();
   renderPersonenMS();
 
   document.getElementById('dag-checkboxes').innerHTML=DAGKORT.map((d,i)=>
@@ -965,6 +977,8 @@ function checkKindjeSection(){
 }
 function togglePrive(){priveAan=!priveAan;updatePriveSwitch();}
 function updatePriveSwitch(){document.getElementById('prive-switch').className='ios-switch'+(priveAan?' on':'');}
+function toggleInformatief(){informatiefAan=!informatiefAan;updateInformatiefSwitch();}
+function updateInformatiefSwitch(){document.getElementById('informatief-switch').className='ios-switch'+(informatiefAan?' on':'');}
 function toggleMeerdaags(){meerdaagsAan=!meerdaagsAan;updateMeerdaagsSwitch();}
 function updateMeerdaagsSwitch(){
   document.getElementById('meerdaags-switch').className='ios-switch'+(meerdaagsAan?' on':'');
@@ -1057,7 +1071,7 @@ async function saveActiviteit(){
     const _mt=Object.values(_maaltijdThuis).some(Boolean)?_maaltijdThuis:null;
     act={
       id:actEditId||Date.now(),_sbId:bestaande?._sbId,
-      naam,wie:geselecteerdePersonen,prive:priveAan,meerdaags:true,
+      naam,wie:geselecteerdePersonen,prive:priveAan,informatief:informatiefAan,meerdaags:true,
       beginDatum,eindDatum,
       start:document.getElementById('a-md-start-tijd').value,
       eindUur:document.getElementById('a-md-eind-tijd').value,
@@ -1080,7 +1094,7 @@ async function saveActiviteit(){
     const _mt=Object.values(_maaltijdThuis).some(Boolean)?_maaltijdThuis:null;
     act={
       id:actEditId||Date.now(),_sbId:bestaande?._sbId,
-      naam,wie:geselecteerdePersonen,start,eindUur,duur,prive:priveAan,meerdaags:false,
+      naam,wie:geselecteerdePersonen,start,eindUur,duur,prive:priveAan,informatief:informatiefAan,meerdaags:false,
       reisHeen:parseInt(document.getElementById('a-reis-heen').value)||0,
       reisTerug:parseInt(document.getElementById('a-reis-terug').value)||0,
       locatie:document.getElementById('a-locatie').value,

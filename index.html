@@ -366,7 +366,7 @@ function renderVandaag(datumISO,p){
     <div class="card" style="display:flex;align-items:center;gap:12px;">
       <div style="font-size:22px;">${a.wie?.length===1?(PEMOJI[a.wie[0]]||'📌'):'👨‍👩‍👧‍👦'}</div>
       <div style="flex:1;">
-        <div class="card-title">${a.naam}${a.prive?' 🔒':''}</div>
+        <div class="card-title">${a.informatief?'📌 ':''}${a.naam}${a.prive?' 🔒':''}</div>
         <div class="meta">
           ${a.start?`<span>🕐 ${a.start}${a.eindUur?' – '+a.eindUur:''}</span>`:''}
           ${a.locatie?`<span>📍 ${a.locatie}</span>`:''}

@@ -111,7 +111,7 @@ function getVakantieNaam(datum) {
 }
 function getDagDrukte(datum) {
   if (drukteOverride[datum]) return drukteOverride[datum];
-  const aantalActs = activiteiten.filter(a => isActiefOpDatum(a, datum)).length;
+  const aantalActs = activiteiten.filter(a => isActiefOpDatum(a, datum) && !a.informatief).length;
   if (aantalActs >= DRUKTE_MAX.druk)    return 'druk';
   if (aantalActs >= DRUKTE_MAX.normaal) return 'normaal';
   return 'rustig';
@@ -343,7 +343,7 @@ async function sbSaveActiviteit(act) {
     duur: +act.duur || 0, reis_heen: +act.reisHeen || 0, reis_terug: +act.reisTerug || 0,
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
     eind_datum:act.eindDatum||null, prep: +act.prep || null, dagen:act.dagen,
-    meerdaags:act.meerdaags||false, prive:act.prive||false,
+    meerdaags:act.meerdaags||false, prive:act.prive||false, informatief:act.informatief||false,
     transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
     maaltijd_thuis: act.maaltijdThuis||null,
