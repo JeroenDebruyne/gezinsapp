@@ -602,7 +602,13 @@ const DOT_KLEUR  = {jeroen:'dot-jeroen',kelly:'dot-kelly',nora:'dot-nora',odiel:
 const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora:'var(--c-nora-dot)',odiel:'var(--c-odiel-dot)'};
 
 // ── Laden ─────────────────────────────────────────────────────
-laadOp().then(()=>{ renderAlles(); icalAutoSync(); }).catch(()=>{laadLokaal();renderAlles();});
+laadOp().then(()=>{
+  renderAlles(); icalAutoSync();
+  if (new URLSearchParams(location.search).get('nieuw')==='1') {
+    geselecteerdeDatum=fDateISO(new Date());
+    setTimeout(openActModal, 300);
+  }
+}).catch(()=>{laadLokaal();renderAlles();});
 
 function renderAlles(){
   renderLegenda();
@@ -954,7 +960,10 @@ function openActModal(act){
 }
 function openActModalVoorDatum(datum){geselecteerdeDatum=datum;openActModal();}
 function editActiviteit(id){openActModal(activiteiten.find(a=>a.id===id));}
-function closeActModal(){document.getElementById('act-modal-bg').classList.remove('open');}
+function closeActModal(){
+  document.getElementById('act-modal-bg').classList.remove('open');
+}
+function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 
 function renderPersonenMS(){
   document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
@@ -1118,7 +1127,7 @@ async function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);
+  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);_teugNaarHome();
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
@@ -1182,7 +1191,7 @@ function closeDOModal(){
 
 // Sluit modals bij klik achtergrond
 document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();closeDOModal();closeIcalModal();}});
+  bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();_teugNaarHome();closeDOModal();closeIcalModal();}});
 });
 
 // ── iCal import & sync ────────────────────────────────────────
@@ -1441,6 +1450,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.onclick = function(e){
       e.stopPropagation();
       if(bg) bg.classList.remove('open');
+      if(bg && bg.id==='act-modal-bg') _teugNaarHome();
     };
     modal.insertBefore(btn, modal.firstChild);
   });

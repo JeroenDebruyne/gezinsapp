@@ -351,7 +351,10 @@ function openModal(todo) {
   setTimeout(()=>document.getElementById('t-titel').focus(), 100);
 }
 function editTodo(id) { openModal(todos.find(t=>t.id==id)); }
-function closeModal() { document.getElementById('todo-modal-bg').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('todo-modal-bg').classList.remove('open');
+}
+function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 
 function renderPersonenMS() {
   document.getElementById('t-wie-ms').innerHTML = PERSONEN.map(p=>
@@ -406,6 +409,7 @@ function saveTodo() {
   closeModal();
   slaLokaalOp();
   sbSaveTodo(todo);
+  _teugNaarHome();
   renderTodos();
 }
 
@@ -423,7 +427,7 @@ function verwijderTodo(id) {
 
 // Sluit modal bij klik op achtergrond
 document.getElementById('todo-modal-bg').addEventListener('click', e=>{
-  if (e.target===document.getElementById('todo-modal-bg')) closeModal();
+  if (e.target===document.getElementById('todo-modal-bg')) { closeModal(); _teugNaarHome(); }
 });
 
 // Enter = opslaan
@@ -485,6 +489,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.onclick = function(e){
       e.stopPropagation();
       if(bg) bg.classList.remove('open');
+      _teugNaarHome();
     };
     modal.insertBefore(btn, modal.firstChild);
   });
