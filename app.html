@@ -11,120 +11,121 @@
 <meta name="theme-color" content="#f4fafa">
 <title>Gezinsapp</title>
 <script src="https://cdn.jsdelivr.net/npm/add-to-calendar-button@2" async defer></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size:14px;}
+body{font-family:system-ui,sans-serif;background:var(--bg-2);color:var(--ink);font-size:14px;}
 .app{max-width:960px;margin:0 auto;padding:0 0 2rem;}
-.nav{display:flex;background:#fff;border-bottom:1px solid #e5e5e3;position:sticky;top:0;z-index:100;overflow-x:auto;}
-.nav-item{flex:1;min-width:80px;padding:12px 6px;text-align:center;font-size:12px;cursor:pointer;border:none;background:none;color:#888;border-bottom:2px solid transparent;white-space:nowrap;}
-.nav-item.active{color:#1a1a1a;border-bottom:2px solid #1a1a1a;font-weight:500;}
-.nav-item:hover{background:#f9f9f7;}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;overflow-x:auto;}
+.nav-item{flex:1;min-width:80px;padding:12px 6px;text-align:center;font-size:12px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;}
+.nav-item.active{color:var(--accent);border-bottom:2px solid var(--accent);font-weight:500;}
+.nav-item:hover{background:var(--bg);}
 .page{display:none;padding:1.25rem 1rem;}.page.active{display:block;}
 .header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
 .page-title{font-size:16px;font-weight:500;}
-.btn{padding:7px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;}
-.btn-primary{background:#1a1a1a;color:#fff;}
-.btn-secondary{background:none;border:1px solid #d0d0ce;color:#1a1a1a;}
-.btn-danger{background:none;border:1px solid #f09595;color:#a32d2d;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;}
-.section-label{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 6px;}
+.btn{padding:7px 14px;border:none;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-secondary{background:none;border:1px solid var(--border);color:var(--ink);}
+.btn-danger{background:none;border:1px solid var(--druk-bg);color:var(--druk-clr);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;}
+.section-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 6px;}
 .pill-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;}
-.ptab{padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1px solid #d0d0ce;background:#fff;color:#888;}
-.ptab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
-.card{background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+.ptab{padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);}
+.ptab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;}
 .card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
 .card-title{font-size:13px;font-weight:500;}
-.meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#888;}
+.meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted);}
 .badge{padding:2px 7px;border-radius:99px;font-size:10px;}
 .badge-familie{background:#e6f1fb;color:#0c447c;}
-.badge-jij{background:#eeedfe;color:#3c3489;}
+.badge-jij{background:var(--accent-l);color:var(--accent-dark);}
 .badge-kelly{background:#fbeaf0;color:#72243e;}
-.badge-nora{background:#e1f5ee;color:#085041;}
-.badge-odiel{background:#faeeda;color:#633806;}
-.di-rustig{background:#e1f5ee;color:#085041;}
-.di-normaal{background:#faeeda;color:#633806;}
-.di-druk{background:#fcebeb;color:#a32d2d;}
-.act-eet{font-size:10px;padding:2px 7px;border-radius:99px;background:#e1f5ee;color:#085041;display:inline-block;margin-top:4px;}
+.badge-nora{background:var(--rustig-bg);color:var(--rustig-clr);}
+.badge-odiel{background:var(--normaal-bg);color:var(--normaal-clr);}
+.di-rustig{background:var(--rustig-bg);color:var(--rustig-clr);}
+.di-normaal{background:var(--normaal-bg);color:var(--normaal-clr);}
+.di-druk{background:var(--druk-bg);color:var(--druk-clr);}
+.act-eet{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);display:inline-block;margin-top:4px;}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;}
 .modal-bg.open{display:flex;}
-.modal{background:#fff;border-radius:12px;padding:1.25rem;width:100%;max-width:480px;margin-top:1rem;}
+.modal{background:var(--surface);border-radius:var(--radius);padding:1.25rem;width:100%;max-width:480px;margin-top:1rem;}
 .modal h3{font-size:14px;font-weight:500;margin-bottom:1rem;}
 .form-row{margin-bottom:0.75rem;}
-.form-row label{display:block;font-size:12px;color:#888;margin-bottom:3px;}
-.form-row input,.form-row select,.form-row textarea{width:100%;padding:7px 10px;border:1px solid #d0d0ce;border-radius:8px;font-size:13px;font-family:inherit;}
+.form-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .dag-checkboxes{display:flex;gap:8px;flex-wrap:wrap;}
 .dag-cb{display:flex;align-items:center;gap:3px;font-size:12px;}
 .dag-cb input{width:auto;}
 .modal-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:1rem;}
 .week-nav-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
-.nav-btn{background:none;border:1px solid #d0d0ce;border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;}
+.nav-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:13px;cursor:pointer;}
 .week-lbl{font-size:13px;font-weight:500;min-width:150px;text-align:center;}
 .rooster-week-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:1.5rem;}
-.rooster-dag-col{background:#fff;border:1px solid #e5e5e3;border-radius:10px;overflow:hidden;}
-.rooster-dag-head{padding:6px 8px;border-bottom:1px solid #e5e5e3;display:flex;flex-direction:column;align-items:center;}
+.rooster-dag-col{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.rooster-dag-head{padding:6px 8px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;}
 .rooster-dag-naam{font-size:11px;font-weight:500;}
-.rooster-dag-datum{font-size:9px;color:#888;}
-.rooster-dag-head.wknd{background:#eeedfe;}
-.rooster-dag-head.wknd .rooster-dag-naam{color:#3c3489;}
-.rooster-dag-head.wknd .rooster-dag-datum{color:#534ab7;}
+.rooster-dag-datum{font-size:9px;color:var(--muted);}
+.rooster-dag-head.wknd{background:var(--accent-l);}
+.rooster-dag-head.wknd .rooster-dag-naam{color:var(--accent-dark);}
+.rooster-dag-head.wknd .rooster-dag-datum{color:var(--accent);}
 .drukte-badge{font-size:10px;padding:2px 6px;border-radius:4px;margin:4px auto;display:block;text-align:center;cursor:pointer;}
-.db-rustig{background:#e1f5ee;color:#085041;}
-.db-normaal{background:#faeeda;color:#633806;}
-.db-druk{background:#fcebeb;color:#a32d2d;}
-.rooster-act-item{font-size:10px;color:#888;padding:2px 6px;border-bottom:1px solid #f5f5f3;}
+.db-rustig{background:var(--rustig-bg);color:var(--rustig-clr);}
+.db-normaal{background:var(--normaal-bg);color:var(--normaal-clr);}
+.db-druk{background:var(--druk-bg);color:var(--druk-clr);}
+.rooster-act-item{font-size:10px;color:var(--muted);padding:2px 6px;border-bottom:1px solid var(--bg);}
 .rooster-act-item:last-child{border-bottom:none;}
 .planner-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
-.dag-col{background:#fff;border:1px solid #e5e5e3;border-radius:12px;overflow:hidden;}
-.dag-col.weekend{border-color:#afa9ec;}
+.dag-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.dag-col.weekend{border-color:var(--border-2);}
 .dag-col.vandaag{border:2px solid #378add;}
-.dag-head{padding:6px 8px;border-bottom:1px solid #e5e5e3;}
+.dag-head{padding:6px 8px;border-bottom:1px solid var(--border);}
 .dag-naam{font-size:11px;font-weight:500;}
-.dag-datum{font-size:9px;color:#888;}
-.dag-head.wknd{background:#eeedfe;}
-.dag-head.wknd .dag-naam{color:#3c3489;}
-.dag-head.wknd .dag-datum{color:#534ab7;}
-.drukte-strip{display:flex;align-items:center;gap:4px;padding:3px 6px;border-bottom:1px solid #e5e5e3;}
+.dag-datum{font-size:9px;color:var(--muted);}
+.dag-head.wknd{background:var(--accent-l);}
+.dag-head.wknd .dag-naam{color:var(--accent-dark);}
+.dag-head.wknd .dag-datum{color:var(--accent);}
+.drukte-strip{display:flex;align-items:center;gap:4px;padding:3px 6px;border-bottom:1px solid var(--border);}
 .drukte-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.drukte-dot.rustig{background:#1d9e75;}
-.drukte-dot.normaal{background:#ba7517;}
-.drukte-dot.druk{background:#e24b4a;}
-.slot{padding:5px 6px;border-bottom:1px solid #f0f0ee;min-height:46px;cursor:pointer;}
+.drukte-dot.rustig{background:var(--rustig-dot);}
+.drukte-dot.normaal{background:var(--normaal-dot);}
+.drukte-dot.druk{background:var(--druk-dot);}
+.slot{padding:5px 6px;border-bottom:1px solid var(--surface-2);min-height:46px;cursor:pointer;}
 .slot:last-child{border-bottom:none;}
-.slot:hover{background:#f9f9f7;}
-.slot-lbl{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;}
-.slot-leeg{font-size:10px;color:#bbb;font-style:italic;}
-.slot-naam{font-size:11px;color:#1a1a1a;line-height:1.3;}
-.slot-tijd{font-size:9px;color:#888;}
+.slot:hover{background:var(--bg);}
+.slot-lbl{font-size:9px;color:var(--border-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;}
+.slot-leeg{font-size:10px;color:var(--border-2);font-style:italic;}
+.slot-naam{font-size:11px;color:var(--ink);line-height:1.3;}
+.slot-tijd{font-size:9px;color:var(--muted);}
 .special-badge{font-size:10px;padding:1px 5px;border-radius:3px;}
-.sb-shake{background:#eeedfe;color:#534ab7;}
-.sb-uiteten{background:#e1f5ee;color:#085041;}
-.sb-afhalen{background:#faeeda;color:#633806;}
-.sb-restjes{background:#f1efe8;color:#444441;}
-.warn{color:#e24b4a;font-size:9px;}
-.eetgroo-badge{font-size:9px;padding:1px 4px;border-radius:99px;background:#e1f5ee;color:#085041;margin-left:auto;}
+.sb-shake{background:var(--accent-l);color:var(--accent-dark);}
+.sb-uiteten{background:var(--rustig-bg);color:var(--rustig-clr);}
+.sb-afhalen{background:var(--normaal-bg);color:var(--normaal-clr);}
+.sb-restjes{background:var(--surface-2);color:var(--ink-2);}
+.warn{color:var(--druk-dot);font-size:9px;}
+.eetgroo-badge{font-size:9px;padding:1px 4px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);margin-left:auto;}
 .recept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;}
-.recept-card{background:#fff;border:1px solid #e5e5e3;border-radius:12px;overflow:hidden;}
+.recept-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .recept-thumb{height:70px;display:flex;align-items:center;justify-content:center;font-size:26px;}
-.thumb-avond{background:#eeedfe;}.thumb-lunch{background:#e1f5ee;}.thumb-weekend{background:#faece7;}.thumb-ontbijt{background:#faeeda;}
+.thumb-avond{background:var(--accent-l);}.thumb-lunch{background:var(--rustig-bg);}.thumb-weekend{background:#faece7;}.thumb-ontbijt{background:var(--normaal-bg);}
 .recept-info{padding:8px 10px;}
 .recept-naam{font-size:13px;font-weight:500;margin-bottom:3px;}
-.recept-stars{font-size:10px;color:#ba7517;margin-top:2px;}
-.tag-pill{font-size:10px;padding:1px 5px;border-radius:99px;background:#f1efe8;color:#888;border:1px solid #e5e5e3;}
-.ing-row{padding:6px 0;border-bottom:1px solid #f0f0ee;}
+.recept-stars{font-size:10px;color:var(--normaal-dot);margin-top:2px;}
+.tag-pill{font-size:10px;padding:1px 5px;border-radius:99px;background:var(--surface-2);color:var(--muted);border:1px solid var(--border);}
+.ing-row{padding:6px 0;border-bottom:1px solid var(--surface-2);}
 .ing-naam{font-size:13px;font-weight:500;}
-.ing-detail{display:flex;justify-content:space-between;margin-top:2px;font-size:11px;color:#888;}
-.ing-recept{font-size:10px;color:#bbb;}
-.extra-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0ee;}
-.extra-badge{font-size:10px;padding:1px 5px;border-radius:99px;background:#faeeda;color:#633806;}
-.plan-recept-btn{width:100%;padding:7px 10px;border:1px solid #e5e5e3;border-radius:8px;cursor:pointer;font-size:12px;background:#fff;text-align:left;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
-.plan-recept-btn:hover{background:#f9f9f7;}
-.plan-recept-btn.aanbevolen{border-color:#1d9e75;}
-.plan-recept-btn.geselecteerd{outline:2px solid #1a1a1a;}
+.ing-detail{display:flex;justify-content:space-between;margin-top:2px;font-size:11px;color:var(--muted);}
+.ing-recept{font-size:10px;color:var(--border-2);}
+.extra-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--surface-2);}
+.extra-badge{font-size:10px;padding:1px 5px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);}
+.plan-recept-btn{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;background:var(--surface);text-align:left;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.plan-recept-btn:hover{background:var(--bg);}
+.plan-recept-btn.aanbevolen{border-color:var(--accent);}
+.plan-recept-btn.geselecteerd{outline:2px solid var(--accent);}
 .plan-recept-btn.vaag{opacity:0.5;}
-.aanbevolen-badge{font-size:9px;padding:1px 5px;border-radius:99px;background:#e1f5ee;color:#085041;}
-.spec-btn{width:100%;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12px;text-align:left;margin-bottom:4px;border:1px solid transparent;}
-.spec-btn.geselecteerd{outline:2px solid #1a1a1a;}
-.info-box{background:#f5f5f3;border-radius:8px;padding:10px 12px;font-size:12px;color:#888;margin-bottom:1rem;}
+.aanbevolen-badge{font-size:9px;padding:1px 5px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);}
+.spec-btn{width:100%;padding:7px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;text-align:left;margin-bottom:4px;border:1px solid transparent;}
+.spec-btn.geselecteerd{outline:2px solid var(--accent);}
+.info-box{background:var(--bg-2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:1rem;}
 
 /* ===== MOBILE OPTIMIZATIONS ===== */
 @media(max-width:600px){
@@ -194,32 +195,32 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size
   .nav-item{min-width:60px;font-size:10px;}
   .recept-grid{grid-template-columns:1fr!important;}
 }
-.crm-card{background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+.crm-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;}
 .crm-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.crm-naam{font-size:14px;font-weight:500;color:#1a1a1a;}
+.crm-naam{font-size:14px;font-weight:500;color:var(--ink);}
 .crm-cat{font-size:10px;padding:2px 8px;border-radius:99px;}
 .cat-familie{background:#e6f1fb;color:#0c447c;}
-.cat-vrienden{background:#eeedfe;color:#3c3489;}
-.cat-school{background:#e1f5ee;color:#085041;}
-.crm-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#888;margin-bottom:6px;}
-.crm-gelegenheid{background:#f5f5f3;border-radius:8px;padding:8px 10px;margin-top:6px;}
-.crm-gel-titel{font-size:11px;font-weight:500;color:#1a1a1a;margin-bottom:4px;}
-.crm-gel-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#888;margin-bottom:3px;}
+.cat-vrienden{background:var(--accent-l);color:var(--accent-dark);}
+.cat-school{background:var(--rustig-bg);color:var(--rustig-clr);}
+.crm-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--muted);margin-bottom:6px;}
+.crm-gelegenheid{background:var(--bg-2);border-radius:var(--radius-sm);padding:8px 10px;margin-top:6px;}
+.crm-gel-titel{font-size:11px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.crm-gel-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:3px;}
 .crm-check{display:flex;align-items:center;gap:4px;font-size:11px;}
 .crm-check input{width:auto;}
-.verjaardag-alert{background:#faeeda;border:1px solid #ef9f27;border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:12px;color:#633806;}
+.verjaardag-alert{background:var(--normaal-bg);border:1px solid var(--normaal-dot);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:1rem;font-size:12px;color:var(--normaal-clr);}
 .verjaardag-alert-titel{font-weight:500;margin-bottom:4px;}
-.crm-notitie{font-size:11px;color:#888;margin-top:4px;font-style:italic;}
+.crm-notitie{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;}
 
 /* ── Auth user bar ──────────────────────────────────────────────── */
-#auth-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 1rem;background:#fff;border-bottom:1px solid #e5e5e3;}
-#auth-user{display:flex;align-items:center;gap:7px;font-size:12px;color:#555;}
+#auth-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 1rem;background:var(--surface);border-bottom:1px solid var(--border);}
+#auth-user{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);}
 #auth-user .au-emoji{font-size:16px;line-height:1;}
-#auth-user .au-naam{font-weight:500;color:#1a1a1a;}
-#auth-user .au-rol{font-size:10px;color:#888;padding:1px 6px;border-radius:99px;background:#f1efe8;border:1px solid #e5e5e3;}
-#auth-user .au-devbadge{font-size:10px;color:#633806;padding:1px 6px;border-radius:99px;background:#faeeda;border:1px solid #ef9f27;}
-#btn-logout{padding:5px 11px;font-size:11px;border:1px solid #d0d0ce;border-radius:8px;background:none;cursor:pointer;color:#555;font-family:inherit;}
-#btn-logout:hover{background:#f5f5f3;}
+#auth-user .au-naam{font-weight:500;color:var(--ink);}
+#auth-user .au-rol{font-size:10px;color:var(--muted);padding:1px 6px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);}
+#auth-user .au-devbadge{font-size:10px;color:var(--normaal-clr);padding:1px 6px;border-radius:99px;background:var(--normaal-bg);border:1px solid var(--normaal-dot);}
+#btn-logout{padding:5px 11px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;cursor:pointer;color:var(--ink-2);font-family:inherit;}
+#btn-logout:hover{background:var(--bg-2);}
 </style>
 </head>
 <body>
@@ -232,7 +233,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size
   <button class="nav-item" onclick="goTo('boodschappen',this)">Boodschappen</button>
   <button class="nav-item" onclick="goTo('crm',this)">Contacten</button>
   <button class="nav-item" onclick="goTo('agent',this)">🤖 Agent</button>
-  <button class="nav-item" onclick="goTo('instellingen',this)">⚙️ Instellingen</button>
+  <button class="nav-item" onclick="goTo('instellingen',this)"><i data-lucide="settings"></i> Instellingen</button>
 </div>
 <div id="auth-bar">
   <div id="auth-user">
@@ -478,7 +479,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size
     <span class="page-title">🤖 Gezinsassistent</span>
     <div style="display:flex;gap:6px;">
       <button class="btn btn-secondary" style="font-size:11px;" onclick="resetApiKey()">🔑 API key wijzigen</button>
-      <button class="btn btn-secondary" style="font-size:11px;" onclick="clearChat()">🗑️ Chat wissen</button>
+      <button class="btn btn-secondary" style="font-size:11px;" onclick="clearChat()"><i data-lucide="trash-2"></i> Chat wissen</button>
     </div>
   </div>
   <div class="info-box">
@@ -2332,6 +2333,7 @@ function sluitModules(e){
 })();
 // ── Sidebar footer vullen met gebruikersinfo ─────────────────
 document.addEventListener('DOMContentLoaded', function(){
+  if(typeof lucide !== 'undefined') lucide.createIcons();
   if(typeof Auth !== 'undefined'){
     const p = Auth.profiel();
     if(p){
