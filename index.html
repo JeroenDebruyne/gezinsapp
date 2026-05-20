@@ -16,7 +16,7 @@
   <div class="topbar-title"><i data-lucide="house"></i>Gezinsapp</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
-    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;margin-right:6px;">🔧 dev</span>
+    <span id="dev-badge" class="dev-badge">🔧 dev</span>
     <div class="topbar-user-wrap">
       <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
         <span class="avatar" id="topbar-emoji">🧑</span>
@@ -96,11 +96,10 @@
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <a id="weer-widget" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener"
-         style="display:flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;flex-shrink:0;" title="Weer in Ardooie — Buienradar">
+      <a id="weer-widget" class="weer-widget-link" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener" title="Weer in Ardooie — Buienradar">
         <span id="weer-icon">🌤️</span>
         <span id="weer-temp">…</span>
-        <span style="font-size:11px;font-weight:400;opacity:.85;" id="weer-regen"></span>
+        <span class="weer-widget-regen" id="weer-regen"></span>
       </a>
       <div class="dag-overzicht-drukte" id="dag-drukte">
         <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
@@ -147,16 +146,16 @@
   <div class="section-label">Snel toevoegen</div>
   <div class="snelle-actie-grid">
     <button class="snelle-actie-btn" onclick="openHomeTodoModal()">
-      <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
+      <span class="snelle-actie-icon"><i data-lucide="circle-check"></i></span><span class="snelle-actie-label">To-do toevoegen</span>
     </button>
     <button class="snelle-actie-btn" onclick="openHomeActModal()">
-      <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
+      <span class="snelle-actie-icon"><i data-lucide="calendar-plus"></i></span><span class="snelle-actie-label">Activiteit toevoegen</span>
     </button>
     <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
-      <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
+      <span class="snelle-actie-icon"><i data-lucide="utensils"></i></span><span class="snelle-actie-label">Weekmenu bekijken</span>
     </button>
     <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
-      <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
+      <span class="snelle-actie-icon"><i data-lucide="shopping-cart"></i></span><span class="snelle-actie-label">Boodschappen</span>
     </button>
   </div>
 

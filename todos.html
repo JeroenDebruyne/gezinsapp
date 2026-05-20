@@ -19,7 +19,7 @@
   <div class="topbar-title"><i data-lucide="circle-check"></i>To-do's</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
-    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;">🔧 dev</span>
+    <span id="dev-badge" class="dev-badge">🔧 dev</span>
     <div class="topbar-user-wrap">
       <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
         <span class="avatar" id="topbar-emoji">🧑</span>
@@ -252,8 +252,8 @@ function renderTodos() {
   const vandaag    = zichtbaar.filter(t=>!t.gedaan&&t.deadline===vandaagISO).length;
   document.getElementById('stats-balk').innerHTML = `
     <div class="stat-chip"><span class="stat-num">${totaalOpen}</span> open</div>
-    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:#ff9f0a;">${vandaag}</span> vandaag</div>`:''}
-    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:#ff453a;">${verlopen}</span> verlopen</div>`:''}
+    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:var(--normaal-dot);">${vandaag}</span> vandaag</div>`:''}
+    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:var(--druk-dot);">${verlopen}</span> verlopen</div>`:''}
   `;
 
   // Lijst

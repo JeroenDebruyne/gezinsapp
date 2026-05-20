@@ -242,7 +242,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size
     <span class="au-devbadge" id="au-devbadge" style="display:none;">🔧 dev-modus</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <span style="font-size:11px;color:#888;" id="opslag-status">💾 Automatisch opgeslagen</span>
+    <span class="opslag-status" id="opslag-status">💾 Automatisch opgeslagen</span>
     <button id="btn-logout" onclick="appLogout()">Uitloggen</button>
   </div>
 </div>
@@ -276,14 +276,14 @@ body{font-family:system-ui,sans-serif;background:#f5f5f3;color:#1a1a1a;font-size
       <button class="btn btn-primary" onclick="goTo('boodschappen',document.querySelectorAll('.nav-item')[3])">Boodschappen</button>
     </div>
   </div>
-  <div id="ai-suggestie-panel" style="display:none;background:#f0eefe;border:1px solid #afa9ec;border-radius:12px;padding:14px;margin-bottom:1rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:14px;font-weight:500;color:#3c3489;">✨ AI weekmenu suggestie</div>
-      <button onclick="document.getElementById('ai-suggestie-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:#888;font-size:18px;">×</button>
+  <div id="ai-suggestie-panel" class="ai-suggestie-panel">
+    <div class="ai-suggestie-header">
+      <div class="ai-suggestie-titel">✨ AI weekmenu suggestie</div>
+      <button onclick="document.getElementById('ai-suggestie-panel').style.display='none'" class="ai-suggestie-sluit">×</button>
     </div>
-    <div id="ai-suggestie-inhoud" style="font-size:13px;color:#534ab7;margin-bottom:10px;">Klik op "Genereer" om een weekmenu te laten voorstellen op basis van jullie rooster en recepten.</div>
+    <div id="ai-suggestie-inhoud" class="ai-suggestie-tekst">Klik op "Genereer" om een weekmenu te laten voorstellen op basis van jullie rooster en recepten.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button id="btn-genereer" class="btn btn-primary" style="background:#3c3489;" onclick="genereerAiMenu()">✨ Genereer weekmenu</button>
+      <button id="btn-genereer" class="btn btn-primary" onclick="genereerAiMenu()">✨ Genereer weekmenu</button>
       <button id="btn-toepassen" class="btn btn-secondary" style="display:none;" onclick="pasAiMenuToe()">✅ Toepassen</button>
     </div>
   </div>

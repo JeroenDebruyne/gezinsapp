@@ -551,9 +551,9 @@
     Wat wil je verwijderen?
   </p>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <button onclick="verwijderEnkelHerhaling()" style="padding:14px;border:2px solid #e0a020;border-radius:var(--radius-sm);background:#fff8e7;color:#7a5c00;font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+    <button onclick="verwijderEnkelHerhaling()" class="herhaling-btn-enkel">
       🗓️ Alleen deze dag<br>
-      <span style="font-size:12px;font-weight:400;color:#a07820;">Verwijder enkel deze ene herhaling</span>
+      <span class="herhaling-btn-sub">Verwijder enkel deze ene herhaling</span>
     </button>
     <button onclick="verwijderVolleActiviteit()" style="padding:14px;border:2px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
       🗑️ Volledige activiteit<br>
@@ -702,7 +702,7 @@ function maakDots(acts,datumISO){
     personen.forEach(p=>{if(DOT_KLEUR[p])html+=`<div class="dot ${DOT_KLEUR[p]}"></div>`;});
   }
   if(heeftPrive)html+=`<div class="dot dot-prive"></div>`;
-  if(datumISO&&getVerjaardagsOpDatum(datumISO).length>0)html+=`<div class="dot" style="background:#f5c842;"></div>`;
+  if(datumISO&&getVerjaardagsOpDatum(datumISO).length>0)html+=`<div class="dot dot-verjaardag"></div>`;
   return html;
 }
 function selecteerDag(datum){geselecteerdeDatum=datum;renderMaand();renderDagDetail(datum);}
@@ -734,11 +734,11 @@ function renderDagDetail(datumISO){
     </div>
     ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:12px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:linear-gradient(135deg,#fff8e7,#ffefc0);border:1.5px solid #f5c842;border-radius:var(--radius-sm);margin-bottom:8px;">
+      <div class="verjaardag-kaart">
         <span style="font-size:20px;">🎂</span>
         <div style="flex:1;">
-          <div style="font-size:14px;font-weight:600;color:#7a5c00;">${escHtml(v.naam)}</div>
-          ${v.leeftijd?`<div style="font-size:12px;color:#a07820;">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div style="font-size:12px;color:#a07820;">🎉 Verjaardag!</div>'}
+          <div class="verjaardag-naam">${escHtml(v.naam)}</div>
+          ${v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'}
         </div>
       </div>`).join('')}
     ${alleActs.length===0
