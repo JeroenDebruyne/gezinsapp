@@ -348,16 +348,30 @@ async function sbSaveActiviteit(act) {
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
     maaltijd_thuis: act.maaltijdThuis||null,
   };
-  try {
+  const _doSave = async (d) => {
     if (act._sbId) {
-      await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',data);
+      await sbFetch(`activiteiten?id=eq.${act._sbId}`,'PATCH',d);
     } else {
-      const res = await sbFetch('activiteiten','POST',{...data,gezin_id:gid});
+      const res = await sbFetch('activiteiten','POST',{...d,gezin_id:gid});
       if (res[0]) { act._sbId = res[0].id; slaLokaalOp(); }
     }
+  };
+  try {
+    await _doSave(data);
     toonOpslagStatus('✅ Opgeslagen');
     return true;
-  } catch(e) { _opslagFout(e,'activiteit'); return false; }
+  } catch(e) {
+    // Kolom 'informatief' bestaat nog niet → retry zonder die kolom
+    if (String(e).includes('informatief')) {
+      try {
+        const { informatief: _drop, ...dataZonderInfo } = data;
+        await _doSave(dataZonderInfo);
+        toonOpslagStatus('✅ Opgeslagen');
+        return true;
+      } catch(e2) { _opslagFout(e2,'activiteit'); return false; }
+    }
+    _opslagFout(e,'activiteit'); return false;
+  }
 }
 async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'activiteit-delete');} }
 

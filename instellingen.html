@@ -292,8 +292,6 @@ function renderInstellingen(){
         <div style="font-size:11px;color:var(--muted);">${v.van===v.tot?v.van:v.van+' → '+v.tot}</div>
       </div>
     </div>`).join('');
-  // Ingrediënten
-  renderIngredienten();
   // Admin sectie
   function _toonAdminSectie(){
     document.getElementById('admin-sectie').style.display='block';
@@ -811,7 +809,6 @@ window.toonOpslagStatus = function(tekst){
   document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
   if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 };
-<script>
 </script>
 </body>
 </html>
