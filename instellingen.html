@@ -264,7 +264,7 @@ const WERKDAGEN_LABELS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
 const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 
-laadOp().then(()=>{ renderInstellingen(); renderIcalAbonnementen(); initMobileAccordion(); }).catch(()=>{laadLokaal();renderInstellingen();initMobileAccordion();});
+laadOp().then(async ()=>{ await Auth.laadProfielen(); renderInstellingen(); renderIcalAbonnementen(); initMobileAccordion(); }).catch(async ()=>{ laadLokaal(); await Auth.laadProfielen().catch(()=>{}); renderInstellingen(); initMobileAccordion(); });
 
 function renderInstellingen(){
   // Profiel
@@ -295,15 +295,22 @@ function renderInstellingen(){
   // Ingrediënten
   renderIngredienten();
   // Admin sectie
-  if(Auth.kan('kanGebruikersBeheren')){
+  function _toonAdminSectie(){
     document.getElementById('admin-sectie').style.display='block';
     document.getElementById('nav-gebruikers').style.display='block';
     laadGebruikersLijst();
-    // Accordion voor admin-sectie activeren (is nu zichtbaar)
     if(window.innerWidth<768){
       const admin=document.getElementById('admin-sectie');
       if(admin) _bouwAccordion(admin,false);
     }
+  }
+  if(Auth.kan('kanGebruikersBeheren')){
+    _toonAdminSectie();
+  } else {
+    // Profielen nog niet geladen — herlaad en probeer opnieuw
+    Auth.laadProfielen().then(()=>{
+      if(Auth.kan('kanGebruikersBeheren')) _toonAdminSectie();
+    });
   }
 }
 

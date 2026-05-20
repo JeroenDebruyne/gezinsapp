@@ -84,7 +84,7 @@ const Auth = (() => {
         `${SUPABASE_URL}/rest/v1/gezin_profielen?select=*&order=naam`,
         { headers: h }
       );
-      if (!res.ok) return;
+      if (!res.ok) { console.error('laadProfielen HTTP', res.status, await res.text().catch(()=>'')); return; }
       const data = await res.json();
       if (Array.isArray(data) && data.length) {
         _profielenCache.length = 0;
@@ -109,7 +109,7 @@ const Auth = (() => {
         _gezinId = mijn?.gezin_id || data[0]?.gezin_id || null;
         if (_gezinId) localStorage.setItem('gezinsapp_gezin_id', _gezinId);
       }
-    } catch {}
+    } catch(e) { console.error('laadProfielen fout:', e); }
   }
 
   function rol() { return profiel()?.rol||'kind'; }
