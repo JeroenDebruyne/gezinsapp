@@ -93,7 +93,7 @@
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-secondary" onclick="openAiSuggestie()">✨ AI weekmenu</button>
-      <button class="btn btn-secondary" onclick="stuurBoodschappenDoor()" title="Stuur ingrediënten van dit weekmenu naar de boodschappenlijst">🛒 → Lijst</button>
+      <button class="btn btn-secondary" onclick="voegToeAanBoodschappenlijst()" title="Voeg ingrediënten van dit weekmenu toe aan de boodschappenlijst">🛒 Voeg toe aan lijst</button>
       <button class="btn btn-primary" onclick="location.href='boodschappen.html'">🛒 Boodschappen</button>
     </div>
   </div>
@@ -323,12 +323,26 @@ function closePlanModal(){
   activeSlot=null;
 }
 
-// ── Boodschappen doorsturen ───────────────────────────────────
-function stuurBoodschappenDoor(){
-  const dates=getWeekDates(weekOffsetP);
-  const nieuweItems=[];
-  const bestaandeNamen=new Set(extraItems.map(i=>i.naam.toLowerCase()));
+// ── Boodschappen doorsturen als weekmenu-snapshot ─────────────
+function _getWeekKey(offset){
+  const dates=getWeekDates(offset);
+  const d=dates[0];
+  // ISO week number
+  const jan4=new Date(d.getFullYear(),0,4);
+  const week=Math.ceil(((d-jan4)/86400000+jan4.getDay()+1)/7);
+  return d.getFullYear()+'-W'+String(week).padStart(2,'0');
+}
 
+async function voegToeAanBoodschappenlijst(){
+  const weekKey=_getWeekKey(weekOffsetP);
+  const opgeslagenWeek=localStorage.getItem('gezinsapp_boodschappen_week');
+  if(opgeslagenWeek===weekKey){
+    if(!confirm('Je hebt al boodschappen toegevoegd voor deze week. Ben je zeker dat je de lijst wil overschrijven?')) return;
+  }
+
+  // Verzamel alle ingrediënten van het weekmenu
+  const dates=getWeekDates(weekOffsetP);
+  const perIng={};
   dates.forEach(date=>{
     const dag=planning[fDateISO(date)]||{};
     Object.values(dag).forEach(k=>{
@@ -336,27 +350,32 @@ function stuurBoodschappenDoor(){
       const r=recepten.find(r=>r.id===k||r.id===parseInt(k));
       if(!r) return;
       (r.ingredienten||[]).forEach(ing=>{
-        if(!bestaandeNamen.has(ing.naam.toLowerCase())){
-          nieuweItems.push({naam:ing.naam,winkel:ing.winkel||'Andere'});
-          bestaandeNamen.add(ing.naam.toLowerCase());
+        const key=(ing.naam||'').toLowerCase()+'|'+(ing.winkel||'Andere');
+        if(!perIng[key]){
+          perIng[key]={naam:ing.naam,winkel:ing.winkel||'Andere',eenheid:ing.eenheid||null,hoev:ing.hoev||null,receptNaam:r.naam,weekKey};
         }
       });
     });
   });
 
-  if(!nieuweItems.length){
-    alert('Alle ingrediënten staan al in de boodschappenlijst, of er zijn geen maaltijden gepland.');
+  const snapshot=Object.values(perIng);
+  if(!snapshot.length){
+    alert('Er zijn geen ingrediënten gevonden in het weekmenu.');
     return;
   }
-  if(!confirm(`${nieuweItems.length} ingrediënten toevoegen aan de boodschappenlijst?`)) return;
 
-  nieuweItems.forEach(item=>{
-    extraItems.push(item);
-    sbSaveExtra(item);
-  });
+  // Verwijder oude recept-items en sla nieuwe op
+  await sbDeleteAlleReceptItems();
+  boodschappenReceptItems=snapshot;
   slaLokaalOp();
-  toonOpslagStatus('✅ '+nieuweItems.length+' ingrediënten toegevoegd');
-  if(confirm('Ga naar boodschappenlijst?')) location.href='boodschappen.html';
+  localStorage.setItem('gezinsapp_boodschappen_week',weekKey);
+
+  // Sla elk item op in Supabase (silent fallback bij fout)
+  for(const item of snapshot){ await sbSaveBoodschapReceptItem(item); }
+  slaLokaalOp();
+
+  toonOpslagStatus('✅ '+snapshot.length+' ingrediënten opgeslagen');
+  if(confirm(snapshot.length+' ingrediënten toegevoegd aan de boodschappenlijst.\nGa nu naar boodschappen?')) location.href='boodschappen.html';
 }
 document.getElementById('plan-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('plan-modal-bg'))closePlanModal();});
 

@@ -78,6 +78,7 @@ let activiteiten = [];
 let recepten = [];
 let planning = {};
 let extraItems = [];
+let boodschappenReceptItems = [];
 let drukteOverride = {};
 let standaardIngredienten = [];
 let contacten = [];
@@ -203,7 +204,17 @@ async function laadOp() {
       maaltijdThuis: x.maaltijd_thuis || null,
     }));
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
-    if (b.length) extraItems = b;
+    if (b.length) {
+      extraItems = b.filter(x => (x.type||'extra') === 'extra');
+      boodschappenReceptItems = b.filter(x => x.type === 'recept').map(x => ({
+        ...x, _sbId: x.id,
+        afgevinkt: x.afgevinkt || false,
+        weekKey: x.week_key || null,
+        eenheid: x.eenheid || null,
+        hoev: x.hoev || null,
+        receptNaam: x.recept_naam || null,
+      }));
+    }
     if (c.length) contacten = c.map(x=>{
       const _p=(v)=>{if(!v) return null; if(typeof v==='object') return v; try{return JSON.parse(v);}catch{return null;}};
       const partnerData=_p(x.partner); // {p1:{...}, p2:{...}} of oud formaat
@@ -261,6 +272,7 @@ function laadLokaal() {
     if (data.recepten)     recepten     = data.recepten;
     if (data.planning)     planning     = data.planning;
     if (data.extraItems)   extraItems   = data.extraItems;
+    if (data.boodschappenReceptItems) boodschappenReceptItems = data.boodschappenReceptItems;
     if (data.drukteOverride) drukteOverride = data.drukteOverride;
     if (data.standaardIngredienten) standaardIngredienten = data.standaardIngredienten;
     if (data.contacten)    contacten    = data.contacten;
@@ -273,7 +285,7 @@ function laadLokaal() {
 }
 
 function slaLokaalOp() {
-  const data = { activiteiten, recepten, planning, extraItems, drukteOverride, standaardIngredienten, contacten, todos, uitzonderingen, vasteRoosters, transportUitzonderingen, standaardTransport };
+  const data = { activiteiten, recepten, planning, extraItems, boodschappenReceptItems, drukteOverride, standaardIngredienten, contacten, todos, uitzonderingen, vasteRoosters, transportUitzonderingen, standaardTransport };
   try { localStorage.setItem('gezinsapp_data', JSON.stringify(data)); } catch(e) {}
 }
 
@@ -447,6 +459,49 @@ async function sbSaveExtra(item) {
   catch(e) { _opslagFout(e,'extra'); }
 }
 async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }
+
+async function sbSaveBoodschapReceptItem(item) {
+  try {
+    const gid = _gid();
+    const body = {
+      naam: item.naam,
+      winkel: item.winkel,
+      eenheid: item.eenheid || null,
+      hoev: item.hoev || null,
+      recept_naam: item.receptNaam || null,
+      type: 'recept',
+      afgevinkt: false,
+      week_key: item.weekKey || null,
+      gezin_id: gid,
+    };
+    const res = await sbFetch('boodschappen_extra', 'POST', body);
+    if (res[0]) item._sbId = res[0].id;
+  } catch(e) { console.warn('[boodschapReceptItem save]', e); }
+}
+
+async function sbToggleAfgevinktItem(sbId, val) {
+  if (!sbId) return;
+  try { await sbFetch(`boodschappen_extra?id=eq.${sbId}`, 'PATCH', { afgevinkt: val }); }
+  catch(e) { console.warn('[toggleAfgevinktItem]', e); }
+}
+
+async function sbDeleteAlleReceptItems() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&type=eq.recept`, 'DELETE'); }
+  catch(e) { console.warn('[deleteAlleReceptItems]', e); }
+}
+
+async function sbDeleteAfgevinktBoodschappen() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'DELETE'); }
+  catch(e) { console.warn('[deleteAfgevinktBoodschappen]', e); }
+}
+
+async function sbResetAfgevinkt() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'PATCH', { afgevinkt: false }); }
+  catch(e) { console.warn('[sbResetAfgevinkt]', e); }
+}
 
 async function sbSaveDrukte(datum, drukte) {
   const gid = _gid();
