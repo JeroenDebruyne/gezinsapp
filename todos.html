@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Gezinsapp">
-<meta name="theme-color" content="#f7f5f0">
+<meta name="theme-color" content="#f4fafa">
 <title>Gezinsapp — To-do's</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -16,17 +16,17 @@
 
 <!-- ── Topbar ─────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="topbar-title">To-do's</div>
+  <div class="topbar-title"><i data-lucide="circle-check"></i>To-do's</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
-    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;">🔧 dev</span>
+    <span id="dev-badge" class="dev-badge">🔧 dev</span>
     <div class="topbar-user-wrap">
       <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings"></i> Instellingen</a>
       </div>
     </div>
   </div>
@@ -56,7 +56,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out"></i></button>
     </div>
   </div>
 </nav>
@@ -252,8 +252,8 @@ function renderTodos() {
   const vandaag    = zichtbaar.filter(t=>!t.gedaan&&t.deadline===vandaagISO).length;
   document.getElementById('stats-balk').innerHTML = `
     <div class="stat-chip"><span class="stat-num">${totaalOpen}</span> open</div>
-    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:#ff9f0a;">${vandaag}</span> vandaag</div>`:''}
-    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:#ff453a;">${verlopen}</span> verlopen</div>`:''}
+    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:var(--normaal-dot);">${vandaag}</span> vandaag</div>`:''}
+    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:var(--druk-dot);">${verlopen}</span> verlopen</div>`:''}
   `;
 
   // Lijst
@@ -292,10 +292,11 @@ function renderTodos() {
         </div>
       </div>
       ${kanBewerken?`<div class="todo-acties">
-        <button class="todo-icon-btn" onclick="verwijderTodo('${t.id}')" title="Verwijderen">🗑️</button>
+        <button class="todo-icon-btn" onclick="verwijderTodo('${t.id}')" title="Verwijderen"><i data-lucide="trash-2"></i></button>
       </div>`:''}
     </div>`;
   }).join('');
+  if(typeof lucide!=='undefined')lucide.createIcons();
 }
 
 function maakDeadlineBadge(deadline, vandaag, gedaan) {

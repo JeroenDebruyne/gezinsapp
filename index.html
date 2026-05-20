@@ -7,23 +7,23 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gezinsapp">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f4fafa">
 <title>Gezinsapp — Home</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">Gezinsapp</div>
+  <div class="topbar-title"><i data-lucide="house"></i>Gezinsapp</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
-    <span id="dev-badge" style="display:none;font-size:10px;background:#faeeda;color:#633806;padding:2px 8px;border-radius:99px;margin-right:6px;">🔧 dev</span>
+    <span id="dev-badge" class="dev-badge">🔧 dev</span>
     <div class="topbar-user-wrap">
       <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings"></i> Instellingen</a>
       </div>
     </div>
   </div>
@@ -52,7 +52,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out"></i></button>
     </div>
   </div>
 </nav>
@@ -96,11 +96,10 @@
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <a id="weer-widget" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener"
-         style="display:flex;align-items:center;gap:6px;color:#fff;text-decoration:none;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;flex-shrink:0;" title="Weer in Ardooie — Buienradar">
+      <a id="weer-widget" class="weer-widget-link" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener" title="Weer in Ardooie — Buienradar">
         <span id="weer-icon">🌤️</span>
         <span id="weer-temp">…</span>
-        <span style="font-size:11px;font-weight:400;opacity:.85;" id="weer-regen"></span>
+        <span class="weer-widget-regen" id="weer-regen"></span>
       </a>
       <div class="dag-overzicht-drukte" id="dag-drukte">
         <span id="dag-drukte-dot">🟢</span>&nbsp;<span id="dag-drukte-label">…</span>
@@ -111,7 +110,7 @@
   <!-- Agent — hoofdfocus -->
   <div class="home-agent-panel">
     <div class="home-agent-header">
-      <span>🤖 Gezinsassistent</span>
+      <span class="home-agent-titel"><i data-lucide="bot"></i> Gezinsassistent</span>
       <div style="display:flex;gap:8px;align-items:center;">
         <div class="home-agent-snelvragen" style="padding:0;">
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
@@ -119,15 +118,15 @@
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Genereer boodschappenlijst op basis van weekmenu.')">🛒 Boodschappen</button>
         </div>
-        <button onclick="homeWisChat()" title="Wis chat" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;flex-shrink:0;">🗑️</button>
+        <button onclick="homeWisChat()" title="Wis chat" class="icon-btn"><i data-lucide="trash-2"></i></button>
       </div>
     </div>
     <div class="home-chat-berichten" id="home-chat-berichten-desktop">
       <div style="align-self:flex-start;" id="home-chat-welkom"></div>
     </div>
-    <div id="home-bevestiging-desktop" style="display:none;background:var(--bg-2);border-top:1px solid var(--border);padding:12px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
-      <div id="home-bevestiging-tekst-desktop" style="font-size:13px;color:var(--ink-2);margin-bottom:10px;"></div>
+    <div id="home-bevestiging-desktop" class="home-bevestiging-panel" style="display:none;">
+      <div class="home-bevestiging-titel">✋ Bevestiging vereist</div>
+      <div id="home-bevestiging-tekst-desktop" class="home-bevestiging-tekst"></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary btn-sm" onclick="homeBevestig('desktop')">✅ Ja</button>
         <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('desktop')">❌ Nee</button>
@@ -136,7 +135,7 @@
     <div class="home-chat-input-row">
       <input type="text" id="home-chat-input-desktop" placeholder="Stel een vraag of geef een opdracht…"
         onkeydown="if(event.key==='Enter')homeStuurBericht('desktop')"/>
-      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;">→</button>
+      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;"><i data-lucide="send"></i></button>
     </div>
   </div>
 
@@ -147,16 +146,16 @@
   <div class="section-label">Snel toevoegen</div>
   <div class="snelle-actie-grid">
     <button class="snelle-actie-btn" onclick="openHomeTodoModal()">
-      <span class="snelle-actie-icon">✅</span><span class="snelle-actie-label">To-do toevoegen</span>
+      <span class="snelle-actie-icon"><i data-lucide="circle-check"></i></span><span class="snelle-actie-label">To-do toevoegen</span>
     </button>
     <button class="snelle-actie-btn" onclick="openHomeActModal()">
-      <span class="snelle-actie-icon">📅</span><span class="snelle-actie-label">Activiteit toevoegen</span>
+      <span class="snelle-actie-icon"><i data-lucide="calendar-plus"></i></span><span class="snelle-actie-label">Activiteit toevoegen</span>
     </button>
     <button class="snelle-actie-btn" onclick="location.href='weekplanner.html'">
-      <span class="snelle-actie-icon">🍽️</span><span class="snelle-actie-label">Weekmenu bekijken</span>
+      <span class="snelle-actie-icon"><i data-lucide="utensils"></i></span><span class="snelle-actie-label">Weekmenu bekijken</span>
     </button>
     <button class="snelle-actie-btn" onclick="location.href='boodschappen.html'">
-      <span class="snelle-actie-icon">🛒</span><span class="snelle-actie-label">Boodschappen</span>
+      <span class="snelle-actie-icon"><i data-lucide="shopping-cart"></i></span><span class="snelle-actie-label">Boodschappen</span>
     </button>
   </div>
 
