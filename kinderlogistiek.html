@@ -122,6 +122,18 @@
     <button class="filter-tab active" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>
   </div>
 
+  <!-- Standaard weekrooster -->
+  <div class="card" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:2px 0;" onclick="toggleStandaardRooster()">
+      <div style="font-weight:700;font-size:15px;">⚙️ Standaard weekrooster</div>
+      <span id="standaard-chevron">▾</span>
+    </div>
+    <div id="standaard-rooster-body" style="margin-top:12px;">
+      <!-- rendered by renderStandaardRooster() -->
+      <div id="standaard-rooster-inhoud"></div>
+    </div>
+  </div>
+
   <div id="kl-grid"></div>
 
 </div>
@@ -140,7 +152,7 @@ const KL_DAGLANG = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zonda
 let weekOffsetKL = 0;
 let kindFilter = 'alle';
 
-laadOp().then(()=>{ renderKindFilterTabs(); renderKL(); }).catch(()=>{ laadLokaal(); renderKindFilterTabs(); renderKL(); });
+laadOp().then(()=>{ renderKindFilterTabs(); renderStandaardRooster(); renderKL(); }).catch(()=>{ laadLokaal(); renderKindFilterTabs(); renderStandaardRooster(); renderKL(); });
 
 function renderKindFilterTabs(){
   const kinderen = Auth.getProfielen().filter(p=>p.isKind);
@@ -186,6 +198,12 @@ function renderKL(){
   const today = fDateISO(new Date());
   const weekHeeftVandaag = dates.some(d=>fDateISO(d)===today);
 
+  const alleKinderenCheck = Auth.getProfielen().filter(p=>p.isKind);
+  if (!alleKinderenCheck.length) {
+    document.getElementById('kl-grid').innerHTML = '<div class="empty-state"><div class="empty-icon">👶</div><p>Geen kinderen ingesteld.</p><p style="font-size:13px;color:var(--muted);">Ga naar ⚙️ Instellingen en stel de rol van Nora en Odiel in op "Kind".</p></div>';
+    return;
+  }
+
   document.getElementById('kl-grid').innerHTML = dates.map((date,i)=>{
     const datum = fDateISO(date);
     const dagKey = KL_DAGMAP[date.getDay()];
@@ -196,7 +214,7 @@ function renderKL(){
     const vakantie = isSchoolvakantie(datum);
 
     // Activiteiten voor de kinderen vandaag
-    const alleKinderen = Auth.getProfielen().filter(p=>p.isKind).map(p=>p.persoonKey);
+    const alleKinderen = alleKinderenCheck.map(p=>p.persoonKey);
     const kinderen = kindFilter==='alle' ? alleKinderen : [kindFilter];
     const kindActs = activiteiten.filter(a=>
       isActiefOpDatum(a,datum) && (a.wie||[]).some(w=>kinderen.includes(w))
@@ -313,6 +331,74 @@ function resetTransport(datum, kind){
   sbSaveInstellingen();
   renderKL();
 }
+
+const KL_WEEKDAGEN = ['ma','di','wo','do','vr'];
+const KL_WEEKDAGLABELS = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
+
+function renderStandaardRooster() {
+  const kinderen = Auth.getProfielen().filter(p=>p.isKind);
+  const el = document.getElementById('standaard-rooster-inhoud');
+  if (!el) return;
+  if (!kinderen.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Geen kinderen geconfigureerd. Ga naar ⚙️ Instellingen → Profielen en stel de rol in op "Kind".</div>';
+    return;
+  }
+  el.innerHTML = kinderen.map(kind => {
+    const p = kind.persoonKey;
+    return `
+    <div style="margin-bottom:1rem;">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--border);">${kind.emoji||'👧'} ${kind.naam}</div>
+      ${KL_WEEKDAGEN.map((dag, i) => {
+        const std = (standaardTransport[p]||{})[dag] || {};
+        return `
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:600;color:var(--muted);">${KL_WEEKDAGLABELS[i].slice(0,2)}</span>
+          <select style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;"
+            onchange="slaStandaardOp('${p}','${dag}','brengt',this.value)">
+            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗→ Wie brengt?'}</option>`).join('')}
+          </select>
+          <select style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;"
+            onchange="slaStandaardOp('${p}','${dag}','haalt',this.value)">
+            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'←🚗 Wie haalt?'}</option>`).join('')}
+          </select>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <div class="ios-switch${std.eetGroo?' on':''}" id="std-eetgroo-${p}-${dag}" onclick="toggleStdEetGroo('${p}','${dag}')"></div>
+            <span>🍽️</span>
+          </label>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function slaStandaardOp(kind, dag, veld, waarde) {
+  if (!standaardTransport[kind]) standaardTransport[kind] = {};
+  if (!standaardTransport[kind][dag]) standaardTransport[kind][dag] = {};
+  standaardTransport[kind][dag][veld] = waarde;
+  slaLokaalOp();
+  sbSaveInstellingen();
+  toonOpslagStatus('✅ Standaard opgeslagen');
+}
+
+function toggleStdEetGroo(kind, dag) {
+  if (!standaardTransport[kind]) standaardTransport[kind] = {};
+  if (!standaardTransport[kind][dag]) standaardTransport[kind][dag] = {};
+  const huidig = standaardTransport[kind][dag].eetGroo || false;
+  standaardTransport[kind][dag].eetGroo = !huidig;
+  const el = document.getElementById(`std-eetgroo-${kind}-${dag}`);
+  if (el) el.className = 'ios-switch' + (!huidig ? ' on' : '');
+  slaLokaalOp();
+  sbSaveInstellingen();
+}
+
+let standaardRoosterOpen = true;
+function toggleStandaardRooster() {
+  standaardRoosterOpen = !standaardRoosterOpen;
+  const body = document.getElementById('standaard-rooster-body');
+  const chevron = document.getElementById('standaard-chevron');
+  if (body) body.style.display = standaardRoosterOpen ? 'block' : 'none';
+  if (chevron) chevron.textContent = standaardRoosterOpen ? '▾' : '›';
+}
 </script>
 <script>
 function toggleProfielMenu(e){ e&&e.stopPropagation(); document.getElementById('profiel-menu')?.classList.toggle('open'); }
@@ -325,7 +411,6 @@ document.addEventListener('DOMContentLoaded',function(){
   const _orig=window.toonOpslagStatus;
   window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); if(t&&t.startsWith('✅'))_flashGreen(_lastClickedBtn); };
 });
-<script>
 </script>
 </body>
 </html>
