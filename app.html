@@ -11,7 +11,6 @@
 <meta name="theme-color" content="#f4fafa">
 <title>Gezinsapp</title>
 <script src="https://cdn.jsdelivr.net/npm/add-to-calendar-button@2" async defer></script>
-<script src="icons.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,sans-serif;background:var(--bg-2);color:var(--ink);font-size:14px;}
@@ -233,7 +232,7 @@ body{font-family:system-ui,sans-serif;background:var(--bg-2);color:var(--ink);fo
   <button class="nav-item" onclick="goTo('boodschappen',this)">Boodschappen</button>
   <button class="nav-item" onclick="goTo('crm',this)">Contacten</button>
   <button class="nav-item" onclick="goTo('agent',this)">🤖 Agent</button>
-  <button class="nav-item" onclick="goTo('instellingen',this)"><i data-lucide="settings"></i> Instellingen</button>
+  <button class="nav-item" onclick="goTo('instellingen',this)"><i class="bi bi-gear"></i> Instellingen</button>
 </div>
 <div id="auth-bar">
   <div id="auth-user">
@@ -479,7 +478,7 @@ body{font-family:system-ui,sans-serif;background:var(--bg-2);color:var(--ink);fo
     <span class="page-title">🤖 Gezinsassistent</span>
     <div style="display:flex;gap:6px;">
       <button class="btn btn-secondary" style="font-size:11px;" onclick="resetApiKey()">🔑 API key wijzigen</button>
-      <button class="btn btn-secondary" style="font-size:11px;" onclick="clearChat()"><i data-lucide="trash-2"></i> Chat wissen</button>
+      <button class="btn btn-secondary" style="font-size:11px;" onclick="clearChat()"><i class="bi bi-trash"></i> Chat wissen</button>
     </div>
   </div>
   <div class="info-box">
@@ -2333,7 +2332,6 @@ function sluitModules(e){
 })();
 // ── Sidebar footer vullen met gebruikersinfo ─────────────────
 document.addEventListener('DOMContentLoaded', function(){
-  if(typeof lucide !== 'undefined') lucide.createIcons();
   if(typeof Auth !== 'undefined'){
     const p = Auth.profiel();
     if(p){
