@@ -81,6 +81,15 @@ body{
 .mobile-nav-icon{ font-size:26px;line-height:1; }
 .mobile-nav-label{ font-size:11px; }
 
+/* Lucide SVG icon sizing */
+.nav-icon i, .mobile-nav-icon i, .module-tile-icon i {
+  display: block;
+  pointer-events: none;
+}
+.nav-icon svg { width: 22px; height: 22px; stroke: currentColor; }
+.mobile-nav-icon svg { width: 28px; height: 28px; stroke: currentColor; }
+.module-tile-icon svg { width: 30px; height: 30px; stroke: currentColor; }
+
 /* ── Module overlay (mobiel) ─────────────────────────────────── */
 .module-overlay{
   display:none;position:fixed;inset:0;
