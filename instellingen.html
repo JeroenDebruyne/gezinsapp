@@ -472,8 +472,12 @@ async function maakNieuwAccount() {
 async function laadGebruikersLijst() {
   const el = document.getElementById('gebruikers-lijst'); if (!el) return;
   try {
-    const profielen = await sbFetch('gezin_profielen?order=naam').catch(() => []);
-    if (!profielen.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>'; return; }
+    let profielen = Auth.getProfielen().filter(p => p.id);
+    if (!profielen.length) {
+      // Fallback: haal vers op als cache leeg is
+      profielen = await sbFetch('gezin_profielen' + _gidQ('?order=naam')).catch(() => []);
+      if (!profielen.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>'; return; }
+    }
     const ROLKLEUR = { gezinshoofd:'var(--druk-bg)', jeugd:'var(--normaal-bg)', kind:'var(--rustig-bg)' };
     const ROLTXT   = { gezinshoofd:'var(--druk-clr)', jeugd:'var(--normaal-clr)', kind:'var(--rustig-clr)' };
     const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };

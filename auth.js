@@ -89,6 +89,7 @@ const Auth = (() => {
       if (Array.isArray(data) && data.length) {
         _profielenCache.length = 0;
         data.forEach(p => _profielenCache.push({
+          id:            p.id,
           email:         p.email || null,
           naam:          p.naam,
           emoji:         p.emoji || '👤',
