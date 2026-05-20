@@ -276,25 +276,22 @@ function _getSbIdVoorKey(key){
 function toggleAfgevinkt(key){
   afgevinkt[key]=!afgevinkt[key];
   _slaAfgevinktOp();
-  const sbId=_getSbIdVoorKey(key);
-  if(sbId) sbToggleAfgevinktItem(sbId,afgevinkt[key]);
   renderBoodschappen();renderExtraItems();
 }
 
 function resetAfgevinkt(){
   afgevinkt={};_slaAfgevinktOp();
-  sbResetAfgevinkt();
   renderBoodschappen();renderExtraItems();
 }
 
 function verwijderAfgevinkt(){
-  // Verwijder afgevinkte recept-items uit de lokale lijst
+  // Verwijder afgevinkte recept-items — per item op _sbId zodat Supabase sync betrouwbaar is
+  const wegRecept=boodschappenReceptItems.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]);
+  wegRecept.forEach(i=>{ if(i._sbId) sbDeleteExtra(i._sbId); });
   boodschappenReceptItems=boodschappenReceptItems.filter(i=>!afgevinkt['ing_'+i.naam.toLowerCase()]);
   // Verwijder afgevinkte extra-items
-  const weg=extraItems.filter(i=>afgevinkt['extra_'+i.id]);
-  weg.forEach(i=>{extraItems=extraItems.filter(e=>e.id!==i.id);if(i._sbId)sbDeleteExtra(i._sbId);});
-  // Verwijder alle afgevinkte rijen in Supabase
-  sbDeleteAfgevinktBoodschappen();
+  const wegExtra=extraItems.filter(i=>afgevinkt['extra_'+i.id]);
+  wegExtra.forEach(i=>{extraItems=extraItems.filter(e=>e.id!==i.id);if(i._sbId)sbDeleteExtra(i._sbId);});
   afgevinkt={};_slaAfgevinktOp();
   slaLokaalOp();renderBoodschappen();renderExtraItems();
 }
