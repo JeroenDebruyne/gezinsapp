@@ -95,7 +95,7 @@ const Auth = (() => {
           emoji:         p.emoji || '👤',
           rol:           p.rol,
           persoonKey:    p.persoon_key,
-          isKind:        p.is_kind || false,
+          isKind:        p.is_kind || p.rol === 'kind' || false,
           gezinId:       p.gezin_id || null,
           geboortedatum: p.geboortedatum || null,
         }));
