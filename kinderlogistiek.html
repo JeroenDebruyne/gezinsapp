@@ -294,7 +294,8 @@ function toggleKLDag(datum){
   const rij = body?.closest('.kl-dag-rij');
   if(!body) return;
   const isOpen = body.classList.toggle('open');
-  rij?.querySelector('.kl-dag-chevron').textContent = isOpen?'▾':'›';
+  const chevron = rij?.querySelector('.kl-dag-chevron');
+  if(chevron) chevron.textContent = isOpen?'▾':'›';
 }
 
 function slaTransportOp(datum, kind){
