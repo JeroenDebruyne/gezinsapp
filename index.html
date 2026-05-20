@@ -23,7 +23,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings"></i> Instellingen</a>
       </div>
     </div>
   </div>
@@ -52,7 +52,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out"></i></button>
     </div>
   </div>
 </nav>
@@ -110,7 +110,7 @@
   <!-- Agent — hoofdfocus -->
   <div class="home-agent-panel">
     <div class="home-agent-header">
-      <span>🤖 Gezinsassistent</span>
+      <span class="home-agent-titel"><i data-lucide="bot"></i> Gezinsassistent</span>
       <div style="display:flex;gap:8px;align-items:center;">
         <div class="home-agent-snelvragen" style="padding:0;">
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er vandaag op de planning?')">📅 Vandaag</button>
@@ -118,15 +118,15 @@
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Wat staat er open op de to-do lijst?')">✅ To-do's</button>
           <button class="voorbeeld-btn" onclick="stuurVoorbeeldHome('Genereer boodschappenlijst op basis van weekmenu.')">🛒 Boodschappen</button>
         </div>
-        <button onclick="homeWisChat()" title="Wis chat" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0;flex-shrink:0;">🗑️</button>
+        <button onclick="homeWisChat()" title="Wis chat" class="icon-btn"><i data-lucide="trash-2"></i></button>
       </div>
     </div>
     <div class="home-chat-berichten" id="home-chat-berichten-desktop">
       <div style="align-self:flex-start;" id="home-chat-welkom"></div>
     </div>
-    <div id="home-bevestiging-desktop" style="display:none;background:var(--bg-2);border-top:1px solid var(--border);padding:12px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">✋ Bevestiging vereist</div>
-      <div id="home-bevestiging-tekst-desktop" style="font-size:13px;color:var(--ink-2);margin-bottom:10px;"></div>
+    <div id="home-bevestiging-desktop" class="home-bevestiging-panel" style="display:none;">
+      <div class="home-bevestiging-titel">✋ Bevestiging vereist</div>
+      <div id="home-bevestiging-tekst-desktop" class="home-bevestiging-tekst"></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary btn-sm" onclick="homeBevestig('desktop')">✅ Ja</button>
         <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('desktop')">❌ Nee</button>
@@ -135,7 +135,7 @@
     <div class="home-chat-input-row">
       <input type="text" id="home-chat-input-desktop" placeholder="Stel een vraag of geef een opdracht…"
         onkeydown="if(event.key==='Enter')homeStuurBericht('desktop')"/>
-      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;">→</button>
+      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;"><i data-lucide="send"></i></button>
     </div>
   </div>
 
