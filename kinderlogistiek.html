@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded',function(){
   const _orig=window.toonOpslagStatus;
   window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); if(t&&t.startsWith('✅'))_flashGreen(_lastClickedBtn); };
 });
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="lucide.min.js"></script>
 <script>
 lucide.createIcons();
 </script>
