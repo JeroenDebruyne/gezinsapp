@@ -11,29 +11,48 @@
 <title>Gezinsapp — Kinderlogistiek</title>
 <link rel="stylesheet" href="style.css">
 <style>
+/* ── Week dag rijen ────────────────────────────────────────── */
 .kl-dag-rij{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:6px;}
 .kl-dag-rij.vandaag{border-color:var(--accent);}
-.kl-dag-rij.weekend{opacity:.7;}
-.kl-dag-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;}
-.kl-dag-naam{font-weight:700;font-size:15px;color:var(--ink);min-width:28px;}
+.kl-dag-rij.weekend{opacity:.6;}
+.kl-dag-header{display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;user-select:none;}
+.kl-dag-naam{font-weight:700;font-size:15px;color:var(--ink);min-width:26px;}
 .kl-dag-datum{font-size:13px;color:var(--muted);}
-.kl-dag-badges{display:flex;gap:5px;flex:1;flex-wrap:wrap;}
-.kl-dag-chevron{color:var(--muted);font-size:14px;margin-left:auto;flex-shrink:0;}
+.kl-dag-badges{display:flex;gap:4px;flex:1;flex-wrap:wrap;align-items:center;}
+.kl-dag-chevron{color:var(--muted);font-size:13px;margin-left:auto;flex-shrink:0;}
 .kl-dag-body{display:none;border-top:1px solid var(--border);padding:12px 14px;}
 .kl-dag-body.open{display:block;}
-.kl-kind-sectie{margin-bottom:12px;}
+
+/* ── Kind sectie in dag body ───────────────────────────────── */
+.kl-kind-sectie{margin-bottom:14px;}
 .kl-kind-sectie:last-child{margin-bottom:0;}
-.kl-kind-titel{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.kl-transport-rij{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.kl-kind-titel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.kl-transport-rij{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
 .kl-transport-veld label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
-.kl-transport-veld select{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--ink);cursor:pointer;}
+.kl-transport-veld select{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--ink);cursor:pointer;font-family:inherit;}
 .kl-transport-veld select.override{border-color:var(--accent);background:var(--accent-l);color:var(--accent);font-weight:600;}
-.kl-eetgroo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer;padding:4px 0;}
+.kl-eetgroo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer;padding:4px 0;color:var(--ink);}
 .kl-act-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--bg-2);color:var(--muted);border:1px solid var(--border);}
 .kl-vakantie-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);font-weight:600;}
-.kl-reset-btn{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
-@media(min-width:768px){
+.kl-reset-btn{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-left:auto;}
+
+/* ── Standaard weekrooster ─────────────────────────────────── */
+.kl-rooster-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:2px 0;}
+.kl-rooster-titel{font-weight:700;font-size:15px;color:var(--ink);}
+.kl-rooster-chevron{color:var(--muted);font-size:13px;}
+.kl-std-kind{margin-bottom:1rem;}
+.kl-std-kind:last-child{margin-bottom:0;}
+.kl-std-kind-naam{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;padding-bottom:5px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:5px;}
+.kl-std-rij{display:grid;grid-template-columns:32px 1fr 1fr;gap:6px;align-items:center;margin-bottom:6px;}
+.kl-std-dag{font-size:12px;font-weight:600;color:var(--muted);}
+.kl-std-select{font-size:12px;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;width:100%;cursor:pointer;}
+.kl-std-select.ingevuld{border-color:var(--accent);color:var(--accent);font-weight:600;}
+.kl-std-eetgroo{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;padding:2px 0;margin-top:-2px;}
+.kl-std-eetgroo-rij{grid-column:2/-1;}
+
+@media(min-width:600px){
   .kl-transport-rij{grid-template-columns:1fr 1fr 1fr;}
+  .kl-std-rij{grid-template-columns:48px 1fr 1fr;}
 }
 </style>
 </head>
@@ -124,12 +143,11 @@
 
   <!-- Standaard weekrooster -->
   <div class="card" style="margin-bottom:1rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:2px 0;" onclick="toggleStandaardRooster()">
-      <div style="font-weight:700;font-size:15px;">⚙️ Standaard weekrooster</div>
-      <span id="standaard-chevron">▾</span>
+    <div class="kl-rooster-header" onclick="toggleStandaardRooster()">
+      <span class="kl-rooster-titel">⚙️ Standaard weekrooster</span>
+      <span class="kl-rooster-chevron" id="standaard-chevron">›</span>
     </div>
-    <div id="standaard-rooster-body" style="margin-top:12px;">
-      <!-- rendered by renderStandaardRooster() -->
+    <div id="standaard-rooster-body" style="display:none;margin-top:12px;">
       <div id="standaard-rooster-inhoud"></div>
     </div>
   </div>
@@ -347,24 +365,27 @@ function renderStandaardRooster() {
   el.innerHTML = kinderen.map(kind => {
     const p = kind.persoonKey;
     return `
-    <div style="margin-bottom:1rem;">
-      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--border);">${kind.emoji||'👧'} ${kind.naam}</div>
+    <div class="kl-std-kind">
+      <div class="kl-std-kind-naam">${kind.emoji||'👧'} ${kind.naam}</div>
       ${KL_WEEKDAGEN.map((dag, i) => {
         const std = (standaardTransport[p]||{})[dag] || {};
         return `
-        <div style="display:grid;grid-template-columns:80px 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
-          <span style="font-size:13px;font-weight:600;color:var(--muted);">${KL_WEEKDAGLABELS[i].slice(0,2)}</span>
-          <select style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;"
+        <div class="kl-std-rij">
+          <span class="kl-std-dag">${KL_WEEKDAGLABELS[i].slice(0,2)}</span>
+          <select class="kl-std-select${std.brengt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','brengt',this.value)">
-            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗→ Wie brengt?'}</option>`).join('')}
+            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗 Brengt?'}</option>`).join('')}
           </select>
-          <select style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;"
+          <select class="kl-std-select${std.haalt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','haalt',this.value)">
-            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'←🚗 Wie haalt?'}</option>`).join('')}
+            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'🚗 Haalt?'}</option>`).join('')}
           </select>
-          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
-            <div class="ios-switch${std.eetGroo?' on':''}" id="std-eetgroo-${p}-${dag}" onclick="toggleStdEetGroo('${p}','${dag}')"></div>
-            <span>🍽️</span>
+        </div>
+        <div class="kl-std-rij" style="margin-top:-2px;margin-bottom:8px;">
+          <span></span>
+          <label class="kl-std-eetgroo kl-std-eetgroo-rij" onclick="toggleStdEetGroo('${p}','${dag}')">
+            <div class="ios-switch${std.eetGroo?' on':''}" id="std-eetgroo-${p}-${dag}"></div>
+            <span>🍽️ Eet bij grootouders</span>
           </label>
         </div>`;
       }).join('')}
@@ -392,7 +413,7 @@ function toggleStdEetGroo(kind, dag) {
   sbSaveInstellingen();
 }
 
-let standaardRoosterOpen = true;
+let standaardRoosterOpen = false;
 function toggleStandaardRooster() {
   standaardRoosterOpen = !standaardRoosterOpen;
   const body = document.getElementById('standaard-rooster-body');
