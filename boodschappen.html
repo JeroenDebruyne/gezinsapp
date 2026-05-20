@@ -128,7 +128,7 @@
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;">
       <span id="voortgang-tekst"></span>
       <div style="display:flex;gap:10px;">
-        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:12px;color:var(--druk-clr);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;">🗑️ Verwijder afgevinkte</button>
+        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:12px;color:var(--druk-clr);cursor:pointer;font-family:inherit;align-items:center;gap:4px;">🗑️ Verwijder afgevinkte</button>
         <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
       </div>
     </div>
@@ -137,7 +137,7 @@
 
   <!-- Boodschappenlijst -->
   <div id="boodschappen-inhoud"></div>
-  <div class="section-label">Extra items</div>
+  <div class="section-label" id="extra-items-label">Extra items</div>
   <div id="extra-items-lijst"></div>
 </div>
 </main>
@@ -146,85 +146,122 @@
 <script src="data.js"></script>
 <script>
 Auth.initPagina('boodschappen');
-let activeWinkel='Colruyt';
+let activeWinkel='Alles';
 let afgevinkt={};
 
 laadOp().then(()=>{renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();}).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();});
 
 function renderWinkelTabs(){
-  document.getElementById('winkel-tabs').innerHTML=WINKELS.map(w=>
+  document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>
     `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${w}')">${w}</button>`
   ).join('');
 }
 function switchWinkel(w){activeWinkel=w;renderWinkelTabs();renderBoodschappen();renderExtraItems();}
 
-function renderBoodschappen(){
+function _geplandItems(){
   const gepland=[];
   Object.entries(planning).forEach(([dk,dag])=>{
     Object.values(dag).forEach(keuze=>{
       if(keuze&&!SPEC[keuze]){const r=recepten.find(r=>r.id===keuze||r.id==keuze);if(r)gepland.push({recept:r,dag:dk});}
     });
   });
+  return gepland;
+}
+
+function _ingVoorWinkel(gepland,w){
   const perIng={};
   gepland.forEach(({recept,dag})=>{
-    (recept.ingredienten||[]).filter(i=>i.winkel===activeWinkel).forEach(ing=>{
+    (recept.ingredienten||[]).filter(i=>i.winkel===w).forEach(ing=>{
       const key=ing.naam.toLowerCase();
       if(!perIng[key])perIng[key]={naam:ing.naam,eenheid:ing.eenheid,gebruiken:[]};
       perIng[key].gebruiken.push({hoev:ing.hoev,dag,recept:recept.naam});
     });
   });
-  const items=Object.values(perIng);
-  const aantalAfgevinkt=items.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]).length;
+  return Object.values(perIng);
+}
 
-  if(items.length>0){
-    const pct=Math.round((aantalAfgevinkt/items.length)*100);
-    document.getElementById('voortgang-wrap').style.display='block';
-    document.getElementById('voortgang-tekst').textContent=`${aantalAfgevinkt} van ${items.length} in mandje`;
-    document.getElementById('voortgang-fill').style.width=pct+'%';
-    document.getElementById('btn-verwijder-afgevinkt').style.display=aantalAfgevinkt>0?'inline':'none';
+function _ingItemHtml(item,winkelSel=true){
+  const key='ing_'+item.naam.toLowerCase();const gedaan=afgevinkt[key];
+  return `<div class="boodschap-item" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.4;':''}">
+    <div class="boodschap-cirkel${gedaan?' gedaan':''}"></div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;':''}">${item.naam}</div>
+      ${item.gebruiken.map(g=>`<div style="font-size:12px;color:var(--muted);display:flex;justify-content:space-between;"><span>${g.recept}</span><span style="font-weight:500;">${g.hoev} ${item.eenheid}</span></div>`).join('')}
+      ${item.gebruiken.length>1?`<div style="font-size:11px;color:var(--muted-2);margin-top:2px;">${item.gebruiken.length}× nodig</div>`:''}
+    </div>
+    ${winkelSel?`<select onclick="event.stopPropagation()" onchange="wijzigIngWinkel('${item.naam.replace(/'/g,"\\'")}',this.value)" style="font-size:11px;padding:3px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;margin-left:8px;flex-shrink:0;">${WINKELS.map(w=>`<option${w===activeWinkel?' selected':''}>${w}</option>`).join('')}</select>`:''}
+  </div>`;
+}
+
+function _extraItemHtml(i){
+  const key='extra_'+i.id;const gedaan=afgevinkt[key];
+  return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+    <div class="boodschap-cirkel${gedaan?' gedaan':''}" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.5;':''}"></div>
+    <span style="flex:1;font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;opacity:.5;':''}">${i.naam}</span>
+    <span class="extra-badge">Extra</span>
+    <button onclick="verwijderExtra(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:18px;line-height:1;">×</button>
+  </div>`;
+}
+
+function _updateVoortgang(aantalAfgevinkt,totaal){
+  const wrap=document.getElementById('voortgang-wrap');
+  if(totaal>0){
+    wrap.style.display='block';
+    document.getElementById('voortgang-tekst').textContent=`${aantalAfgevinkt} van ${totaal} in mandje`;
+    document.getElementById('voortgang-fill').style.width=Math.round((aantalAfgevinkt/totaal)*100)+'%';
+    document.getElementById('btn-verwijder-afgevinkt').style.display=aantalAfgevinkt>0?'flex':'none';
   } else {
-    document.getElementById('voortgang-wrap').style.display='none';
+    wrap.style.display='none';
+  }
+}
+
+function renderBoodschappen(){
+  const gepland=_geplandItems();
+  const label=document.getElementById('extra-items-label');
+
+  if(activeWinkel==='Alles'){
+    if(label)label.style.display='none';
+    let totaal=0,afgevinktAantal=0,html='';
+    WINKELS.forEach(w=>{
+      const items=_ingVoorWinkel(gepland,w);
+      const extras=extraItems.filter(i=>i.winkel===w);
+      if(!items.length&&!extras.length)return;
+      totaal+=items.length+extras.length;
+      afgevinktAantal+=items.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]).length
+                       +extras.filter(i=>afgevinkt['extra_'+i.id]).length;
+      html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin:1.25rem 0 6px;padding-bottom:6px;border-bottom:2px solid var(--accent-l);">🏪 ${w}</div>`;
+      html+=items.map(i=>_ingItemHtml(i,false)).join('');
+      html+=extras.map(i=>_extraItemHtml(i)).join('');
+    });
+    _updateVoortgang(afgevinktAantal,totaal);
+    document.getElementById('boodschappen-inhoud').innerHTML=html||`<div class="empty-state"><span class="empty-icon">🛒</span><p>Geen boodschappen gepland<br>Maak eerst een weekmenu aan</p></div>`;
+    return;
   }
 
+  if(label)label.style.display='';
+  const items=_ingVoorWinkel(gepland,activeWinkel);
+  const aantalAfgevinkt=items.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]).length;
+  _updateVoortgang(aantalAfgevinkt,items.length);
   document.getElementById('boodschappen-inhoud').innerHTML=items.length===0
     ?`<div class="empty-state"><span class="empty-icon">🛒</span><p>Geen ingrediënten voor ${activeWinkel}<br>Maak eerst een weekmenu aan</p></div>`
-    :items.map(item=>{
-      const key='ing_'+item.naam.toLowerCase();
-      const gedaan=afgevinkt[key];
-      return `<div class="boodschap-item" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.4;':''}">
-        <div class="boodschap-cirkel${gedaan?' gedaan':''}"></div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;':''}">${item.naam}</div>
-          ${item.gebruiken.map(g=>`<div style="font-size:12px;color:var(--muted);display:flex;justify-content:space-between;"><span>${g.recept}</span><span style="font-weight:500;">${g.hoev} ${item.eenheid}</span></div>`).join('')}
-          ${item.gebruiken.length>1?`<div style="font-size:11px;color:var(--muted-2);margin-top:2px;">${item.gebruiken.length}× nodig</div>`:''}
-        </div>
-        <select onclick="event.stopPropagation()" onchange="wijzigIngWinkel('${item.naam.replace(/'/g,"\\'")}',this.value)" style="font-size:11px;padding:3px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;margin-left:8px;flex-shrink:0;">
-          ${WINKELS.map(w=>`<option${w===activeWinkel?' selected':''}>${w}</option>`).join('')}
-        </select>
-      </div>`;
-    }).join('');
+    :items.map(i=>_ingItemHtml(i,true)).join('');
 }
 
 function renderExtraItems(){
+  if(activeWinkel==='Alles'){document.getElementById('extra-items-lijst').innerHTML='';return;}
   const voor=extraItems.filter(i=>i.winkel===activeWinkel);
   document.getElementById('extra-items-lijst').innerHTML=voor.length===0
     ?`<p style="font-size:13px;color:var(--muted);padding:6px 0;">Geen extra items voor ${activeWinkel}</p>`
-    :voor.map(i=>{
-      const key='extra_'+i.id;const gedaan=afgevinkt[key];
-      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div class="boodschap-cirkel${gedaan?' gedaan':''}" onclick="toggleAfgevinkt('${key}')" style="${gedaan?'opacity:.5;':''}"></div>
-        <span style="flex:1;font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;opacity:.5;':''}">${i.naam}</span>
-        <span class="extra-badge">Extra</span>
-        <button onclick="verwijderExtra(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:18px;line-height:1;">×</button>
-      </div>`;
-    }).join('');
+    :voor.map(i=>_extraItemHtml(i)).join('');
 }
 
 function toggleAfgevinkt(key){afgevinkt[key]=!afgevinkt[key];renderBoodschappen();renderExtraItems();}
 function resetAfgevinkt(){afgevinkt={};renderBoodschappen();renderExtraItems();}
 function verwijderAfgevinkt(){
-  const afgevinktExtras=extraItems.filter(i=>afgevinkt['extra_'+i.id]&&i.winkel===activeWinkel);
-  afgevinktExtras.forEach(i=>{extraItems=extraItems.filter(e=>e.id!==i.id);if(i._sbId)sbDeleteExtra(i._sbId);});
+  const teVerwijderen=activeWinkel==='Alles'
+    ?extraItems.filter(i=>afgevinkt['extra_'+i.id])
+    :extraItems.filter(i=>afgevinkt['extra_'+i.id]&&i.winkel===activeWinkel);
+  teVerwijderen.forEach(i=>{extraItems=extraItems.filter(e=>e.id!==i.id);if(i._sbId)sbDeleteExtra(i._sbId);});
   Object.keys(afgevinkt).forEach(k=>{delete afgevinkt[k];});
   slaLokaalOp();renderBoodschappen();renderExtraItems();
 }
