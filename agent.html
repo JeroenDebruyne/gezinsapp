@@ -19,7 +19,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🤖 Agent</div>
+  <div class="topbar-title">Agent</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -36,21 +36,21 @@
   </div>
 </header>
 <nav class="bottom-nav" id="sidebar">
-  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
-  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
-  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
-  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
-  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
-  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
-  <a class="bottom-nav-item" data-pagina="ingredienten" href="ingredienten.html"><span class="nav-icon">🥦</span><span class="nav-label">Ingrediënten</span></a>
-  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
-  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">🚸</span><span class="nav-label">Kinderen</span></a>
-  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
+  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon"><i data-lucide="house"></i></span><span class="nav-label">Home</span></a>
+  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon"><i data-lucide="calendar-days"></i></span><span class="nav-label">Agenda</span></a>
+  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon"><i data-lucide="circle-check"></i></span><span class="nav-label">To-do's</span></a>
+  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon"><i data-lucide="utensils"></i></span><span class="nav-label">Maaltijden</span></a>
+  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon"><i data-lucide="book-open"></i></span><span class="nav-label">Recepten</span></a>
+  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon"><i data-lucide="shopping-cart"></i></span><span class="nav-label">Boodschappen</span></a>
+  <a class="bottom-nav-item" data-pagina="ingredienten" href="ingredienten.html"><span class="nav-icon"><i data-lucide="leaf"></i></span><span class="nav-label">Ingrediënten</span></a>
+  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon"><i data-lucide="users"></i></span><span class="nav-label">Contacten</span></a>
+  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon"><i data-lucide="baby"></i></span><span class="nav-label">Kinderen</span></a>
+  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon"><i data-lucide="bot"></i></span><span class="nav-label">Agent</span></a>
 
   <div class="sidebar-footer">
     <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
     <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
-      <span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span>
+      <span class="nav-icon"><i data-lucide="settings"></i></span><span class="nav-label">Instellingen</span>
     </a>
     <div class="sidebar-user">
       <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
@@ -64,11 +64,11 @@
 </nav>
 <nav class="bottom-nav-mobile">
   <a class="mobile-nav-item" href="index.html" data-pagina="index">
-    <span class="mobile-nav-icon">🏠</span>
+    <span class="mobile-nav-icon"><i data-lucide="house"></i></span>
     <span class="mobile-nav-label">Home</span>
   </a>
   <button class="mobile-nav-item" onclick="toggleModules()">
-    <span class="mobile-nav-icon">⊞</span>
+    <span class="mobile-nav-icon"><i data-lucide="layout-grid"></i></span>
     <span class="mobile-nav-label">Alles</span>
   </button>
 </nav>
@@ -78,16 +78,16 @@
   <div class="module-sheet" onclick="event.stopPropagation()">
     <div class="module-sheet-handle"></div>
     <div class="module-tiles">
-      <a class="module-tile" href="agenda.html"><span class="module-tile-icon">📅</span><span class="module-tile-naam">Agenda</span></a>
-      <a class="module-tile" href="todos.html"><span class="module-tile-icon">✅</span><span class="module-tile-naam">To-do's</span></a>
-      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
-      <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
-      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
-      <a class="module-tile" href="ingredienten.html"><span class="module-tile-icon">🥦</span><span class="module-tile-naam">Ingrediënten</span></a>
-      <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
-      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">🚸</span><span class="module-tile-naam">Kinderen</span></a>
-      <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
-      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
+      <a class="module-tile" href="agenda.html"><span class="module-tile-icon"><i data-lucide="calendar-days"></i></span><span class="module-tile-naam">Agenda</span></a>
+      <a class="module-tile" href="todos.html"><span class="module-tile-icon"><i data-lucide="circle-check"></i></span><span class="module-tile-naam">To-do's</span></a>
+      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon"><i data-lucide="utensils"></i></span><span class="module-tile-naam">Maaltijden</span></a>
+      <a class="module-tile" href="recepten.html"><span class="module-tile-icon"><i data-lucide="book-open"></i></span><span class="module-tile-naam">Recepten</span></a>
+      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon"><i data-lucide="shopping-cart"></i></span><span class="module-tile-naam">Boodschappen</span></a>
+      <a class="module-tile" href="ingredienten.html"><span class="module-tile-icon"><i data-lucide="leaf"></i></span><span class="module-tile-naam">Ingrediënten</span></a>
+      <a class="module-tile" href="contacten.html"><span class="module-tile-icon"><i data-lucide="users"></i></span><span class="module-tile-naam">Contacten</span></a>
+      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon"><i data-lucide="baby"></i></span><span class="module-tile-naam">Kinderen</span></a>
+      <a class="module-tile" href="agent.html"><span class="module-tile-icon"><i data-lucide="bot"></i></span><span class="module-tile-naam">Agent</span></a>
+      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon"><i data-lucide="settings"></i></span><span class="module-tile-naam">Instellingen</span></a>
     </div>
   </div>
 </div>
@@ -365,6 +365,9 @@ window.toonOpslagStatus = function(tekst){
   document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
   if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 };
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+lucide.createIcons();
 </script>
 </body>
 </html>
