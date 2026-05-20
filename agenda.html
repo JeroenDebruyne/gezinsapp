@@ -817,14 +817,15 @@ function renderTransportDetail(act,datumISO){
     if(!(act.wie||[]).includes(kind)) return;
     const std=stdTransport[kind]?.[dagKey]||{};
     const uitz=uitzondering?.[kind]||{};
-    const brengt=act[`brengt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.brengt||std.brengt||'—';
-    const haalt=act[`haalt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.haalt||std.haalt||'—';
+    const brengt=act[`brengt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.brengt||std.brengt||'';
+    const haalt=act[`haalt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.haalt||std.haalt||'';
     const eetGroo=act[`eetGroo${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||(uitz.eetGroo!==undefined?uitz.eetGroo:std.eetGroo);
+    if(!brengt&&!haalt&&!eetGroo) return;
     const isUitz=uitzondering&&uitzondering[kind];
     html+=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:3px;">
       <span style="font-weight:600;color:var(--ink);">${PEMOJI[kind]} ${PLABEL[kind]}:</span>
-      <span>🚗→ ${brengt}</span>
-      <span>←🚗 ${haalt}</span>
+      ${brengt?`<span>🚗→ ${brengt}</span>`:''}
+      ${haalt?`<span>←🚗 ${haalt}</span>`:''}
       ${eetGroo?'<span style="font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;">🍽️ Eet bij grootouders</span>':''}
       ${isUitz?'<span style="font-size:10px;background:var(--normaal-bg);color:var(--normaal-clr);padding:1px 6px;border-radius:99px;font-weight:600;">⚡ Uitzondering</span>':''}
     </div>`;
@@ -960,10 +961,13 @@ function openActModal(act){
 }
 function openActModalVoorDatum(datum){geselecteerdeDatum=datum;openActModal();}
 function editActiviteit(id){openActModal(activiteiten.find(a=>a.id===id));}
-function closeActModal(){
-  document.getElementById('act-modal-bg').classList.remove('open');
-}
 function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
+function closeActModal(){
+  const el=document.getElementById('act-modal-bg');
+  const wasOpen=el.classList.contains('open');
+  el.classList.remove('open');
+  if(wasOpen) _teugNaarHome();
+}
 
 function renderPersonenMS(){
   document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
@@ -979,8 +983,9 @@ function togglePersoon(p){
 function checkKindjeSection(){
   const heeftNora=geselecteerdePersonen.includes('nora');
   const heeftOdiel=geselecteerdePersonen.includes('odiel');
-  const heeftKind=heeftNora||heeftOdiel;
-  document.getElementById('kindje-sectie').style.display=heeftKind?'block':'none';
+  const heeftGezinshoofd=geselecteerdePersonen.some(p=>['jeroen','kelly'].includes(p));
+  const toonKindje=(heeftNora||heeftOdiel)&&!heeftGezinshoofd;
+  document.getElementById('kindje-sectie').style.display=toonKindje?'block':'none';
   document.getElementById('transport-nora').style.display=heeftNora?'block':'none';
   document.getElementById('transport-odiel').style.display=heeftOdiel?'block':'none';
 }
@@ -1127,7 +1132,7 @@ async function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  closeActModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);_teugNaarHome();
+  slaLokaalOp();renderAlles();await sbSaveActiviteit(act);closeActModal();
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
