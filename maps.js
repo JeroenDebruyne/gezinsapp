@@ -18,13 +18,15 @@ const Maps = (() => {
     const key = getKey();
     if (!key) { console.warn('[Maps] Geen API key ingesteld.'); return; }
     _loading = true;
-    window._mapsGereed = () => {
-      _ready = true; _loading = false;
-      _queue.forEach(f => f()); _queue = [];
-    };
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&callback=_mapsGereed&language=nl&region=BE`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async&language=nl&region=BE`;
     s.async = s.defer = true;
+    s.onload = () => {
+      google.maps.importLibrary('places').then(() => {
+        _ready = true; _loading = false;
+        _queue.forEach(f => f()); _queue = [];
+      });
+    };
     s.onerror = () => { _loading = false; console.error('[Maps] Laden mislukt — controleer de API key.'); };
     document.head.appendChild(s);
   }
