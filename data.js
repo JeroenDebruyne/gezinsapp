@@ -191,7 +191,7 @@ async function laadOp() {
       sbFetch(`todos${_gidQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
     if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
-    if (i.length) standaardIngredienten = i.map(x => ({...x, productLink: x.product_link || null}));
+    if (i.length) standaardIngredienten = i.map(x => ({...x, _sbId: x.id, productLink: x.product_link || null}));
     if (a.length) activiteiten = a.map(x=>({
       ...x, _sbId:x.id,
       dagen:x.dagen||[], wie:Array.isArray(x.wie)?x.wie:[x.wie].filter(Boolean),
