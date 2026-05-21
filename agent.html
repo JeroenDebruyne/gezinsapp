@@ -10,7 +10,7 @@
 <title>Gezinsapp — Agent</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.chat-container{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:var(--radius);padding:1rem;min-height:320px;max-height:520px;overflow-y:auto;margin-bottom:1rem;border:1.5px solid var(--border);}
+.chat-container{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:var(--radius);padding:1rem;min-height:320px;max-height:560px;overflow-y:auto;margin-bottom:1rem;border:1.5px solid var(--border);}
 .voorbeeld-btns{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1rem;}
 .voorbeeld-btn{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:99px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;font-weight:500;transition:all .15s;}
 .voorbeeld-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
@@ -19,7 +19,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🤖Agent</div>
+  <div class="topbar-title">🤖 Agent</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -46,7 +46,6 @@
   <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
   <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">👶</span><span class="nav-label">Kinderen</span></a>
   <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
-
   <div class="sidebar-footer">
     <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
     <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
@@ -72,8 +71,6 @@
     <span class="mobile-nav-label">Alles</span>
   </button>
 </nav>
-
-<!-- Module grid (mobiel) -->
 <div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
   <div class="module-sheet" onclick="event.stopPropagation()">
     <div class="module-sheet-handle"></div>
@@ -93,23 +90,25 @@
 </div>
 <main class="main-content">
 <div class="page-content">
-  <div class="info-box">De gezinsassistent heeft toegang tot jullie agenda, recepten en weekplanning. Hij vraagt altijd bevestiging voor hij iets aanpast.</div>
+  <div class="info-box">De gezinsassistent heeft volledige toegang tot jullie agenda, recepten, planning, to-do's, contacten en kinderlogistiek. Hij vraagt altijd bevestiging voor hij iets aanpast.</div>
 
   <div class="voorbeeld-btns">
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Maak een weekmenu voor deze week op basis van ons rooster en recepten.')">📅 Weekmenu maken</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Genereer de boodschappenlijst per winkel op basis van het huidige weekmenu.')">🛒 Boodschappenlijst</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Welke recepten zijn geschikt voor een drukke dag? Max 20 minuten.')">⚡ Snelle recepten</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een overzicht van de activiteiten deze week en hoe druk elke dag is.')">📊 Weekoverzicht</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Stel een to-do lijst voor op basis van wat we deze week moeten doen.')">✅ To-do voorstellen</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Wat staat er vandaag op de planning? Activiteiten, maaltijd en transport.')">📋 Vandaag</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Maak een gevarieerd weekmenu voor volgende week op basis van ons rooster, drukte en wat we de laatste 8 weken al gegeten hebben.')">📅 Weekmenu</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Wie brengt en haalt de kinderen deze week? Geef een overzicht per dag.')">👶 Transport week</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Welke to-dos zijn dringend of hebben een deadline deze week?')">✅ Dringende to-do\'s</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Zijn er binnenkort verjaardagen? Geef een overzicht van de komende 8 weken.')">🎂 Verjaardagen</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Genereer de boodschappenlijst per winkel op basis van het huidige weekmenu.')">🛒 Boodschappen</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Zijn er conflicten in de planning deze week? Overlappen er activiteiten voor dezelfde persoon?')">⚠️ Conflicten</button>
+    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een volledig weekoverzicht: drukte, maaltijden en activiteiten per dag.')">📊 Weekoverzicht</button>
   </div>
 
   <div class="chat-container" id="chat-berichten">
     <div style="align-self:flex-start;">
-      <div class="chat-bubble-bot">Hallo! 👋 Ik ben jullie gezinsassistent. Ik heb toegang tot jullie agenda, recepten en weekplanning. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?</div>
+      <div class="chat-bubble-bot">Hallo! 👋 Ik ben jullie gezinsassistent. Ik heb volledige toegang tot jullie agenda, recepten, weekplanning, to-do's, contacten en kinderlogistiek. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?</div>
     </div>
   </div>
 
-  <!-- Bevestiging panel -->
   <div id="bevestiging-panel" style="display:none;" class="bevestiging-modal">
     <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
     <div id="bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
@@ -131,209 +130,620 @@
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
-Auth.initPagina('agent');
-let chatGeschiedenis=[];
-let pendingActie=null;
-let _dataGeladen=false;
+// ════════════════════════════════════════════════════════════════
+// GEZINSAGENT — volledig toolset (30 tools: 14 lezen + 16 schrijven)
+// ════════════════════════════════════════════════════════════════
 
-laadOp().catch(()=>laadLokaal()).finally(()=>{ _dataGeladen=true; });
+Auth.initPagina('agent');
+let chatGeschiedenis=[], pendingActie=null, _dataGeladen=false;
+let _weerCache=null, _weerLaatst=0;
+
+laadOp().catch(()=>laadLokaal()).finally(()=>{ _dataGeladen=true; _laadWeer(); });
+if(typeof BroadcastChannel!=='undefined')
+  new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); };
 
 const DAGKEYS_KORT=['zo','ma','di','wo','do','vr','za'];
 const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-// Week di→ma: index 0=di,1=wo,2=do,3=vr,4=za,5=zo,6=ma
 const WEEK_VOLGORDE=['Di','Wo','Do','Vr','Za','Zo','Ma'];
-const WEEK_VOLGORDE_LANG=['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
 
+// ── Tools ────────────────────────────────────────────────────────
 const AGENT_TOOLS=[
-  {name:'get_weekplanning',description:'Haal de weekplanning op. Toont per dag: datum (YYYY-MM-DD), welke dag het is, of het vandaag is, geplande maaltijden, activiteiten met maaltijdThuis-info, en drukte.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_rooster',description:'Haal alle activiteiten op inclusief data.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_recepten',description:'Haal recepten op. Optioneel filteren op type of max bereidingstijd.',input_schema:{type:'object',properties:{type:{type:'string'},max_tijd:{type:'number'}},required:[]}},
-  {name:'get_todos',description:'Haal alle openstaande to-dos op. Geeft ook het id terug voor afvinken.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'vink_todo_af',description:'Vink een to-do af als gedaan. VERPLICHT: vraag eerst bevestiging.',input_schema:{type:'object',properties:{todo_id:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['todo_id']}},
-  {name:'stel_weekmenu_in',description:'Stel het weekmenu in. Gebruik numeriek recept-id uit get_recepten. Gebruik "uiteten" voor buiten eten, null om een slot leeg te laten. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:'number'},lunch:{type:'number'},avond:{type:'number'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
-  {name:'voeg_todo_toe',description:'Voeg een to-do toe. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{titel:{type:'string'},deadline:{type:'string',description:'YYYY-MM-DD'},wie:{type:'array',items:{type:'string'}},prioriteit:{type:'string',description:'hoog/middel/laag'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
-  {name:'voeg_activiteit_toe',description:'Voeg een activiteit toe. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'jeroen,kelly,nora,odiel'},dagen:{type:'array',items:{type:'string'},description:'ma,di,wo,do,vr,za,zo'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks,tweewekelijks,eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','wie']}},
-  {name:'zoek_ingredienten',description:'Zoek of een ingrediënt al bestaat in de ingrediëntenlijst.',input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:['zoekterm']}},
-  {name:'voeg_ingredient_toe',description:'Voeg nieuw ingrediënt toe aan de ingrediëntenlijst. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'voeg_aan_boodschappenlijst_toe',description:'Voeg een item toe aan de boodschappenlijst (extraItems). VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'get_boodschappenlijst',description:'Genereer boodschappenlijst per winkel op basis van huidig weekmenu.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'wijzig_activiteit',description:'Wijzig een bestaande activiteit op naam. Geef alleen de velden mee die je wilt aanpassen. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string',description:'Huidige naam van de activiteit'},nieuw_naam:{type:'string'},wie:{type:'array',items:{type:'string'}},dagen:{type:'array',items:{type:'string'}},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string'},begin_datum:{type:'string',description:'YYYY-MM-DD'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
-  {name:'verwijder_activiteit',description:'Verwijder een activiteit op naam. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}}
+  // ── LEZEN ────────────────────────────────────────────────────────
+  {name:'get_dag',
+   description:'Volledig dagoverzicht: activiteiten, maaltijden, transport kinderen, drukte en schoolvakantie. Gebruik voor vragen over één specifieke dag.',
+   input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD. Leeg = vandaag.'}},required:[]}},
+
+  {name:'get_week',
+   description:'Weekoverzicht met per dag: activiteiten, maaltijden, transport, drukte en schoolvakantie. Gebruik voor wekelijkse planning of overzichten.',
+   input_schema:{type:'object',properties:{offset:{type:'integer',description:'0=huidige week, 1=volgende, -1=vorige, enz.'}},required:[]}},
+
+  {name:'get_activiteiten',
+   description:'Alle activiteiten in het rooster, optioneel gefilterd op persoon of zoekterm.',
+   input_schema:{type:'object',properties:{persoon:{type:'string',description:'jeroen/kelly/nora/odiel'},zoekterm:{type:'string'},actief_na:{type:'string',description:'YYYY-MM-DD — filter op einddatum'}},required:[]}},
+
+  {name:'get_recepten',
+   description:'Recepten ophalen met rijke filters. Roep dit ALTIJD aan vóór stel_weekmenu_in.',
+   input_schema:{type:'object',properties:{zoekterm:{type:'string'},type:{type:'string',description:'avond/lunch/ontbijt/weekend'},max_tijd:{type:'integer',description:'max bereidingstijd in minuten'},tag:{type:'string',description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},max_resultaten:{type:'integer'}},required:[]}},
+
+  {name:'get_todos',
+   description:'To-dos ophalen, optioneel gefilterd. Geeft id terug voor wijzigen of afvinken.',
+   input_schema:{type:'object',properties:{wie:{type:'string',description:'persoonkey'},prioriteit:{type:'string',description:'hoog/middel/laag'},inclusief_gedaan:{type:'boolean',description:'Standaard false'}},required:[]}},
+
+  {name:'get_boodschappenlijst',
+   description:'Boodschappenlijst per winkel: ingrediënten uit weekmenu plus extra handmatige items.',
+   input_schema:{type:'object',properties:{},required:[]}},
+
+  {name:'get_contacten',
+   description:'Contacten met familienaam, partners, kinderen, verjaardagen en kerstkaart-info.',
+   input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:[]}},
+
+  {name:'get_verjaardagen',
+   description:'Aankomende verjaardagen uit contacten, gesorteerd op datum.',
+   input_schema:{type:'object',properties:{weken:{type:'integer',description:'Aantal weken vooruit. Standaard 8.'}},required:[]}},
+
+  {name:'get_transport',
+   description:'Transport voor kinderen (wie brengt/haalt, eet bij grootouders) voor een dag of de volledige week.',
+   input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD. Leeg = vandaag.'},week:{type:'boolean',description:'true = volledige huidige week'}},required:[]}},
+
+  {name:'get_schoolvakanties',
+   description:'Schoolvakanties Vlaanderen en geplande uitzonderingen (verlof, vrije dagen).',
+   input_schema:{type:'object',properties:{},required:[]}},
+
+  {name:'get_eethistoriek',
+   description:'Maaltijdhistoriek van de afgelopen weken. Roep dit ALTIJD aan vóór je een weekmenu plant om herhalingen te vermijden.',
+   input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
+
+  {name:'get_weer',
+   description:'Huidig weer in Ardooie: temperatuur, neerslagkans en weersomschrijving.',
+   input_schema:{type:'object',properties:{},required:[]}},
+
+  {name:'get_conflicten',
+   description:'Detecteer overlappende activiteiten voor dezelfde persoon in de opgegeven week.',
+   input_schema:{type:'object',properties:{offset:{type:'integer',description:'0=huidige week, 1=volgende, enz.'}},required:[]}},
+
+  {name:'zoek_ingredienten',
+   description:'Zoek in de standaard ingrediëntenlijst. Gebruik dit vóór voeg_ingredient_toe om duplicaten te vermijden.',
+   input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:['zoekterm']}},
+
+  // ── SCHRIJVEN (altijd bevestiging vragen) ────────────────────────
+  {name:'stel_weekmenu_in',
+   description:'Plan maaltijden voor een of meerdere dagen. Gebruik NUMERIEK recept-id uit get_recepten, of "uiteten"/"afhalen"/"restjes"/"shake". ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+
+  {name:'wis_weekmenu_slot',
+   description:'Wis één maaltijdslot op een specifieke datum. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},slot:{type:'string',description:'ontbijt/lunch/avond'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot']}},
+
+  {name:'voeg_activiteit_toe',
+   description:'Voeg een nieuwe activiteit toe aan het rooster. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'persoonkeys: jeroen/kelly/nora/odiel'},dagen:{type:'array',items:{type:'string'},description:'ma/di/wo/do/vr/za/zo'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks/tweewekelijks/maandelijks/eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},eind_datum:{type:'string',description:'YYYY-MM-DD'},prep:{type:'string',description:'voorbereiding notities'},informatief:{type:'boolean',description:'true = geen impact op drukte'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','wie']}},
+
+  {name:'wijzig_activiteit',
+   description:'Wijzig velden van een bestaande activiteit. Zoekt op naam (gedeeltelijk). ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string',description:'Huidige naam of deel ervan'},nieuw_naam:{type:'string'},wie:{type:'array',items:{type:'string'}},dagen:{type:'array',items:{type:'string'}},start:{type:'string'},eind_uur:{type:'string'},locatie:{type:'string'},freq:{type:'string'},begin_datum:{type:'string'},eind_datum:{type:'string'},prep:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
+
+  {name:'verwijder_activiteit',
+   description:'Verwijder een activiteit permanent. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
+
+  {name:'voeg_todo_toe',
+   description:'Voeg een nieuwe to-do toe. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{titel:{type:'string'},notitie:{type:'string'},deadline:{type:'string',description:'YYYY-MM-DD'},prioriteit:{type:'string',description:'hoog/middel/laag'},wie:{type:'array',items:{type:'string'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
+
+  {name:'wijzig_todo',
+   description:'Wijzig een bestaande to-do op id. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{id:{type:'string'},titel:{type:'string'},notitie:{type:'string'},deadline:{type:'string'},prioriteit:{type:'string'},wie:{type:'array',items:{type:'string'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
+
+  {name:'vink_todo_af',
+   description:'Markeer een to-do als gedaan. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{id:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
+
+  {name:'verwijder_todo',
+   description:'Verwijder een to-do permanent. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{id:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
+
+  {name:'stel_transport_in',
+   description:'Éénmalige transport-uitzondering voor een specifieke dag (overschrijft standaard). ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},kind:{type:'string',description:'nora/odiel'},brengt:{type:'string',description:'persoonkey of lege string'},haalt:{type:'string',description:'persoonkey of lege string'},eet_groo:{type:'boolean'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','kind']}},
+
+  {name:'wijzig_standaard_transport',
+   description:'Wijzig het vaste weekrooster voor transport van een kind (permanent voor die weekdag). ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{kind:{type:'string',description:'nora/odiel'},dag:{type:'string',description:'ma/di/wo/do/vr'},brengt:{type:'string'},haalt:{type:'string'},eet_groo:{type:'boolean'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['kind','dag']}},
+
+  {name:'overschrijf_drukte',
+   description:'Stel de drukte van een dag handmatig in. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},drukte:{type:'string',description:'rustig/normaal/druk'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','drukte']}},
+
+  {name:'voeg_aan_boodschappenlijst_toe',
+   description:'Voeg een extra item toe aan de boodschappenlijst. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string',description:'Colruyt/Delhaize/Lidl/Albert Heijn/Beenhouwerij/Markt/Andere'},hoev:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
+
+  {name:'voeg_ingredient_toe',
+   description:'Voeg een nieuw standaard-ingrediënt toe. Gebruik zoek_ingredienten eerst om duplicaten te vermijden. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string',description:'Colruyt/Delhaize/Lidl/Albert Heijn/Beenhouwerij/Markt/Andere'},eenheid:{type:'string'},categorie:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
+
+  {name:'voeg_recept_toe',
+   description:'Voeg een volledig nieuw recept toe met ingrediënten en bereiding. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'},description:'avond/lunch/ontbijt/weekend'},tijd:{type:'integer',description:'bereidingstijd in minuten'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'},description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
+
+  {name:'wijzig_recept',
+   description:'Wijzig velden van een bestaand recept (naam, score, tags, tijd, bereiding, ingrediënten…). Zoekt op naam. ALTIJD bevestiging vragen.',
+   input_schema:{type:'object',properties:{naam:{type:'string',description:'Huidige naam of deel ervan'},nieuw_naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},score:{type:'integer',description:'1-5'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
 ];
 
+// ── Systeemprompt ────────────────────────────────────────────────
 function _bouwSysteemPrompt(){
   const nu=new Date();
   const vandaagISO=fDateISO(nu);
   const dagNaamNL=DAGKEYS_LANG[nu.getDay()];
-  // Bouw huidige weekplanning in als context
-  let planningContext='';
-  try {
+  let planCtx='';
+  try{
     const dates=getWeekDates(0);
-    const regels=dates.map((d,i)=>{
+    planCtx='\n\nHUIDIGE WEEK ('+wLabel(dates)+'):\n'+dates.map((d,i)=>{
       const key=fDateISO(d);
       const dag=planning[key]||{};
-      const isVandaag=key===vandaagISO;
-      const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?` ${a.start}`:''));
-      return `  ${WEEK_VOLGORDE[i]} ${key}${isVandaag?' ← VANDAAG':''}: ontbijt=${getNaam(dag.ontbijt)}, lunch=${getNaam(dag.lunch)}, avond=${getNaam(dag.avond)}${acts.length?', activiteiten: '+acts.join(', '):''}`;
-    });
-    planningContext='\n\nHUIDIGE WEEKPLANNING:\n'+regels.join('\n');
-  } catch(e) {}
-  return `Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere.
-Vandaag is ${dagNaamNL} ${vandaagISO}.
+      const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
+      return '  '+WEEK_VOLGORDE[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
+        ': O='+_getNaam(dag.ontbijt)+' L='+_getNaam(dag.lunch)+' A='+_getNaam(dag.avond)+
+        (acts?' ['+acts+']':'');
+    }).join('\n');
+  }catch(e){}
+  return `Je bent de gezinsassistent van de familie Debruyne-Dewaegenaere.
+Vandaag: ${dagNaamNL} ${vandaagISO}.
 Gezin: Jeroen (vader/admin, key:jeroen), Kelly (moeder, key:kelly), Nora (dochter 6j, key:nora), Odiel (zoon 3j, key:odiel).
-De week in de app loopt van dinsdag t/m maandag.
-Op schooldagen (ma-vr) eten de kinderen 's middags op school.${planningContext}
+Week loopt di→ma. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
 
 REGELS:
-- Vraag ALTIJD bevestiging voor je iets wijzigt (bevestiging_vereist:true in de tool).
-- Bij stel_weekmenu_in: gebruik het NUMERIEKE id van get_recepten. Gebruik het DATUM-veld (YYYY-MM-DD), niet de dagnaam.
-- Bij weekmenu plannen: roep eerst get_weekplanning aan voor de volledige details (inclusief maaltijdThuis). Als een activiteit maaltijdThuis.avond=false heeft, plan dan geen avondmaal thuis.
-- Voor ingrediënten toevoegen: eerst zoek_ingredienten → als niet gevonden voeg_ingredient_toe → dan voeg_aan_boodschappenlijst_toe.
-- Persoonkeys: jeroen, kelly, nora, odiel. Dagkeys: ma, di, wo, do, vr, za, zo.
-- Antwoord altijd in het Nederlands. Wees kort en concreet.`;
+- Vraag ALTIJD bevestiging vóór elke schrijfactie (bevestiging_vereist:true).
+- Roep get_eethistoriek(8) aan VÓÓR je een weekmenu plant. Vermijd recepten die de afgelopen 8 weken al voorkwamen.
+- Bij stel_weekmenu_in: gebruik NUMERIEK recept-id uit get_recepten, nooit de naam.
+- Antwoord altijd in het Nederlands. Wees bondig en concreet.`;
 }
 
-function voerToolUit(naam,input){
+// ── Helpers ──────────────────────────────────────────────────────
+async function _laadWeer(){
+  if(_weerCache&&Date.now()-_weerLaatst<30*60*1000)return;
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.97&longitude=3.19&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels');
+    const d=await r.json();
+    _weerCache={temp:Math.round(d.current.temperature_2m),regen:d.current.precipitation_probability,omschrijving:_weerOmschrijving(d.current.weather_code||0),icon:_weerIcon(d.current.weather_code||0)};
+    _weerLaatst=Date.now();
+  }catch(e){_weerCache=null;}
+}
+function _weerIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';if(c<=79)return'🌨️';if(c<=82)return'🌦️';if(c<=86)return'❄️';if(c<=99)return'⛈️';return'🌡️';}
+function _weerOmschrijving(c){if(c===0)return'Helder';if(c<=2)return'Licht bewolkt';if(c<=3)return'Bewolkt';if(c<=49)return'Mist';if(c<=69)return'Regen';if(c<=79)return'Sneeuw';if(c<=82)return'Regenbuien';if(c<=86)return'Sneeuwbuien';if(c<=99)return'Onweer';return'Onbekend';}
+
+function _getNaam(keuze){
+  if(!keuze)return'–';
+  if(SPEC[keuze])return SPEC[keuze];
+  const r=recepten.find(r=>r.id===keuze||r.id==keuze);
+  return r?r.naam:'–';
+}
+
+function _transportVoorDag(datum){
+  const dagKey=DAGKEYS_KORT[new Date(datum+'T12:00:00').getDay()];
+  const result={};
+  ['nora','odiel'].forEach(kind=>{
+    const std=(standaardTransport||{})[kind]?.[dagKey]||{};
+    const uit=(transportUitzonderingen||{})[datum]?.[kind]||{};
+    result[kind]={...std,...uit};
+  });
+  return result;
+}
+
+function _verjDatumDitJaar(verjaardag,nu){
+  const[,m,d]=verjaardag.split('-');
+  const dt=new Date(nu.getFullYear(),parseInt(m)-1,parseInt(d));
+  if(dt<nu)dt.setFullYear(dt.getFullYear()+1);
+  return dt;
+}
+
+// ── Tool executor ────────────────────────────────────────────────
+async function voerToolUit(naam,input){
   if(input.bevestiging_vereist){
     pendingActie={naam,input:JSON.parse(JSON.stringify(input))};
     toonBevestiging(input.bevestiging_bericht||'Wil je dit uitvoeren?');
-    return 'WACHT_OP_BEVESTIGING';
+    return'WACHT_OP_BEVESTIGING';
   }
-  return _voerToolUitZonderBevestiging(naam,input);
+  return await _exec(naam,input);
 }
 
-function _voerToolUitZonderBevestiging(naam,input){
+async function _exec(naam,input){
   switch(naam){
-    case 'get_weekplanning': {
-      const dates=getWeekDates(0);
+
+    // ── LEZEN ──────────────────────────────────────────────────────
+    case 'get_dag':{
+      const datum=input.datum||fDateISO(new Date());
+      const dag=planning[datum]||{};
+      const dObj=new Date(datum+'T12:00:00');
+      const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({
+        naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',
+        locatie:a.locatie||'',duur:a.duur||0,reisHeen:a.reisHeen||0,
+        maaltijdThuis:a.maaltijdThuis||{},informatief:a.informatief||false,prep:a.prep||''
+      }));
+      const dagNr=dObj.getDay();
+      return JSON.stringify({
+        datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===fDateISO(new Date()),
+        isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,
+        vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
+        drukte:getDagDrukte(datum),
+        ontbijt:_getNaam(dag.ontbijt),lunch:_getNaam(dag.lunch),avond:_getNaam(dag.avond),
+        activiteiten:acts,transport:_transportVoorDag(datum)
+      });
+    }
+
+    case 'get_week':{
+      const offset=input.offset||0;
+      const dates=getWeekDates(offset);
       const vandaagISO=fDateISO(new Date());
       return JSON.stringify(dates.map((d,i)=>{
-        const key=fDateISO(d);
-        const dag=planning[key]||{};
-        const actsVandaag=activiteiten.filter(a=>isActiefOpDatum(a,key));
-        return {
-          dag:WEEK_VOLGORDE[i], datum:key, isVandaag:key===vandaagISO,
-          ontbijt:getNaam(dag.ontbijt), lunch:getNaam(dag.lunch), avond:getNaam(dag.avond),
-          drukte:getDagDrukte(key),
-          activiteiten:actsVandaag.map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',maaltijdThuis:a.maaltijdThuis||{}})),
+        const datum=fDateISO(d);
+        const dag=planning[datum]||{};
+        const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({
+          naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||''
+        }));
+        return{
+          dag:WEEK_VOLGORDE[i],datum,isVandaag:datum===vandaagISO,
+          vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
+          drukte:getDagDrukte(datum),
+          ontbijt:_getNaam(dag.ontbijt),lunch:_getNaam(dag.lunch),avond:_getNaam(dag.avond),
+          activiteiten:acts,transport:_transportVoorDag(datum)
         };
       }));
     }
-    case 'get_rooster':
-      return JSON.stringify(activiteiten.map(a=>({
-        naam:a.naam, wie:(a.wie||[]).map(w=>PLABEL[w]||w),
-        dagen:a.dagen, start:a.start, eind:a.eindUur, locatie:a.locatie,
-        freq:a.freq, beginDatum:a.beginDatum, eindDatum:a.eindDatum, meerdaags:a.meerdaags||false,
+
+    case 'get_activiteiten':{
+      let acts=activiteiten;
+      if(input.persoon)acts=acts.filter(a=>(a.wie||[]).includes(input.persoon));
+      if(input.zoekterm)acts=acts.filter(a=>a.naam.toLowerCase().includes(input.zoekterm.toLowerCase()));
+      if(input.actief_na)acts=acts.filter(a=>!a.eindDatum||a.eindDatum>=input.actief_na);
+      return JSON.stringify(acts.map(a=>({
+        naam:a.naam,wie:(a.wie||[]).join(','),dagen:(a.dagen||[]).join(','),
+        start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||'',freq:a.freq,
+        beginDatum:a.beginDatum,eindDatum:a.eindDatum,prep:a.prep||'',informatief:a.informatief||false
       })));
-    case 'get_recepten': {
+    }
+
+    case 'get_recepten':{
       let recs=recepten;
-      if(input.type) recs=recs.filter(r=>r.type===input.type);
-      if(input.max_tijd) recs=recs.filter(r=>r.tijd&&r.tijd<=input.max_tijd);
-      return JSON.stringify(recs.map(r=>({id:r.id,naam:r.naam,type:r.type,tijd:r.tijd,moeilijk:r.moeilijk,score:r.score,tags:r.tags})));
+      if(input.zoekterm){const q=input.zoekterm.toLowerCase();recs=recs.filter(r=>r.naam.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q)));}
+      if(input.type)recs=recs.filter(r=>(r.types||[r.type].filter(Boolean)).includes(input.type));
+      if(input.max_tijd)recs=recs.filter(r=>r.tijd&&r.tijd<=input.max_tijd);
+      if(input.tag)recs=recs.filter(r=>(r.tags||[]).includes(input.tag));
+      if(input.wie)recs=recs.filter(r=>!r.wie||r.wie===input.wie);
+      return JSON.stringify(recs.slice(0,input.max_resultaten||50).map(r=>({
+        id:r.id,naam:r.naam,types:r.types||[r.type],tijd:r.tijd,
+        moeilijk:r.moeilijk,wie:r.wie,score:r.score||0,tags:r.tags||[],
+        ingredienten:(r.ingredienten||[]).map(i=>i.naam)
+      })));
     }
-    case 'get_todos':
-      return JSON.stringify(todos.filter(t=>!t.gedaan).map(t=>({id:t.id,titel:t.titel,deadline:t.deadline,prioriteit:t.prioriteit,wie:(t.wie||[]).map(w=>PLABEL[w]||w)})));
-    case 'vink_todo_af': {
-      const todo=todos.find(t=>t.id===input.todo_id);
-      if(!todo) return 'To-do niet gevonden.';
-      todo.gedaan=true; todo.gedaanOp=fDateISO(new Date());
-      slaLokaalOp(); sbSaveTodo(todo);
-      return `✅ "${todo.titel}" afgevinkt.`;
+
+    case 'get_todos':{
+      let td=todos;
+      if(!input.inclusief_gedaan)td=td.filter(t=>!t.gedaan);
+      if(input.wie)td=td.filter(t=>(t.wie||[]).includes(input.wie));
+      if(input.prioriteit)td=td.filter(t=>t.prioriteit===input.prioriteit);
+      return JSON.stringify(td.map(t=>({
+        id:t.id,titel:t.titel,notitie:t.notitie||'',deadline:t.deadline||'',
+        prioriteit:t.prioriteit,wie:(t.wie||[]).join(','),gedaan:t.gedaan
+      })));
     }
-    case 'stel_weekmenu_in': {
-      if(!input.menu||!Array.isArray(input.menu)) return 'Fout formaat';
-      input.menu.forEach(dagData=>{
-        // Gebruik datum direct (YYYY-MM-DD)
-        const key=dagData.datum||null;
-        if(!key||!key.match(/^\d{4}-\d{2}-\d{2}$/)) return;
-        if(!planning[key]) planning[key]={};
+
+    case 'get_boodschappenlijst':{
+      const WINKELS=['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
+      const res={};WINKELS.forEach(w=>res[w]=[]);
+      Object.values(planning).forEach(dag=>{
         ['ontbijt','lunch','avond'].forEach(slot=>{
-          if(dagData[slot]===undefined||dagData[slot]===null) return;
+          const keuze=dag[slot];
+          const numId=Number(keuze);
+          if(keuze&&!isNaN(numId)&&numId>0){
+            const r=recepten.find(r=>r.id==keuze);
+            if(r)(r.ingredienten||[]).forEach(ing=>{
+              const w=ing.winkel||'Andere';
+              if(res[w])res[w].push({naam:ing.naam,hoev:ing.hoev||'',eenheid:ing.eenheid||'',recept:r.naam});
+            });
+          }
+        });
+      });
+      (extraItems||[]).forEach(item=>{const w=item.winkel||'Andere';if(res[w])res[w].push({naam:item.naam,hoev:item.hoev||'',eenheid:item.eenheid||'',extra:true});});
+      return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([,v])=>v.length)));
+    }
+
+    case 'get_contacten':{
+      const q=(input.zoekterm||'').toLowerCase();
+      let ct=contacten;
+      if(q)ct=ct.filter(c=>(c.naam||'').toLowerCase().includes(q));
+      return JSON.stringify(ct.map(c=>{
+        let partners=[];
+        try{const p=typeof c.partner==='string'?JSON.parse(c.partner):(c.partner||{});partners=Object.values(p).filter(p=>p&&p.voornaam);}catch{}
+        let kinderen=[];
+        try{kinderen=typeof c.kinderen_namen==='string'?JSON.parse(c.kinderen_namen):(c.kinderen_namen||[]);}catch{}
+        return{
+          familie:c.naam,
+          partners:partners.map(p=>({naam:`${p.voornaam||''} ${p.achternaam||''}`.trim(),verjaardag:p.verjaardag||''})),
+          kinderen:kinderen.map(k=>({naam:`${k.voornaam||''} ${k.achternaam||''}`.trim(),verjaardag:k.verjaardag||''})),
+          kerstmis:c.kerstmis||false,adres:c.adres||''
+        };
+      }));
+    }
+
+    case 'get_verjaardagen':{
+      const weken=input.weken||8;
+      const nu=new Date();nu.setHours(0,0,0,0);
+      const tot=new Date(nu);tot.setDate(tot.getDate()+weken*7);
+      const vj=[];
+      contacten.forEach(c=>{
+        let personen=[];
+        try{const p=typeof c.partner==='string'?JSON.parse(c.partner):(c.partner||{});personen.push(...Object.values(p).filter(p=>p&&p.voornaam));}catch{}
+        try{const k=typeof c.kinderen_namen==='string'?JSON.parse(c.kinderen_namen):(c.kinderen_namen||[]);personen.push(...k);}catch{}
+        personen.forEach(p=>{
+          if(!p||!p.verjaardag)return;
+          const d=_verjDatumDitJaar(p.verjaardag,nu);
+          if(d>=nu&&d<=tot)vj.push({naam:`${p.voornaam||''} ${p.achternaam||''}`.trim(),familie:c.naam,datum:fDateISO(d),over:Math.round((d-nu)/(24*3600*1000))});
+        });
+      });
+      vj.sort((a,b)=>a.over-b.over);
+      return JSON.stringify(vj.length?vj:`Geen verjaardagen de komende ${weken} weken.`);
+    }
+
+    case 'get_transport':{
+      if(input.week){
+        const dates=getWeekDates(0);
+        return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
+      }
+      const datum=input.datum||fDateISO(new Date());
+      return JSON.stringify({datum,dag:DAGKEYS_LANG[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
+    }
+
+    case 'get_schoolvakanties':{
+      const nu=fDateISO(new Date());
+      return JSON.stringify({vakanties:SCHOOLVAKANTIES,uitzonderingen:(uitzonderingen||[]).filter(u=>u.datum>=nu)});
+    }
+
+    case 'get_eethistoriek':{
+      const weken=input.weken||8;
+      const nu=new Date();nu.setHours(0,0,0,0);
+      const van=new Date(nu);van.setDate(van.getDate()-weken*7);
+      const vanISO=fDateISO(van);
+      const vandaagISO=fDateISO(nu);
+      const hist=[];
+      Object.entries(planning).forEach(([datum,dag])=>{
+        if(datum>=vanISO&&datum<vandaagISO){
+          const entry={datum};
+          if(dag.ontbijt&&dag.ontbijt!==null)entry.ontbijt=_getNaam(dag.ontbijt);
+          if(dag.lunch&&dag.lunch!==null)entry.lunch=_getNaam(dag.lunch);
+          if(dag.avond&&dag.avond!==null)entry.avond=_getNaam(dag.avond);
+          if(entry.ontbijt||entry.lunch||entry.avond)hist.push(entry);
+        }
+      });
+      hist.sort((a,b)=>b.datum.localeCompare(a.datum));
+      return JSON.stringify(hist.length?hist:'Geen eethistoriek (planning nog leeg of alle maaltijden onbekend).');
+    }
+
+    case 'get_weer':
+      if(!_weerCache)await _laadWeer();
+      return _weerCache?JSON.stringify(_weerCache):'Weersdata niet beschikbaar.';
+
+    case 'get_conflicten':{
+      const dates=getWeekDates(input.offset||0);
+      const conflicten=[];
+      const personen=PERSONEN.length?PERSONEN:['jeroen','kelly','nora','odiel'];
+      dates.forEach(d=>{
+        const datum=fDateISO(d);
+        const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)&&!a.informatief&&a.start&&a.eindUur);
+        personen.forEach(persoon=>{
+          const pActs=acts.filter(a=>(a.wie||[]).includes(persoon));
+          for(let i=0;i<pActs.length;i++){
+            for(let j=i+1;j<pActs.length;j++){
+              const a1=pActs[i],a2=pActs[j];
+              if(a1.start<a2.eindUur&&a2.start<a1.eindUur)
+                conflicten.push({datum,dag:DAGKEYS_LANG[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam,tijden:`${a1.start}-${a1.eindUur} / ${a2.start}-${a2.eindUur}`});
+            }
+          }
+        });
+      });
+      return JSON.stringify(conflicten.length?conflicten:'Geen conflicten gevonden.');
+    }
+
+    case 'zoek_ingredienten':{
+      const q=(input.zoekterm||'').toLowerCase();
+      return JSON.stringify(standaardIngredienten.filter(i=>(i.naam||'').toLowerCase().includes(q)).map(i=>({id:i._sbId||i.id,naam:i.naam,winkel:i.winkel,eenheid:i.eenheid||'',categorie:i.categorie||''})));
+    }
+
+    // ── SCHRIJVEN ──────────────────────────────────────────────────
+    case 'stel_weekmenu_in':{
+      if(!input.menu||!Array.isArray(input.menu))return'Fout formaat.';
+      input.menu.forEach(dagData=>{
+        const key=dagData.datum;
+        if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(key))return;
+        if(!planning[key])planning[key]={};
+        ['ontbijt','lunch','avond'].forEach(slot=>{
+          if(dagData[slot]===undefined)return;
           let val=dagData[slot];
-          if(val==='uiteten'||val==='—') { planning[key][slot]=null; sbSavePlanning(key,slot,null,planning[key].porties||{}); return; }
-          if(typeof val==='string'&&isNaN(Number(val))){const rec=recepten.find(r=>r.naam.toLowerCase()===val.toLowerCase());val=rec?rec.id:val;}
-          else if(typeof val==='string') val=Number(val)||val;
+          if(val===null||val==='')val=null;
+          else if(typeof val==='string'&&SPEC[val])val=val;
+          else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);
+          else{const rec=recepten.find(r=>r.naam.toLowerCase()===String(val).toLowerCase());val=rec?rec.id:val;}
           planning[key][slot]=val;
           sbSavePlanning(key,slot,val,planning[key].porties||{});
         });
       });
-      slaLokaalOp(); return '✅ Weekmenu ingesteld!';
-    }
-    case 'voeg_todo_toe': {
-      const todo={id:String(Date.now()),titel:input.titel,deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:fDateISO(new Date())};
-      todos.push(todo); slaLokaalOp(); sbSaveTodo(todo);
-      return '✅ To-do toegevoegd: '+input.titel;
-    }
-    case 'voeg_activiteit_toe': {
-      const act={id:Date.now(),naam:input.naam,wie:input.wie||[],dagen:input.dagen||[],start:input.start||null,eindUur:input.eind_uur||null,duur:0,reisHeen:0,reisTerug:0,prep:0,locatie:input.locatie||'',freq:input.freq||'wekelijks',beginDatum:input.begin_datum||null,eindDatum:null,meerdaags:false,prive:false,transport:{}};
-      activiteiten.push(act); slaLokaalOp(); sbSaveActiviteit(act);
-      return '✅ Activiteit toegevoegd: '+input.naam;
-    }
-    case 'zoek_ingredienten': {
-      const q=(input.zoekterm||'').toLowerCase();
-      const found=standaardIngredienten.filter(i=>(i.naam||'').toLowerCase().includes(q));
-      return JSON.stringify(found.map(i=>({id:i._sbId||i.id,naam:i.naam,winkel:i.winkel,eenheid:i.eenheid||''})));
-    }
-    case 'voeg_ingredient_toe': {
-      const ing={id:String(Date.now()),naam:input.naam,winkel:input.winkel||'Andere',eenheid:input.eenheid||''};
-      standaardIngredienten.push(ing); slaLokaalOp(); sbSaveIngredient(ing);
-      return `✅ Ingrediënt "${input.naam}" toegevoegd (${input.winkel}).`;
-    }
-    case 'voeg_aan_boodschappenlijst_toe': {
-      const item={id:Date.now(),naam:input.naam,winkel:input.winkel||'Andere',hoev:input.hoev||'',eenheid:input.eenheid||''};
-      extraItems.push(item); slaLokaalOp(); sbSaveExtra(item);
-      return `✅ "${input.naam}" toegevoegd aan boodschappenlijst.`;
-    }
-    case 'get_boodschappenlijst': {
-      const res={};WINKELS.forEach(w=>res[w]=[]);
-      Object.values(planning).forEach(dag=>{
-        Object.values(dag).forEach(keuze=>{
-          if(keuze&&!SPEC[keuze]){const r=recepten.find(r=>r.id===keuze||r.id==keuze);if(r)(r.ingredienten||[]).forEach(ing=>{if(res[ing.winkel])res[ing.winkel].push({naam:ing.naam,hoev:ing.hoev,eenheid:ing.eenheid,recept:r.naam});});}
-        });
-      });
-      return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));
-    }
-    case 'wijzig_activiteit': {
-      const act=activiteiten.find(a=>a.naam.toLowerCase()===input.naam.toLowerCase());
-      if(!act) return `Activiteit "${input.naam}" niet gevonden.`;
-      if(input.nieuw_naam) act.naam=input.nieuw_naam;
-      if(input.wie)        act.wie=input.wie;
-      if(input.dagen)      act.dagen=input.dagen;
-      if(input.start)      act.start=input.start;
-      if(input.eind_uur)   act.eindUur=input.eind_uur;
-      if(input.locatie)    act.locatie=input.locatie;
-      if(input.freq)       act.freq=input.freq;
-      if(input.begin_datum) act.beginDatum=input.begin_datum;
-      slaLokaalOp(); sbSaveActiviteit(act);
-      return `✅ Activiteit "${act.naam}" gewijzigd.`;
-    }
-    case 'verwijder_activiteit': {
-      const idx=activiteiten.findIndex(a=>a.naam.toLowerCase()===input.naam.toLowerCase());
-      if(idx<0) return `Activiteit "${input.naam}" niet gevonden.`;
-      const [removed]=activiteiten.splice(idx,1);
       slaLokaalOp();
-      if(removed._sbId) sbDeleteActiviteit(removed._sbId);
-      return `✅ Activiteit "${removed.naam}" verwijderd.`;
+      return'✅ Weekmenu ingesteld.';
     }
-    default: return 'Onbekende tool: '+naam;
+
+    case 'wis_weekmenu_slot':{
+      if(!planning[input.datum])planning[input.datum]={};
+      planning[input.datum][input.slot]=null;
+      sbSavePlanning(input.datum,input.slot,null,planning[input.datum].porties||{});
+      slaLokaalOp();
+      return`✅ ${input.slot} op ${input.datum} gewist.`;
+    }
+
+    case 'voeg_activiteit_toe':{
+      const act={id:Date.now(),naam:input.naam,wie:input.wie||[],dagen:input.dagen||[],start:input.start||null,eindUur:input.eind_uur||null,duur:0,reisHeen:0,reisTerug:0,prep:input.prep||'',locatie:input.locatie||'',freq:input.freq||'wekelijks',beginDatum:input.begin_datum||null,eindDatum:input.eind_datum||null,meerdaags:false,prive:false,informatief:input.informatief||false,transport:{},maaltijdThuis:{}};
+      activiteiten.push(act);slaLokaalOp();sbSaveActiviteit(act);
+      return`✅ Activiteit "${act.naam}" toegevoegd.`;
+    }
+
+    case 'wijzig_activiteit':{
+      const act=activiteiten.find(a=>a.naam.toLowerCase().includes(input.naam.toLowerCase()));
+      if(!act)return`Activiteit met "${input.naam}" niet gevonden.`;
+      if(input.nieuw_naam!==undefined)act.naam=input.nieuw_naam;
+      if(input.wie!==undefined)act.wie=input.wie;
+      if(input.dagen!==undefined)act.dagen=input.dagen;
+      if(input.start!==undefined)act.start=input.start;
+      if(input.eind_uur!==undefined)act.eindUur=input.eind_uur;
+      if(input.locatie!==undefined)act.locatie=input.locatie;
+      if(input.freq!==undefined)act.freq=input.freq;
+      if(input.begin_datum!==undefined)act.beginDatum=input.begin_datum;
+      if(input.eind_datum!==undefined)act.eindDatum=input.eind_datum;
+      if(input.prep!==undefined)act.prep=input.prep;
+      slaLokaalOp();sbSaveActiviteit(act);
+      return`✅ Activiteit "${act.naam}" gewijzigd.`;
+    }
+
+    case 'verwijder_activiteit':{
+      const idx=activiteiten.findIndex(a=>a.naam.toLowerCase().includes(input.naam.toLowerCase()));
+      if(idx<0)return`Activiteit met "${input.naam}" niet gevonden.`;
+      const[removed]=activiteiten.splice(idx,1);
+      slaLokaalOp();if(removed._sbId)sbDeleteActiviteit(removed._sbId);
+      return`✅ Activiteit "${removed.naam}" verwijderd.`;
+    }
+
+    case 'voeg_todo_toe':{
+      const todo={id:String(Date.now()),titel:input.titel,notitie:input.notitie||'',deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:fDateISO(new Date())};
+      todos.push(todo);slaLokaalOp();sbSaveTodo(todo);
+      return`✅ To-do "${todo.titel}" toegevoegd.`;
+    }
+
+    case 'wijzig_todo':{
+      const todo=todos.find(t=>t.id===input.id);
+      if(!todo)return'To-do niet gevonden.';
+      if(input.titel!==undefined)todo.titel=input.titel;
+      if(input.notitie!==undefined)todo.notitie=input.notitie;
+      if(input.deadline!==undefined)todo.deadline=input.deadline;
+      if(input.prioriteit!==undefined)todo.prioriteit=input.prioriteit;
+      if(input.wie!==undefined)todo.wie=input.wie;
+      slaLokaalOp();sbSaveTodo(todo);
+      return`✅ To-do "${todo.titel}" gewijzigd.`;
+    }
+
+    case 'vink_todo_af':{
+      const todo=todos.find(t=>t.id===input.id);
+      if(!todo)return'To-do niet gevonden.';
+      todo.gedaan=true;todo.gedaanOp=fDateISO(new Date());
+      slaLokaalOp();sbSaveTodo(todo);
+      return`✅ "${todo.titel}" afgevinkt.`;
+    }
+
+    case 'verwijder_todo':{
+      const idx=todos.findIndex(t=>t.id===input.id);
+      if(idx<0)return'To-do niet gevonden.';
+      const[removed]=todos.splice(idx,1);
+      slaLokaalOp();if(removed._sbId)sbDeleteTodo(removed._sbId);
+      return`✅ To-do "${removed.titel}" verwijderd.`;
+    }
+
+    case 'stel_transport_in':{
+      if(!transportUitzonderingen[input.datum])transportUitzonderingen[input.datum]={};
+      if(!transportUitzonderingen[input.datum][input.kind])transportUitzonderingen[input.datum][input.kind]={};
+      const t=transportUitzonderingen[input.datum][input.kind];
+      if(input.brengt!==undefined)t.brengt=input.brengt;
+      if(input.haalt!==undefined)t.haalt=input.haalt;
+      if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;
+      slaLokaalOp();sbSaveInstellingen();
+      return`✅ Transport voor ${input.kind} op ${input.datum} ingesteld.`;
+    }
+
+    case 'wijzig_standaard_transport':{
+      if(!standaardTransport[input.kind])standaardTransport[input.kind]={};
+      if(!standaardTransport[input.kind][input.dag])standaardTransport[input.kind][input.dag]={};
+      const t=standaardTransport[input.kind][input.dag];
+      if(input.brengt!==undefined)t.brengt=input.brengt;
+      if(input.haalt!==undefined)t.haalt=input.haalt;
+      if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;
+      slaLokaalOp();sbSaveInstellingen();
+      return`✅ Standaard transport voor ${input.kind} op ${input.dag} permanent gewijzigd.`;
+    }
+
+    case 'overschrijf_drukte':{
+      drukteOverride[input.datum]=input.drukte;
+      slaLokaalOp();sbSaveDrukte(input.datum,input.drukte);
+      return`✅ Drukte op ${input.datum} ingesteld op "${input.drukte}".`;
+    }
+
+    case 'voeg_aan_boodschappenlijst_toe':{
+      const item={id:Date.now(),naam:input.naam,winkel:input.winkel||'Andere',hoev:input.hoev||'',eenheid:input.eenheid||''};
+      extraItems.push(item);slaLokaalOp();sbSaveExtra(item);
+      return`✅ "${input.naam}" toegevoegd aan boodschappenlijst (${input.winkel}).`;
+    }
+
+    case 'voeg_ingredient_toe':{
+      const ing={id:String(Date.now()),naam:input.naam,winkel:input.winkel||'Andere',eenheid:input.eenheid||'',categorie:input.categorie||''};
+      standaardIngredienten.push(ing);slaLokaalOp();sbSaveIngredient(ing);
+      return`✅ Ingrediënt "${input.naam}" toegevoegd.`;
+    }
+
+    case 'voeg_recept_toe':{
+      const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};
+      recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);
+      return`✅ Recept "${rec.naam}" toegevoegd.`;
+    }
+
+    case 'wijzig_recept':{
+      const rec=recepten.find(r=>r.naam.toLowerCase().includes(input.naam.toLowerCase()));
+      if(!rec)return`Recept met "${input.naam}" niet gevonden.`;
+      if(input.nieuw_naam!==undefined)rec.naam=input.nieuw_naam;
+      if(input.types!==undefined){rec.types=input.types;rec.type=input.types[0];}
+      if(input.tijd!==undefined)rec.tijd=input.tijd;
+      if(input.moeilijk!==undefined)rec.moeilijk=input.moeilijk;
+      if(input.wie!==undefined)rec.wie=input.wie;
+      if(input.bron!==undefined)rec.bron=input.bron;
+      if(input.bereiding!==undefined)rec.bereiding=input.bereiding;
+      if(input.score!==undefined)rec.score=input.score;
+      if(input.tags!==undefined)rec.tags=input.tags;
+      if(input.ingredienten!==undefined)rec.ingredienten=input.ingredienten;
+      slaLokaalOp();sbSaveRecept(rec);
+      return`✅ Recept "${rec.naam}" gewijzigd.`;
+    }
+
+    default:return`Onbekende tool: ${naam}`;
   }
 }
 
-function getNaam(keuze){if(!keuze)return'–';if(SPEC[keuze])return SPEC[keuze];const r=recepten.find(r=>r.id===keuze||r.id==keuze);return r?r.naam:'–';}
-
+// ── Bevestiging ──────────────────────────────────────────────────
 function toonBevestiging(bericht){
   document.getElementById('bevestiging-tekst').textContent=bericht;
   document.getElementById('bevestiging-panel').style.display='block';
 }
-function bevestigActie(){
-  document.getElementById('bevestiging-panel').style.display='none';
+
+async function bevestigActie(){
   if(!pendingActie)return;
-  const {naam,input}=pendingActie;pendingActie=null;
-  const result=_voerToolUitZonderBevestiging(naam,input);
-  const msg='✅ Uitgevoerd: '+result;
-  voegBerichtToe('assistant',msg);
-  chatGeschiedenis.push({role:'assistant',content:msg});
+  document.getElementById('bevestiging-panel').style.display='none';
+  const{naam,input,toolUseId}=pendingActie;
+  pendingActie=null;
+  const typingEl=voegBerichtToe('assistant','⏳…',true);
+  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
+  try{
+    const result=await _exec(naam,input);
+    // Vervang de "wacht op bevestiging" placeholder in de history door het echte resultaat
+    const lastUser=chatGeschiedenis[chatGeschiedenis.length-1];
+    if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){
+      const placeholder=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);
+      if(placeholder)placeholder.content=result;
+    }
+    const data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:_bouwSysteemPrompt(),tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    typingEl?.remove();
+    voegBerichtToe('assistant',tekst);
+    chatGeschiedenis.push({role:'assistant',content:tekst});
+  }catch(e){
+    typingEl?.remove();
+    voegBerichtToe('assistant','❌ Fout: '+e.message);
+  }
 }
+
 function annuleerActie(){
   document.getElementById('bevestiging-panel').style.display='none';
   pendingActie=null;
@@ -342,45 +752,55 @@ function annuleerActie(){
   chatGeschiedenis.push({role:'assistant',content:msg});
 }
 
+// ── API ──────────────────────────────────────────────────────────
+async function _aFetch(apiKey,body){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)
+  });
+  const d=await r.json();
+  if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}
+  return d;
+}
+
+// ── Chat ─────────────────────────────────────────────────────────
 async function stuurBericht(){
-  const input=document.getElementById('chat-input');
-  const tekst=input.value.trim();if(!tekst)return;
+  const inputEl=document.getElementById('chat-input');
+  const tekst=inputEl.value.trim();if(!tekst)return;
   if(!_dataGeladen){
     voegBerichtToe('assistant','⏳ Even wachten, data wordt nog geladen…');
-    await new Promise(r=>{ const t=setInterval(()=>{ if(_dataGeladen){clearInterval(t);r();} },200); });
-    document.querySelector('.chat-bubble-bot:last-of-type')?.closest('div')?.remove();
+    await new Promise(r=>{const t=setInterval(()=>{if(_dataGeladen){clearInterval(t);r();}},200);});
+    document.querySelector('#chat-berichten > div:last-child')?.remove();
   }
   let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side only, no backend available
   if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
-  input.value='';
+  inputEl.value='';
   voegBerichtToe('user',tekst);
   chatGeschiedenis.push({role:'user',content:tekst});
-  // Trim history: bewaar max 20 beurten (40 berichten) om context-overflow te vermijden
-  if(chatGeschiedenis.length>40) chatGeschiedenis=chatGeschiedenis.slice(-40);
+  if(chatGeschiedenis.length>40)chatGeschiedenis=chatGeschiedenis.slice(-40);
   const typingEl=voegBerichtToe('assistant','⏳…',true);
+  const systeemPrompt=_bouwSysteemPrompt();
   try{
-    const _aFetch=async(body)=>{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;};
-    const systeemPrompt=_bouwSysteemPrompt();
-    let data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const toolResults=[];
-      for(const block of (data.content||[])){
+      for(const block of(data.content||[])){
         if(block.type==='tool_use'){
-          const result=voerToolUit(block.name,block.input);
+          const result=await voerToolUit(block.name,block.input);
           if(result==='WACHT_OP_BEVESTIGING'){
             typingEl?.remove();
             pendingActie.toolUseId=block.id;
-            pendingActie.assistantContent=data.content;
             chatGeschiedenis.push({role:'assistant',content:data.content});
             chatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
             return;
           }
-          toolResults.push({type:'tool_result',tool_use_id:block.id,content:result});
+          toolResults.push({type:'tool_result',tool_use_id:block.id,content:String(result)});
         }
       }
       chatGeschiedenis.push({role:'assistant',content:data.content});
       chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+      data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     }
     const finaleTekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
@@ -398,7 +818,7 @@ function stuurVoorbeeldVraag(tekst){document.getElementById('chat-input').value=
 function voegBerichtToe(rol,tekst,isTyping=false){
   const container=document.getElementById('chat-berichten');
   const wrap=document.createElement('div');
-  wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};max-width:82%;`;
+  wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};max-width:85%;`;
   const bubble=document.createElement('div');
   bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
   if(rol==='user'){bubble.textContent=tekst;}else{bubble.innerHTML=formateerAntwoord(escHtml(tekst));}
@@ -408,70 +828,42 @@ function voegBerichtToe(rol,tekst,isTyping=false){
 }
 
 function formateerAntwoord(tekst){
-  return tekst.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  return tekst
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/^#{1,3}\s(.+)$/gm,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
 }
-function clearChat(){chatGeschiedenis=[];document.getElementById('chat-berichten').innerHTML=`<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>`;}
+
+function clearChat(){
+  chatGeschiedenis=[];
+  document.getElementById('chat-berichten').innerHTML='<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>';
+}
 </script>
 <script>
-// ── Sidebar (desktop) ────────────────────────────────────────
-// ── Profiel dropdown ─────────────────────────────────────────
-function toggleProfielMenu(e){
-  e && e.stopPropagation();
-  document.getElementById('profiel-menu')?.classList.toggle('open');
-}
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
-});
-// ── Module overlay (mobiel) ───────────────────────────────────
-function toggleModules(){
-  document.getElementById('module-overlay')?.classList.toggle('open');
-}
-function sluitModules(e){
-  if(e.target === document.getElementById('module-overlay'))
-    document.getElementById('module-overlay').classList.remove('open');
-}
-// ── Actieve pagina in mobiele nav ─────────────────────────────
+// ── Sidebar & navigatie ──────────────────────────────────────────
+function toggleProfielMenu(e){e&&e.stopPropagation();document.getElementById('profiel-menu')?.classList.toggle('open');}
+document.addEventListener('click',function(){document.getElementById('profiel-menu')?.classList.remove('open');});
+function toggleModules(){document.getElementById('module-overlay')?.classList.toggle('open');}
+function sluitModules(e){if(e.target===document.getElementById('module-overlay'))document.getElementById('module-overlay').classList.remove('open');}
 (function(){
-  const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
-  document.querySelectorAll('.mobile-nav-item[data-pagina], .bottom-nav-item[data-pagina]').forEach(el => {
-    el.classList.toggle('active', el.dataset.pagina === pagina);
-  });
+  const pagina=window.location.pathname.split('/').pop().replace('.html','')||'index';
+  document.querySelectorAll('.mobile-nav-item[data-pagina],.bottom-nav-item[data-pagina]').forEach(el=>el.classList.toggle('active',el.dataset.pagina===pagina));
 })();
-// ── Sidebar footer vullen met gebruikersinfo ─────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  if(typeof Auth !== 'undefined'){
-    const p = Auth.profiel();
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof Auth!=='undefined'){
+    const p=Auth.profiel();
     if(p){
-      const av = document.getElementById('sidebar-avatar');
-      const nm = document.getElementById('sidebar-naam');
-      const rl = document.getElementById('sidebar-rol');
-      if(av) av.textContent = p.emoji || '🧑';
-      if(nm) nm.textContent = p.naam || '';
-      if(rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
+      const av=document.getElementById('sidebar-avatar');const nm=document.getElementById('sidebar-naam');const rl=document.getElementById('sidebar-rol');
+      if(av)av.textContent=p.emoji||'🧑';if(nm)nm.textContent=p.naam||'';if(rl)rl.textContent=Auth.ROLLEN[p.rol]?.label||p.rol||'';
     }
   }
-  // ── Sluitknop injecteren in alle modals ──────────────────────
-  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
-    if(modal.querySelector('.modal-sluit-btn')) return;
-    const bg = modal.closest('.modal-bg');
-    const btn = document.createElement('button');
-    btn.className = 'modal-sluit-btn';
-    btn.setAttribute('aria-label', 'Sluiten');
-    btn.textContent = '✕';
-    btn.onclick = function(e){
-      e.stopPropagation();
-      if(bg) bg.classList.remove('open');
-    };
-    modal.insertBefore(btn, modal.firstChild);
-  });
 });
-// ── Sync status ook in sidebar bijwerken ─────────────────────
-const _origToonOpslag = window.toonOpslagStatus;
-window.toonOpslagStatus = function(tekst){
-  document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
-  if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
+const _origToonOpslag=window.toonOpslagStatus;
+window.toonOpslagStatus=function(tekst){
+  document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=tekst);
+  if(tekst&&tekst.startsWith('✅'))_flashGreen&&_flashGreen(_lastClickedBtn);
 };
-<script>
 </script>
 </body>
 </html>
