@@ -405,21 +405,40 @@ function renderWerkadressen(){
   const ghProfielen=Auth.getProfielen().filter(p=>p.rol==='gezinshoofd');
   if(!ghProfielen.length){container.innerHTML='<p style="font-size:13px;color:var(--muted);">Geen gezinshoofden gevonden.</p>';return;}
   const inputStijl='width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;';
-  container.innerHTML=ghProfielen.map(p=>`
+  container.innerHTML=ghProfielen.map(p=>{
+    const geslagenReistijd=localStorage.getItem('gezinsapp_reistijd_'+p.persoonKey)||'';
+    return `
     <div style="margin-bottom:14px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${escHtml(p.emoji)} ${escHtml(p.naam)}</div>
       <input type="text" id="werkadres-${escHtml(p.persoonKey)}" placeholder="Werkadres" style="${inputStijl}" value="${escHtml(localStorage.getItem('gezinsapp_werkadres_'+p.persoonKey)||'')}"/>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <label style="font-size:13px;color:var(--muted);white-space:nowrap;">Reistijd (min):</label>
-        <input type="number" id="reistijd-${escHtml(p.persoonKey)}" min="0" max="180" step="5"
-          style="width:80px;padding:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"
-          value="${escHtml(localStorage.getItem('gezinsapp_reistijd_'+p.persoonKey)||'')}"/>
-        <span style="font-size:12px;color:var(--muted);">minuten pendelen</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span id="reistijd-lbl-${escHtml(p.persoonKey)}" style="font-size:13px;color:var(--muted);">${geslagenReistijd?'🚗 Pendeltijd: <b>'+escHtml(geslagenReistijd)+' min</b>':'⏳ Pendeltijd wordt automatisch berekend na adresselectie'}</span>
+        <span id="reistijd-spinner-${escHtml(p.persoonKey)}" style="display:none;font-size:12px;color:var(--muted);">⏳ Berekenen…</span>
       </div>
-    </div>`).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()">💾 Opslaan</button>`;
+      <input type="hidden" id="reistijd-${escHtml(p.persoonKey)}" value="${escHtml(geslagenReistijd)}"/>
+    </div>`;
+  }).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()">💾 Opslaan</button>`;
   ghProfielen.forEach(p=>{
     const el=document.getElementById('werkadres-'+p.persoonKey);
-    if(el) Maps.autocomplete(el, adres=>localStorage.setItem('gezinsapp_werkadres_'+p.persoonKey, adres));
+    if(!el) return;
+    Maps.autocomplete(el, async (adres)=>{
+      localStorage.setItem('gezinsapp_werkadres_'+p.persoonKey, adres);
+      const lbl=document.getElementById('reistijd-lbl-'+p.persoonKey);
+      const spinner=document.getElementById('reistijd-spinner-'+p.persoonKey);
+      const hidden=document.getElementById('reistijd-'+p.persoonKey);
+      if(lbl) lbl.style.display='none';
+      if(spinner) spinner.style.display='inline';
+      const minuten=await Maps.reistijd(adres);
+      if(spinner) spinner.style.display='none';
+      if(lbl) lbl.style.display='';
+      if(minuten!==null){
+        if(hidden) hidden.value=minuten;
+        if(lbl) lbl.innerHTML=`🚗 Pendeltijd: <b>${minuten} min</b> <span style="font-size:11px;color:var(--muted);">(automatisch berekend)</span>`;
+        localStorage.setItem('gezinsapp_reistijd_'+p.persoonKey, minuten);
+      } else {
+        if(lbl) lbl.innerHTML=`⚠️ Kon pendeltijd niet berekenen. Controleer thuisadres en Maps API key.`;
+      }
+    });
   });
 }
 
@@ -429,7 +448,7 @@ function slaaWerkadressen(){
     const adres=document.getElementById('werkadres-'+p.persoonKey)?.value.trim();
     const reistijd=document.getElementById('reistijd-'+p.persoonKey)?.value;
     if(adres!==undefined) localStorage.setItem('gezinsapp_werkadres_'+p.persoonKey, adres);
-    if(reistijd!==undefined) localStorage.setItem('gezinsapp_reistijd_'+p.persoonKey, reistijd);
+    if(reistijd) localStorage.setItem('gezinsapp_reistijd_'+p.persoonKey, reistijd);
   });
   sbSaveInstellingen();
   toonOpslagStatus('✅ Werkadressen opgeslagen');
