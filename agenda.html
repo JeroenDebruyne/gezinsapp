@@ -801,6 +801,7 @@ function renderDagDetail(datumISO){
 
 // ── Transport detail render ───────────────────────────────────
 function renderTransportDetail(act,datumISO){
+  if(act.informatief) return '';
   const heeftKind=(act.wie||[]).includes('nora')||(act.wie||[]).includes('odiel');
   if(!heeftKind&&!act.meerdaags) return '';
   // Als een gezinshoofd (niet-kind) aanwezig is: geen transport nodig
