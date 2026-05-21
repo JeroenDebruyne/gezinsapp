@@ -165,16 +165,29 @@ function _bouwSysteemPrompt(){
   const nu=new Date();
   const vandaagISO=fDateISO(nu);
   const dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  // Bouw huidige weekplanning in als context
+  let planningContext='';
+  try {
+    const dates=getWeekDates(0);
+    const regels=dates.map((d,i)=>{
+      const key=fDateISO(d);
+      const dag=planning[key]||{};
+      const isVandaag=key===vandaagISO;
+      const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?` ${a.start}`:''));
+      return `  ${WEEK_VOLGORDE[i]} ${key}${isVandaag?' ← VANDAAG':''}: ontbijt=${getNaam(dag.ontbijt)}, lunch=${getNaam(dag.lunch)}, avond=${getNaam(dag.avond)}${acts.length?', activiteiten: '+acts.join(', '):''}`;
+    });
+    planningContext='\n\nHUIDIGE WEEKPLANNING:\n'+regels.join('\n');
+  } catch(e) {}
   return `Je bent een vriendelijke gezinsassistent voor de familie Debruyne-Dewaegenaere.
 Vandaag is ${dagNaamNL} ${vandaagISO}.
 Gezin: Jeroen (vader/admin, key:jeroen), Kelly (moeder, key:kelly), Nora (dochter 6j, key:nora), Odiel (zoon 3j, key:odiel).
 De week in de app loopt van dinsdag t/m maandag.
-Op schooldagen (ma-vr) eten de kinderen 's middags op school.
+Op schooldagen (ma-vr) eten de kinderen 's middags op school.${planningContext}
 
 REGELS:
 - Vraag ALTIJD bevestiging voor je iets wijzigt (bevestiging_vereist:true in de tool).
 - Bij stel_weekmenu_in: gebruik het NUMERIEKE id van get_recepten. Gebruik het DATUM-veld (YYYY-MM-DD), niet de dagnaam.
-- Bij weekmenu plannen: roep eerst get_weekplanning aan. Als een activiteit maaltijdThuis.avond=false heeft, plan dan geen avondmaal thuis — vermeld "uiteten" of laat leeg.
+- Bij weekmenu plannen: roep eerst get_weekplanning aan voor de volledige details (inclusief maaltijdThuis). Als een activiteit maaltijdThuis.avond=false heeft, plan dan geen avondmaal thuis.
 - Voor ingrediënten toevoegen: eerst zoek_ingredienten → als niet gevonden voeg_ingredient_toe → dan voeg_aan_boodschappenlijst_toe.
 - Persoonkeys: jeroen, kelly, nora, odiel. Dagkeys: ma, di, wo, do, vr, za, zo.
 - Antwoord altijd in het Nederlands. Wees kort en concreet.`;
