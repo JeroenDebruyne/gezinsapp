@@ -7,7 +7,6 @@ const Maps = (() => {
   const THUIS_KEY = 'gezinsapp_thuisadres';
 
   let _ready = false, _loading = false, _queue = [];
-  let _placesLib = null;
 
   function getKey()        { return localStorage.getItem(KEY_KEY)   || ''; }
   function getThuisadres() { return localStorage.getItem(THUIS_KEY) || ''; }
@@ -20,14 +19,11 @@ const Maps = (() => {
     if (!key) { console.warn('[Maps] Geen API key ingesteld.'); return; }
     _loading = true;
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async&language=nl&region=BE`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=nl&region=BE`;
     s.async = s.defer = true;
     s.onload = () => {
-      google.maps.importLibrary('places').then(lib => {
-        _placesLib = lib;
-        _ready = true; _loading = false;
-        _queue.forEach(f => f()); _queue = [];
-      });
+      _ready = true; _loading = false;
+      _queue.forEach(f => f()); _queue = [];
     };
     s.onerror = () => { _loading = false; console.error('[Maps] Laden mislukt — controleer de API key.'); };
     document.head.appendChild(s);
@@ -42,13 +38,7 @@ const Maps = (() => {
     laad(() => {
       if (el._mapsAC) return;
       // Gebruik destructured klasse uit importLibrary (werkt met alle API-versies)
-      const Autocomplete = (_placesLib && _placesLib.Autocomplete)
-        || (google.maps.places && google.maps.places.Autocomplete);
-      if (!Autocomplete) {
-        console.error('[Maps] Autocomplete klasse niet gevonden in places library.');
-        return;
-      }
-      const ac = new Autocomplete(el, {
+      const ac = new google.maps.places.Autocomplete(el, {
         fields: ['formatted_address', 'name', 'geometry'],
         componentRestrictions: { country: 'be' },
       });
