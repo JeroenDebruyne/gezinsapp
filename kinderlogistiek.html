@@ -565,8 +565,9 @@ function beheerTransportTodo(act, datum, kind, type, vervoerder) {
     : _subTijdstip(act.eindUur, act.reisTerug);
 
   const ghProfielen = Auth.getProfielen().filter(p=>!p.isKind);
-  const ghNamen = ghProfielen.map(p=>p.naam);
-  const isGH = ghNamen.includes(vervoerder);
+  const isGH = ghProfielen.some(p =>
+    p.naam === vervoerder || p.persoonKey === vervoerder.toLowerCase()
+  );
 
   const bestaandeIdx = todos.findIndex(t => t.deadline === datum && t.titel === titel);
   if (bestaandeIdx >= 0) {
@@ -577,7 +578,7 @@ function beheerTransportTodo(act, datum, kind, type, vervoerder) {
     } else {
       const todo = todos[bestaandeIdx];
       todo.notitie = tijdstip ? `Vertrek om ${tijdstip}` : '';
-      const persoon = ghProfielen.find(p=>p.naam===vervoerder);
+      const persoon = ghProfielen.find(p => p.naam === vervoerder || p.persoonKey === vervoerder.toLowerCase());
       todo.wie = persoon ? [persoon.persoonKey] : [];
       sbSaveTodo(todo);
     }
@@ -587,7 +588,7 @@ function beheerTransportTodo(act, datum, kind, type, vervoerder) {
 
   if (!isGH) return;
 
-  const persoon = ghProfielen.find(p=>p.naam===vervoerder);
+  const persoon = ghProfielen.find(p => p.naam === vervoerder || p.persoonKey === vervoerder.toLowerCase());
   const todo = {
     id: Date.now() + Math.round(Math.random()*1000),
     titel,
