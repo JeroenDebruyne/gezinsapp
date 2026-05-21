@@ -91,9 +91,9 @@ let vasteRoosters = {};
 // ── Hulpfuncties datum ────────────────────────────────────────
 function getWeekDates(offset) {
   const now = new Date(); const day = now.getDay();
-  const diff = (day===0 ? -5 : 2-day);
-  const tue = new Date(now); tue.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7}, (_,i) => { const d=new Date(tue); d.setDate(tue.getDate()+i); return d; });
+  const diff = (day===0 ? -6 : 1-day);
+  const mon = new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
 }
 function fDate(d) { return d.getDate()+'/'+(d.getMonth()+1); }
 function fDateISO(d) {

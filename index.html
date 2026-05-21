@@ -271,9 +271,9 @@ function _hNuISO(){ return localStorage.getItem('gezinsapp_vandaag')||fDateISO(n
 function _hDagNaam(iso){ return ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'][new Date(iso+'T12:00:00').getDay()]; }
 function _hGetWeekDates(offset){
   const now=new Date(_hNuISO()+'T12:00:00');
-  const day=now.getDay();const diff=(day===0?-5:2-day);
-  const tue=new Date(now);tue.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(tue);d.setDate(tue.getDate()+i);return d;});
+  const day=now.getDay();const diff=(day===0?-6:1-day);
+  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
 }
 const _hSPEC={shake:'Shake',uiteten:'Uit eten',afhalen:'Afhalen',restjes:'Restjes'};
 function _hGetNaam(k){if(!k)return'–';if(_hSPEC[k])return _hSPEC[k];const r=recepten.find(r=>r.id===k||r.id==k);return r?r.naam:'–';}

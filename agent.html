@@ -360,9 +360,9 @@ function _agentGetWeekDates(offset){
   // Variant van getWeekDates() die _nuISO() gebruikt i.p.v. new Date()
   const now=new Date(_nuISO()+'T12:00:00');
   const day=now.getDay();
-  const diff=(day===0?-5:2-day);
-  const tue=new Date(now);tue.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(tue);d.setDate(tue.getDate()+i);return d;});
+  const diff=(day===0?-6:1-day);
+  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
 }
 
 function _getNaam(keuze){

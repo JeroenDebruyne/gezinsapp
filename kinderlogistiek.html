@@ -36,6 +36,28 @@
 .kl-vakantie-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);font-weight:600;}
 .kl-reset-btn{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-left:auto;}
 
+/* ── Activiteiten per kind ─────────────────────────────────── */
+.kl-acts-wrap{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.kl-act-rij{display:flex;align-items:center;gap:6px;justify-content:space-between;}
+.kl-act-info{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;}
+.kl-act-transport{font-size:11px;color:var(--accent);font-weight:600;}
+.kl-edit-btn{font-size:13px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:var(--radius-sm);flex-shrink:0;}
+.kl-edit-btn:hover{background:var(--bg-2);}
+
+/* ── Activity transport modal ──────────────────────────────── */
+.kl-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.kl-modal-overlay.hidden{display:none;}
+.kl-modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;padding:20px;width:100%;max-width:480px;box-shadow:0 -4px 24px rgba(0,0,0,.15);}
+.kl-modal-titel{font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;}
+.kl-modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.kl-modal-rij{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.kl-modal-veld label{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;}
+.kl-modal-veld select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--ink);font-family:inherit;}
+.kl-modal-acties{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+.kl-modal-acties button{padding:9px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;}
+.btn-annuleer{background:var(--bg-2);color:var(--ink);}
+.btn-opslaan{background:var(--accent);color:#fff;}
+
 /* ── Standaard weekrooster ─────────────────────────────────── */
 .kl-rooster-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:2px 0;}
 .kl-rooster-titel{font-weight:700;font-size:15px;color:var(--ink);}
@@ -157,6 +179,32 @@
 </div>
 </main>
 
+<!-- Activity transport modal -->
+<div class="kl-modal-overlay hidden" id="kl-act-modal" onclick="sluitActModal(event)">
+  <div class="kl-modal" onclick="event.stopPropagation()">
+    <div class="kl-modal-titel" id="kl-modal-titel">Activiteit</div>
+    <div class="kl-modal-sub" id="kl-modal-sub"></div>
+    <div class="kl-modal-rij">
+      <div class="kl-modal-veld">
+        <label>🚗→ Wie brengt?</label>
+        <select id="kl-modal-brengt">
+          ${TRANSPORT_OPTIES?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
+        </select>
+      </div>
+      <div class="kl-modal-veld">
+        <label>←🚗 Wie haalt?</label>
+        <select id="kl-modal-haalt">
+          ${TRANSPORT_OPTIES?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
+        </select>
+      </div>
+    </div>
+    <div class="kl-modal-acties">
+      <button class="btn-annuleer" onclick="sluitActModal()">Annuleren</button>
+      <button class="btn-opslaan" onclick="slaActTransportOp()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
@@ -164,8 +212,8 @@ Auth.initPagina('kinderlogistiek');
 
 const TRANSPORT_OPTIES = ['','Kelly','Jeroen','Geert & Nadine','Patrick','Anne','Tine','Andere'];
 const KL_DAGMAP = {0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'};
-const KL_DAGKORT = ['Di','Wo','Do','Vr','Za','Zo','Ma'];
-const KL_DAGLANG = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
+const KL_DAGKORT = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+const KL_DAGLANG = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
 
 let weekOffsetKL = 0;
 let kindFilter = 'alle';
@@ -231,11 +279,15 @@ function renderKL(){
     const school = isSchoolDag(datum);
     const vakantie = isSchoolvakantie(datum);
 
-    // Activiteiten voor de kinderen vandaag
+    // Activiteiten voor de kinderen vandaag (excl. informatief + gezinshoofd doet mee)
     const alleKinderen = alleKinderenCheck.map(p=>p.persoonKey);
     const kinderen = kindFilter==='alle' ? alleKinderen : [kindFilter];
+    const gezinshoofden = Auth.getProfielen().filter(p=>!p.isKind).map(p=>p.persoonKey);
     const kindActs = activiteiten.filter(a=>
-      isActiefOpDatum(a,datum) && (a.wie||[]).some(w=>kinderen.includes(w))
+      isActiefOpDatum(a,datum) &&
+      !a.informatief &&
+      (a.wie||[]).some(w=>kinderen.includes(w)) &&
+      !(a.wie||[]).some(w=>gezinshoofden.includes(w))
     );
 
     // Badges in header
@@ -250,10 +302,31 @@ function renderKL(){
       const t = getTransport(datum, kind);
       const heeftOverride = t.isOverride;
 
-      // Activiteiten voor dit kind
+      // Activiteiten voor dit kind (excl. informatief + gezinshoofd doet mee)
       const kindActsHtml = activiteiten
-        .filter(a=>isActiefOpDatum(a,datum)&&(a.wie||[]).includes(kind))
-        .map(a=>`<span class="kl-act-badge">📌 ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>`)
+        .filter(a=>
+          isActiefOpDatum(a,datum) &&
+          !a.informatief &&
+          (a.wie||[]).includes(kind) &&
+          !(a.wie||[]).some(w=>gezinshoofden.includes(w))
+        )
+        .map(a=>{
+          const cap = kind.charAt(0).toUpperCase()+kind.slice(1);
+          const brengt = a[`brengt${cap}`]||'';
+          const haalt  = a[`haalt${cap}`]||'';
+          const transportInfo = [
+            brengt ? `🚗→ ${escHtml(brengt)}` : '',
+            haalt  ? `←🚗 ${escHtml(haalt)}` : '',
+          ].filter(Boolean).join(' · ');
+          return `
+          <div class="kl-act-rij">
+            <div class="kl-act-info">
+              <span class="kl-act-badge">📌 ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>
+              ${transportInfo?`<span class="kl-act-transport">${transportInfo}</span>`:''}
+            </div>
+            <button class="kl-edit-btn" onclick="openActTransportModal(${a.id},'${datum}','${kind}')" title="Transport bewerken">✏️</button>
+          </div>`;
+        })
         .join('');
 
       const dagKeyStr = `${datum}_${kind}`;
@@ -261,19 +334,19 @@ function renderKL(){
       <div class="kl-kind-sectie">
         <div class="kl-kind-titel">
           ${PEMOJI[kind]} ${PLABEL[kind]}
-          ${kindActsHtml?`<span style="margin-left:4px;">${kindActsHtml}</span>`:''}
           ${heeftOverride?`<button class="kl-reset-btn" onclick="resetTransport('${datum}','${kind}')">Herstel standaard</button>`:''}
         </div>
+        ${kindActsHtml?`<div class="kl-acts-wrap">${kindActsHtml}</div>`:''}
         <div class="kl-transport-rij">
           <div class="kl-transport-veld">
-            <label>🚗→ Wie brengt?</label>
+            <label>🚗→ School: wie brengt?</label>
             <select id="brengt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.brengt!==undefined?'override':''}">
               ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.brengt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
             </select>
           </div>
           <div class="kl-transport-veld">
-            <label>←🚗 Wie haalt?</label>
+            <label>←🚗 School: wie haalt?</label>
             <select id="haalt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.haalt!==undefined?'override':''}">
               ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.haalt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
@@ -420,6 +493,116 @@ function toggleStandaardRooster() {
   const chevron = document.getElementById('standaard-chevron');
   if (body) body.style.display = standaardRoosterOpen ? 'block' : 'none';
   if (chevron) chevron.textContent = standaardRoosterOpen ? '▾' : '›';
+}
+
+// ── Modal: transport per activiteit ──────────────────────────
+let _modalActId = null, _modalDatum = null, _modalKind = null;
+
+function _vulModalOpties() {
+  ['kl-modal-brengt','kl-modal-haalt'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel || sel.children.length > 1) return;
+    sel.innerHTML = TRANSPORT_OPTIES.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('');
+  });
+}
+
+function openActTransportModal(actId, datum, kind) {
+  _vulModalOpties();
+  const act = activiteiten.find(a=>a.id===actId||a.id==actId);
+  if (!act) return;
+  _modalActId = actId; _modalDatum = datum; _modalKind = kind;
+  const cap = kind.charAt(0).toUpperCase()+kind.slice(1);
+  document.getElementById('kl-modal-titel').textContent = act.naam;
+  document.getElementById('kl-modal-sub').textContent =
+    [act.start, act.eindUur].filter(Boolean).join(' – ') +
+    (act.locatie ? ' · ' + act.locatie : '') +
+    (act.reisHeen ? ' · Reistijd heen: '+act.reisHeen+' min' : '');
+  document.getElementById('kl-modal-brengt').value = act[`brengt${cap}`]||'';
+  document.getElementById('kl-modal-haalt').value  = act[`haalt${cap}`]||'';
+  document.getElementById('kl-act-modal').classList.remove('hidden');
+}
+
+function sluitActModal(e) {
+  if (e && e.target !== document.getElementById('kl-act-modal')) return;
+  document.getElementById('kl-act-modal').classList.add('hidden');
+  _modalActId = _modalDatum = _modalKind = null;
+}
+
+function slaActTransportOp() {
+  const act = activiteiten.find(a=>a.id===_modalActId||a.id==_modalActId);
+  if (!act || !_modalKind) return;
+  const cap = _modalKind.charAt(0).toUpperCase()+_modalKind.slice(1);
+  const brengt = document.getElementById('kl-modal-brengt').value;
+  const haalt  = document.getElementById('kl-modal-haalt').value;
+  act[`brengt${cap}`] = brengt;
+  act[`haalt${cap}`]  = haalt;
+  slaLokaalOp();
+  sbSaveActiviteit(act);
+  // Todo aanmaken/bijwerken voor gezinshoofd
+  beheerTransportTodo(act, _modalDatum, _modalKind, 'brengt', brengt);
+  beheerTransportTodo(act, _modalDatum, _modalKind, 'haalt',  haalt);
+  document.getElementById('kl-act-modal').classList.add('hidden');
+  _modalActId = _modalDatum = _modalKind = null;
+  renderKL();
+  toonOpslagStatus('✅ Transport opgeslagen');
+}
+
+// ── Todo beheer voor gezinshoofd transport ────────────────────
+function _subTijdstip(tijd, minuten) {
+  if (!tijd || !minuten) return tijd || null;
+  const tot = tijdMinuten(tijd) - minuten;
+  if (tot < 0 || tot > 1439) return tijd;
+  return String(Math.floor(tot/60)).padStart(2,'0') + ':' + String(tot%60).padStart(2,'0');
+}
+
+function beheerTransportTodo(act, datum, kind, type, vervoerder) {
+  const kindNaam = PLABEL[kind] || kind;
+  const titel = type === 'brengt'
+    ? `🚗 Breng ${kindNaam} naar ${act.naam}`
+    : `🚗 Haal ${kindNaam} op van ${act.naam}`;
+  const tijdstip = type === 'brengt'
+    ? _subTijdstip(act.start,   act.reisHeen)
+    : _subTijdstip(act.eindUur, act.reisTerug);
+
+  const ghProfielen = Auth.getProfielen().filter(p=>!p.isKind);
+  const ghNamen = ghProfielen.map(p=>p.naam);
+  const isGH = ghNamen.includes(vervoerder);
+
+  const bestaandeIdx = todos.findIndex(t => t.deadline === datum && t.titel === titel);
+  if (bestaandeIdx >= 0) {
+    if (!isGH) {
+      const todo = todos[bestaandeIdx];
+      if (todo._sbId) sbDeleteTodo(todo._sbId);
+      todos.splice(bestaandeIdx, 1);
+    } else {
+      const todo = todos[bestaandeIdx];
+      todo.notitie = tijdstip ? `Vertrek om ${tijdstip}` : '';
+      const persoon = ghProfielen.find(p=>p.naam===vervoerder);
+      todo.wie = persoon ? [persoon.persoonKey] : [];
+      sbSaveTodo(todo);
+    }
+    slaLokaalOp();
+    return;
+  }
+
+  if (!isGH) return;
+
+  const persoon = ghProfielen.find(p=>p.naam===vervoerder);
+  const todo = {
+    id: Date.now() + Math.round(Math.random()*1000),
+    titel,
+    notitie: tijdstip ? `Vertrek om ${tijdstip}` : '',
+    deadline: datum,
+    prioriteit: 'middel',
+    wie: persoon ? [persoon.persoonKey] : [],
+    gedaan: false,
+    aangemaaktDoor: Auth.profiel()?.persoonKey || null,
+    aangemaaktOp: new Date().toISOString(),
+  };
+  todos.push(todo);
+  slaLokaalOp();
+  sbSaveTodo(todo);
+  toonOpslagStatus('✅ Todo aangemaakt voor ' + vervoerder);
 }
 </script>
 <script>
