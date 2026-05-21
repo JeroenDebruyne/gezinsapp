@@ -137,8 +137,10 @@
 Auth.initPagina('agent');
 let chatGeschiedenis=[], pendingActie=null, _dataGeladen=false;
 let _weerCache=null, _weerLaatst=0;
+let _vandaagISO=null, _dagNaamNL=null; // worden ingevuld via internet-API
 
-laadOp().catch(()=>laadLokaal()).finally(()=>{ _dataGeladen=true; _laadWeer(); });
+laadOp().catch(()=>laadLokaal()).finally(()=>{ _dataGeladen=true; });
+Promise.all([_laadDatum(),_laadWeer()]);
 if(typeof BroadcastChannel!=='undefined')
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); };
 
@@ -216,7 +218,7 @@ const AGENT_TOOLS=[
 
   {name:'voeg_activiteit_toe',
    description:'Voeg een nieuwe activiteit toe aan het rooster. ALTIJD bevestiging vragen.',
-   input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'persoonkeys: jeroen/kelly/nora/odiel'},dagen:{type:'array',items:{type:'string'},description:'ma/di/wo/do/vr/za/zo'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks/tweewekelijks/maandelijks/eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},eind_datum:{type:'string',description:'YYYY-MM-DD'},prep:{type:'string',description:'voorbereiding notities'},informatief:{type:'boolean',description:'true = geen impact op drukte'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','wie']}},
+   input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'persoonkeys: jeroen/kelly/nora/odiel — optioneel, laat leeg als niet van toepassing'},dagen:{type:'array',items:{type:'string'},description:'ma/di/wo/do/vr/za/zo (gebruik ALTIJD de 2-letter afkorting, nooit de volledige naam)'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks/tweewekelijks/maandelijks/eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},eind_datum:{type:'string',description:'YYYY-MM-DD'},prep:{type:'integer',description:'voorbereiding in minuten (bijv. 15 voor klaarzetten)'},informatief:{type:'boolean',description:'true = geen impact op drukte'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
 
   {name:'wijzig_activiteit',
    description:'Wijzig velden van een bestaande activiteit. Zoekt op naam (gedeeltelijk). ALTIJD bevestiging vragen.',
@@ -273,9 +275,8 @@ const AGENT_TOOLS=[
 
 // ── Systeemprompt ────────────────────────────────────────────────
 function _bouwSysteemPrompt(){
-  const nu=new Date();
-  const vandaagISO=fDateISO(nu);
-  const dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  const vandaagISO=_nuISO();
+  const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date().getDay()];
   let planCtx='';
   try{
     const dates=getWeekDates(0);
@@ -312,6 +313,23 @@ async function _laadWeer(){
 }
 function _weerIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';if(c<=79)return'🌨️';if(c<=82)return'🌦️';if(c<=86)return'❄️';if(c<=99)return'⛈️';return'🌡️';}
 function _weerOmschrijving(c){if(c===0)return'Helder';if(c<=2)return'Licht bewolkt';if(c<=3)return'Bewolkt';if(c<=49)return'Mist';if(c<=69)return'Regen';if(c<=79)return'Sneeuw';if(c<=82)return'Regenbuien';if(c<=86)return'Sneeuwbuien';if(c<=99)return'Onweer';return'Onbekend';}
+
+async function _laadDatum(){
+  try{
+    const r=await fetch('https://worldtimeapi.org/api/timezone/Europe/Brussels');
+    const d=await r.json();
+    // d.datetime = "2026-05-21T14:30:00.000+02:00"
+    const dt=new Date(d.datetime);
+    _vandaagISO=d.datetime.substring(0,10);
+    _dagNaamNL=DAGKEYS_LANG[dt.getDay()];
+  }catch(e){
+    // fallback: lokale systeemtijd
+    const nu=new Date();
+    _vandaagISO=fDateISO(nu);
+    _dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  }
+}
+function _nuISO(){return _vandaagISO||fDateISO(new Date());}
 
 function _getNaam(keuze){
   if(!keuze)return'–';
@@ -353,7 +371,7 @@ async function _exec(naam,input){
 
     // ── LEZEN ──────────────────────────────────────────────────────
     case 'get_dag':{
-      const datum=input.datum||fDateISO(new Date());
+      const datum=input.datum||_nuISO();
       const dag=planning[datum]||{};
       const dObj=new Date(datum+'T12:00:00');
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({
@@ -363,7 +381,7 @@ async function _exec(naam,input){
       }));
       const dagNr=dObj.getDay();
       return JSON.stringify({
-        datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===fDateISO(new Date()),
+        datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===_nuISO(),
         isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,
         vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
         drukte:getDagDrukte(datum),
@@ -375,7 +393,7 @@ async function _exec(naam,input){
     case 'get_week':{
       const offset=input.offset||0;
       const dates=getWeekDates(offset);
-      const vandaagISO=fDateISO(new Date());
+      const vandaagISO=_nuISO();
       return JSON.stringify(dates.map((d,i)=>{
         const datum=fDateISO(d);
         const dag=planning[datum]||{};
@@ -491,21 +509,21 @@ async function _exec(naam,input){
         const dates=getWeekDates(0);
         return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
       }
-      const datum=input.datum||fDateISO(new Date());
+      const datum=input.datum||_nuISO();
       return JSON.stringify({datum,dag:DAGKEYS_LANG[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
     }
 
     case 'get_schoolvakanties':{
-      const nu=fDateISO(new Date());
+      const nu=_nuISO();
       return JSON.stringify({vakanties:SCHOOLVAKANTIES,uitzonderingen:(uitzonderingen||[]).filter(u=>u.datum>=nu)});
     }
 
     case 'get_eethistoriek':{
       const weken=input.weken||8;
-      const nu=new Date();nu.setHours(0,0,0,0);
+      const vandaagISO=_nuISO();
+      const nu=new Date(vandaagISO+'T12:00:00');
       const van=new Date(nu);van.setDate(van.getDate()-weken*7);
       const vanISO=fDateISO(van);
-      const vandaagISO=fDateISO(nu);
       const hist=[];
       Object.entries(planning).forEach(([datum,dag])=>{
         if(datum>=vanISO&&datum<vandaagISO){
@@ -612,7 +630,7 @@ async function _exec(naam,input){
     }
 
     case 'voeg_todo_toe':{
-      const todo={id:String(Date.now()),titel:input.titel,notitie:input.notitie||'',deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:fDateISO(new Date())};
+      const todo={id:String(Date.now()),titel:input.titel,notitie:input.notitie||'',deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:_nuISO()};
       todos.push(todo);slaLokaalOp();sbSaveTodo(todo);
       return`✅ To-do "${todo.titel}" toegevoegd.`;
     }
@@ -632,7 +650,7 @@ async function _exec(naam,input){
     case 'vink_todo_af':{
       const todo=todos.find(t=>t.id===input.id);
       if(!todo)return'To-do niet gevonden.';
-      todo.gedaan=true;todo.gedaanOp=fDateISO(new Date());
+      todo.gedaan=true;todo.gedaanOp=_nuISO();
       slaLokaalOp();sbSaveTodo(todo);
       return`✅ "${todo.titel}" afgevinkt.`;
     }
