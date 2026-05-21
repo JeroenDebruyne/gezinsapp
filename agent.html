@@ -315,7 +315,8 @@ async function stuurBericht(){
   const typingEl=voegBerichtToe('assistant','⏳…',true);
   try{
     const _aFetch=async(body)=>{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;};
-    let data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:SYSTEEMPROMPT,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    const systeemPrompt=_bouwSysteemPrompt();
+    let data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const toolResults=[];
       for(const block of (data.content||[])){
@@ -334,7 +335,7 @@ async function stuurBericht(){
       }
       chatGeschiedenis.push({role:'assistant',content:data.content});
       chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:SYSTEEMPROMPT,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+      data=await _aFetch({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     }
     const finaleTekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
