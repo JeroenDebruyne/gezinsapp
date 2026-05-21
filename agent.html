@@ -2,6 +2,9 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +22,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🤖 Agent</div>
+  <div class="topbar-title">🤖 Agent <span id="agent-versie" style="font-size:10px;font-weight:400;opacity:.5;margin-left:6px;"></span></div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -343,9 +346,13 @@ async function _laadDatum(){
 function _nuISO(){return _vandaagISO||fDateISO(new Date());}
 
 function _toonDatumInChat(){
-  // Werk de welkomstboodschap bij met de geladen datum zodat de gebruiker dit kan verifiëren
+  if(!_vandaagISO||!_dagNaamNL)return;
+  // Versielabel in topbar (bouw-datum + geladen app-datum)
+  const versieEl=document.getElementById('agent-versie');
+  if(versieEl)versieEl.textContent='v2026-05-21c · '+_vandaagISO;
+  // Welkomstboodschap met geladen datum
   const el=document.querySelector('#chat-berichten .chat-bubble-bot');
-  if(el&&_vandaagISO&&_dagNaamNL)
+  if(el)
     el.innerHTML=`Hallo! 👋 Ik ben jullie gezinsassistent. Vandaag is het <strong>${_dagNaamNL} ${_vandaagISO}</strong>.<br>Ik heb volledige toegang tot jullie agenda, recepten, weekplanning, to-do's, contacten en kinderlogistiek. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?`;
 }
 
