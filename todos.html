@@ -195,6 +195,10 @@ const PRIO_KLEUR = { hoog:'#ff453a', middel:'#ff9f0a', laag:'#30d158' };
 // ── Laden ─────────────────────────────────────────────────────
 laadOp().then(renderTodos).catch(()=>{ laadLokaal(); renderTodos(); });
 
+if(typeof BroadcastChannel!=='undefined'){
+  new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderTodos(); };
+}
+
 // ── Filter ────────────────────────────────────────────────────
 function setFilter(filter, el) {
   actieveFilter = filter;

@@ -284,9 +284,12 @@ function laadLokaal() {
   } catch(e) { console.warn('Lokaal laden mislukt:', e); }
 }
 
+const _dataChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('gezinsapp_data') : null;
+
 function slaLokaalOp() {
   const data = { activiteiten, recepten, planning, extraItems, boodschappenReceptItems, drukteOverride, standaardIngredienten, contacten, todos, uitzonderingen, vasteRoosters, transportUitzonderingen, standaardTransport };
   try { localStorage.setItem('gezinsapp_data', JSON.stringify(data)); } catch(e) {}
+  _dataChannel?.postMessage('changed');
 }
 
 // Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties

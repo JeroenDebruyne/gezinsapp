@@ -610,6 +610,10 @@ laadOp().then(()=>{
   }
 }).catch(()=>{laadLokaal();renderAlles();});
 
+if(typeof BroadcastChannel!=='undefined'){
+  new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderAlles(); };
+}
+
 function renderAlles(){
   renderLegenda();
   renderMaand();

@@ -155,6 +155,10 @@ let aiMenuVoorstel=null, chatGeschiedenisWP=[];
 
 laadOp().then(renderPlanner).catch(()=>{laadLokaal();renderPlanner();});
 
+if(typeof BroadcastChannel!=='undefined'){
+  new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderPlanner(); };
+}
+
 function changeWeekP(dir){weekOffsetP+=dir;renderPlanner();}
 
 function renderPlanner(){
