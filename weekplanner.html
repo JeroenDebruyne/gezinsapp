@@ -199,7 +199,7 @@ function renderPlanner(){
   const today=fDateISO(new Date());
   const weekHeeftVandaag=dates.some(d=>fDateISO(d)===today);
   document.getElementById('planner-grid').innerHTML=dates.map((date,i)=>{
-    const key=fDateISO(date);const isW=i>=5&&i<=6;
+    const key=fDateISO(date);const isW=WEEKEND.includes(i);
     const dagPlan=planning[key]||{};
     const drukte=getDagDrukte(key);
     const eetGroo=activiteiten.some(a=>(a.dagen||[]).includes(DAGKEYS_WP[i])&&Object.values(a.transport||{}).some(t=>t?.eetGroo));
@@ -284,7 +284,7 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
     huidigSectie.style.display='block';
   } else { huidigSectie.style.display='none'; }
   document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">${{rustig:'🟢 Rustige dag',normaal:'🟡 Drukke dag',druk:'🔴 Zeer drukke dag'}[drukte]}</div>`;
-  const isW=dagIndex>=5&&dagIndex<=6;
+  const isW=WEEKEND.includes(dagIndex);
   const slot=SLOTS.find(s=>s.key===slotKey);
   const types=isW?['weekend']:slot.types;
 
