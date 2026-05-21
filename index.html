@@ -296,7 +296,7 @@ function _hSysteemPrompt(){
   const dagNaamNL=_hDagNaam(vandaagISO);
   let planCtx='';
   try{
-    const WEEK_VOLGORDE=['Di','Wo','Do','Vr','Za','Zo','Ma'];
+    const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
     const dates=_hGetWeekDates(0);
     planCtx='\n\nHUIDIGE WEEK:\n'+dates.map((d,i)=>{
       const key=fDateISO(d);const dag=planning[key]||{};
@@ -366,7 +366,7 @@ async function homeVoerToolUit(naam,input,kanaal){
 
 async function _hExec(naam,input){
   const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-  const WEEK_VOLGORDE=['Di','Wo','Do','Vr','Za','Zo','Ma'];
+  const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
   switch(naam){
     case 'get_dag':{
       const datum=input.datum||_hNuISO();

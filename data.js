@@ -43,9 +43,9 @@ function herbouwPersonenData() {
   });
 }
 
-const DKORT  = ['Di','Wo','Do','Vr','Za','Zo','Ma'];
-const DLANG  = ['Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag','Maandag'];
-const WEEKEND = [4, 5]; // index in DKORT
+const DKORT  = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+const DLANG  = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const WEEKEND = [5, 6]; // index in DKORT
 
 const SLOTS  = [
   { key:'ontbijt', lbl:'Ontbijt', types:['ontbijt'] },
