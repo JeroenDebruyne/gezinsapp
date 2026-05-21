@@ -314,7 +314,7 @@ REGELS:
 - Vraag ALTIJD bevestiging vóór elke schrijfactie (bevestiging_vereist:true).
 - Roep get_eethistoriek(8) aan VÓÓR je een weekmenu plant.
 - Bij stel_weekmenu_in: gebruik NUMERIEK recept-id uit get_recepten, nooit de naam.
-- Antwoord altijd in het Nederlands. Wees bondig en concreet.`;
+- Antwoord altijd in het Nederlands. Wees bondig en concreet.${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g,i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
 }
 
 // ── Tools (zelfde 30 tools als agent.html) ───────────────────
@@ -349,6 +349,8 @@ const HOME_AGENT_TOOLS=[
   {name:'voeg_ingredient_toe',description:'Voeg standaard-ingrediënt toe. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},eenheid:{type:'string'},categorie:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
   {name:'voeg_recept_toe',description:'Voeg volledig recept toe met ingrediënten en bereiding. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
   {name:'wijzig_recept',description:'Wijzig bestaand recept op naam. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},nieuw_naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},score:{type:'integer'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
+  {name:'onthoud', description:'Sla een herinnering of voorkeur op in het permanente geheugen van de agent. Gebruik dit wanneer de gebruiker zegt "onthoud dit", "vergeet niet", "houd bij" of iets wil bewaren voor later.', input_schema:{type:'object',properties:{tekst:{type:'string',description:'De tekst om te onthouden, volledig en zelfstandig leesbaar'}},required:['tekst']}},
+  {name:'vergeet_herinnering', description:'Verwijder een specifieke herinnering uit het geheugen op basis van de index (0-gebaseerd).', input_schema:{type:'object',properties:{index:{type:'integer',description:'Index van de herinnering om te verwijderen (0 = eerste)'}},required:['index']}},
 ];
 
 // ── Tool executor ─────────────────────────────────────────────
@@ -454,6 +456,20 @@ async function _hExec(naam,input){
     case 'voeg_ingredient_toe':{const ing={id:String(Date.now()),naam:input.naam,winkel:input.winkel||'Andere',eenheid:input.eenheid||'',categorie:input.categorie||''};standaardIngredienten.push(ing);slaLokaalOp();sbSaveIngredient(ing);return`✅ Ingrediënt "${input.naam}" toegevoegd.`;}
     case 'voeg_recept_toe':{const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);return`✅ Recept "${rec.naam}" toegevoegd.`;}
     case 'wijzig_recept':{const rec=recepten.find(r=>r.naam.toLowerCase().includes(input.naam.toLowerCase()));if(!rec)return`Recept "${input.naam}" niet gevonden.`;if(input.nieuw_naam!==undefined)rec.naam=input.nieuw_naam;if(input.types!==undefined){rec.types=input.types;rec.type=input.types[0];}if(input.tijd!==undefined)rec.tijd=input.tijd;if(input.moeilijk!==undefined)rec.moeilijk=input.moeilijk;if(input.wie!==undefined)rec.wie=input.wie;if(input.bron!==undefined)rec.bron=input.bron;if(input.bereiding!==undefined)rec.bereiding=input.bereiding;if(input.score!==undefined)rec.score=input.score;if(input.tags!==undefined)rec.tags=input.tags;if(input.ingredienten!==undefined)rec.ingredienten=input.ingredienten;slaLokaalOp();sbSaveRecept(rec);return`✅ Recept "${rec.naam}" gewijzigd.`;}
+    case 'onthoud': {
+      const item = {tekst: input.tekst, aangemaakt_op: new Date().toISOString()};
+      geheugen.push(item);
+      slaLokaalOp();
+      sbSaveGeheugen();
+      return `✅ Onthouden: "${input.tekst}"`;
+    }
+    case 'vergeet_herinnering': {
+      if (input.index < 0 || input.index >= geheugen.length) return `⚠️ Geen herinnering op index ${input.index}.`;
+      const verwijderd = geheugen.splice(input.index, 1)[0];
+      slaLokaalOp();
+      sbSaveGeheugen();
+      return `✅ Vergeten: "${verwijderd.tekst}"`;
+    }
     default:return`Onbekende tool: ${naam}`;
   }
 }

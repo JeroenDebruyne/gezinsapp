@@ -83,6 +83,7 @@ let drukteOverride = {};
 let standaardIngredienten = [];
 let contacten = [];
 let todos = [];
+let geheugen = [];
 let uitzonderingen = [];
 let transportUitzonderingen = {};   // { 'YYYY-MM-DD': { nora:{brengt,haalt,eetGroo}, odiel:{...} } }
 let standaardTransport = {};
@@ -241,6 +242,7 @@ async function laadOp() {
       if (r.id==='googleMapsKey'&&r.waarde) localStorage.setItem('google_maps_key', r.waarde);
       if (r.id==='thuisadres'&&r.waarde) localStorage.setItem('gezinsapp_thuisadres', r.waarde);
       if (r.id==='anthropicApiKey'&&r.waarde) localStorage.setItem('anthropic_api_key', r.waarde);
+      if (r.id==='geheugen' && r.waarde) geheugen = r.waarde;
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
     const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
@@ -277,6 +279,7 @@ function laadLokaal() {
     if (data.standaardIngredienten) standaardIngredienten = data.standaardIngredienten;
     if (data.contacten)    contacten    = data.contacten;
     if (data.todos)        todos        = data.todos;
+    if (data.geheugen)     geheugen     = data.geheugen;
     if (data.uitzonderingen) uitzonderingen = data.uitzonderingen;
     if (data.vasteRoosters) vasteRoosters = {...vasteRoosters,...data.vasteRoosters};
     if (data.transportUitzonderingen) transportUitzonderingen = data.transportUitzonderingen;
@@ -287,7 +290,7 @@ function laadLokaal() {
 const _dataChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('gezinsapp_data') : null;
 
 function slaLokaalOp() {
-  const data = { activiteiten, recepten, planning, extraItems, boodschappenReceptItems, drukteOverride, standaardIngredienten, contacten, todos, uitzonderingen, vasteRoosters, transportUitzonderingen, standaardTransport };
+  const data = { activiteiten, recepten, planning, extraItems, boodschappenReceptItems, drukteOverride, standaardIngredienten, contacten, todos, geheugen, uitzonderingen, vasteRoosters, transportUitzonderingen, standaardTransport };
   try { localStorage.setItem('gezinsapp_data', JSON.stringify(data)); } catch(e) {}
   _dataChannel?.postMessage('changed');
 }
@@ -532,6 +535,16 @@ async function sbSaveInstellingen() {
         '','resolution=merge-duplicates');
     }
   } catch(e) { _opslagFout(e,'instellingen'); }
+}
+
+async function sbSaveGeheugen() {
+  const gid = _gid();
+  if (!gid) return;
+  try {
+    await sbFetch('instellingen','POST',
+      {id:'geheugen', waarde:geheugen, updated_at:new Date().toISOString(), gezin_id:gid},
+      '','resolution=merge-duplicates');
+  } catch(e) { _opslagFout(e,'geheugen'); }
 }
 
 // ── iCal gedeelde functies ────────────────────────────────────
