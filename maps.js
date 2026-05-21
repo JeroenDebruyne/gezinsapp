@@ -7,6 +7,7 @@ const Maps = (() => {
   const THUIS_KEY = 'gezinsapp_thuisadres';
 
   let _ready = false, _loading = false, _queue = [];
+  let _placesLib = null;
 
   function getKey()        { return localStorage.getItem(KEY_KEY)   || ''; }
   function getThuisadres() { return localStorage.getItem(THUIS_KEY) || ''; }
@@ -22,7 +23,8 @@ const Maps = (() => {
     s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async&language=nl&region=BE`;
     s.async = s.defer = true;
     s.onload = () => {
-      google.maps.importLibrary('places').then(() => {
+      google.maps.importLibrary('places').then(lib => {
+        _placesLib = lib;
         _ready = true; _loading = false;
         _queue.forEach(f => f()); _queue = [];
       });
@@ -33,19 +35,35 @@ const Maps = (() => {
 
   // Koppel Google Places autocomplete aan een input-element.
   // onKeuze(adres: string, place: PlaceResult) wordt aangeroepen bij selectie.
+  // Voorkomt dubbele instanties via el._mapsAC.
   function autocomplete(el, onKeuze) {
     if (!el) return;
+    if (el._mapsAC) return; // al gekoppeld, niet opnieuw aanmaken
     laad(() => {
-      const ac = new google.maps.places.Autocomplete(el, {
+      if (el._mapsAC) return;
+      // Gebruik destructured klasse uit importLibrary (werkt met alle API-versies)
+      const Autocomplete = (_placesLib && _placesLib.Autocomplete)
+        || (google.maps.places && google.maps.places.Autocomplete);
+      if (!Autocomplete) {
+        console.error('[Maps] Autocomplete klasse niet gevonden in places library.');
+        return;
+      }
+      const ac = new Autocomplete(el, {
         fields: ['formatted_address', 'name', 'geometry'],
         componentRestrictions: { country: 'be' },
       });
+      el._mapsAC = ac;
       ac.addListener('place_changed', () => {
         const p = ac.getPlace();
         const adres = p.formatted_address || p.name || el.value;
         onKeuze && onKeuze(adres, p);
       });
     });
+  }
+
+  // Reset de autocomplete-koppeling op een element (bijv. bij hergebruik van modal).
+  function resetAutocomplete(el) {
+    if (el) delete el._mapsAC;
   }
 
   // Bereken rijdtijd in minuten van thuisadres naar bestemming.
@@ -68,5 +86,5 @@ const Maps = (() => {
     });
   }
 
-  return { laad, autocomplete, reistijd, getKey, getThuisadres, KEY_KEY, THUIS_KEY };
+  return { laad, autocomplete, resetAutocomplete, reistijd, getKey, getThuisadres, KEY_KEY, THUIS_KEY };
 })();
