@@ -279,7 +279,7 @@ const AGENT_TOOLS=[
 // ── Systeemprompt ────────────────────────────────────────────────
 function _bouwSysteemPrompt(){
   const vandaagISO=_nuISO();
-  const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date().getDay()];
+  const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
     const dates=_agentGetWeekDates(0);
@@ -295,7 +295,7 @@ function _bouwSysteemPrompt(){
   return `Je bent de gezinsassistent van de familie Debruyne-Dewaegenaere.
 Vandaag: ${dagNaamNL} ${vandaagISO}.
 Gezin: Jeroen (vader/admin, key:jeroen), Kelly (moeder, key:kelly), Nora (dochter 6j, key:nora), Odiel (zoon 3j, key:odiel).
-Week loopt di→ma. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
+Week loopt ma→zo. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
 
 REGELS:
 - Vraag ALTIJD bevestiging vóór elke schrijfactie (bevestiging_vereist:true).
