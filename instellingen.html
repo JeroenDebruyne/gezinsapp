@@ -410,12 +410,12 @@ function renderWerkadressen(){
     return `
     <div style="margin-bottom:14px;">
       <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${escHtml(p.emoji)} ${escHtml(p.naam)}</div>
-      <input type="text" id="werkadres-${escHtml(p.persoonKey)}" placeholder="Werkadres" style="${inputStijl}" value="${escHtml(localStorage.getItem('gezinsapp_werkadres_'+p.persoonKey)||'')}"/>
+      <input type="text" id="werkadres-${p.persoonKey}" placeholder="Werkadres" style="${inputStijl}" value="${escHtml(localStorage.getItem('gezinsapp_werkadres_'+p.persoonKey)||'')}"/>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span id="reistijd-lbl-${escHtml(p.persoonKey)}" style="font-size:13px;color:var(--muted);">${geslagenReistijd?'🚗 Pendeltijd: <b>'+escHtml(geslagenReistijd)+' min</b>':'⏳ Pendeltijd wordt automatisch berekend na adresselectie'}</span>
-        <span id="reistijd-spinner-${escHtml(p.persoonKey)}" style="display:none;font-size:12px;color:var(--muted);">⏳ Berekenen…</span>
+        <span id="reistijd-lbl-${p.persoonKey}" style="font-size:13px;color:var(--muted);">${geslagenReistijd?'🚗 Pendeltijd: <b>'+escHtml(geslagenReistijd)+' min</b>':'⏳ Pendeltijd wordt automatisch berekend na adresselectie'}</span>
+        <span id="reistijd-spinner-${p.persoonKey}" style="display:none;font-size:12px;color:var(--muted);">⏳ Berekenen…</span>
       </div>
-      <input type="hidden" id="reistijd-${escHtml(p.persoonKey)}" value="${escHtml(geslagenReistijd)}"/>
+      <input type="hidden" id="reistijd-${p.persoonKey}" value="${escHtml(geslagenReistijd)}"/>
     </div>`;
   }).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()">💾 Opslaan</button>`;
   ghProfielen.forEach(p=>{
