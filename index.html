@@ -185,6 +185,7 @@ laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
 
 function renderHomepage(){
   const nu=new Date(); const datumISO=fDateISO(nu); const p=Auth.profiel();
+  localStorage.setItem('gezinsapp_vandaag',datumISO); // gedeeld met agent-pagina
   const dagNamen=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
   const maandNamen=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
   document.getElementById('dag-datum').textContent=

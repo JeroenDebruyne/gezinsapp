@@ -279,7 +279,7 @@ function _bouwSysteemPrompt(){
   const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date().getDay()];
   let planCtx='';
   try{
-    const dates=getWeekDates(0);
+    const dates=_agentGetWeekDates(0);
     planCtx='\n\nHUIDIGE WEEK ('+wLabel(dates)+'):\n'+dates.map((d,i)=>{
       const key=fDateISO(d);
       const dag=planning[key]||{};
@@ -315,21 +315,48 @@ function _weerIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return
 function _weerOmschrijving(c){if(c===0)return'Helder';if(c<=2)return'Licht bewolkt';if(c<=3)return'Bewolkt';if(c<=49)return'Mist';if(c<=69)return'Regen';if(c<=79)return'Sneeuw';if(c<=82)return'Regenbuien';if(c<=86)return'Sneeuwbuien';if(c<=99)return'Onweer';return'Onbekend';}
 
 async function _laadDatum(){
-  try{
-    const r=await fetch('https://worldtimeapi.org/api/timezone/Europe/Brussels');
-    const d=await r.json();
-    // d.datetime = "2026-05-21T14:30:00.000+02:00"
-    const dt=new Date(d.datetime);
-    _vandaagISO=d.datetime.substring(0,10);
-    _dagNaamNL=DAGKEYS_LANG[dt.getDay()];
-  }catch(e){
-    // fallback: lokale systeemtijd
-    const nu=new Date();
-    _vandaagISO=fDateISO(nu);
-    _dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  // 1. Primair: lees datum die de homepage heeft opgeslagen (gebruiker zijn eigen klok)
+  const opgeslagen=localStorage.getItem('gezinsapp_vandaag');
+  if(opgeslagen&&/^\d{4}-\d{2}-\d{2}$/.test(opgeslagen)){
+    _vandaagISO=opgeslagen;
+    _dagNaamNL=DAGKEYS_LANG[new Date(opgeslagen+'T12:00:00').getDay()];
+    _toonDatumInChat();
+    return;
   }
+  // 2. Fallback: tijdzone-bewuste berekening op basis van Belgische tijd
+  try{
+    const fmt=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'});
+    const iso=fmt.format(new Date()); // geeft "YYYY-MM-DD" in sv-SE locale
+    if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
+      _vandaagISO=iso;
+      _dagNaamNL=DAGKEYS_LANG[new Date(iso+'T12:00:00').getDay()];
+      _toonDatumInChat();
+      return;
+    }
+  }catch(e){}
+  // 3. Laatste uitweg: ruwe new Date()
+  const nu=new Date();
+  _vandaagISO=fDateISO(nu);
+  _dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  _toonDatumInChat();
 }
 function _nuISO(){return _vandaagISO||fDateISO(new Date());}
+
+function _toonDatumInChat(){
+  // Werk de welkomstboodschap bij met de geladen datum zodat de gebruiker dit kan verifiëren
+  const el=document.querySelector('#chat-berichten .chat-bubble-bot');
+  if(el&&_vandaagISO&&_dagNaamNL)
+    el.innerHTML=`Hallo! 👋 Ik ben jullie gezinsassistent. Vandaag is het <strong>${_dagNaamNL} ${_vandaagISO}</strong>.<br>Ik heb volledige toegang tot jullie agenda, recepten, weekplanning, to-do's, contacten en kinderlogistiek. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?`;
+}
+
+function _agentGetWeekDates(offset){
+  // Variant van getWeekDates() die _nuISO() gebruikt i.p.v. new Date()
+  const now=new Date(_nuISO()+'T12:00:00');
+  const day=now.getDay();
+  const diff=(day===0?-5:2-day);
+  const tue=new Date(now);tue.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(tue);d.setDate(tue.getDate()+i);return d;});
+}
 
 function _getNaam(keuze){
   if(!keuze)return'–';
@@ -392,7 +419,7 @@ async function _exec(naam,input){
 
     case 'get_week':{
       const offset=input.offset||0;
-      const dates=getWeekDates(offset);
+      const dates=_agentGetWeekDates(offset);
       const vandaagISO=_nuISO();
       return JSON.stringify(dates.map((d,i)=>{
         const datum=fDateISO(d);
@@ -487,7 +514,7 @@ async function _exec(naam,input){
 
     case 'get_verjaardagen':{
       const weken=input.weken||8;
-      const nu=new Date();nu.setHours(0,0,0,0);
+      const nu=new Date(_nuISO()+'T00:00:00');
       const tot=new Date(nu);tot.setDate(tot.getDate()+weken*7);
       const vj=[];
       contacten.forEach(c=>{
@@ -506,7 +533,7 @@ async function _exec(naam,input){
 
     case 'get_transport':{
       if(input.week){
-        const dates=getWeekDates(0);
+        const dates=_agentGetWeekDates(0);
         return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
       }
       const datum=input.datum||_nuISO();
@@ -543,7 +570,7 @@ async function _exec(naam,input){
       return _weerCache?JSON.stringify(_weerCache):'Weersdata niet beschikbaar.';
 
     case 'get_conflicten':{
-      const dates=getWeekDates(input.offset||0);
+      const dates=_agentGetWeekDates(input.offset||0);
       const conflicten=[];
       const personen=PERSONEN.length?PERSONEN:['jeroen','kelly','nora','odiel'];
       dates.forEach(d=>{
