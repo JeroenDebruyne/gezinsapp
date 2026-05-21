@@ -134,8 +134,9 @@
 Auth.initPagina('agent');
 let chatGeschiedenis=[];
 let pendingActie=null;
+let _dataGeladen=false;
 
-laadOp().catch(()=>laadLokaal());
+laadOp().catch(()=>laadLokaal()).finally(()=>{ _dataGeladen=true; });
 
 const DAGKEYS_KORT=['zo','ma','di','wo','do','vr','za'];
 const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
@@ -155,7 +156,9 @@ const AGENT_TOOLS=[
   {name:'zoek_ingredienten',description:'Zoek of een ingrediënt al bestaat in de ingrediëntenlijst.',input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:['zoekterm']}},
   {name:'voeg_ingredient_toe',description:'Voeg nieuw ingrediënt toe aan de ingrediëntenlijst. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
   {name:'voeg_aan_boodschappenlijst_toe',description:'Voeg een item toe aan de boodschappenlijst (extraItems). VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'get_boodschappenlijst',description:'Genereer boodschappenlijst per winkel op basis van huidig weekmenu.',input_schema:{type:'object',properties:{},required:[]}}
+  {name:'get_boodschappenlijst',description:'Genereer boodschappenlijst per winkel op basis van huidig weekmenu.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'wijzig_activiteit',description:'Wijzig een bestaande activiteit op naam. Geef alleen de velden mee die je wilt aanpassen. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string',description:'Huidige naam van de activiteit'},nieuw_naam:{type:'string'},wie:{type:'array',items:{type:'string'}},dagen:{type:'array',items:{type:'string'}},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string'},begin_datum:{type:'string',description:'YYYY-MM-DD'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
+  {name:'verwijder_activiteit',description:'Verwijder een activiteit op naam. VERPLICHT: bevestiging vragen.',input_schema:{type:'object',properties:{naam:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}}
 ];
 
 function _bouwSysteemPrompt(){
@@ -277,6 +280,28 @@ function _voerToolUitZonderBevestiging(naam,input){
       });
       return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([_,v])=>v.length)));
     }
+    case 'wijzig_activiteit': {
+      const act=activiteiten.find(a=>a.naam.toLowerCase()===input.naam.toLowerCase());
+      if(!act) return `Activiteit "${input.naam}" niet gevonden.`;
+      if(input.nieuw_naam) act.naam=input.nieuw_naam;
+      if(input.wie)        act.wie=input.wie;
+      if(input.dagen)      act.dagen=input.dagen;
+      if(input.start)      act.start=input.start;
+      if(input.eind_uur)   act.eindUur=input.eind_uur;
+      if(input.locatie)    act.locatie=input.locatie;
+      if(input.freq)       act.freq=input.freq;
+      if(input.begin_datum) act.beginDatum=input.begin_datum;
+      slaLokaalOp(); sbSaveActiviteit(act);
+      return `✅ Activiteit "${act.naam}" gewijzigd.`;
+    }
+    case 'verwijder_activiteit': {
+      const idx=activiteiten.findIndex(a=>a.naam.toLowerCase()===input.naam.toLowerCase());
+      if(idx<0) return `Activiteit "${input.naam}" niet gevonden.`;
+      const [removed]=activiteiten.splice(idx,1);
+      slaLokaalOp();
+      if(removed._sbId) sbDeleteActiviteit(removed._sbId);
+      return `✅ Activiteit "${removed.naam}" verwijderd.`;
+    }
     default: return 'Onbekende tool: '+naam;
   }
 }
@@ -307,11 +332,18 @@ function annuleerActie(){
 async function stuurBericht(){
   const input=document.getElementById('chat-input');
   const tekst=input.value.trim();if(!tekst)return;
+  if(!_dataGeladen){
+    voegBerichtToe('assistant','⏳ Even wachten, data wordt nog geladen…');
+    await new Promise(r=>{ const t=setInterval(()=>{ if(_dataGeladen){clearInterval(t);r();} },200); });
+    document.querySelector('.chat-bubble-bot:last-of-type')?.closest('div')?.remove();
+  }
   let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side only, no backend available
   if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
   input.value='';
   voegBerichtToe('user',tekst);
   chatGeschiedenis.push({role:'user',content:tekst});
+  // Trim history: bewaar max 20 beurten (40 berichten) om context-overflow te vermijden
+  if(chatGeschiedenis.length>40) chatGeschiedenis=chatGeschiedenis.slice(-40);
   const typingEl=voegBerichtToe('assistant','⏳…',true);
   try{
     const _aFetch=async(body)=>{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;};
