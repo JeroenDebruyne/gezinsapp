@@ -537,16 +537,7 @@ function toggleMobielAgent(){
   homeMobielOpen=!homeMobielOpen;
   document.getElementById('home-agent-mobile-body')?.classList.toggle('open',homeMobielOpen);
   document.getElementById('home-agent-chevron').textContent=homeMobielOpen?'▾':'›';
-}  {name:'get_rooster',description:'Haal alle activiteiten op.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_recepten',description:'Haal recepten op.',input_schema:{type:'object',properties:{type:{type:'string'},max_tijd:{type:'number'}},required:[]}},
-  {name:'get_weekplanning',description:'Haal de huidige weekplanning op.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_drukte_week',description:'Drukte per dag voor de huidige week.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_todos',description:'Alle openstaande to-do\'s.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'stel_weekmenu_in',description:'Stel het weekmenu in met recept-IDs. Vraag ALTIJD bevestiging.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{dag:{type:'string'},ontbijt:{type:'number'},lunch:{type:'number'},avond:{type:'number'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
-  {name:'voeg_todo_toe',description:'Voeg een to-do toe. Vraag ALTIJD bevestiging.',input_schema:{type:'object',properties:{titel:{type:'string'},deadline:{type:'string'},wie:{type:'array',items:{type:'string'}},prioriteit:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
-  {name:'voeg_activiteit_toe',description:'Voeg een activiteit toe aan het rooster. Vraag ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'jeroen,kelly,nora,odiel'},dagen:{type:'array',items:{type:'string'},description:'ma,di,wo,do,vr,za,zo'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks,tweewekelijks,eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','wie']}},
-  {name:'get_boodschappenlijst',description:'Boodschappenlijst per winkel.',input_schema:{type:'object',properties:{},required:[]}}
-];
+}
 // ── Buienradar / Weer (Open-Meteo) ────────────────────────────
 async function laadWeer(){
   try{
