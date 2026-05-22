@@ -211,9 +211,6 @@
 Auth.initPagina('kinderlogistiek');
 
 const TRANSPORT_OPTIES = ['','Kelly','Jeroen','Geert & Nadine','Patrick','Anne','Tine','Andere'];
-const KL_DAGMAP = {0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'};
-const KL_DAGKORT = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
-const KL_DAGLANG = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
 
 let weekOffsetKL = 0;
 let kindFilter = 'alle';
@@ -239,7 +236,7 @@ function setKindFilter(filter, el){
 }
 
 function getTransport(datum, kind){
-  const dagKey = KL_DAGMAP[new Date(datum+'T12:00:00').getDay()];
+  const dagKey = DAGMAP[new Date(datum+'T12:00:00').getDay()];
   const std = standaardTransport[kind]?.[dagKey] || {};
   const uitz = transportUitzonderingen[datum]?.[kind] || {};
   return {
@@ -272,7 +269,7 @@ function renderKL(){
 
   document.getElementById('kl-grid').innerHTML = dates.map((date,i)=>{
     const datum = fDateISO(date);
-    const dagKey = KL_DAGMAP[date.getDay()];
+    const dagKey = DAGMAP[date.getDay()];
     const isW = date.getDay()===0||date.getDay()===6;
     const isVandaag = datum===today;
     const isOpen = weekHeeftVandaag?(datum===today):(i===0);
@@ -365,7 +362,7 @@ function renderKL(){
     return `
     <div class="kl-dag-rij${isVandaag?' vandaag':''}${isW?' weekend':''}">
       <div class="kl-dag-header" onclick="toggleKLDag('${datum}')">
-        <span class="kl-dag-naam">${KL_DAGKORT[i]}</span>
+        <span class="kl-dag-naam">${DKORT[i]}</span>
         <span class="kl-dag-datum">${fDate(date)}</span>
         <div class="kl-dag-badges">${badgesHtml}</div>
         <span class="kl-dag-chevron">${isOpen?'▾':'›'}</span>
@@ -424,8 +421,8 @@ function resetTransport(datum, kind){
   renderKL();
 }
 
-const KL_WEEKDAGEN = ['ma','di','wo','do','vr'];
-const KL_WEEKDAGLABELS = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
+const KL_WEEKDAGEN = DAGKEYS.slice(0,5);
+const KL_WEEKDAGLABELS = DLANG.slice(0,5);
 
 function renderStandaardRooster() {
   const kinderen = Auth.getProfielen().filter(p=>p.isKind);

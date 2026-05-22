@@ -259,8 +259,8 @@
 <script>
 Auth.initPagina('instellingen');
 
-const WERKDAGEN_KEYS=['ma','di','wo','do','vr'];
-const WERKDAGEN_LABELS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag'];
+const WERKDAGEN_KEYS=DAGKEYS.slice(0,5);
+const WERKDAGEN_LABELS=DLANG.slice(0,5);
 const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 

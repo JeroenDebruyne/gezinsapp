@@ -43,9 +43,12 @@ function herbouwPersonenData() {
   });
 }
 
-const DKORT  = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
-const DLANG  = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
-const WEEKEND = [5, 6]; // index in DKORT
+const DKORT   = ['Ma','Di','Wo','Do','Vr','Za','Zo'];   // Ma-first, index 0=Ma
+const DLANG   = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const WEEKEND  = [5, 6]; // index in DKORT (Za=5, Zo=6)
+const DAGKEYS  = ['ma','di','wo','do','vr','za','zo'];   // Ma-first lowercase
+const DAGMAP   = {0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'}; // getDay() → key
+const DLANG_GD = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag']; // getDay() → lang
 
 const SLOTS  = [
   { key:'ontbijt', lbl:'Ontbijt', types:['ontbijt'] },
@@ -90,11 +93,14 @@ let standaardTransport = {};
 let vasteRoosters = {};
 
 // ── Hulpfuncties datum ────────────────────────────────────────
+function getWeekDatesFrom(isoDate, offset) {
+  const now=new Date(isoDate+'T12:00:00'); const day=now.getDay();
+  const diff=(day===0?-6:1-day);
+  const mon=new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
 function getWeekDates(offset) {
-  const now = new Date(); const day = now.getDay();
-  const diff = (day===0 ? -6 : 1-day);
-  const mon = new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
+  return getWeekDatesFrom(fDateISO(new Date()), offset);
 }
 function fDate(d) { return d.getDate()+'/'+(d.getMonth()+1); }
 function fDateISO(d) {
@@ -131,8 +137,7 @@ function isActiefOpDatum(act, datumStr) {
   if (act.freq === 'eenmalig') return datumStr === act.beginDatum;
   const datum = new Date(datumStr+'T12:00:00');
   const dagNr = datum.getDay();
-  const dagMap = {1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za',0:'zo'};
-  const dagKey = dagMap[dagNr];
+  const dagKey = DAGMAP[dagNr];
   if (!act.dagen || !act.dagen.includes(dagKey)) return false;
   if (act.beginDatum && datum < new Date(act.beginDatum)) return false;
   if (act.eindDatum  && datum > new Date(act.eindDatum+'T23:59:59')) return false;

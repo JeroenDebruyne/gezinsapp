@@ -268,17 +268,11 @@ let homeChatGeschiedenis=[], homePendingActie=null, homeMobielOpen=false;
 
 // ── Datum (leest uit localStorage dat renderHomepage() zojuist heeft gezet)
 function _hNuISO(){ return localStorage.getItem('gezinsapp_vandaag')||fDateISO(new Date()); }
-function _hDagNaam(iso){ return ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'][new Date(iso+'T12:00:00').getDay()]; }
-function _hGetWeekDates(offset){
-  const now=new Date(_hNuISO()+'T12:00:00');
-  const day=now.getDay();const diff=(day===0?-6:1-day);
-  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
-}
+function _hGetWeekDates(offset){ return getWeekDatesFrom(_hNuISO(),offset); }
 const _hSPEC={shake:'Shake',uiteten:'Uit eten',afhalen:'Afhalen',restjes:'Restjes'};
 function _hGetNaam(k){if(!k)return'–';if(_hSPEC[k])return _hSPEC[k];const r=recepten.find(r=>r.id===k||r.id==k);return r?r.naam:'–';}
 function _hTransportVoorDag(datum){
-  const dagKey=['zo','ma','di','wo','do','vr','za'][new Date(datum+'T12:00:00').getDay()];
+  const dagKey=DAGMAP[new Date(datum+'T12:00:00').getDay()];
   const result={};['nora','odiel'].forEach(kind=>{
     const std=(standaardTransport||{})[kind]?.[dagKey]||{};
     const uit=(transportUitzonderingen||{})[datum]?.[kind]||{};
@@ -293,15 +287,14 @@ function _hVerjDatumDitJaar(vj,nu){
 // ── Systeemprompt ─────────────────────────────────────────────
 function _hSysteemPrompt(){
   const vandaagISO=_hNuISO();
-  const dagNaamNL=_hDagNaam(vandaagISO);
+  const dagNaamNL=DLANG_GD[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
-    const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
     const dates=_hGetWeekDates(0);
     planCtx='\n\nHUIDIGE WEEK:\n'+dates.map((d,i)=>{
       const key=fDateISO(d);const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
-      return '  '+WEEK_VOLGORDE[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
+      return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
         ': O='+_hGetNaam(dag.ontbijt)+' L='+_hGetNaam(dag.lunch)+' A='+_hGetNaam(dag.avond)+(acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
@@ -367,18 +360,16 @@ async function homeVoerToolUit(naam,input,kanaal){
 }
 
 async function _hExec(naam,input){
-  const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-  const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
   switch(naam){
     case 'get_dag':{
       const datum=input.datum||_hNuISO();
       const dag=planning[datum]||{};const dObj=new Date(datum+'T12:00:00');const dagNr=dObj.getDay();
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||'',informatief:a.informatief||false}));
-      return JSON.stringify({datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===_hNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)});
+      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_hNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)});
     }
     case 'get_week':{
       const dates=_hGetWeekDates(input.offset||0);const vandaagISO=_hNuISO();
-      return JSON.stringify(dates.map((d,i)=>{const datum=fDateISO(d);const dag=planning[datum]||{};const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||''}));return{dag:WEEK_VOLGORDE[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)};}));
+      return JSON.stringify(dates.map((d,i)=>{const datum=fDateISO(d);const dag=planning[datum]||{};const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||''}));return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)};}));
     }
     case 'get_activiteiten':{
       let acts=activiteiten;
@@ -402,8 +393,7 @@ async function _hExec(naam,input){
       return JSON.stringify(td.map(t=>({id:t.id,titel:t.titel,notitie:t.notitie||'',deadline:t.deadline||'',prioriteit:t.prioriteit,wie:(t.wie||[]).join(','),gedaan:t.gedaan})));
     }
     case 'get_boodschappenlijst':{
-      const WINKELS2=['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
-      const res={};WINKELS2.forEach(w=>res[w]=[]);
+      const res={};WINKELS.forEach(w=>res[w]=[]);
       Object.values(planning).forEach(dag=>['ontbijt','lunch','avond'].forEach(slot=>{const keuze=dag[slot];const numId=Number(keuze);if(keuze&&!isNaN(numId)&&numId>0){const r=recepten.find(r=>r.id==keuze);if(r)(r.ingredienten||[]).forEach(ing=>{const w=ing.winkel||'Andere';if(res[w])res[w].push({naam:ing.naam,hoev:ing.hoev||'',eenheid:ing.eenheid||'',recept:r.naam});});}}));
       (extraItems||[]).forEach(item=>{const w=item.winkel||'Andere';if(res[w])res[w].push({naam:item.naam,hoev:item.hoev||'',eenheid:item.eenheid||'',extra:true});});
       return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([,v])=>v.length)));
@@ -418,8 +408,8 @@ async function _hExec(naam,input){
       vj.sort((a,b)=>a.over-b.over);return JSON.stringify(vj.length?vj:`Geen verjaardagen de komende ${weken} weken.`);
     }
     case 'get_transport':{
-      if(input.week){const dates=_hGetWeekDates(0);return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],transport:_hTransportVoorDag(fDateISO(d))})));}
-      const datum=input.datum||_hNuISO();return JSON.stringify({datum,dag:DAGKEYS_LANG[new Date(datum+'T12:00:00').getDay()],transport:_hTransportVoorDag(datum)});
+      if(input.week){const dates=_hGetWeekDates(0);return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DLANG_GD[d.getDay()],transport:_hTransportVoorDag(fDateISO(d))})));}
+      const datum=input.datum||_hNuISO();return JSON.stringify({datum,dag:DLANG_GD[new Date(datum+'T12:00:00').getDay()],transport:_hTransportVoorDag(datum)});
     }
     case 'get_schoolvakanties':return JSON.stringify({vakanties:SCHOOLVAKANTIES,uitzonderingen:(uitzonderingen||[]).filter(u=>u.datum>=_hNuISO())});
     case 'get_eethistoriek':{
@@ -432,7 +422,7 @@ async function _hExec(naam,input){
     }
     case 'get_conflicten':{
       const dates=_hGetWeekDates(input.offset||0);const conflicten=[];const personen=PERSONEN.length?PERSONEN:['jeroen','kelly','nora','odiel'];
-      dates.forEach(d=>{const datum=fDateISO(d);const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)&&!a.informatief&&a.start&&a.eindUur);personen.forEach(persoon=>{const pA=acts.filter(a=>(a.wie||[]).includes(persoon));for(let i=0;i<pA.length;i++)for(let j=i+1;j<pA.length;j++){const a1=pA[i],a2=pA[j];if(a1.start<a2.eindUur&&a2.start<a1.eindUur)conflicten.push({datum,dag:DAGKEYS_LANG[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam});}});});
+      dates.forEach(d=>{const datum=fDateISO(d);const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)&&!a.informatief&&a.start&&a.eindUur);personen.forEach(persoon=>{const pA=acts.filter(a=>(a.wie||[]).includes(persoon));for(let i=0;i<pA.length;i++)for(let j=i+1;j<pA.length;j++){const a1=pA[i],a2=pA[j];if(a1.start<a2.eindUur&&a2.start<a1.eindUur)conflicten.push({datum,dag:DLANG_GD[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam});}});});
       return JSON.stringify(conflicten.length?conflicten:'Geen conflicten gevonden.');
     }
     case 'zoek_ingredienten':{const q=(input.zoekterm||'').toLowerCase();return JSON.stringify(standaardIngredienten.filter(i=>(i.naam||'').toLowerCase().includes(q)).map(i=>({naam:i.naam,winkel:i.winkel,eenheid:i.eenheid||''})));}

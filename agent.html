@@ -147,9 +147,6 @@ Promise.all([_laadDatum(),_laadWeer()]);
 if(typeof BroadcastChannel!=='undefined')
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); };
 
-const DAGKEYS_KORT=['zo','ma','di','wo','do','vr','za'];
-const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 
 // ── Tools ────────────────────────────────────────────────────────
 const AGENT_TOOLS=[
@@ -282,7 +279,7 @@ const AGENT_TOOLS=[
 // ── Systeemprompt ────────────────────────────────────────────────
 function _bouwSysteemPrompt(){
   const vandaagISO=_nuISO();
-  const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date(vandaagISO+'T12:00:00').getDay()];
+  const dagNaamNL=_dagNaamNL||DLANG_GD[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
     const dates=_agentGetWeekDates(0);
@@ -290,7 +287,7 @@ function _bouwSysteemPrompt(){
       const key=fDateISO(d);
       const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
-      return '  '+WEEK_VOLGORDE[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
+      return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
         ': O='+_getNaam(dag.ontbijt)+' L='+_getNaam(dag.lunch)+' A='+_getNaam(dag.avond)+
         (acts?' ['+acts+']':'');
     }).join('\n');
@@ -325,7 +322,7 @@ async function _laadDatum(){
   const opgeslagen=localStorage.getItem('gezinsapp_vandaag');
   if(opgeslagen&&/^\d{4}-\d{2}-\d{2}$/.test(opgeslagen)){
     _vandaagISO=opgeslagen;
-    _dagNaamNL=DAGKEYS_LANG[new Date(opgeslagen+'T12:00:00').getDay()];
+    _dagNaamNL=DLANG_GD[new Date(opgeslagen+'T12:00:00').getDay()];
     _toonDatumInChat();
     return;
   }
@@ -335,7 +332,7 @@ async function _laadDatum(){
     const iso=fmt.format(new Date()); // geeft "YYYY-MM-DD" in sv-SE locale
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
       _vandaagISO=iso;
-      _dagNaamNL=DAGKEYS_LANG[new Date(iso+'T12:00:00').getDay()];
+      _dagNaamNL=DLANG_GD[new Date(iso+'T12:00:00').getDay()];
       _toonDatumInChat();
       return;
     }
@@ -343,7 +340,7 @@ async function _laadDatum(){
   // 3. Laatste uitweg: ruwe new Date()
   const nu=new Date();
   _vandaagISO=fDateISO(nu);
-  _dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  _dagNaamNL=DLANG_GD[nu.getDay()];
   _toonDatumInChat();
 }
 function _nuISO(){return _vandaagISO||fDateISO(new Date());}
@@ -360,12 +357,7 @@ function _toonDatumInChat(){
 }
 
 function _agentGetWeekDates(offset){
-  // Variant van getWeekDates() die _nuISO() gebruikt i.p.v. new Date()
-  const now=new Date(_nuISO()+'T12:00:00');
-  const day=now.getDay();
-  const diff=(day===0?-6:1-day);
-  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+  return getWeekDatesFrom(_nuISO(),offset);
 }
 
 function _getNaam(keuze){
@@ -376,7 +368,7 @@ function _getNaam(keuze){
 }
 
 function _transportVoorDag(datum){
-  const dagKey=DAGKEYS_KORT[new Date(datum+'T12:00:00').getDay()];
+  const dagKey=DAGMAP[new Date(datum+'T12:00:00').getDay()];
   const result={};
   ['nora','odiel'].forEach(kind=>{
     const std=(standaardTransport||{})[kind]?.[dagKey]||{};
@@ -418,7 +410,7 @@ async function _exec(naam,input){
       }));
       const dagNr=dObj.getDay();
       return JSON.stringify({
-        datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===_nuISO(),
+        datum,dag:DLANG_GD[dagNr],isVandaag:datum===_nuISO(),
         isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,
         vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
         drukte:getDagDrukte(datum),
@@ -438,7 +430,7 @@ async function _exec(naam,input){
           naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||''
         }));
         return{
-          dag:WEEK_VOLGORDE[i],datum,isVandaag:datum===vandaagISO,
+          dag:DKORT[i],datum,isVandaag:datum===vandaagISO,
           vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
           drukte:getDagDrukte(datum),
           ontbijt:_getNaam(dag.ontbijt),lunch:_getNaam(dag.lunch),avond:_getNaam(dag.avond),
@@ -485,7 +477,6 @@ async function _exec(naam,input){
     }
 
     case 'get_boodschappenlijst':{
-      const WINKELS=['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
       const res={};WINKELS.forEach(w=>res[w]=[]);
       Object.values(planning).forEach(dag=>{
         ['ontbijt','lunch','avond'].forEach(slot=>{
@@ -544,10 +535,10 @@ async function _exec(naam,input){
     case 'get_transport':{
       if(input.week){
         const dates=_agentGetWeekDates(0);
-        return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
+        return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DLANG_GD[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
       }
       const datum=input.datum||_nuISO();
-      return JSON.stringify({datum,dag:DAGKEYS_LANG[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
+      return JSON.stringify({datum,dag:DLANG_GD[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
     }
 
     case 'get_schoolvakanties':{
@@ -592,7 +583,7 @@ async function _exec(naam,input){
             for(let j=i+1;j<pActs.length;j++){
               const a1=pActs[i],a2=pActs[j];
               if(a1.start<a2.eindUur&&a2.start<a1.eindUur)
-                conflicten.push({datum,dag:DAGKEYS_LANG[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam,tijden:`${a1.start}-${a1.eindUur} / ${a2.start}-${a2.eindUur}`});
+                conflicten.push({datum,dag:DLANG_GD[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam,tijden:`${a1.start}-${a1.eindUur} / ${a2.start}-${a2.eindUur}`});
             }
           }
         });
