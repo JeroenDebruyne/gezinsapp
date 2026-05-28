@@ -374,7 +374,7 @@ async function sbSaveRecept(recept) {
     tijd:recept.tijd,
     porties:recept.porties||4,                 // nieuw
     moeilijk:recept.moeilijk,
-    wie:recept.wie,
+    wie:Array.isArray(recept.wie)?recept.wie:[recept.wie].filter(Boolean),
     bron:recept.bron,
     bereiding:recept.bereiding,
     tags:recept.tags,
@@ -386,7 +386,8 @@ async function sbSaveRecept(recept) {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('recepten','POST',{...data,gezin_id:_gid()}); if(res[0]) recept._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
-  } catch(e) { _opslagFout(e,'recept'); }
+    return true;
+  } catch(e) { _opslagFout(e,'recept'); return e?.message||String(e); }
 }
 async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
 
