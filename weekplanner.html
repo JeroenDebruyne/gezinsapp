@@ -15,6 +15,16 @@
 .wp-voorbeeld-btn{padding:6px 12px;border:1.5px solid var(--border-2);border-radius:99px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;font-weight:500;transition:all .15s;}
 .wp-voorbeeld-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
 .wp-bevestiging-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px;}
+.slot.slot-filled{padding:0;flex-direction:column;align-items:stretch;cursor:default;}
+.slot.slot-filled:hover{border-color:var(--border);box-shadow:none;}
+.slot-top{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-radius:var(--radius-sm) var(--radius-sm) 0 0;}
+.slot-top:hover{background:var(--accent-l,#eaf7f3);}
+.slot-ctrl{display:flex;align-items:center;gap:10px;padding:5px 14px 7px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.slot-porties-wrap{display:flex;align-items:center;gap:4px;}
+.slot-ctrl-btn{width:22px;height:22px;border:1.5px solid var(--border);border-radius:50%;background:var(--surface);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;color:var(--ink);transition:all .12s;}
+.slot-ctrl-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
+.slot-porties-val{font-size:12px;color:var(--muted);min-width:34px;text-align:center;font-weight:600;}
+.slot-kok-sel{font-size:12px;padding:3px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;cursor:pointer;max-width:150px;}
 </style>
 </head>
 <body>
@@ -184,6 +194,7 @@
 Auth.initPagina('weekplanner');
 let weekOffsetP=0, activeSlot=null, selectedKeuze=null;
 let aiMenuVoorstel=null, chatGeschiedenisWP=[];
+let _openDagen=new Set();
 
 laadOp().then(renderPlanner).catch(()=>{laadLokaal();renderPlanner();});
 
@@ -191,7 +202,7 @@ if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderPlanner(); };
 }
 
-function changeWeekP(dir){weekOffsetP+=dir;renderPlanner();}
+function changeWeekP(dir){weekOffsetP+=dir;_openDagen.clear();renderPlanner();}
 
 function renderPlanner(){
   const dates=getWeekDates(weekOffsetP);
@@ -199,11 +210,12 @@ function renderPlanner(){
   const today=fDateISO(new Date());
   const weekHeeftVandaag=dates.some(d=>fDateISO(d)===today);
   document.getElementById('planner-grid').innerHTML=dates.map((date,i)=>{
-    const key=fDateISO(date);const isW=i>=4&&i<=5;
+    const key=fDateISO(date);const isW=WEEKEND.includes(i);
     const dagPlan=planning[key]||{};
     const drukte=getDagDrukte(key);
     const eetGroo=activiteiten.some(a=>(a.dagen||[]).includes(DAGKEYS[i])&&Object.values(a.transport||{}).some(t=>t?.eetGroo));
-    const isOpen=weekHeeftVandaag?(key===today):(i===0);
+    const defaultOpen=weekHeeftVandaag?(key===today):(i===0);
+    const isOpen=_openDagen.size?_openDagen.has(key):defaultOpen;
     const previewItems=SLOTS.map(slot=>{
       const k=dagPlan[slot.key];if(!k)return null;
       if(SPEC[k])return SPEC[k];
@@ -212,12 +224,41 @@ function renderPlanner(){
     const preview=previewItems.join(' · ');
     const slotsHtml=SLOTS.map(slot=>{
       const keuze=dagPlan[slot.key];
-      let badge='';
-      if(!keuze) badge=`<span class="slot-leeg">+ Toevoegen</span>`;
-      else if(SPEC[keuze]) badge=`<span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>`;
-      else{const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));if(r){const w=r.tijd>DRUKTE_MAX[drukte];badge=`<div class="slot-naam">${r.naam}${w?' <span class="warn">⚠️</span>':''}</div><div class="slot-tijd">${r.tijd}m</div>`;}}
       const wisBtn=keuze?`<button class="slot-wis-btn" onclick="event.stopPropagation();wisSlotDirect('${key}','${slot.key}')" title="Wissen">×</button>`:'';
-      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${badge}${wisBtn}</div>`;
+      if(!keuze){
+        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="slot-leeg">+ Toevoegen</span></div>`;
+      }
+      if(SPEC[keuze]){
+        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>${wisBtn}</div>`;
+      }
+      const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));
+      if(r){
+        const w=r.tijd>DRUKTE_MAX[drukte];
+        const receptPorties=r.porties||4;
+        const geplandPorties=(dagPlan.porties||{})[slot.key]||receptPorties;
+        const kok=(dagPlan.porties||{})['kok_'+slot.key]||'';
+        const persOpts=PERSONEN.map(p=>`<option value="${escHtml(p)}"${p===kok?' selected':''}>${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</option>`).join('');
+        return `<div class="slot slot-filled">
+          <div class="slot-top" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})">
+            <div class="slot-lbl">${slot.lbl}</div>
+            <div class="slot-naam">${escHtml(r.naam)}${w?' <span class="warn">⚠️</span>':''}</div>
+            <div class="slot-tijd">${r.tijd}m</div>
+            ${wisBtn}
+          </div>
+          <div class="slot-ctrl" onclick="event.stopPropagation()">
+            <div class="slot-porties-wrap">
+              <button class="slot-ctrl-btn" onclick="wijzigPorties('${key}','${slot.key}',-1)">−</button>
+              <span class="slot-porties-val">👥 ${geplandPorties}</span>
+              <button class="slot-ctrl-btn" onclick="wijzigPorties('${key}','${slot.key}',1)">+</button>
+            </div>
+            <select class="slot-kok-sel" onchange="wijzigKok('${key}','${slot.key}',this.value)">
+              <option value="">👨‍🍳 Kok?</option>
+              ${persOpts}
+            </select>
+          </div>
+        </div>`;
+      }
+      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${wisBtn}</div>`;
     }).join('');
     return `<div class="dag-rij${isW?' weekend':''}${key===today?' vandaag':''}" id="dag-rij-${key}">
       <div class="dag-rij-header" onclick="toggleDag('${key}')">
@@ -244,6 +285,7 @@ function toggleDag(key){
   const chevron=rij.querySelector('.dag-rij-chevron');
   const isOpen=body.classList.toggle('open');
   chevron.textContent=isOpen?'▾':'›';
+  if(isOpen) _openDagen.add(key); else _openDagen.delete(key);
 }
 
 
@@ -281,7 +323,7 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
     huidigSectie.style.display='block';
   } else { huidigSectie.style.display='none'; }
   document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">${{rustig:'🟢 Rustige dag',normaal:'🟡 Drukke dag',druk:'🔴 Zeer drukke dag'}[drukte]}</div>`;
-  const isW=dagIndex>=4&&dagIndex<=5;
+  const isW=WEEKEND.includes(dagIndex);
   const slot=SLOTS.find(s=>s.key===slotKey);
   const types=isW?['weekend']:slot.types;
 
@@ -351,6 +393,24 @@ function wisSlotDirect(dagKey,slotKey){
   slaLokaalOp();
   sbSavePlanning(dagKey,slotKey,null,(planning[dagKey]||{}).porties);
 }
+function wijzigPorties(dagKey,slotKey,delta){
+  if(!planning[dagKey]) planning[dagKey]={};
+  if(!planning[dagKey].porties) planning[dagKey].porties={};
+  const r=recepten.find(r=>r.id===planning[dagKey][slotKey]||r.id===parseInt(planning[dagKey][slotKey]));
+  const huidig=planning[dagKey].porties[slotKey]||r?.porties||4;
+  planning[dagKey].porties[slotKey]=Math.max(1,Math.min(20,huidig+delta));
+  slaLokaalOp();
+  sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+  renderPlanner();
+}
+function wijzigKok(dagKey,slotKey,kokKey){
+  if(!planning[dagKey]) planning[dagKey]={};
+  if(!planning[dagKey].porties) planning[dagKey].porties={};
+  planning[dagKey].porties['kok_'+slotKey]=kokKey||null;
+  slaLokaalOp();
+  sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+  renderPlanner();
+}
 function closePlanModal(){
   document.getElementById('plan-modal-bg').classList.remove('open');
   activeSlot=null;
@@ -373,19 +433,28 @@ async function voegToeAanBoodschappenlijst(){
     if(!confirm('Je hebt al boodschappen toegevoegd voor deze week. Ben je zeker dat je de lijst wil overschrijven?')) return;
   }
 
-  // Verzamel alle ingrediënten van het weekmenu
+  // Verzamel alle ingrediënten van het weekmenu (geschaald naar porties)
   const dates=getWeekDates(weekOffsetP);
   const perIng={};
   dates.forEach(date=>{
-    const dag=planning[fDateISO(date)]||{};
-    Object.values(dag).forEach(k=>{
-      if(!k||SPEC[k]) return;
-      const r=recepten.find(r=>r.id===k||r.id===parseInt(k));
-      if(!r) return;
+    const datum=fDateISO(date);
+    const dag=planning[datum]||{};
+    SLOTS.forEach(slot=>{
+      const k=dag[slot.key];if(!k||SPEC[k])return;
+      const r=recepten.find(r=>r.id===k||r.id===parseInt(k));if(!r)return;
+      const receptPorties=r.porties||4;
+      const geplandPorties=(dag.porties||{})[slot.key]||receptPorties;
+      const schaal=geplandPorties/receptPorties;
       (r.ingredienten||[]).forEach(ing=>{
         const key=(ing.naam||'').toLowerCase()+'|'+(ing.winkel||'Andere');
+        const hoevNum=parseFloat(ing.hoev)||null;
+        const geschaaldHoev=hoevNum?Math.round(hoevNum*schaal*100)/100:null;
         if(!perIng[key]){
-          perIng[key]={naam:ing.naam,winkel:ing.winkel||'Andere',eenheid:ing.eenheid||null,hoev:ing.hoev||null,receptNaam:r.naam,weekKey};
+          perIng[key]={naam:ing.naam,winkel:ing.winkel||'Andere',eenheid:ing.eenheid||null,hoev:geschaaldHoev||ing.hoev||null,receptNaam:r.naam,weekKey};
+        } else if(hoevNum&&geschaaldHoev){
+          // Zelfde ingredient meerdere recepten: optellen
+          const huidig=parseFloat(perIng[key].hoev)||0;
+          perIng[key].hoev=Math.round((huidig+geschaaldHoev)*100)/100;
         }
       });
     });
@@ -451,11 +520,42 @@ const WP_AGENT_TOOLS=[
   {name:'get_recepten',description:'Recepten ophalen met filters. Roep dit ALTIJD aan vóór stel_weekmenu_in.',input_schema:{type:'object',properties:{zoekterm:{type:'string'},type:{type:'string',description:'avond/lunch/ontbijt/weekend'},max_tijd:{type:'integer',description:'max bereidingstijd in minuten'},tag:{type:'string',description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},max_resultaten:{type:'integer'}},required:[]}},
   {name:'get_eethistoriek',description:'Maaltijdhistoriek van de afgelopen weken. Roep dit ALTIJD aan vóór je een weekmenu plant om herhalingen te vermijden.',input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
   {name:'get_boodschappenlijst',description:'Boodschappenlijst per winkel: ingrediënten uit weekmenu plus extra handmatige items.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'stel_weekmenu_in',description:'Plan maaltijden voor een of meerdere dagen. Gebruik NUMERIEK recept-id uit get_recepten, of "uiteten"/"afhalen"/"restjes"/"shake". ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+  {name:'stel_weekmenu_in',description:'Plan maaltijden voor een of meerdere dagen. Gebruik NUMERIEK recept-id uit get_recepten, of "uiteten"/"afhalen"/"restjes"/"shake". ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']},porties:{type:'object',description:'Aantal porties per slot: {avond:2}. Weglaten = standaard receptporties.'},kok:{type:'object',description:'Wie kookt per slot: {avond:"jeroen"}. Gebruik persoonKey (kleine letters).'}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
   {name:'wis_weekmenu_slot',description:'Wis één maaltijdslot op een specifieke datum. ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},slot:{type:'string',description:'ontbijt/lunch/avond'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot']}},
+  {name:'beoordeel_maaltijd',description:'Beoordeel een recept na het eten (👍/👎 of score 1-5). Werkt het geheugen van de maaltijdassistent bij zodat toekomstige aanbevelingen verbeteren. Vraag altijd bevestiging.',input_schema:{type:'object',properties:{recept_id:{type:'integer',description:'Het numerieke recept-id'},score:{type:'integer',description:'Score 1-5 (1=slecht, 3=ok, 5=uitstekend)'},opmerking:{type:'string',description:'Optionele opmerking over het recept'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['recept_id','score']}},
   {name:'onthoud',description:'Sla een herinnering of voorkeur op in het permanente geheugen van de agent. Gebruik dit wanneer de gebruiker zegt "onthoud dit", "vergeet niet", "houd bij" of iets wil bewaren voor later.',input_schema:{type:'object',properties:{tekst:{type:'string',description:'De tekst om te onthouden, volledig en zelfstandig leesbaar'}},required:['tekst']}},
   {name:'vergeet_herinnering',description:'Verwijder een specifieke herinnering uit het geheugen op basis van de index (0-gebaseerd).',input_schema:{type:'object',properties:{index:{type:'integer',description:'Index van de herinnering om te verwijderen (0 = eerste)'}},required:['index']}},
 ];
+
+function _wpThuiskomstCtx(){
+  const profielen=Auth.getProfielen().filter(p=>p.rol==='gezinshoofd');
+  if(!profielen.length) return '';
+  const dates=_wpGetWeekDates(0);
+  const dagKeys=['zo','ma','di','wo','do','vr','za'];
+  const lines=[];
+  dates.forEach((d,i)=>{
+    const datum=fDateISO(d);
+    const dagKey=dagKeys[d.getDay()];
+    const dagInfo=[];
+    profielen.forEach(p=>{
+      const rooster=(vasteRoosters[p.persoonKey]||{})[dagKey];
+      if(!rooster||!rooster.actief) return;
+      const locatie=rooster.locatie||'thuis';
+      const tot=rooster.tot||'17:00';
+      if(locatie==='kantoor'){
+        const reistijd=parseInt(localStorage.getItem(`gezinsapp_reistijd_${p.persoonKey}`)||'0')||0;
+        const [h,m]=(tot||'17:00').split(':').map(Number);
+        const thuisTot=(h*60+m+reistijd);
+        const thuisTijd=`${String(Math.floor(thuisTot/60)).padStart(2,'0')}:${String(thuisTot%60).padStart(2,'0')}`;
+        dagInfo.push(`${p.naam}: kantoor tot ${tot} + ${reistijd}min pendelen → thuis ~${thuisTijd}`);
+      } else {
+        dagInfo.push(`${p.naam}: thuis/remote tot ${tot}`);
+      }
+    });
+    if(dagInfo.length) lines.push(`  ${WP_WEEK_VOLGORDE[i]} ${datum}: ${dagInfo.join('; ')}`);
+  });
+  return lines.length ? '\n\nTHUISKOMST DEZE WEEK:\n'+lines.join('\n') : '';
+}
 
 function _wpSysteemPrompt(){
   const vandaagISO=_wpNuISO();
@@ -472,17 +572,41 @@ function _wpSysteemPrompt(){
         (acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
+  const thuiskomstCtx=_wpThuiskomstCtx();
   return `Je bent de maaltijdassistent van de familie Debruyne-Dewaegenaere.
 Vandaag: ${dagNaamNL} ${vandaagISO}.
 Gezin: Jeroen (vader), Kelly (moeder), Nora (dochter 6j), Odiel (zoon 3j).
-Week loopt ma→zo. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
+Week loopt ma→zo. Op schooldagen (ma-vr) eten de kinderen 's middags op school (Jeroen en Kelly eten wel thuis of doen lunch zelf).${planCtx}${thuiskomstCtx}
 
 REGELS:
 - Vraag ALTIJD bevestiging vóór elke schrijfactie (bevestiging_vereist:true).
 - Roep get_eethistoriek(8) aan VÓÓR je een weekmenu plant. Vermijd recepten die de afgelopen 8 weken al voorkwamen.
 - Bij stel_weekmenu_in: gebruik NUMERIEK recept-id uit get_recepten, nooit de naam.
 - Focus op maaltijdplanning: ontbijt, lunch en avondeten.
-- Antwoord altijd in het Nederlands. Wees bondig en concreet.${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g,i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
+- Antwoord altijd in het Nederlands. Wees bondig en concreet.
+- Geef voorkeur aan recepten met score ≥ 4. Vermijd recepten met score ≤ 2 tenzij de gebruiker ze expliciet vraagt.
+
+TIJDSBEWUSTZIJN:
+- Bereken per avond of Jeroen en/of Kelly nog op kantoor zijn geweest en wanneer ze thuis zijn (zie THUISKOMST DEZE WEEK).
+- Als iemand pas na 18:30 thuis is en er nog activiteiten zijn, is er weinig tijd voor koken: stel maaltijdshake, afhalen of een snel recept (<30min) voor.
+- Vraag altijd expliciet: "Wie eet er mee?" als er twijfel is over aanwezigheid van gezinsleden.
+- Een maaltijdshake = een shake als maaltijdvervanging (bijv. Herbalife). Stel dit voor bij erg krappe avonden.
+
+KOKEN:
+- Per maaltijdslot kan aangeduid worden wie kookt. Gebruik de persoonKey (kleine letters) in stel_weekmenu_in.kok.
+- Als de aangewezen kok die avond laat thuis is (kantoor + pendeltijd), stel dan automatisch een sneller recept voor (<30 min) of een maaltijdshake.
+- Verspreid kookbeurten eerlijk over Jeroen en Kelly. Vraag wie er kookt als het niet ingesteld is voor een avond.
+
+RESTJESDAG:
+- "Restjes" = de resten van het gerecht van de vorige avond worden opgegeten.
+- Noteer mentaal welk recept het was de avond voor de restjes-dag. Vermeld dit bij je voorstel ("Restjes van [gerecht]").
+- Plan restjes na gerechten die voldoende overblijven: pasta bolognese, stoofpot, soep, lasagne, gratin...
+- Bij de boodschappenlijst: toon de restjes-dag zonder extra ingrediënten (die staan al bij de vorige dag).
+
+PORTIES & BOODSCHAPPENLIJST:
+- Een recept is bedoeld voor een bepaald aantal porties (standaard 4). Als er maar 2 personen eten, zijn de benodigde hoeveelheden de helft.
+- Bij get_boodschappenlijst worden ingrediënten automatisch geschaald: porties_gegeten / recept_porties × hoeveelheid.
+- Bij stel_weekmenu_in: je kunt porties meegeven per slot als het gezin niet voltallig aanwezig is.${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g,i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
 }
 
 async function _wpFetch(apiKey,body){
@@ -524,7 +648,22 @@ async function _wpExec(naam,input){
       const dObj=new Date(datum+'T12:00:00');
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||''}));
       const dagNr=dObj.getDay();
-      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum)});
+      const dagKey=DAGMAP[dagNr];
+      const thuiskomst={};
+      Auth.getProfielen().filter(p=>p.rol==='gezinshoofd').forEach(p=>{
+        const rooster=(vasteRoosters[p.persoonKey]||{})[dagKey];
+        if(!rooster||!rooster.actief){thuiskomst[p.naam]='niet ingepland';return;}
+        if((rooster.locatie||'thuis')==='kantoor'){
+          const reistijd=parseInt(localStorage.getItem(`gezinsapp_reistijd_${p.persoonKey}`)||'0')||0;
+          const [h,m]=(rooster.tot||'17:00').split(':').map(Number);
+          const thuisTot=h*60+m+reistijd;
+          thuiskomst[p.naam]=`kantoor tot ${rooster.tot}, thuis ~${String(Math.floor(thuisTot/60)).padStart(2,'0')}:${String(thuisTot%60).padStart(2,'0')}`;
+        } else {
+          thuiskomst[p.naam]=`thuis/remote (tot ${rooster.tot})`;
+        }
+      });
+      const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
+      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag});
     }
     case 'get_week':{
       const offset=input.offset||0;
@@ -532,8 +671,23 @@ async function _wpExec(naam,input){
       const vandaagISO=_wpNuISO();
       return JSON.stringify(dates.map((d,i)=>{
         const datum=fDateISO(d);const dag=planning[datum]||{};
+        const dagNr=d.getDay();const dagKey=DAGMAP[dagNr];
         const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',locatie:a.locatie||''}));
-        return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum)};
+        const thuiskomst={};
+        Auth.getProfielen().filter(p=>p.rol==='gezinshoofd').forEach(p=>{
+          const rooster=(vasteRoosters[p.persoonKey]||{})[dagKey];
+          if(!rooster||!rooster.actief)return;
+          if((rooster.locatie||'thuis')==='kantoor'){
+            const reistijd=parseInt(localStorage.getItem(`gezinsapp_reistijd_${p.persoonKey}`)||'0')||0;
+            const [h,m]=(rooster.tot||'17:00').split(':').map(Number);
+            const thuisTot=h*60+m+reistijd;
+            thuiskomst[p.naam]=`kantoor tot ${rooster.tot} → thuis ~${String(Math.floor(thuisTot/60)).padStart(2,'0')}:${String(thuisTot%60).padStart(2,'0')}`;
+          } else {
+            thuiskomst[p.naam]=`thuis (tot ${rooster.tot})`;
+          }
+        });
+        const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
+        return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag};
       }));
     }
     case 'get_recepten':{
@@ -561,18 +715,62 @@ async function _wpExec(naam,input){
       return JSON.stringify(hist);
     }
     case 'get_boodschappenlijst':{
-      const extra=extraItems.map(i=>({naam:i.naam,winkel:i.winkel||'Andere',hoev:i.hoev||'',eenheid:i.eenheid||'',type:'extra'}));
-      const recept=boodschappenReceptItems.map(i=>({naam:i.naam,winkel:i.winkel||'Andere',hoev:i.hoev||'',eenheid:i.eenheid||'',receptNaam:i.receptNaam||'',type:'recept',afgevinkt:i.afgevinkt||false}));
+      // Build scaled ingredient list from current weekmenu
+      const vandaagISO=_wpNuISO();
+      const now=new Date(vandaagISO+'T12:00:00');
+      const weekItems=[];
+      _wpGetWeekDates(0).forEach(d=>{
+        const datum=fDateISO(d);
+        const dag=planning[datum]||{};
+        SLOTS.forEach(slot=>{
+          const k=dag[slot.key];if(!k||SPEC[k])return;
+          const r=recepten.find(r=>r.id===k||r.id===parseInt(k));if(!r)return;
+          const receptPorties=r.porties||4;
+          const geplandPorties=(dag.porties||{})[slot.key]||receptPorties;
+          const schaal=geplandPorties/receptPorties;
+          (r.ingredienten||[]).forEach(ing=>{
+            const hoevNum=parseFloat(ing.hoev)||null;
+            const geschaaldHoev=hoevNum?Math.round(hoevNum*schaal*100)/100:null;
+            weekItems.push({naam:ing.naam,winkel:ing.winkel||'Andere',hoev:geschaaldHoev,eenheid:ing.eenheid||null,receptNaam:r.naam,porties:`${geplandPorties}/${receptPorties}`,type:'recept',afgevinkt:false});
+          });
+        });
+      });
+      const extra=extraItems.map(i=>({naam:i.naam,winkel:i.winkel||'Andere',hoev:i.hoev||null,eenheid:i.eenheid||null,type:'extra'}));
       const perWinkel={};
-      [...extra,...recept].forEach(i=>{if(!perWinkel[i.winkel])perWinkel[i.winkel]=[];perWinkel[i.winkel].push(i);});
+      [...weekItems,...extra].forEach(i=>{if(!perWinkel[i.winkel])perWinkel[i.winkel]=[];perWinkel[i.winkel].push(i);});
       return JSON.stringify(perWinkel);
     }
     case 'stel_weekmenu_in':{
       if(!input.menu||!Array.isArray(input.menu))return'Fout formaat.';
-      input.menu.forEach(dd=>{const key=dd.datum;if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(key))return;if(!planning[key])planning[key]={};['ontbijt','lunch','avond'].forEach(slot=>{if(dd[slot]===undefined)return;let val=dd[slot];if(val===null||val==='')val=null;else if(typeof val==='string'&&WP_SPEC[val])val=val;else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);else{const rec=recepten.find(r=>r.naam.toLowerCase()===String(val).toLowerCase());val=rec?rec.id:val;}planning[key][slot]=val;sbSavePlanning(key,slot,val,planning[key].porties||{});});});
+      input.menu.forEach(dd=>{
+        const key=dd.datum;if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(key))return;
+        if(!planning[key])planning[key]={};
+        if(!planning[key].porties)planning[key].porties={};
+        ['ontbijt','lunch','avond'].forEach(slot=>{
+          if(dd[slot]===undefined)return;
+          let val=dd[slot];
+          if(val===null||val==='')val=null;
+          else if(typeof val==='string'&&WP_SPEC[val])val=val;
+          else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);
+          else{const rec=recepten.find(r=>r.naam.toLowerCase()===String(val).toLowerCase());val=rec?rec.id:val;}
+          planning[key][slot]=val;
+          if(dd.porties&&dd.porties[slot]) planning[key].porties[slot]=dd.porties[slot];
+          if(dd.kok&&dd.kok[slot]) planning[key].porties['kok_'+slot]=dd.kok[slot];
+          sbSavePlanning(key,slot,val,planning[key].porties||{});
+        });
+      });
       slaLokaalOp();renderPlanner();return'✅ Weekmenu ingesteld.';
     }
     case 'wis_weekmenu_slot':{if(!planning[input.datum])planning[input.datum]={};planning[input.datum][input.slot]=null;sbSavePlanning(input.datum,input.slot,null,planning[input.datum].porties||{});slaLokaalOp();renderPlanner();return`✅ ${input.slot} op ${input.datum} gewist.`;}
+    case 'beoordeel_maaltijd':{
+      const r=recepten.find(r=>r.id===input.recept_id||r.id==input.recept_id);
+      if(!r)return`⚠️ Recept ${input.recept_id} niet gevonden.`;
+      r.score=Math.min(5,Math.max(1,input.score));
+      slaLokaalOp();
+      sbSaveRecept(r);
+      const opmerking=input.opmerking?` (${input.opmerking})`:'';
+      return`✅ ${r.naam} beoordeeld: ${r.score}/5${opmerking}.`;
+    }
     case 'onthoud':{const item={tekst:input.tekst,aangemaakt_op:new Date().toISOString()};geheugen.push(item);slaLokaalOp();sbSaveGeheugen();return`✅ Onthouden: "${input.tekst}"`;}
     case 'vergeet_herinnering':{if(input.index<0||input.index>=geheugen.length)return`⚠️ Geen herinnering op index ${input.index}.`;const verwijderd=geheugen.splice(input.index,1)[0];slaLokaalOp();sbSaveGeheugen();return`✅ Vergeten: "${verwijderd.tekst}"`;}
     default:return`Onbekende tool: ${naam}`;
