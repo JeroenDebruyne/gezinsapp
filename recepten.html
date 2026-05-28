@@ -48,6 +48,11 @@
 .ing-combo-nieuw{padding:8px 10px;font-size:13px;cursor:pointer;color:var(--accent);font-weight:600;border-top:1px solid var(--border);}
 .ing-combo-nieuw:hover{background:var(--accent-l);}
 .ing-nieuw-badge{font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px;}
+.ster-input{display:flex;gap:6px;margin-top:6px;}
+.ster-input span{font-size:22px;cursor:pointer;opacity:.35;transition:opacity .1s,transform .1s;line-height:1;}
+.ster-input span.vol{opacity:1;}
+.ster-input span:hover,.ster-input span:hover~span{opacity:.65;}
+.ster-display{color:var(--accent);letter-spacing:1px;font-size:13px;}
 </style>
 </head>
 <body>
@@ -297,6 +302,18 @@
   </div>
 
   <div class="form-row">
+    <label>Beoordeling (optioneel)</label>
+    <div class="ster-input" id="ster-input">
+      <span data-v="1" onclick="setSter(1)">★</span>
+      <span data-v="2" onclick="setSter(2)">★</span>
+      <span data-v="3" onclick="setSter(3)">★</span>
+      <span data-v="4" onclick="setSter(4)">★</span>
+      <span data-v="5" onclick="setSter(5)">★</span>
+    </div>
+    <input type="hidden" id="f-score"/>
+  </div>
+
+  <div class="form-row">
     <label>Bron (URL of kookboek)</label>
     <input type="text" id="f-bron" placeholder="https://… of Kookboek p.42"/>
   </div>
@@ -380,6 +397,7 @@ function renderRecepten(){
           ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
           ${r.porties?`<span>🍽 ${r.porties}p</span>`:''}
           ${r.moeilijk?`<span>${escHtml(r.moeilijk)}</span>`:''}
+          ${r.score?_sterHtml(r.score):''}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">
           ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
@@ -451,6 +469,7 @@ function renderFicheHtml(r, metSluitknop){
     ${r.tijd?`<span class="fiche-meta-item">⏱ ${r.tijd} min</span>`:''}
     ${r.porties?`<span class="fiche-meta-item">🍽 ${r.porties} p.</span>`:''}
     ${r.moeilijk?`<span class="fiche-meta-item">📊 ${escHtml(r.moeilijk)}</span>`:''}
+    ${r.score?`<span class="fiche-meta-item">${_sterHtml(r.score)}</span>`:''}
   </div>
   ${(r.tags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1rem;">${r.tags.map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}</div>`:''}
   ${bronDom?`<div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;">📎 ${bronDom}</div>`:''}
@@ -476,6 +495,25 @@ function sluitFiche(event){
 }
 
 // ── Type multiselect ──────────────────────────────────────────
+function setSter(v){
+  const cur=parseInt(document.getElementById('f-score').value)||0;
+  const nieuw=cur===v?0:v;
+  document.getElementById('f-score').value=nieuw||'';
+  document.querySelectorAll('#ster-input span').forEach(s=>{
+    s.classList.toggle('vol',parseInt(s.dataset.v)<=nieuw);
+  });
+}
+function _laadSter(score){
+  document.getElementById('f-score').value=score||'';
+  document.querySelectorAll('#ster-input span').forEach(s=>{
+    s.classList.toggle('vol',parseInt(s.dataset.v)<=(score||0));
+  });
+}
+function _sterHtml(score){
+  if(!score)return'';
+  return`<span class="ster-display">${'★'.repeat(score)}${'☆'.repeat(5-score)}</span>`;
+}
+
 function toggleType(el){
   el.classList.toggle('selected');
   geselecteerdeTypes=getGeselecteerdeTypes();
@@ -603,12 +641,14 @@ function openReceptModal(recept, vanImport=false){
     document.getElementById('f-moeilijk').value=recept.moeilijk||'Normaal';
     document.getElementById('f-bron').value=recept.bron||'';
     document.getElementById('f-bereiding').value=recept.bereiding||'';
+    _laadSter(recept.score||0);
     document.getElementById('ingredients-container').innerHTML=(recept.ingredienten||[]).map(i=>ingRow(i.naam,i.hoev,i.eenheid,i.winkel)).join('');
     document.getElementById('recept-modal-bg').dataset.editId=vanImport?'':(recept.id||'');
   } else {
     ['f-naam','f-bron','f-bereiding'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-tijd').value='';
     document.getElementById('f-porties').value='4';
+    _laadSter(0);
     document.getElementById('ingredients-container').innerHTML=ingRow();
     document.getElementById('recept-modal-bg').dataset.editId='';
   }
@@ -662,6 +702,7 @@ function saveRecept(){
     tijd:parseInt(document.getElementById('f-tijd').value)||30,
     porties:parseInt(document.getElementById('f-porties').value)||4,
     moeilijk:document.getElementById('f-moeilijk').value,
+    score:parseInt(document.getElementById('f-score').value)||null,
     wie:PERSONEN.length?[...PERSONEN]:['jeroen','kelly','nora','odiel'],
     bron:document.getElementById('f-bron').value,
     bereiding:document.getElementById('f-bereiding').value,
