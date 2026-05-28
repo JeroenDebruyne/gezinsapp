@@ -380,6 +380,7 @@ async function sbSaveRecept(recept) {
     tags:recept.tags,
     ingredienten:recept.ingredienten,
     prive:recept.prive||false,
+    score:recept.score??null,
   };
   try {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
