@@ -147,9 +147,6 @@ Promise.all([_laadDatum(),_laadWeer()]);
 if(typeof BroadcastChannel!=='undefined')
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); };
 
-const DAGKEYS_KORT=['zo','ma','di','wo','do','vr','za'];
-const DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-const WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 
 // ── Tools ────────────────────────────────────────────────────────
 const AGENT_TOOLS=[
@@ -269,7 +266,7 @@ const AGENT_TOOLS=[
 
   {name:'voeg_recept_toe',
    description:'Voeg een volledig nieuw recept toe met ingrediënten en bereiding. ALTIJD bevestiging vragen.',
-   input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'},description:'avond/lunch/ontbijt/weekend'},tijd:{type:'integer',description:'bereidingstijd in minuten'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'},description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
+   input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'},description:'avond/lunch/ontbijt/weekend'},porties:{type:'integer',description:'aantal porties/servings'},tijd:{type:'integer',description:'bereidingstijd in minuten'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'},description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
 
   {name:'wijzig_recept',
    description:'Wijzig velden van een bestaand recept (naam, score, tags, tijd, bereiding, ingrediënten…). Zoekt op naam. ALTIJD bevestiging vragen.',
@@ -282,7 +279,7 @@ const AGENT_TOOLS=[
 // ── Systeemprompt ────────────────────────────────────────────────
 function _bouwSysteemPrompt(){
   const vandaagISO=_nuISO();
-  const dagNaamNL=_dagNaamNL||DAGKEYS_LANG[new Date(vandaagISO+'T12:00:00').getDay()];
+  const dagNaamNL=_dagNaamNL||DLANG_GD[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
     const dates=_agentGetWeekDates(0);
@@ -290,7 +287,7 @@ function _bouwSysteemPrompt(){
       const key=fDateISO(d);
       const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
-      return '  '+WEEK_VOLGORDE[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
+      return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
         ': O='+_getNaam(dag.ontbijt)+' L='+_getNaam(dag.lunch)+' A='+_getNaam(dag.avond)+
         (acts?' ['+acts+']':'');
     }).join('\n');
@@ -325,7 +322,7 @@ async function _laadDatum(){
   const opgeslagen=localStorage.getItem('gezinsapp_vandaag');
   if(opgeslagen&&/^\d{4}-\d{2}-\d{2}$/.test(opgeslagen)){
     _vandaagISO=opgeslagen;
-    _dagNaamNL=DAGKEYS_LANG[new Date(opgeslagen+'T12:00:00').getDay()];
+    _dagNaamNL=DLANG_GD[new Date(opgeslagen+'T12:00:00').getDay()];
     _toonDatumInChat();
     return;
   }
@@ -335,7 +332,7 @@ async function _laadDatum(){
     const iso=fmt.format(new Date()); // geeft "YYYY-MM-DD" in sv-SE locale
     if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){
       _vandaagISO=iso;
-      _dagNaamNL=DAGKEYS_LANG[new Date(iso+'T12:00:00').getDay()];
+      _dagNaamNL=DLANG_GD[new Date(iso+'T12:00:00').getDay()];
       _toonDatumInChat();
       return;
     }
@@ -343,7 +340,7 @@ async function _laadDatum(){
   // 3. Laatste uitweg: ruwe new Date()
   const nu=new Date();
   _vandaagISO=fDateISO(nu);
-  _dagNaamNL=DAGKEYS_LANG[nu.getDay()];
+  _dagNaamNL=DLANG_GD[nu.getDay()];
   _toonDatumInChat();
 }
 function _nuISO(){return _vandaagISO||fDateISO(new Date());}
@@ -360,12 +357,7 @@ function _toonDatumInChat(){
 }
 
 function _agentGetWeekDates(offset){
-  // Variant van getWeekDates() die _nuISO() gebruikt i.p.v. new Date()
-  const now=new Date(_nuISO()+'T12:00:00');
-  const day=now.getDay();
-  const diff=(day===0?-6:1-day);
-  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+  return getWeekDatesFrom(_nuISO(),offset);
 }
 
 function _getNaam(keuze){
@@ -376,7 +368,7 @@ function _getNaam(keuze){
 }
 
 function _transportVoorDag(datum){
-  const dagKey=DAGKEYS_KORT[new Date(datum+'T12:00:00').getDay()];
+  const dagKey=DAGMAP[new Date(datum+'T12:00:00').getDay()];
   const result={};
   ['nora','odiel'].forEach(kind=>{
     const std=(standaardTransport||{})[kind]?.[dagKey]||{};
@@ -418,7 +410,7 @@ async function _exec(naam,input){
       }));
       const dagNr=dObj.getDay();
       return JSON.stringify({
-        datum,dag:DAGKEYS_LANG[dagNr],isVandaag:datum===_nuISO(),
+        datum,dag:DLANG_GD[dagNr],isVandaag:datum===_nuISO(),
         isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,
         vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
         drukte:getDagDrukte(datum),
@@ -438,7 +430,7 @@ async function _exec(naam,input){
           naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||''
         }));
         return{
-          dag:WEEK_VOLGORDE[i],datum,isVandaag:datum===vandaagISO,
+          dag:DKORT[i],datum,isVandaag:datum===vandaagISO,
           vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,
           drukte:getDagDrukte(datum),
           ontbijt:_getNaam(dag.ontbijt),lunch:_getNaam(dag.lunch),avond:_getNaam(dag.avond),
@@ -485,7 +477,6 @@ async function _exec(naam,input){
     }
 
     case 'get_boodschappenlijst':{
-      const WINKELS=['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
       const res={};WINKELS.forEach(w=>res[w]=[]);
       Object.values(planning).forEach(dag=>{
         ['ontbijt','lunch','avond'].forEach(slot=>{
@@ -544,10 +535,10 @@ async function _exec(naam,input){
     case 'get_transport':{
       if(input.week){
         const dates=_agentGetWeekDates(0);
-        return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DAGKEYS_LANG[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
+        return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DLANG_GD[d.getDay()],isSchooldag:!isSchoolvakantie(fDateISO(d))&&d.getDay()>=1&&d.getDay()<=5,transport:_transportVoorDag(fDateISO(d))})));
       }
       const datum=input.datum||_nuISO();
-      return JSON.stringify({datum,dag:DAGKEYS_LANG[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
+      return JSON.stringify({datum,dag:DLANG_GD[new Date(datum+'T12:00:00').getDay()],transport:_transportVoorDag(datum)});
     }
 
     case 'get_schoolvakanties':{
@@ -592,7 +583,7 @@ async function _exec(naam,input){
             for(let j=i+1;j<pActs.length;j++){
               const a1=pActs[i],a2=pActs[j];
               if(a1.start<a2.eindUur&&a2.start<a1.eindUur)
-                conflicten.push({datum,dag:DAGKEYS_LANG[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam,tijden:`${a1.start}-${a1.eindUur} / ${a2.start}-${a2.eindUur}`});
+                conflicten.push({datum,dag:DLANG_GD[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam,tijden:`${a1.start}-${a1.eindUur} / ${a2.start}-${a2.eindUur}`});
             }
           }
         });
@@ -708,6 +699,7 @@ async function _exec(naam,input){
       if(input.haalt!==undefined)t.haalt=input.haalt;
       if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;
       slaLokaalOp();sbSaveInstellingen();
+      maakTransportActiviteit(input.datum,input.kind,t.brengt,t.haalt);
       return`✅ Transport voor ${input.kind} op ${input.datum} ingesteld.`;
     }
 
@@ -741,7 +733,7 @@ async function _exec(naam,input){
     }
 
     case 'voeg_recept_toe':{
-      const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};
+      const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',porties:input.porties||4,tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};
       recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);
       return`✅ Recept "${rec.naam}" toegevoegd.`;
     }
@@ -803,7 +795,7 @@ async function bevestigActie(){
       const placeholder=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);
       if(placeholder)placeholder.content=result;
     }
-    const data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:_bouwSysteemPrompt(),tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    const data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:_bouwSysteemPrompt(),tools:AGENT_TOOLS,messages:chatGeschiedenis});
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
     voegBerichtToe('assistant',tekst);
@@ -852,7 +844,7 @@ async function stuurBericht(){
   const typingEl=voegBerichtToe('assistant','⏳…',true);
   const systeemPrompt=_bouwSysteemPrompt();
   try{
-    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const toolResults=[];
       for(const block of(data.content||[])){
@@ -870,7 +862,7 @@ async function stuurBericht(){
       }
       chatGeschiedenis.push({role:'assistant',content:data.content});
       chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+      data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     }
     const finaleTekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();

@@ -43,9 +43,12 @@ function herbouwPersonenData() {
   });
 }
 
-const DKORT  = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
-const DLANG  = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
-const WEEKEND = [5, 6]; // index in DKORT
+const DKORT   = ['Ma','Di','Wo','Do','Vr','Za','Zo'];   // Ma-first, index 0=Ma
+const DLANG   = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const WEEKEND  = [5, 6]; // index in DKORT (Za=5, Zo=6)
+const DAGKEYS  = ['ma','di','wo','do','vr','za','zo'];   // Ma-first lowercase
+const DAGMAP   = {0:'zo',1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za'}; // getDay() → key
+const DLANG_GD = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag']; // getDay() → lang
 
 const SLOTS  = [
   { key:'ontbijt', lbl:'Ontbijt', types:['ontbijt'] },
@@ -90,17 +93,49 @@ let standaardTransport = {};
 let vasteRoosters = {};
 
 // ── Hulpfuncties datum ────────────────────────────────────────
+function getWeekDatesFrom(isoDate, offset) {
+  const now=new Date(isoDate+'T12:00:00'); const day=now.getDay();
+  const diff=(day===0?-6:1-day);
+  const mon=new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
 function getWeekDates(offset) {
-  const now = new Date(); const day = now.getDay();
-  const diff = (day===0 ? -6 : 1-day);
-  const mon = new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
+  return getWeekDatesFrom(fDateISO(new Date()), offset);
 }
 function fDate(d) { return d.getDate()+'/'+(d.getMonth()+1); }
 function fDateISO(d) {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function wLabel(dates) { return fDate(dates[0])+' — '+fDate(dates[6]); }
+
+function maakTransportActiviteit(datum, kind, brengt, haalt) {
+  const profielen = Auth.getProfielen();
+  const kindNaam = (profielen.find(p=>p.persoonKey===kind)?.naam) || (kind.charAt(0).toUpperCase()+kind.slice(1));
+  let seq = 0;
+  const verwerk = (naam, transportNaam, start, eindUur) => {
+    if (!transportNaam) return;
+    const p = profielen.find(q => q.naam === transportNaam);
+    if (!p) return;
+    const wie = [p.persoonKey];
+    const bestaatAl = activiteiten.some(a =>
+      a.freq==='eenmalig' && a.beginDatum===datum && a.naam===naam &&
+      (a.wie||[]).length===1 && (a.wie||[])[0]===p.persoonKey
+    );
+    if (bestaatAl) return;
+    const act = {
+      id: Date.now()+seq++, naam, wie, dagen:[], start, eindUur,
+      duur:0, reisHeen:0, reisTerug:0, prep:0, locatie:'',
+      freq:'eenmalig', beginDatum:datum, eindDatum:datum,
+      meerdaags:false, prive:false, informatief:false, transport:{}, maaltijdThuis:{}
+    };
+    activiteiten.push(act);
+    slaLokaalOp();
+    sbSaveActiviteit(act);
+  };
+  verwerk(`${kindNaam} naar school`, brengt, '08:00', '08:20');
+  verwerk(`${kindNaam} ophalen`, haalt, '15:30', '15:45');
+}
+
 function isSchoolvakantie(datum) {
   const d = new Date(datum+'T12:00:00');
   return SCHOOLVAKANTIES.some(v=>d>=new Date(v.van)&&d<=new Date(v.tot)) ||
@@ -131,8 +166,7 @@ function isActiefOpDatum(act, datumStr) {
   if (act.freq === 'eenmalig') return datumStr === act.beginDatum;
   const datum = new Date(datumStr+'T12:00:00');
   const dagNr = datum.getDay();
-  const dagMap = {1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za',0:'zo'};
-  const dagKey = dagMap[dagNr];
+  const dagKey = DAGMAP[dagNr];
   if (!act.dagen || !act.dagen.includes(dagKey)) return false;
   if (act.beginDatum && datum < new Date(act.beginDatum)) return false;
   if (act.eindDatum  && datum > new Date(act.eindDatum+'T23:59:59')) return false;

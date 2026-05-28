@@ -213,7 +213,7 @@ function renderPlanner(){
     const key=fDateISO(date);const isW=WEEKEND.includes(i);
     const dagPlan=planning[key]||{};
     const drukte=getDagDrukte(key);
-    const eetGroo=activiteiten.some(a=>(a.dagen||[]).includes(DAGKEYS_WP[i])&&Object.values(a.transport||{}).some(t=>t?.eetGroo));
+    const eetGroo=activiteiten.some(a=>(a.dagen||[]).includes(DAGKEYS[i])&&Object.values(a.transport||{}).some(t=>t?.eetGroo));
     const defaultOpen=weekHeeftVandaag?(key===today):(i===0);
     const isOpen=_openDagen.size?_openDagen.has(key):defaultOpen;
     const previewItems=SLOTS.map(slot=>{
@@ -226,10 +226,10 @@ function renderPlanner(){
       const keuze=dagPlan[slot.key];
       const wisBtn=keuze?`<button class="slot-wis-btn" onclick="event.stopPropagation();wisSlotDirect('${key}','${slot.key}')" title="Wissen">×</button>`:'';
       if(!keuze){
-        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="slot-leeg">+ Toevoegen</span></div>`;
+        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="slot-leeg">+ Toevoegen</span></div>`;
       }
       if(SPEC[keuze]){
-        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>${wisBtn}</div>`;
+        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>${wisBtn}</div>`;
       }
       const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));
       if(r){
@@ -239,7 +239,7 @@ function renderPlanner(){
         const kok=(dagPlan.porties||{})['kok_'+slot.key]||'';
         const persOpts=PERSONEN.map(p=>`<option value="${escHtml(p)}"${p===kok?' selected':''}>${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</option>`).join('');
         return `<div class="slot slot-filled">
-          <div class="slot-top" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})">
+          <div class="slot-top" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})">
             <div class="slot-lbl">${slot.lbl}</div>
             <div class="slot-naam">${escHtml(r.naam)}${w?' <span class="warn">⚠️</span>':''}</div>
             <div class="slot-tijd">${r.tijd}m</div>
@@ -258,12 +258,12 @@ function renderPlanner(){
           </div>
         </div>`;
       }
-      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DAGLANG_WP[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${wisBtn}</div>`;
+      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${wisBtn}</div>`;
     }).join('');
     return `<div class="dag-rij${isW?' weekend':''}${key===today?' vandaag':''}" id="dag-rij-${key}">
       <div class="dag-rij-header" onclick="toggleDag('${key}')">
         <div class="dag-rij-links">
-          <span class="dag-rij-naam">${DAGKORT_WP[i]}</span>
+          <span class="dag-rij-naam">${DKORT[i]}</span>
           <span class="dag-rij-datum">${fDate(date)}</span>
           ${eetGroo?`<span class="eetgroo-badge">Bij opa/oma</span>`:''}
         </div>
@@ -288,9 +288,6 @@ function toggleDag(key){
   if(isOpen) _openDagen.add(key); else _openDagen.delete(key);
 }
 
-const DAGKORT_WP=['Ma','Di','Wo','Do','Vr','Za','Zo'];
-const DAGLANG_WP=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
-const DAGKEYS_WP=['ma','di','wo','do','vr','za','zo'];
 
 let planReceptenGefilterd=[];
 
@@ -489,9 +486,6 @@ document.getElementById('plan-modal-bg').addEventListener('click',e=>{if(e.targe
 // ════════════════════════════════════════════════════════════════
 let wpChatGeschiedenis=[], wpPendingActie=null;
 const WP_SPEC={'uiteten':'Uiteten','afhalen':'Afhalen','restjes':'Restjes','shake':'Shake'};
-const WP_DAGKEYS_KORT=['zo','ma','di','wo','do','vr','za'];
-const WP_DAGKEYS_LANG=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-const WP_WEEK_VOLGORDE=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 
 function openWpAgent(){document.getElementById('wp-agent-panel').style.display='block';}
 
@@ -502,12 +496,7 @@ function _wpNuISO(){
   return fDateISO(new Date());
 }
 
-function _wpGetWeekDates(offset){
-  const now=new Date(_wpNuISO()+'T12:00:00');
-  const day=now.getDay();const diff=(day===0?-6:1-day);
-  const mon=new Date(now);mon.setDate(now.getDate()+diff+(offset||0)*7);
-  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
-}
+function _wpGetWeekDates(offset){ return getWeekDatesFrom(_wpNuISO(),offset); }
 
 function _wpGetNaam(keuze){
   if(!keuze)return'–';if(WP_SPEC[keuze])return WP_SPEC[keuze];
@@ -515,7 +504,7 @@ function _wpGetNaam(keuze){
 }
 
 function _wpTransportVoorDag(datum){
-  const dagKey=WP_DAGKEYS_KORT[new Date(datum+'T12:00:00').getDay()];
+  const dagKey=DAGMAP[new Date(datum+'T12:00:00').getDay()];
   const result={};
   ['nora','odiel'].forEach(kind=>{
     const std=(standaardTransport||{})[kind]?.[dagKey]||{};
@@ -570,7 +559,7 @@ function _wpThuiskomstCtx(){
 
 function _wpSysteemPrompt(){
   const vandaagISO=_wpNuISO();
-  const dagNaamNL=WP_DAGKEYS_LANG[new Date(vandaagISO+'T12:00:00').getDay()];
+  const dagNaamNL=DLANG_GD[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
     const dates=_wpGetWeekDates(0);
@@ -578,7 +567,7 @@ function _wpSysteemPrompt(){
       const key=fDateISO(d);
       const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
-      return '  '+WP_WEEK_VOLGORDE[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
+      return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
         ': O='+_wpGetNaam(dag.ontbijt)+' L='+_wpGetNaam(dag.lunch)+' A='+_wpGetNaam(dag.avond)+
         (acts?' ['+acts+']':'');
     }).join('\n');
@@ -659,8 +648,7 @@ async function _wpExec(naam,input){
       const dObj=new Date(datum+'T12:00:00');
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||''}));
       const dagNr=dObj.getDay();
-      const dagKeys=['zo','ma','di','wo','do','vr','za'];
-      const dagKey=dagKeys[dagNr];
+      const dagKey=DAGMAP[dagNr];
       const thuiskomst={};
       Auth.getProfielen().filter(p=>p.rol==='gezinshoofd').forEach(p=>{
         const rooster=(vasteRoosters[p.persoonKey]||{})[dagKey];
@@ -675,16 +663,15 @@ async function _wpExec(naam,input){
         }
       });
       const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
-      return JSON.stringify({datum,dag:WP_DAGKEYS_LANG[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag});
+      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag});
     }
     case 'get_week':{
       const offset=input.offset||0;
       const dates=_wpGetWeekDates(offset);
       const vandaagISO=_wpNuISO();
-      const dagKeys=['zo','ma','di','wo','do','vr','za'];
       return JSON.stringify(dates.map((d,i)=>{
         const datum=fDateISO(d);const dag=planning[datum]||{};
-        const dagNr=d.getDay();const dagKey=dagKeys[dagNr];
+        const dagNr=d.getDay();const dagKey=DAGMAP[dagNr];
         const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',locatie:a.locatie||''}));
         const thuiskomst={};
         Auth.getProfielen().filter(p=>p.rol==='gezinshoofd').forEach(p=>{
@@ -700,7 +687,7 @@ async function _wpExec(naam,input){
           }
         });
         const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
-        return{dag:WP_WEEK_VOLGORDE[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag};
+        return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag};
       }));
     }
     case 'get_recepten':{
@@ -800,7 +787,7 @@ async function wpBevestigActie(){
     const result=await _wpExec(naam,input);
     const lastUser=wpChatGeschiedenis[wpChatGeschiedenis.length-1];
     if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){const ph=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);if(ph)ph.content=result;}
-    const data=await _wpFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:_wpSysteemPrompt(),tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+    const data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:_wpSysteemPrompt(),tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();wpVoegBerichtToe('assistant',tekst);wpChatGeschiedenis.push({role:'assistant',content:tekst});
   }catch(e){typingEl?.remove();wpVoegBerichtToe('assistant','❌ Fout: '+e.message);}
@@ -821,7 +808,7 @@ async function wpStuurBericht(){
   const typingEl=wpVoegBerichtToe('assistant','⏳…',true);
   const systeemPrompt=_wpSysteemPrompt();
   try{
-    let data=await _wpFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+    let data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const results=[];
       for(const b of(data.content||[])){
@@ -838,7 +825,7 @@ async function wpStuurBericht(){
       }
       wpChatGeschiedenis.push({role:'assistant',content:data.content});
       wpChatGeschiedenis.push({role:'user',content:results});
-      data=await _wpFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+      data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
     }
     const finaal=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();wpVoegBerichtToe('assistant',finaal);wpChatGeschiedenis.push({role:'assistant',content:finaal});

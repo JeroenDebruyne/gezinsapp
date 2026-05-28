@@ -595,9 +595,7 @@ let doKey=null, tempOverride=null;
 let actievePersoonFilter = 'alle';
 
 const MAANDEN = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-const DAGKEYS  = ['ma','di','wo','do','vr','za','zo'];
-const DAGKORT  = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
-const JSDAGMAP = {1:'ma',2:'di',3:'wo',4:'do',5:'vr',6:'za',0:'zo'};
+const DAGKORT  = DKORT;  // alias voor agenda-intern gebruik
 const DOT_KLEUR  = {jeroen:'dot-jeroen',kelly:'dot-kelly',nora:'dot-nora',odiel:'dot-odiel'};
 const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora:'var(--c-nora-dot)',odiel:'var(--c-odiel-dot)'};
 
@@ -813,7 +811,7 @@ function renderTransportDetail(act,datumISO){
   if(heeftGezinsHoofd) return '';
 
   // Standaard transport ophalen (uit vasteRoosters/standaardTransport)
-  const dagKey=JSDAGMAP[new Date(datumISO+'T12:00:00').getDay()];
+  const dagKey=DAGMAP[new Date(datumISO+'T12:00:00').getDay()];
   const stdTransport=standaardTransport||{};
   const uitzondering=(transportUitzonderingen||{})[datumISO];
 
@@ -846,7 +844,7 @@ function isActiefOp(act,datumISO){
   // Eenmalige activiteiten: toon enkel op hun exacte begindatum
   if(act.freq==='eenmalig') return datumISO===act.beginDatum;
   const d=new Date(datumISO+'T12:00:00');
-  const dagKey=JSDAGMAP[d.getDay()];
+  const dagKey=DAGMAP[d.getDay()];
   if(!act.dagen||!act.dagen.includes(dagKey)) return false;
   if(act.beginDatum&&d<new Date(act.beginDatum)) return false;
   if(act.eindDatum&&d>new Date(act.eindDatum+'T23:59:59')) return false;
