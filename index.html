@@ -383,7 +383,7 @@ const HOME_AGENT_TOOLS=[
   {name:'overschrijf_drukte',description:'Stel drukte van een dag in. ALTIJD bevestiging.',input_schema:{type:'object',properties:{datum:{type:'string'},drukte:{type:'string',description:'rustig/normaal/druk'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','drukte']}},
   {name:'voeg_aan_boodschappenlijst_toe',description:'Voeg extra item toe aan boodschappenlijst. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
   {name:'voeg_ingredient_toe',description:'Voeg standaard-ingrediënt toe. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},eenheid:{type:'string'},categorie:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'voeg_recept_toe',description:'Voeg volledig recept toe met ingrediënten en bereiding. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
+  {name:'voeg_recept_toe',description:'Voeg volledig recept toe met ingrediënten en bereiding. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'}},porties:{type:'integer',description:'aantal porties/servings'},tijd:{type:'integer'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
   {name:'wijzig_recept',description:'Wijzig bestaand recept op naam. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},nieuw_naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},score:{type:'integer'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
   {name:'onthoud', description:'Sla een herinnering of voorkeur op in het permanente geheugen van de agent. Gebruik dit wanneer de gebruiker zegt "onthoud dit", "vergeet niet", "houd bij" of iets wil bewaren voor later.', input_schema:{type:'object',properties:{tekst:{type:'string',description:'De tekst om te onthouden, volledig en zelfstandig leesbaar'}},required:['tekst']}},
   {name:'vergeet_herinnering', description:'Verwijder een specifieke herinnering uit het geheugen op basis van de index (0-gebaseerd).', input_schema:{type:'object',properties:{index:{type:'integer',description:'Index van de herinnering om te verwijderen (0 = eerste)'}},required:['index']}},
@@ -487,7 +487,7 @@ async function _hExec(naam,input){
     case 'overschrijf_drukte':{drukteOverride[input.datum]=input.drukte;slaLokaalOp();sbSaveDrukte(input.datum,input.drukte);return`✅ Drukte op ${input.datum} = "${input.drukte}".`;}
     case 'voeg_aan_boodschappenlijst_toe':{const item={id:Date.now(),naam:input.naam,winkel:input.winkel||'Andere',hoev:input.hoev||'',eenheid:input.eenheid||''};extraItems.push(item);slaLokaalOp();sbSaveExtra(item);return`✅ "${input.naam}" toegevoegd aan boodschappenlijst.`;}
     case 'voeg_ingredient_toe':{const ing={id:String(Date.now()),naam:input.naam,winkel:input.winkel||'Andere',eenheid:input.eenheid||'',categorie:input.categorie||''};standaardIngredienten.push(ing);slaLokaalOp();sbSaveIngredient(ing);return`✅ Ingrediënt "${input.naam}" toegevoegd.`;}
-    case 'voeg_recept_toe':{const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);return`✅ Recept "${rec.naam}" toegevoegd.`;}
+    case 'voeg_recept_toe':{const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',porties:input.porties||4,tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);return`✅ Recept "${rec.naam}" toegevoegd.`;}
     case 'wijzig_recept':{const rec=recepten.find(r=>r.naam.toLowerCase().includes(input.naam.toLowerCase()));if(!rec)return`Recept "${input.naam}" niet gevonden.`;if(input.nieuw_naam!==undefined)rec.naam=input.nieuw_naam;if(input.types!==undefined){rec.types=input.types;rec.type=input.types[0];}if(input.tijd!==undefined)rec.tijd=input.tijd;if(input.moeilijk!==undefined)rec.moeilijk=input.moeilijk;if(input.wie!==undefined)rec.wie=input.wie;if(input.bron!==undefined)rec.bron=input.bron;if(input.bereiding!==undefined)rec.bereiding=input.bereiding;if(input.score!==undefined)rec.score=input.score;if(input.tags!==undefined)rec.tags=input.tags;if(input.ingredienten!==undefined)rec.ingredienten=input.ingredienten;slaLokaalOp();sbSaveRecept(rec);return`✅ Recept "${rec.naam}" gewijzigd.`;}
     case 'onthoud': {
       const item = {tekst: input.tekst, aangemaakt_op: new Date().toISOString()};
@@ -518,7 +518,7 @@ async function homeBevestig(kanaal){
     const result=await _hExec(naam,input);
     const lastUser=homeChatGeschiedenis[homeChatGeschiedenis.length-1];
     if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){const ph=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);if(ph)ph.content=result;}
-    const data=await _hFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:_hSysteemPrompt(),tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
+    const data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:_hSysteemPrompt(),tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant',tekst);homeChatGeschiedenis.push({role:'assistant',content:tekst});
   }catch(e){typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant','❌ Fout: '+e.message);}
@@ -543,7 +543,7 @@ async function homeStuurBericht(kanaal){
   const typingEl=homeVoegBerichtToe(kanaal,'assistant','⏳…',true);
   const systeemPrompt=_hSysteemPrompt();
   try{
-    let data=await _hFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
+    let data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const results=[];
       for(const b of(data.content||[])){
@@ -560,7 +560,7 @@ async function homeStuurBericht(kanaal){
       }
       homeChatGeschiedenis.push({role:'assistant',content:data.content});
       homeChatGeschiedenis.push({role:'user',content:results});
-      data=await _hFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:1500,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
+      data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
     }
     const finaal=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant',finaal);homeChatGeschiedenis.push({role:'assistant',content:finaal});

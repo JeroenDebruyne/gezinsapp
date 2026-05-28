@@ -266,7 +266,7 @@ const AGENT_TOOLS=[
 
   {name:'voeg_recept_toe',
    description:'Voeg een volledig nieuw recept toe met ingrediënten en bereiding. ALTIJD bevestiging vragen.',
-   input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'},description:'avond/lunch/ontbijt/weekend'},tijd:{type:'integer',description:'bereidingstijd in minuten'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'},description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
+   input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'},description:'avond/lunch/ontbijt/weekend'},porties:{type:'integer',description:'aantal porties/servings'},tijd:{type:'integer',description:'bereidingstijd in minuten'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},bron:{type:'string'},bereiding:{type:'string'},tags:{type:'array',items:{type:'string'},description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
 
   {name:'wijzig_recept',
    description:'Wijzig velden van een bestaand recept (naam, score, tags, tijd, bereiding, ingrediënten…). Zoekt op naam. ALTIJD bevestiging vragen.',
@@ -733,7 +733,7 @@ async function _exec(naam,input){
     }
 
     case 'voeg_recept_toe':{
-      const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};
+      const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',porties:input.porties||4,tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie||'Heel gezin',bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:0,prive:false,ingredienten:input.ingredienten||[]};
       recepten.push(rec);slaLokaalOp();sbSaveRecept(rec);
       return`✅ Recept "${rec.naam}" toegevoegd.`;
     }
@@ -795,7 +795,7 @@ async function bevestigActie(){
       const placeholder=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);
       if(placeholder)placeholder.content=result;
     }
-    const data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:_bouwSysteemPrompt(),tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    const data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:_bouwSysteemPrompt(),tools:AGENT_TOOLS,messages:chatGeschiedenis});
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
     voegBerichtToe('assistant',tekst);
@@ -844,7 +844,7 @@ async function stuurBericht(){
   const typingEl=voegBerichtToe('assistant','⏳…',true);
   const systeemPrompt=_bouwSysteemPrompt();
   try{
-    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     while(data.stop_reason==='tool_use'){
       const toolResults=[];
       for(const block of(data.content||[])){
@@ -862,7 +862,7 @@ async function stuurBericht(){
       }
       chatGeschiedenis.push({role:'assistant',content:data.content});
       chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch(apiKey,{model:'claude-sonnet-4-5',max_tokens:2000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
+      data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
     }
     const finaleTekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();
