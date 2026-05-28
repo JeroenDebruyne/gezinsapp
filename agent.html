@@ -699,6 +699,7 @@ async function _exec(naam,input){
       if(input.haalt!==undefined)t.haalt=input.haalt;
       if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;
       slaLokaalOp();sbSaveInstellingen();
+      maakTransportActiviteit(input.datum,input.kind,t.brengt,t.haalt);
       return`✅ Transport voor ${input.kind} op ${input.datum} ingesteld.`;
     }
 

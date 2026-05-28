@@ -397,6 +397,7 @@ function slaTransportOp(datum, kind){
   transportUitzonderingen[datum][kind] = { brengt, haalt, eetGroo };
   slaLokaalOp();
   sbSaveInstellingen();
+  maakTransportActiviteit(datum, kind, brengt, haalt);
   // Accent kleur bij override
   document.getElementById('brengt-'+dagKeyStr)?.classList.toggle('override', true);
   document.getElementById('haalt-'+dagKeyStr)?.classList.toggle('override', true);

@@ -167,9 +167,48 @@
 
   <div class="section-label">Openstaande to-do's</div>
   <div id="todos-preview"><div class="spinner"></div></div>
-
 </div>
 </main>
+
+<!-- Activiteit detail modal -->
+<div id="act-detail-bg" class="modal-bg" onclick="sluitActDetail(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="act-detail-inhoud"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="sluitActDetail()">Sluiten</button>
+      <button class="modal-btn modal-btn-primary" id="act-detail-agenda-btn">Naar agenda →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openActDetail(id){
+  const a=activiteiten.find(x=>x.id==id);
+  if(!a)return;
+  const emoji=a.wie?.length===1?(PEMOJI[a.wie[0]]||'📌'):'👨‍👩‍👧‍👦';
+  const wieHtml=(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join(' ');
+  const freq={wekelijks:'Wekelijks',tweewekelijks:'Tweewekelijks',eenmalig:'Eenmalig',maandelijks:'Maandelijks'};
+  document.getElementById('act-detail-inhoud').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--border);">
+      <span style="font-size:26px;">${emoji}</span><span>${a.naam}${a.prive?' 🔒':''}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--ink-2);">
+      ${a.start?`<div>🕐 <strong>${a.start}${a.eindUur?' – '+a.eindUur:''}</strong></div>`:''}
+      ${a.locatie?`<div>📍 ${a.locatie}</div>`:''}
+      ${a.wie?.length?`<div>👤 ${wieHtml}</div>`:''}
+      ${a.freq&&a.freq!=='eenmalig'?`<div>🔄 ${freq[a.freq]||a.freq}</div>`:''}
+      ${a.beginDatum?`<div>📅 ${a.beginDatum}${a.eindDatum&&a.eindDatum!==a.beginDatum?' – '+a.eindDatum:''}</div>`:''}
+      ${a.informatief?`<span class="badge" style="background:var(--bg-2);color:var(--muted);">📌 Informatief</span>`:''}
+    </div>`;
+  document.getElementById('act-detail-agenda-btn').onclick=()=>location.href=`agenda.html?datum=${_hNuISO()}`;
+  document.getElementById('act-detail-bg').classList.add('open');
+}
+function sluitActDetail(e){
+  if(!e||e.target===document.getElementById('act-detail-bg'))
+    document.getElementById('act-detail-bg').classList.remove('open');
+}
+</script>
 
 
 <script src="auth.js"></script>
@@ -226,7 +265,7 @@ function renderVandaag(datumISO,p){
   }).sort((a,b)=>tijdMinuten(a.start)-tijdMinuten(b.start));
   if(!dagActs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🌿</div><p>Geen activiteiten vandaag</p></div>';return;}
   el.innerHTML=dagActs.map(a=>`
-    <div class="card" style="display:flex;align-items:center;gap:12px;">
+    <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openActDetail(${a.id})">
       <div style="font-size:22px;">${a.wie?.length===1?(PEMOJI[a.wie[0]]||'📌'):'👨‍👩‍👧‍👦'}</div>
       <div style="flex:1;">
         <div class="card-title">${a.informatief?'📌 ':''}${a.naam}${a.prive?' 🔒':''}</div>
@@ -236,6 +275,7 @@ function renderVandaag(datumISO,p){
           ${(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
         </div>
       </div>
+      <div style="color:var(--muted);font-size:14px;flex-shrink:0;">›</div>
     </div>`).join('');
 }
 
@@ -245,10 +285,10 @@ function renderTodosPreview(p){
   const open=todos.filter(t=>!t.gedaan&&(!t.wie||t.wie.includes(perspectief))).slice(0,5);
   if(!open.length){el.innerHTML='<div class="card" style="color:var(--muted);font-size:13px;text-align:center;padding:1rem;">✅ Geen openstaande to-do\'s</div>';return;}
   el.innerHTML=open.map(t=>`
-    <div class="todo-item">
-      <div class="todo-check${t.gedaan?' done':''}" onclick="toggleTodo('${t.id}')">${t.gedaan?'✓':''}</div>
-      <div class="todo-body">
-        <div class="todo-titel${t.gedaan?' done':''}">${t.titel}</div>
+    <div class="todo-item${t.gedaan?' gedaan':''}">
+      <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan&&t.prioriteit?' '+t.prioriteit:''}" onclick="toggleTodo('${t.id}')"></button>
+      <div class="todo-body" style="cursor:default;">
+        <div class="todo-titel${t.gedaan?' gedaan':''}">${t.titel}</div>
         <div class="todo-meta">
           ${t.deadline?`<span>📅 ${t.deadline}</span>`:''}
           ${(t.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
@@ -260,7 +300,10 @@ function renderTodosPreview(p){
 
 function toggleTodo(id){
   const t=todos.find(x=>x.id==id);
-  if(t){t.gedaan=!t.gedaan;t.gedaanOp=t.gedaan?fDateISO(new Date()):null;slaLokaalOp();sbSaveTodo(t);renderHomepage();}
+  if(!t)return;
+  t.gedaan=!t.gedaan;t.gedaanOp=t.gedaan?fDateISO(new Date()):null;
+  slaLokaalOp();sbSaveTodo(t);
+  renderTodosPreview(Auth.profiel());
 }
 
 // ── Agent op homepage — volledig toolset (gelijk aan agent.html) ─
@@ -439,7 +482,7 @@ async function _hExec(naam,input){
     case 'wijzig_todo':{const t=todos.find(t=>t.id===input.id);if(!t)return'To-do niet gevonden.';if(input.titel!==undefined)t.titel=input.titel;if(input.notitie!==undefined)t.notitie=input.notitie;if(input.deadline!==undefined)t.deadline=input.deadline;if(input.prioriteit!==undefined)t.prioriteit=input.prioriteit;if(input.wie!==undefined)t.wie=input.wie;slaLokaalOp();sbSaveTodo(t);return`✅ To-do "${t.titel}" gewijzigd.`;}
     case 'vink_todo_af':{const t=todos.find(t=>t.id===input.id);if(!t)return'To-do niet gevonden.';t.gedaan=true;t.gedaanOp=_hNuISO();slaLokaalOp();sbSaveTodo(t);renderTodosPreview(Auth.profiel());return`✅ "${t.titel}" afgevinkt.`;}
     case 'verwijder_todo':{const idx=todos.findIndex(t=>t.id===input.id);if(idx<0)return'To-do niet gevonden.';const[rm]=todos.splice(idx,1);slaLokaalOp();if(rm._sbId)sbDeleteTodo(rm._sbId);return`✅ To-do "${rm.titel}" verwijderd.`;}
-    case 'stel_transport_in':{if(!transportUitzonderingen[input.datum])transportUitzonderingen[input.datum]={};if(!transportUitzonderingen[input.datum][input.kind])transportUitzonderingen[input.datum][input.kind]={};const t=transportUitzonderingen[input.datum][input.kind];if(input.brengt!==undefined)t.brengt=input.brengt;if(input.haalt!==undefined)t.haalt=input.haalt;if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;slaLokaalOp();sbSaveInstellingen();return`✅ Transport ${input.kind} op ${input.datum} ingesteld.`;}
+    case 'stel_transport_in':{if(!transportUitzonderingen[input.datum])transportUitzonderingen[input.datum]={};if(!transportUitzonderingen[input.datum][input.kind])transportUitzonderingen[input.datum][input.kind]={};const t=transportUitzonderingen[input.datum][input.kind];if(input.brengt!==undefined)t.brengt=input.brengt;if(input.haalt!==undefined)t.haalt=input.haalt;if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;slaLokaalOp();sbSaveInstellingen();maakTransportActiviteit(input.datum,input.kind,t.brengt,t.haalt);return`✅ Transport ${input.kind} op ${input.datum} ingesteld.`;}
     case 'wijzig_standaard_transport':{if(!standaardTransport[input.kind])standaardTransport[input.kind]={};if(!standaardTransport[input.kind][input.dag])standaardTransport[input.kind][input.dag]={};const t=standaardTransport[input.kind][input.dag];if(input.brengt!==undefined)t.brengt=input.brengt;if(input.haalt!==undefined)t.haalt=input.haalt;if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;slaLokaalOp();sbSaveInstellingen();return`✅ Standaard transport ${input.kind} op ${input.dag} gewijzigd.`;}
     case 'overschrijf_drukte':{drukteOverride[input.datum]=input.drukte;slaLokaalOp();sbSaveDrukte(input.datum,input.drukte);return`✅ Drukte op ${input.datum} = "${input.drukte}".`;}
     case 'voeg_aan_boodschappenlijst_toe':{const item={id:Date.now(),naam:input.naam,winkel:input.winkel||'Andere',hoev:input.hoev||'',eenheid:input.eenheid||''};extraItems.push(item);slaLokaalOp();sbSaveExtra(item);return`✅ "${input.naam}" toegevoegd aan boodschappenlijst.`;}
