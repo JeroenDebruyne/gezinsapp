@@ -98,7 +98,7 @@
       <div class="dag-overzicht-datum" id="dag-datum"></div>
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;">
+    <div class="dag-compact-rechts" style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
       <a id="weer-widget" class="weer-widget-link" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener" title="Weer in Ardooie — Buienradar" onclick="window.open('https://www.buienradar.be/weer/ardooie/be/2803091/14daagse','_blank','noopener');event.preventDefault();">
         <span id="weer-icon">🌤️</span>
         <span id="weer-temp">…</span>
@@ -287,7 +287,7 @@ function renderTodosPreview(p){
   el.innerHTML=open.map(t=>`
     <div class="todo-item${t.gedaan?' gedaan':''}">
       <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan&&t.prioriteit?' '+t.prioriteit:''}" onclick="toggleTodo('${t.id}')"></button>
-      <div class="todo-body" style="cursor:default;">
+      <div class="todo-body" style="cursor:pointer;" onclick="location.href='todos.html'">
         <div class="todo-titel${t.gedaan?' gedaan':''}">${t.titel}</div>
         <div class="todo-meta">
           ${t.deadline?`<span>📅 ${t.deadline}</span>`:''}

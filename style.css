@@ -261,15 +261,6 @@ body{
   .sidebar-logout:hover{ background:var(--druk-bg);color:var(--druk-clr); }
 }
 
-@media(max-width:767px){
-  .topbar-actions .opslag-status{display:none;}
-  .topbar-user .naam{display:none;}
-  .mob-filter-sel{display:block;width:100%;padding:9px 14px;border:2px solid var(--accent);border-radius:var(--radius);font-size:14px;font-family:inherit;font-weight:600;background:var(--surface);color:var(--accent);margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
-  .mob-hide-on-mobile{display:none!important;}
-  .wp-actie-rij{flex-wrap:nowrap!important;gap:4px!important;}
-  .wp-actie-rij .btn{flex:1;font-size:11px;padding:7px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-}
-
 /* Layout */
 .main-content{width:100%;}
 .page-content{max-width:880px;margin:0 auto;padding:1.25rem 1rem;}
@@ -758,5 +749,19 @@ body{
 .leeg-titel { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .leeg-sub { font-size: 14px; }
 
-/* Mobile filter select: hidden by default on desktop */
+/* Mobile filter select: hidden on desktop, shown as styled dropdown on mobile */
 .mob-filter-sel{display:none;}
+@media(max-width:767px){
+  .topbar-actions .opslag-status{display:none;}
+  .topbar-user .naam{display:none;}
+  .mob-filter-sel{display:block;width:100%;padding:9px 14px;border:2px solid var(--accent);border-radius:var(--radius);font-size:14px;font-family:inherit;font-weight:600;background:var(--surface);color:var(--accent);margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+  .mob-hide-on-mobile{display:none!important;}
+  /* Weekplanner action buttons: stack vertically on mobile so text stays visible */
+  .wp-actie-rij{display:flex!important;flex-direction:column!important;gap:6px!important;width:100%;}
+  .wp-actie-rij .btn{width:100%;justify-content:center;}
+  /* FAB 25% smaller on mobile */
+  .fab{width:42px;height:42px;font-size:19px;}
+  /* Homepage compact bar: stack drukte below weather on small screens */
+  .dag-overzicht-compact{flex-wrap:wrap;}
+  .dag-overzicht-compact .dag-compact-rechts{width:100%;justify-content:flex-start;margin-top:6px;}
+}
