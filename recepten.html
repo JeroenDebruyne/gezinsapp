@@ -58,12 +58,12 @@
 <body>
 
 <header class="topbar">
-  <div class="topbar-title">📖Recepten</div>
+  <div class="topbar-title">📖 Recepten</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -137,7 +137,14 @@
   <!-- Linker kolom: lijst + zoek + filter -->
   <div class="recept-kolom-lijst">
     <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
-    <div class="pill-tabs" id="recept-type-tabs">
+    <select class="mob-filter-sel" id="recept-type-sel-mob" onchange="filterRType(this.value,null)">
+      <option value="alle">Alle</option>
+      <option value="avond">🍝 Avond</option>
+      <option value="lunch">🥗 Lunch</option>
+      <option value="weekend">🍖 Weekend</option>
+      <option value="ontbijt">🥐 Ontbijt</option>
+    </select>
+    <div class="pill-tabs mob-hide-on-mobile" id="recept-type-tabs">
       <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
       <button class="ptab" onclick="filterRType('avond',this)">🍝 Avond</button>
       <button class="ptab" onclick="filterRType('lunch',this)">🥗 Lunch</button>
@@ -369,7 +376,10 @@ laadOp().then(()=>{
 function filterRType(type,el){
   activeRType=type;
   document.querySelectorAll('#recept-type-tabs .ptab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  else document.querySelector(`#recept-type-tabs .ptab[onclick*="${type}"]`)?.classList.add('active');
+  const sel=document.getElementById('recept-type-sel-mob');
+  if(sel) sel.value=type;
   renderRecepten();
 }
 

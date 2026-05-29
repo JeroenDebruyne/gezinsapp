@@ -16,12 +16,12 @@
 
 <!-- ── Topbar ─────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="topbar-title">✅To-do's</div>
+  <div class="topbar-title">✅ To-do's</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" class="dev-badge">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -93,7 +93,14 @@
 <main class="main-content">
 
   <!-- Filter tabs -->
-  <div class="filter-tabs" id="filter-tabs">
+  <select class="mob-filter-sel" id="filter-sel-mob" onchange="setFilter(this.value,null)">
+    <option value="open">Openstaand</option>
+    <option value="vandaag">Vandaag</option>
+    <option value="mijn">Mijn to-do's</option>
+    <option value="gedaan">Afgewerkt</option>
+    <option value="alle">Alle</option>
+  </select>
+  <div class="filter-tabs mob-hide-on-mobile" id="filter-tabs">
     <button class="filter-tab active" data-filter="open" onclick="setFilter('open',this)">Openstaand</button>
     <button class="filter-tab" data-filter="vandaag" onclick="setFilter('vandaag',this)">Vandaag</button>
     <button class="filter-tab" data-filter="mijn" onclick="setFilter('mijn',this)">Mijn to-do's</button>
@@ -203,7 +210,10 @@ if(typeof BroadcastChannel!=='undefined'){
 function setFilter(filter, el) {
   actieveFilter = filter;
   document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  else document.querySelector(`.filter-tab[data-filter="${filter}"]`)?.classList.add('active');
+  const sel=document.getElementById('filter-sel-mob');
+  if(sel) sel.value=filter;
   renderTodos();
 }
 

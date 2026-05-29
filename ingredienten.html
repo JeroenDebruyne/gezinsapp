@@ -12,12 +12,12 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🌿Ingrediënten</div>
+  <div class="topbar-title">🌿 Ingrediënten</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -94,7 +94,8 @@
     </div>
   </div>
 
-  <div class="pill-tabs" id="ing-winkel-filter" style="margin-bottom:12px;"></div>
+  <select class="mob-filter-sel" id="ing-winkel-sel-mob" onchange="filterIngWinkel(this.value)"></select>
+  <div class="pill-tabs mob-hide-on-mobile" id="ing-winkel-filter" style="margin-bottom:12px;"></div>
   <div id="ingredienten-lijst"></div>
 </div>
 </main>
@@ -140,6 +141,8 @@ function renderIngredienten() {
   document.getElementById('ing-winkel-filter').innerHTML = winkels.map(w =>
     `<button class="ptab${activeIngWinkelFilter===w?' active':''}" onclick="filterIngWinkel('${escHtml(w)}')">${w==='alle'?'Alle winkels':escHtml(w)}</button>`
   ).join('');
+  const mobSel=document.getElementById('ing-winkel-sel-mob');
+  if(mobSel){mobSel.innerHTML=winkels.map(w=>`<option value="${w}"${activeIngWinkelFilter===w?' selected':''}>${w==='alle'?'Alle winkels':w}</option>`).join('');}
   let filtered = standaardIngredienten;
   if (activeIngWinkelFilter !== 'alle') filtered = filtered.filter(i => i.winkel === activeIngWinkelFilter);
   if (search) filtered = filtered.filter(i => i.naam.toLowerCase().includes(search.toLowerCase()));

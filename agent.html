@@ -22,20 +22,16 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🤖 Agent <span id="agent-versie" style="font-size:10px;font-weight:400;opacity:.5;margin-left:6px;"></span></div>
+  <div class="topbar-title">🤖 Agent</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
-      <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
-      </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑️ Wis chat</button>
   </div>
 </header>
 <nav class="bottom-nav" id="sidebar">
@@ -106,6 +102,9 @@
     <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een volledig weekoverzicht: drukte, maaltijden en activiteiten per dag.')">📊 Weekoverzicht</button>
   </div>
 
+  <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+    <button class="btn btn-secondary btn-sm" onclick="clearChat()" title="Wis de chatgeschiedenis">🗑️ Wis chat</button>
+  </div>
   <div class="chat-container" id="chat-berichten">
     <div style="align-self:flex-start;">
       <div class="chat-bubble-bot">Hallo! 👋 Ik ben jullie gezinsassistent. Ik heb volledige toegang tot jullie agenda, recepten, weekplanning, to-do's, contacten en kinderlogistiek. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?</div>

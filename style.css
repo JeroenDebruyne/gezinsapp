@@ -261,6 +261,15 @@ body{
   .sidebar-logout:hover{ background:var(--druk-bg);color:var(--druk-clr); }
 }
 
+@media(max-width:767px){
+  .topbar-actions .opslag-status{display:none;}
+  .topbar-user .naam{display:none;}
+  .mob-filter-sel{display:block;width:100%;padding:9px 14px;border:2px solid var(--accent);border-radius:var(--radius);font-size:14px;font-family:inherit;font-weight:600;background:var(--surface);color:var(--accent);margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+  .mob-hide-on-mobile{display:none!important;}
+  .wp-actie-rij{flex-wrap:nowrap!important;gap:4px!important;}
+  .wp-actie-rij .btn{flex:1;font-size:11px;padding:7px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+}
+
 /* Layout */
 .main-content{width:100%;}
 .page-content{max-width:880px;margin:0 auto;padding:1.25rem 1rem;}
@@ -287,6 +296,7 @@ body{
 .fab:hover{box-shadow:0 8px 28px rgba(13,148,136,0.50);}
 .fab:active{transform:scale(0.92);}
 @media(min-width:768px){.fab{bottom:28px;right:32px;}}
+@media(max-width:767px){.fab{width:42px;height:42px;font-size:19px;}}
 
 /* Kaarten */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow-sm);}
@@ -747,3 +757,6 @@ body{
 .leeg-icon { font-size: 48px; margin-bottom: 12px; display: block; }
 .leeg-titel { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .leeg-sub { font-size: 14px; }
+
+/* Mobile filter select: hidden by default on desktop */
+.mob-filter-sel{display:none;}
