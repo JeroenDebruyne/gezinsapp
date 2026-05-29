@@ -887,7 +887,27 @@ async function wpBevestigActie(){
     const result=await _wpExec(naam,input);
     const lastUser=wpChatGeschiedenis[wpChatGeschiedenis.length-1];
     if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){const ph=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);if(ph)ph.content=result;}
-    const data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:_wpSysteemPrompt(),tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+    const systeemPrompt=_wpSysteemPrompt();
+    let data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+    while(data.stop_reason==='tool_use'){
+      const toolResults=[];
+      for(const block of(data.content||[])){
+        if(block.type==='tool_use'){
+          const res=await wpVoerToolUit(block.name,block.input);
+          if(res==='WACHT_OP_BEVESTIGING'){
+            typingEl?.remove();
+            wpPendingActie.toolUseId=block.id;
+            wpChatGeschiedenis.push({role:'assistant',content:data.content});
+            wpChatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
+            return;
+          }
+          toolResults.push({type:'tool_result',tool_use_id:block.id,content:String(res)});
+        }
+      }
+      wpChatGeschiedenis.push({role:'assistant',content:data.content});
+      wpChatGeschiedenis.push({role:'user',content:toolResults});
+      data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
+    }
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
     typingEl?.remove();wpVoegBerichtToe('assistant',tekst);wpChatGeschiedenis.push({role:'assistant',content:tekst});
   }catch(e){typingEl?.remove();wpVoegBerichtToe('assistant','❌ Fout: '+e.message);}
