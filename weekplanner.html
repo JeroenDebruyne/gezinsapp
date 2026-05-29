@@ -17,6 +17,18 @@
 .wp-bevestiging-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px;}
 .slot.slot-filled{padding:0;flex-direction:column;align-items:stretch;cursor:default;}
 .slot.slot-filled:hover{border-color:var(--border);box-shadow:none;}
+.slot-lbl-bar{padding:6px 14px 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.slot-item{padding:7px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+.slot-item:last-of-type{border-bottom:none;}
+.slot-item-top{display:flex;align-items:center;gap:8px;}
+.slot-item-naam{flex:1;font-size:14px;font-weight:600;color:var(--ink);}
+.slot-item-ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.wie-chip{font-size:12px;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border-2);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .1s;opacity:.35;user-select:none;}
+.wie-chip.sel{border-color:var(--accent);background:var(--accent-l);opacity:1;}
+.slot-add-btn{width:100%;padding:7px 14px;background:none;border:none;border-top:1px dashed var(--border-2);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;text-align:left;font-family:inherit;}
+.slot-add-btn:hover{background:var(--accent-l);}
+.slot-item-wis{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:17px;padding:0 2px;line-height:1;flex-shrink:0;}
+.slot-item-wis:hover{color:var(--druk-clr);}
 .slot-top{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-radius:var(--radius-sm) var(--radius-sm) 0 0;}
 .slot-top:hover{background:var(--accent-l,#eaf7f3);}
 .slot-ctrl{display:flex;align-items:center;gap:10px;padding:5px 14px 7px;border-top:1px solid var(--border);flex-wrap:wrap;}
@@ -25,6 +37,8 @@
 .slot-ctrl-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
 .slot-porties-val{font-size:12px;color:var(--muted);min-width:34px;text-align:center;font-weight:600;}
 .slot-kok-sel{font-size:12px;padding:3px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;cursor:pointer;max-width:150px;}
+.wie-stap-chip{padding:8px 14px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:all .12s;}
+.wie-stap-chip.sel{border-color:var(--accent);background:var(--accent-l);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -162,28 +176,41 @@
 <div class="modal" style="max-width:420px;">
   <div class="modal-handle"></div>
   <h3 id="plan-titel"></h3>
-  <div id="drukte-info-box" style="margin-bottom:12px;"></div>
-  <div id="huidig-sectie" style="display:none;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Huidig</div>
-        <div id="huidig-waarde" style="font-size:14px;font-weight:600;color:var(--ink);"></div>
-      </div>
-      <button onclick="wisSlot()" class="btn-wis-slot">🗑️ Wissen</button>
+
+  <!-- Stap 1: kies recept / snelle optie -->
+  <div id="pick-sectie">
+    <div id="drukte-info-box" style="margin-bottom:12px;"></div>
+    <div class="section-label">Snelle opties</div>
+    <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
+    <div id="top3-sectie" style="display:none;margin-bottom:4px;">
+      <div class="section-label">Meest gebruikt</div>
+      <div id="top3-recepten" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    </div>
+    <div class="section-label">Recepten</div>
+    <input type="text" id="plan-zoek" placeholder="🔍 Zoek recept…" oninput="zoekRecepten(this.value)"
+      style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:8px;background:var(--bg);color:var(--ink);"/>
+    <div id="plan-recepten" style="max-height:200px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closePlanModal()">Annuleren</button>
     </div>
   </div>
-  <div class="section-label">Snelle opties</div>
-  <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
-  <div id="top3-sectie" style="display:none;margin-bottom:4px;">
-    <div class="section-label">Meest gebruikt</div>
-    <div id="top3-recepten" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
-  </div>
-  <div class="section-label">Recepten</div>
-  <input type="text" id="plan-zoek" placeholder="🔍 Zoek recept…" oninput="zoekRecepten(this.value)"
-    style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:8px;background:var(--bg);color:var(--ink);"/>
-  <div id="plan-recepten" style="max-height:260px;overflow-y:auto;"></div>
-  <div class="modal-actions">
-    <button class="modal-btn modal-btn-cancel" onclick="closePlanModal()">Annuleren</button>
+
+  <!-- Stap 2: wie eet dit + kok -->
+  <div id="wie-sectie" style="display:none;">
+    <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Gekozen</div>
+      <div id="wie-gekozen-naam" style="font-size:15px;font-weight:700;color:var(--ink);"></div>
+    </div>
+    <div class="section-label">Wie eet dit?</div>
+    <div id="wie-chips-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+    <div class="section-label">Wie kookt?</div>
+    <select id="wie-kok-sel" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit;margin-bottom:4px;">
+      <option value="">— Niemand / niet van toepassing —</option>
+    </select>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="toonPickStap()">← Terug</button>
+      <button class="modal-btn modal-btn-primary" onclick="voegItemToe()">Voeg toe</button>
+    </div>
   </div>
 </div>
 </div>
@@ -192,9 +219,34 @@
 <script src="data.js"></script>
 <script>
 Auth.initPagina('weekplanner');
-let weekOffsetP=0, activeSlot=null, selectedKeuze=null;
+let weekOffsetP=0, activeSlot=null, selectedKeuze=null, selectedWie=[];
 let aiMenuVoorstel=null, chatGeschiedenisWP=[];
 let _openDagen=new Set();
+
+// ── Multi-item helpers ────────────────────────────────────────
+function getSlotItems(dagPlan,slotKey){
+  const stored=(dagPlan.porties||{})['items_'+slotKey];
+  if(stored&&stored.length) return stored.map(i=>({...i,wie:i.wie||[]}));
+  const waarde=dagPlan[slotKey];
+  if(!waarde) return [];
+  return [{waarde,wie:[],kok:(dagPlan.porties||{})['kok_'+slotKey]||null,porties:(dagPlan.porties||{})[slotKey]||null}];
+}
+function _saveItems(dagKey,slotKey,items){
+  if(!planning[dagKey]) planning[dagKey]={};
+  if(!planning[dagKey].porties) planning[dagKey].porties={};
+  planning[dagKey].porties['items_'+slotKey]=items;
+  const first=items[0]||null;
+  planning[dagKey][slotKey]=first?first.waarde:null;
+  if(first){
+    if(first.porties) planning[dagKey].porties[slotKey]=first.porties;
+    planning[dagKey].porties['kok_'+slotKey]=first.kok||null;
+  } else {
+    delete planning[dagKey].porties[slotKey];
+    delete planning[dagKey].porties['kok_'+slotKey];
+  }
+  slaLokaalOp();
+  sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+}
 
 laadOp().then(renderPlanner).catch(()=>{laadLokaal();renderPlanner();});
 
@@ -217,48 +269,51 @@ function renderPlanner(){
     const defaultOpen=weekHeeftVandaag?(key===today):(i===0);
     const isOpen=_openDagen.size?_openDagen.has(key):defaultOpen;
     const previewItems=SLOTS.map(slot=>{
-      const k=dagPlan[slot.key];if(!k)return null;
-      if(SPEC[k])return SPEC[k];
-      const r=recepten.find(r=>r.id===k||r.id===parseInt(k));return r?r.naam:null;
+      const items=getSlotItems(dagPlan,slot.key);if(!items.length)return null;
+      const first=items[0];
+      const naam=SPEC[first.waarde]?SPEC[first.waarde]:(recepten.find(r=>r.id===first.waarde||r.id===parseInt(first.waarde))?.naam||null);
+      if(!naam)return null;
+      return naam+(items.length>1?` +${items.length-1}`:'');
     }).filter(Boolean);
     const preview=previewItems.join(' · ');
     const slotsHtml=SLOTS.map(slot=>{
-      const keuze=dagPlan[slot.key];
-      const wisBtn=keuze?`<button class="slot-wis-btn" onclick="event.stopPropagation();wisSlotDirect('${key}','${slot.key}')" title="Wissen">×</button>`:'';
-      if(!keuze){
+      const items=getSlotItems(dagPlan,slot.key);
+      if(!items.length){
         return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="slot-leeg">+ Toevoegen</span></div>`;
       }
-      if(SPEC[keuze]){
-        return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div><span class="special-badge sb-${keuze}">${SPEC[keuze]}</span>${wisBtn}</div>`;
-      }
-      const r=recepten.find(r=>r.id===keuze||r.id===parseInt(keuze));
-      if(r){
-        const w=r.tijd>DRUKTE_MAX[drukte];
-        const receptPorties=r.porties||4;
-        const geplandPorties=(dagPlan.porties||{})[slot.key]||receptPorties;
-        const kok=(dagPlan.porties||{})['kok_'+slot.key]||'';
-        const persOpts=PERSONEN.map(p=>`<option value="${escHtml(p)}"${p===kok?' selected':''}>${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</option>`).join('');
-        return `<div class="slot slot-filled">
-          <div class="slot-top" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})">
-            <div class="slot-lbl">${slot.lbl}</div>
-            <div class="slot-naam">${escHtml(r.naam)}${w?' <span class="warn">⚠️</span>':''}</div>
-            <div class="slot-tijd">${r.tijd}m</div>
-            ${wisBtn}
+      const itemsHtml=items.map((item,idx)=>{
+        const isSpec=!!SPEC[item.waarde];
+        const r=!isSpec?recepten.find(r=>r.id===item.waarde||r.id===parseInt(item.waarde)):null;
+        const naam=isSpec?SPEC[item.waarde]:(r?r.naam:'?');
+        const w=r&&r.tijd>DRUKTE_MAX[drukte];
+        const itemPorties=item.porties||(r?r.porties:null)||4;
+        const persOpts=PERSONEN.map(p=>`<option value="${escHtml(p)}"${p===item.kok?' selected':''}>${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</option>`).join('');
+        const wieLeeg=!item.wie||item.wie.length===0;
+        const wieHtml=PERSONEN.map(p=>`<span class="wie-chip${wieLeeg||(item.wie||[]).includes(p)?' sel':''}" onclick="toggleWieItem('${key}','${slot.key}',${idx},'${p}')">${escHtml(PEMOJI[p]||'👤')}</span>`).join('');
+        return `<div class="slot-item">
+          <div class="slot-item-top">
+            ${isSpec?`<span class="special-badge sb-${item.waarde}">${naam}</span>`:`<span class="slot-item-naam">${escHtml(naam)}${w?' <span class="warn">⚠️</span>':''}</span>`}
+            <button class="slot-item-wis" onclick="wisItem('${key}','${slot.key}',${idx})">×</button>
           </div>
-          <div class="slot-ctrl" onclick="event.stopPropagation()">
-            <div class="slot-porties-wrap">
-              <button class="slot-ctrl-btn" onclick="wijzigPorties('${key}','${slot.key}',-1)">−</button>
-              <span class="slot-porties-val">👥 ${geplandPorties}</span>
-              <button class="slot-ctrl-btn" onclick="wijzigPorties('${key}','${slot.key}',1)">+</button>
-            </div>
-            <select class="slot-kok-sel" onchange="wijzigKok('${key}','${slot.key}',this.value)">
+          <div class="slot-item-ctrl" onclick="event.stopPropagation()">
+            <div style="display:flex;gap:3px;">${wieHtml}</div>
+            ${r?`<div class="slot-porties-wrap">
+              <button class="slot-ctrl-btn" onclick="wijzigPortiesItem('${key}','${slot.key}',${idx},-1)">−</button>
+              <span class="slot-porties-val">👥 ${itemPorties}</span>
+              <button class="slot-ctrl-btn" onclick="wijzigPortiesItem('${key}','${slot.key}',${idx},1)">+</button>
+            </div>`:''}
+            <select class="slot-kok-sel" onchange="wijzigKokItem('${key}','${slot.key}',${idx},this.value)">
               <option value="">👨‍🍳 Kok?</option>
               ${persOpts}
             </select>
           </div>
         </div>`;
-      }
-      return `<div class="slot" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})"><div class="slot-lbl">${slot.lbl}</div>${wisBtn}</div>`;
+      }).join('');
+      return `<div class="slot slot-filled">
+        <div class="slot-lbl-bar">${slot.lbl}</div>
+        ${itemsHtml}
+        <button class="slot-add-btn" onclick="openPlanModal('${key}','${slot.key}','${DLANG[i]}',${i})">+ Toevoegen</button>
+      </div>`;
     }).join('');
     return `<div class="dag-rij${isW?' weekend':''}${key===today?' vandaag':''}" id="dag-rij-${key}">
       <div class="dag-rij-header" onclick="toggleDag('${key}')">
@@ -293,9 +348,11 @@ let planReceptenGefilterd=[];
 
 function getTop3Recepten(types){
   const telling={};
-  Object.values(planning).forEach(dag=>{
-    Object.values(dag).forEach(k=>{
-      if(k&&!SPEC[k]) telling[k]=(telling[k]||0)+1;
+  Object.entries(planning).forEach(([datum,dag])=>{
+    SLOTS.forEach(slot=>{
+      getSlotItems(dag,slot.key).forEach(item=>{
+        if(item.waarde&&!SPEC[item.waarde]) telling[item.waarde]=(telling[item.waarde]||0)+1;
+      });
     });
   });
   return recepten
@@ -314,14 +371,6 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
   activeSlot={dagKey:dk,slotKey,dagIndex};
   const drukte=getDagDrukte(dk);
   document.getElementById('plan-titel').textContent=dagnaam+' — '+SLOTS.find(s=>s.key===slotKey).lbl;
-  // Toon huidige waarde + wis-knop als slot al ingevuld is
-  const huidig=(planning[dk]||{})[slotKey];
-  const huidigSectie=document.getElementById('huidig-sectie');
-  if(huidig){
-    const huidigNaam=SPEC[huidig]||recepten.find(r=>r.id===huidig||r.id===parseInt(huidig))?.naam||huidig;
-    document.getElementById('huidig-waarde').textContent=huidigNaam;
-    huidigSectie.style.display='block';
-  } else { huidigSectie.style.display='none'; }
   document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">${{rustig:'🟢 Rustige dag',normaal:'🟡 Drukke dag',druk:'🔴 Zeer drukke dag'}[drukte]}</div>`;
   const isW=WEEKEND.includes(dagIndex);
   const slot=SLOTS.find(s=>s.key===slotKey);
@@ -367,53 +416,88 @@ function zoekRecepten(q){
   );
 }
 
+// ── Modal stappen ──────────────────────────────────────────────
+function toonPickStap(){
+  document.getElementById('pick-sectie').style.display='';
+  document.getElementById('wie-sectie').style.display='none';
+  selectedKeuze=null;
+}
 function kiesPlanK(k){
   if(!activeSlot) return;
-  const dagKey=activeSlot.dagKey, slotKey=activeSlot.slotKey;
-  if(!planning[dagKey]) planning[dagKey]={};
-  planning[dagKey][slotKey]=k;
+  selectedKeuze=k;
+  // Toon wie-stap
+  const naam=SPEC[k]||recepten.find(r=>r.id===k||r.id===parseInt(k))?.naam||String(k);
+  document.getElementById('wie-gekozen-naam').textContent=naam;
+  // Wie-chips: standaard iedereen geselecteerd
+  selectedWie=[];
+  const chipsHtml=PERSONEN.map(p=>`<div class="wie-stap-chip sel" data-p="${escHtml(p)}" onclick="toggleWieStap(this,'${p}')">${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</div>`).join('');
+  document.getElementById('wie-chips-wrap').innerHTML=chipsHtml;
+  // Kok-select
+  const kokOpts=PERSONEN.map(p=>`<option value="${escHtml(p)}">${escHtml(PEMOJI[p]||'👤')} ${escHtml(PLABEL[p]||p)}</option>`).join('');
+  document.getElementById('wie-kok-sel').innerHTML=`<option value="">— Niemand / niet van toepassing —</option>${kokOpts}`;
+  document.getElementById('pick-sectie').style.display='none';
+  document.getElementById('wie-sectie').style.display='';
+}
+function toggleWieStap(el,p){
+  el.classList.toggle('sel');
+  const geselecteerd=[...document.querySelectorAll('#wie-chips-wrap .wie-stap-chip.sel')].map(e=>e.dataset.p);
+  selectedWie=geselecteerd.length===PERSONEN.length?[]:geselecteerd;
+}
+function voegItemToe(){
+  if(!activeSlot||selectedKeuze==null) return;
+  const {dagKey,slotKey}=activeSlot;
+  const kok=document.getElementById('wie-kok-sel').value||null;
+  const dagPlan=planning[dagKey]||{};
+  const items=getSlotItems(dagPlan,slotKey);
+  const isSpec=!!SPEC[selectedKeuze];
+  const r=!isSpec?recepten.find(r=>r.id===selectedKeuze||r.id===parseInt(selectedKeuze)):null;
+  items.push({waarde:selectedKeuze,wie:[...selectedWie],kok,porties:r?r.porties||4:null});
+  _saveItems(dagKey,slotKey,items);
   closePlanModal();
   renderPlanner();
-  slaLokaalOp();
-  sbSavePlanning(dagKey,slotKey,k,planning[dagKey].porties);
 }
 
-function wisSlot(){
-  if(!activeSlot) return;
-  const dk=activeSlot.dagKey, sk=activeSlot.slotKey;
-  if(planning[dk]) delete planning[dk][sk];
-  closePlanModal();
-  renderPlanner();
-  slaLokaalOp();
-  sbSavePlanning(dk,sk,null,(planning[dk]||{}).porties);
-}
-function wisSlotDirect(dagKey,slotKey){
-  if(planning[dagKey]) delete planning[dagKey][slotKey];
-  renderPlanner();
-  slaLokaalOp();
-  sbSavePlanning(dagKey,slotKey,null,(planning[dagKey]||{}).porties);
-}
-function wijzigPorties(dagKey,slotKey,delta){
-  if(!planning[dagKey]) planning[dagKey]={};
-  if(!planning[dagKey].porties) planning[dagKey].porties={};
-  const r=recepten.find(r=>r.id===planning[dagKey][slotKey]||r.id===parseInt(planning[dagKey][slotKey]));
-  const huidig=planning[dagKey].porties[slotKey]||r?.porties||4;
-  planning[dagKey].porties[slotKey]=Math.max(1,Math.min(20,huidig+delta));
-  slaLokaalOp();
-  sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+// ── Item bewerken ──────────────────────────────────────────────
+function wisItem(dagKey,slotKey,idx){
+  const items=getSlotItems(planning[dagKey]||{},slotKey);
+  items.splice(idx,1);
+  _saveItems(dagKey,slotKey,items);
   renderPlanner();
 }
-function wijzigKok(dagKey,slotKey,kokKey){
-  if(!planning[dagKey]) planning[dagKey]={};
-  if(!planning[dagKey].porties) planning[dagKey].porties={};
-  planning[dagKey].porties['kok_'+slotKey]=kokKey||null;
-  slaLokaalOp();
-  sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+function wijzigPortiesItem(dagKey,slotKey,idx,delta){
+  const items=getSlotItems(planning[dagKey]||{},slotKey);
+  const item=items[idx];
+  const r=recepten.find(r=>r.id===item.waarde||r.id===parseInt(item.waarde));
+  const huidig=item.porties||(r?r.porties:4)||4;
+  items[idx].porties=Math.max(1,Math.min(20,huidig+delta));
+  _saveItems(dagKey,slotKey,items);
+  renderPlanner();
+}
+function wijzigKokItem(dagKey,slotKey,idx,kokKey){
+  const items=getSlotItems(planning[dagKey]||{},slotKey);
+  items[idx].kok=kokKey||null;
+  _saveItems(dagKey,slotKey,items);
+  renderPlanner();
+}
+function toggleWieItem(dagKey,slotKey,idx,persoon){
+  const items=getSlotItems(planning[dagKey]||{},slotKey);
+  const item=items[idx];
+  let wie=item.wie||[];
+  if(wie.length===0) wie=PERSONEN.filter(p=>p!==persoon);
+  else if(wie.includes(persoon)){
+    wie=wie.filter(p=>p!==persoon);
+  } else {
+    wie=[...wie,persoon];
+    if(wie.length===PERSONEN.length) wie=[];
+  }
+  items[idx].wie=wie;
+  _saveItems(dagKey,slotKey,items);
   renderPlanner();
 }
 function closePlanModal(){
   document.getElementById('plan-modal-bg').classList.remove('open');
   activeSlot=null;
+  toonPickStap();
 }
 
 // ── Boodschappen doorsturen als weekmenu-snapshot ─────────────
@@ -440,10 +524,11 @@ async function voegToeAanBoodschappenlijst(){
     const datum=fDateISO(date);
     const dag=planning[datum]||{};
     SLOTS.forEach(slot=>{
-      const k=dag[slot.key];if(!k||SPEC[k])return;
-      const r=recepten.find(r=>r.id===k||r.id===parseInt(k));if(!r)return;
+      const slotItems=getSlotItems(dag,slot.key);
+      slotItems.filter(item=>!SPEC[item.waarde]).forEach(item=>{
+      const r=recepten.find(r=>r.id===item.waarde||r.id===parseInt(item.waarde));if(!r)return;
       const receptPorties=r.porties||4;
-      const geplandPorties=(dag.porties||{})[slot.key]||receptPorties;
+      const geplandPorties=item.porties||receptPorties;
       const schaal=geplandPorties/receptPorties;
       (r.ingredienten||[]).forEach(ing=>{
         const key=(ing.naam||'').toLowerCase()+'|'+(ing.winkel||'Andere');
@@ -452,11 +537,11 @@ async function voegToeAanBoodschappenlijst(){
         if(!perIng[key]){
           perIng[key]={naam:ing.naam,winkel:ing.winkel||'Andere',eenheid:ing.eenheid||null,hoev:geschaaldHoev||ing.hoev||null,receptNaam:r.naam,weekKey};
         } else if(hoevNum&&geschaaldHoev){
-          // Zelfde ingredient meerdere recepten: optellen
           const huidig=parseFloat(perIng[key].hoev)||0;
           perIng[key].hoev=Math.round((huidig+geschaaldHoev)*100)/100;
         }
       });
+      }); // end forEach item
     });
   });
 
@@ -520,8 +605,9 @@ const WP_AGENT_TOOLS=[
   {name:'get_recepten',description:'Recepten ophalen met filters. Roep dit ALTIJD aan vóór stel_weekmenu_in.',input_schema:{type:'object',properties:{zoekterm:{type:'string'},type:{type:'string',description:'avond/lunch/ontbijt/weekend'},max_tijd:{type:'integer',description:'max bereidingstijd in minuten'},tag:{type:'string',description:'Kindvriendelijk/Feest/Restjes-proof/Meal prep/Eenpansgerecht/Oven'},wie:{type:'string',description:'Heel gezin/Alleen volwassenen'},max_resultaten:{type:'integer'}},required:[]}},
   {name:'get_eethistoriek',description:'Maaltijdhistoriek van de afgelopen weken. Roep dit ALTIJD aan vóór je een weekmenu plant om herhalingen te vermijden.',input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
   {name:'get_boodschappenlijst',description:'Boodschappenlijst per winkel: ingrediënten uit weekmenu plus extra handmatige items.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'stel_weekmenu_in',description:'Plan maaltijden voor een of meerdere dagen. Gebruik NUMERIEK recept-id uit get_recepten, of "uiteten"/"afhalen"/"restjes"/"shake". ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']},porties:{type:'object',description:'Aantal porties per slot: {avond:2}. Weglaten = standaard receptporties.'},kok:{type:'object',description:'Wie kookt per slot: {avond:"jeroen"}. Gebruik persoonKey (kleine letters).'}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
-  {name:'wis_weekmenu_slot',description:'Wis één maaltijdslot op een specifieke datum. ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},slot:{type:'string',description:'ontbijt/lunch/avond'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot']}},
+  {name:'stel_weekmenu_in',description:'Plan maaltijden voor een of meerdere dagen. Vervangt eventueel bestaande items. Gebruik NUMERIEK recept-id of "uiteten"/"afhalen"/"restjes"/"shake". ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']},porties:{type:'object',description:'{avond:4}'},kok:{type:'object',description:'{avond:"jeroen"} — persoonKey'},wie:{type:'object',description:'{avond:["jeroen","kelly"]} — wie eet dit (leeg=[]=iedereen)'}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
+  {name:'voeg_maaltijd_toe',description:'Voeg een EXTRA maaltijd toe aan een slot op een dag (bijv. iemand eet iets anders dan de rest). ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},slot:{type:'string',description:'ontbijt/lunch/avond'},recept:{type:['number','string'],description:'recept-id of "uiteten"/"afhalen"/etc.'},wie:{type:'array',items:{type:'string'},description:'persoonKeys die dit eten (leeg=iedereen)'},kok:{type:'string',description:'persoonKey van de kok (optioneel)'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot','recept']}},
+  {name:'wis_weekmenu_slot',description:'Wis ALLE maaltijditems van één slot op een specifieke datum. ALTIJD bevestiging vragen.',input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD'},slot:{type:'string',description:'ontbijt/lunch/avond'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot']}},
   {name:'beoordeel_maaltijd',description:'Beoordeel een recept na het eten (👍/👎 of score 1-5). Werkt het geheugen van de maaltijdassistent bij zodat toekomstige aanbevelingen verbeteren. Vraag altijd bevestiging.',input_schema:{type:'object',properties:{recept_id:{type:'integer',description:'Het numerieke recept-id'},score:{type:'integer',description:'Score 1-5 (1=slecht, 3=ok, 5=uitstekend)'},opmerking:{type:'string',description:'Optionele opmerking over het recept'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['recept_id','score']}},
   {name:'onthoud',description:'Sla een herinnering of voorkeur op in het permanente geheugen van de agent. Gebruik dit wanneer de gebruiker zegt "onthoud dit", "vergeet niet", "houd bij" of iets wil bewaren voor later.',input_schema:{type:'object',properties:{tekst:{type:'string',description:'De tekst om te onthouden, volledig en zelfstandig leesbaar'}},required:['tekst']}},
   {name:'vergeet_herinnering',description:'Verwijder een specifieke herinnering uit het geheugen op basis van de index (0-gebaseerd).',input_schema:{type:'object',properties:{index:{type:'integer',description:'Index van de herinnering om te verwijderen (0 = eerste)'}},required:['index']}},
@@ -567,8 +653,9 @@ function _wpSysteemPrompt(){
       const key=fDateISO(d);
       const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
+      const _slotStr=(s)=>getSlotItems(dag,s).map(it=>{const n=_wpGetNaam(it.waarde);const w=it.wie&&it.wie.length?'('+it.wie.map(p=>PLABEL[p]||p).join('/')+')':'';return n+w;}).join('+');
       return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
-        ': O='+_wpGetNaam(dag.ontbijt)+' L='+_wpGetNaam(dag.lunch)+' A='+_wpGetNaam(dag.avond)+
+        ': O='+_slotStr('ontbijt')+' L='+_slotStr('lunch')+' A='+_slotStr('avond')+
         (acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
@@ -662,8 +749,8 @@ async function _wpExec(naam,input){
           thuiskomst[p.naam]=`thuis/remote (tot ${rooster.tot})`;
         }
       });
-      const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
-      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag});
+      const _items=(s)=>getSlotItems(dag,s).map(it=>({naam:_wpGetNaam(it.waarde),waarde:it.waarde,wie:it.wie&&it.wie.length?it.wie.map(p=>PLABEL[p]||p):['iedereen'],kok:it.kok?PLABEL[it.kok]||it.kok:null,porties:it.porties}));
+      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_wpNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_items('ontbijt'),lunch:_items('lunch'),avond:_items('avond'),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst});
     }
     case 'get_week':{
       const offset=input.offset||0;
@@ -686,8 +773,8 @@ async function _wpExec(naam,input){
             thuiskomst[p.naam]=`thuis (tot ${rooster.tot})`;
           }
         });
-        const kok_dag={};SLOTS.forEach(s=>{const k=(dag.porties||{})['kok_'+s.key];if(k)kok_dag[s.key]=PLABEL[k]||k;});
-        return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_wpGetNaam(dag.ontbijt),lunch:_wpGetNaam(dag.lunch),avond:_wpGetNaam(dag.avond),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst,porties:dag.porties||{},kok:kok_dag};
+        const _items=(s)=>getSlotItems(dag,s).map(it=>({naam:_wpGetNaam(it.waarde),waarde:it.waarde,wie:it.wie&&it.wie.length?it.wie.map(p=>PLABEL[p]||p):['iedereen'],kok:it.kok?PLABEL[it.kok]||it.kok:null,porties:it.porties}));
+        return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_items('ontbijt'),lunch:_items('lunch'),avond:_items('avond'),activiteiten:acts,transport:_wpTransportVoorDag(datum),thuiskomst};
       }));
     }
     case 'get_recepten':{
@@ -709,7 +796,7 @@ async function _wpExec(naam,input){
       Object.entries(planning).forEach(([datum,dag])=>{
         const d=new Date(datum+'T12:00:00');
         if(d<cutoff||d>now)return;
-        ['ontbijt','lunch','avond'].forEach(slot=>{if(dag[slot])hist.push({datum,slot,naam:_wpGetNaam(dag[slot]),id:dag[slot]});});
+        ['ontbijt','lunch','avond'].forEach(slot=>{getSlotItems(dag,slot).forEach(it=>{hist.push({datum,slot,naam:_wpGetNaam(it.waarde),wie:it.wie&&it.wie.length?it.wie.map(p=>PLABEL[p]||p):['iedereen']});});});
       });
       hist.sort((a,b)=>b.datum.localeCompare(a.datum));
       return JSON.stringify(hist);
@@ -723,15 +810,16 @@ async function _wpExec(naam,input){
         const datum=fDateISO(d);
         const dag=planning[datum]||{};
         SLOTS.forEach(slot=>{
-          const k=dag[slot.key];if(!k||SPEC[k])return;
-          const r=recepten.find(r=>r.id===k||r.id===parseInt(k));if(!r)return;
-          const receptPorties=r.porties||4;
-          const geplandPorties=(dag.porties||{})[slot.key]||receptPorties;
-          const schaal=geplandPorties/receptPorties;
-          (r.ingredienten||[]).forEach(ing=>{
-            const hoevNum=parseFloat(ing.hoev)||null;
-            const geschaaldHoev=hoevNum?Math.round(hoevNum*schaal*100)/100:null;
-            weekItems.push({naam:ing.naam,winkel:ing.winkel||'Andere',hoev:geschaaldHoev,eenheid:ing.eenheid||null,receptNaam:r.naam,porties:`${geplandPorties}/${receptPorties}`,type:'recept',afgevinkt:false});
+          getSlotItems(dag,slot.key).filter(it=>!WP_SPEC[it.waarde]).forEach(it=>{
+            const r=recepten.find(r=>r.id===it.waarde||r.id===parseInt(it.waarde));if(!r)return;
+            const receptPorties=r.porties||4;
+            const geplandPorties=it.porties||receptPorties;
+            const schaal=geplandPorties/receptPorties;
+            (r.ingredienten||[]).forEach(ing=>{
+              const hoevNum=parseFloat(ing.hoev)||null;
+              const geschaaldHoev=hoevNum?Math.round(hoevNum*schaal*100)/100:null;
+              weekItems.push({naam:ing.naam,winkel:ing.winkel||'Andere',hoev:geschaaldHoev,eenheid:ing.eenheid||null,receptNaam:r.naam,porties:`${geplandPorties}/${receptPorties}`,type:'recept',afgevinkt:false});
+            });
           });
         });
       });
@@ -744,24 +832,36 @@ async function _wpExec(naam,input){
       if(!input.menu||!Array.isArray(input.menu))return'Fout formaat.';
       input.menu.forEach(dd=>{
         const key=dd.datum;if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(key))return;
-        if(!planning[key])planning[key]={};
-        if(!planning[key].porties)planning[key].porties={};
         ['ontbijt','lunch','avond'].forEach(slot=>{
           if(dd[slot]===undefined)return;
           let val=dd[slot];
-          if(val===null||val==='')val=null;
-          else if(typeof val==='string'&&WP_SPEC[val])val=val;
+          if(val===null||val===''){_saveItems(key,slot,[]);return;}
+          if(typeof val==='string'&&WP_SPEC[val]){}
           else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);
           else{const rec=recepten.find(r=>r.naam.toLowerCase()===String(val).toLowerCase());val=rec?rec.id:val;}
-          planning[key][slot]=val;
-          if(dd.porties&&dd.porties[slot]) planning[key].porties[slot]=dd.porties[slot];
-          if(dd.kok&&dd.kok[slot]) planning[key].porties['kok_'+slot]=dd.kok[slot];
-          sbSavePlanning(key,slot,val,planning[key].porties||{});
+          const r=!WP_SPEC[val]?recepten.find(r=>r.id===val||r.id==val):null;
+          const wie=dd.wie&&dd.wie[slot]?dd.wie[slot]:[];
+          const kok=dd.kok&&dd.kok[slot]?dd.kok[slot]:null;
+          const porties=(dd.porties&&dd.porties[slot])||(r?r.porties:null)||null;
+          _saveItems(key,slot,[{waarde:val,wie,kok,porties}]);
         });
       });
       slaLokaalOp();renderPlanner();return'✅ Weekmenu ingesteld.';
     }
-    case 'wis_weekmenu_slot':{if(!planning[input.datum])planning[input.datum]={};planning[input.datum][input.slot]=null;sbSavePlanning(input.datum,input.slot,null,planning[input.datum].porties||{});slaLokaalOp();renderPlanner();return`✅ ${input.slot} op ${input.datum} gewist.`;}
+    case 'voeg_maaltijd_toe':{
+      const {datum,slot,recept,wie,kok}=input;
+      if(!datum||!slot)return'⚠️ datum en slot zijn verplicht.';
+      let val=recept;
+      if(WP_SPEC[val]){}
+      else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);
+      else{const r2=recepten.find(r=>r.naam.toLowerCase().includes(String(val).toLowerCase()));val=r2?r2.id:val;}
+      const r=!WP_SPEC[val]?recepten.find(r=>r.id===val||r.id==val):null;
+      const items=getSlotItems(planning[datum]||{},slot);
+      items.push({waarde:val,wie:wie||[],kok:kok||null,porties:r?r.porties||4:null});
+      _saveItems(datum,slot,items);
+      slaLokaalOp();renderPlanner();return`✅ Extra maaltijd "${_wpGetNaam(val)}" toegevoegd aan ${slot} op ${datum}.`;
+    }
+    case 'wis_weekmenu_slot':{_saveItems(input.datum,input.slot,[]);slaLokaalOp();renderPlanner();return`✅ ${input.slot} op ${input.datum} gewist.`;}
     case 'beoordeel_maaltijd':{
       const r=recepten.find(r=>r.id===input.recept_id||r.id==input.recept_id);
       if(!r)return`⚠️ Recept ${input.recept_id} niet gevonden.`;
