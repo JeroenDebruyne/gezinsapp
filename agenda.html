@@ -189,12 +189,12 @@
 
 <!-- Topbar -->
 <header class="topbar">
-  <div class="topbar-title">📅Agenda</div>
+  <div class="topbar-title">📅 Agenda</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -204,7 +204,6 @@
     </div>
   </div>
 </header>
-<button class="fab" onclick="openActModal()" title="Activiteit toevoegen">＋</button>
 
 <!-- Navigatie -->
 <nav class="bottom-nav" id="sidebar">
@@ -748,7 +747,6 @@ function renderDagDetail(datumISO){
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="dag-detail-drukte" style="background:${dc.bg};color:${dc.clr};"
           onclick="openDOModal('${datumISO}','${dagLabel}')">${dc.lbl}</span>
-        ${kanBewerken?`<button class="btn btn-primary btn-sm" onclick="openActModalVoorDatum('${datumISO}')">+ Activiteit</button>`:''}
       </div>
     </div>
     ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:12px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}

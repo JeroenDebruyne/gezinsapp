@@ -81,11 +81,11 @@
 <body>
 
 <header class="topbar">
-  <div class="topbar-title">👶Kinderlogistiek</div>
+  <div class="topbar-title">👶 Kinderlogistiek</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleProfielMenu(event)">
+      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -159,7 +159,8 @@
   </div>
 
   <!-- Kind filter -->
-  <div class="filter-tabs" id="kl-filter-tabs" style="margin-bottom:1rem;">
+  <select class="mob-filter-sel" id="kl-sel-mob" onchange="setKindFilter(this.value,null)"></select>
+  <div class="filter-tabs mob-hide-on-mobile" id="kl-filter-tabs" style="margin-bottom:1rem;">
     <button class="filter-tab active" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>
   </div>
 
@@ -224,6 +225,8 @@ function renderKindFilterTabs(){
   container.innerHTML =
     `<button class="filter-tab${kindFilter==='alle'?' active':''}" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>` +
     kinderen.map(k=>`<button class="filter-tab${kindFilter===k.persoonKey?' active':''}" onclick="setKindFilter('${k.persoonKey}',this)">${k.emoji||'👧'} ${k.naam}</button>`).join('');
+  const klMobSel=document.getElementById('kl-sel-mob');
+  if(klMobSel){klMobSel.innerHTML=`<option value="alle"${kindFilter==='alle'?' selected':''}>👨‍👩‍👧‍👦 Alle</option>`+kinderen.map(k=>`<option value="${k.persoonKey}"${kindFilter===k.persoonKey?' selected':''}>${k.emoji||'👧'} ${k.naam}</option>`).join('');}
 }
 
 function changeWeekKL(dir){ weekOffsetKL+=dir; renderKL(); }
@@ -232,6 +235,7 @@ function setKindFilter(filter, el){
   kindFilter=filter;
   document.querySelectorAll('#kl-filter-tabs .filter-tab').forEach(t=>t.classList.remove('active'));
   if(el) el.classList.add('active');
+  const klMobSel=document.getElementById('kl-sel-mob');if(klMobSel)klMobSel.value=filter;
   renderKL();
 }
 
