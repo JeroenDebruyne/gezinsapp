@@ -273,10 +273,12 @@
 
   <!-- Maand navigatie -->
   <div class="maand-nav">
-    <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
-    <span class="maand-nav-label" id="maand-nav-label"></span>
-    <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
-    <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;margin-left:8px;">📥</button>
+    <div style="display:flex;align-items:center;gap:2px;">
+      <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
+      <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;">📥</button>
   </div>
 
   <!-- Weekdagen header: Ma t/m Zo -->
