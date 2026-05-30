@@ -636,7 +636,7 @@ async function icalFetchUrl(rawUrl) {
 async function icalMerge(parsedEvents, wie, sourceUrl) {
   let nieuw = 0, geupdate = 0;
   for (const ev of parsedEvents) {
-    ev.wie = wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean);
+    ev.wie = ev.wie?.length ? ev.wie : (wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean));
     if (!ev.icalUid) {
       // Geen UID: altijd toevoegen (eenmalige import zonder deduplicatie)
       activiteiten.push(ev); await sbSaveActiviteit(ev); nieuw++; continue;

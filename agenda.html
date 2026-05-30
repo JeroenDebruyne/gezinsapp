@@ -525,9 +525,21 @@
   <!-- Preview -->
   <div id="ical-preview" style="display:none;">
     <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px;" id="ical-preview-titel"></div>
-    <div class="form-row" style="margin-bottom:10px;">
+    <div id="ical-wie-rij" class="form-row" style="margin-bottom:10px;">
       <label>Voor wie importeren?</label>
       <div class="persoon-ms" id="ical-wie-ms"></div>
+    </div>
+    <!-- Importeeropties -->
+    <div style="margin-bottom:10px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1.5px solid var(--border);">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Importeeropties</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);margin-bottom:6px;">
+        <input type="checkbox" id="ical-smart-check" style="width:auto;accent-color:var(--accent);" checked onchange="icalToonPreview()"/>
+        🧠 Automatische persoondetectie op naam
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
+        <input type="checkbox" id="ical-toekomst-check" style="width:auto;accent-color:var(--accent);" checked onchange="icalToonPreview()"/>
+        📅 Verberg afgelopen eenmalige activiteiten
+      </label>
     </div>
     <!-- Abonnement bewaren (alleen bij URL-import) -->
     <div id="ical-abo-rij" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1.5px solid var(--border);">
@@ -1208,6 +1220,71 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
 // ── iCal import & sync ────────────────────────────────────────
 // parseIcal, icalFetchUrl, icalMerge, icalAbonnementen, laadIcalAbonnementen,
 // slaIcalAbonnementenOp en sbVerwijderIcalActiviteiten zitten in data.js
+
+function detectWieSmart(summary) {
+  const s = (summary || '').toLowerCase();
+  const profielen = Auth.getProfielen();
+  const result = new Set();
+
+  // Direct name match in summary
+  for (const p of profielen) {
+    const naam = (p.naam || '').toLowerCase();
+    if (naam && new RegExp('\\b' + naam + '\\b').test(s)) result.add(p.persoonKey);
+  }
+  if (result.size > 0) return [...result];
+
+  // Helper to find persoonKey by name keyword
+  const find = kw => profielen.find(p => (p.naam||'').toLowerCase().includes(kw))?.persoonKey;
+  const kelly  = find('kelly');
+  const jeroen = find('jeroen');
+  const kinderen = profielen.filter(p => p.rol === 'kind').map(p => p.persoonKey);
+  const gezinshoofden = profielen.filter(p => p.rol === 'gezinshoofd').map(p => p.persoonKey);
+  const allen = profielen.map(p => p.persoonKey);
+
+  const test = (...terms) => terms.some(t => s.includes(t));
+
+  // Kelly-specific (beauty, fitness, friends)
+  if (test('nagels','meisjesavond','infralign','infralinge','kreatos','slimyonik','lashlift',
+           'spraytan','wimpers','wenkbrauwen','pedicure','gezichtbehandeling','laseren','adipologie',
+           'volley ste','skireis tine','ibiza tine','markt tine','badmintontoernooi','schminkdemo',
+           'blend','lashlift','reparatie nagel','venlor','gynaecoloog','vroedvrouw'))
+    return kelly ? [kelly] : gezinshoofden;
+
+  // Jeroen work events
+  if (test('afterwork','b-inside','b-insde','ranson','copilot event','hp roadshow','hpe elevation',
+           'hpe channel','om conference','kickoff weekend','uitstap ranson'))
+    return jeroen ? [jeroen] : gezinshoofden;
+
+  // Family/household events
+  if (test('poetshulp','kuisvrouw','vakantie','sinterklaas','dierenarts','ontwormen',
+           'center parcs','centerparc','efteling','plopsaland','bellewaerde','snowland',
+           'verjaardag debruyne','verjaardag dewaegenaere','weekend debruyne'))
+    return allen;
+
+  // Kids events without name
+  if (test('sint op school','fruit op school','kindernamiddag','kleuterklas','kamp bert',
+           'proefles judo','initiatie judo'))
+    return kinderen.length ? kinderen : allen;
+
+  // Kine without person name → jeroen (most frequent)
+  if (/^kine\b/.test(s) || /^kine - ?$/.test(s))
+    return jeroen ? [jeroen] : gezinshoofden;
+
+  // Default: social event = gezinshoofden
+  return gezinshoofden.length ? gezinshoofden : allen;
+}
+
+function icalGetFiltered() {
+  const filterToekomst = document.getElementById('ical-toekomst-check')?.checked;
+  if (!filterToekomst) return _icalEvents;
+  const today = new Date().toLocaleDateString('sv');
+  return _icalEvents.filter(e => {
+    if (e.freq !== 'eenmalig') return true;
+    const check = e.meerdaags ? e.eindDatum : e.beginDatum;
+    return !check || check >= today;
+  });
+}
+
 let _icalEvents = [];
 let _icalWie    = [];
 let _icalSrcUrl = null;   // huidige URL (voor abonnement opslaan)
@@ -1305,13 +1382,19 @@ function icalVerwerk(text, srcUrl){
 
 // ── Preview ───────────────────────────────────────────────────
 function icalToonPreview(){
-  const n=_icalEvents.length;
-  const bestaandAantal=_icalEvents.filter(e=>e.icalUid&&activiteiten.find(a=>a.icalUid===e.icalUid&&a.icalSource===e.icalSource)).length;
+  const smartMode = document.getElementById('ical-smart-check')?.checked;
+  const filtered = icalGetFiltered();
+  const n = filtered.length;
+  const totaal = _icalEvents.length;
+  const bestaandAantal=filtered.filter(e=>e.icalUid&&activiteiten.find(a=>a.icalUid===e.icalUid&&a.icalSource===e.icalSource)).length;
   const nieuwAantal=n-bestaandAantal;
   document.getElementById('ical-preview-titel').textContent=
-    `${n} activiteit${n!==1?'en':''} gevonden`+
-    (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
+    `${n} activiteit${n!==1?'en':''}`+(totaal!==n?` (${totaal-n} verborgen)`:'')+
+    (bestaandAantal?` · ${bestaandAantal} al aanwezig, ${nieuwAantal} nieuw`:'');
 
+  // Hide manual wie-picker in smart mode
+  const wieRij = document.getElementById('ical-wie-rij');
+  if (wieRij) wieRij.style.display = smartMode ? 'none' : '';
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
     `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" onclick="icalToggleWie('${p}')">
       ${PEMOJI[p]||''} ${PLABEL[p]||p}
@@ -1322,17 +1405,19 @@ function icalToonPreview(){
   document.getElementById('ical-abo-rij').style.display=isAbo?'flex':'none';
   document.getElementById('ical-abo-check').checked=isAbo;
 
-  const toon=_icalEvents.slice(0,15);
+  const toon=filtered.slice(0,20);
   document.getElementById('ical-event-lijst').innerHTML=
     toon.map(a=>{
       const al=a.icalUid&&activiteiten.find(x=>x.icalUid===a.icalUid&&x.icalSource===a.icalSource);
+      const wieEmoji = smartMode ? detectWieSmart(a.naam).map(p=>PEMOJI[p]||p).join('') : '';
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);">
         ${al?'<span style="font-size:10px;color:var(--normaal-clr);flex-shrink:0;">↻</span>':'<span style="font-size:10px;color:var(--rustig-clr);flex-shrink:0;">＋</span>'}
         <span style="font-size:11px;color:var(--muted);min-width:80px;flex-shrink:0;">${a.beginDatum}${a.meerdaags&&a.eindDatum!==a.beginDatum?' →'+a.eindDatum.slice(5):''}</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.naam)}</span>
+        ${smartMode?`<span style="font-size:14px;flex-shrink:0;">${wieEmoji}</span>`:''}
         <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${a.start||''}</span>
       </div>`;
-    }).join('')+(n>15?`<div style="padding:7px 10px;font-size:12px;color:var(--muted);">… en nog ${n-15} meer</div>`:'');
+    }).join('')+(n>20?`<div style="padding:7px 10px;font-size:12px;color:var(--muted);">… en nog ${n-20} meer</div>`:'');
 
   document.getElementById('ical-preview').style.display='block';
   const btn=document.getElementById('ical-import-btn');
@@ -1354,10 +1439,16 @@ async function icalImporteer(){
   const btn=document.getElementById('ical-import-btn');
   btn.disabled=true; btn.textContent='Bezig…';
 
+  const smartMode = document.getElementById('ical-smart-check')?.checked;
+  const filtered = icalGetFiltered();
   const wie=_icalWie.length?[..._icalWie]:[Auth.profiel()?.persoonKey].filter(Boolean);
   const src=_icalSrcUrl||null;
-  _icalEvents.forEach(e=>{ e.wie=wie; });
-  const {nieuw,geupdate}=await icalMerge(_icalEvents,wie,src);
+  if (smartMode) {
+    filtered.forEach(e=>{ e.wie=detectWieSmart(e.naam); });
+  } else {
+    filtered.forEach(e=>{ e.wie=wie; });
+  }
+  const {nieuw,geupdate}=await icalMerge(filtered,wie,src);
 
   // Abonnement bewaren?
   if(src&&document.getElementById('ical-abo-check')?.checked){
