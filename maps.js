@@ -29,6 +29,17 @@ const Maps = (() => {
     document.head.appendChild(s);
   }
 
+  // Zoek de dichtstbijzijnde scrollende voorouder van een element.
+  function _scrollParent(el) {
+    let node = el.parentNode;
+    while (node && node !== document.body) {
+      const s = window.getComputedStyle(node);
+      if (/(auto|scroll)/.test(s.overflow + s.overflowY + s.overflowX)) return node;
+      node = node.parentNode;
+    }
+    return window;
+  }
+
   // Koppel Google Places autocomplete aan een input-element.
   // onKeuze(adres: string, place: PlaceResult) wordt aangeroepen bij selectie.
   // Voorkomt dubbele instanties via el._mapsAC.
@@ -37,7 +48,6 @@ const Maps = (() => {
     if (el._mapsAC) return; // al gekoppeld, niet opnieuw aanmaken
     laad(() => {
       if (el._mapsAC) return;
-      // Gebruik destructured klasse uit importLibrary (werkt met alle API-versies)
       const ac = new google.maps.places.Autocomplete(el, {
         fields: ['formatted_address', 'name', 'geometry'],
         componentRestrictions: { country: 'be' },
@@ -48,12 +58,29 @@ const Maps = (() => {
         const adres = p.formatted_address || p.name || el.value;
         onKeuze && onKeuze(adres, p);
       });
+
+      // Fix: herpositioneer de dropdown wanneer de scrollende ouder scrolt.
+      // .pac-container wordt absoluut gepositioneerd in het document — bij modal-
+      // scroll raakt die los van het input-veld zonder deze correctie.
+      const reposition = () => {
+        const pac = document.querySelector('.pac-container');
+        if (!pac) return;
+        const rect = el.getBoundingClientRect();
+        pac.style.top   = (rect.bottom + window.scrollY) + 'px';
+        pac.style.left  = (rect.left   + window.scrollX) + 'px';
+        pac.style.width = rect.width + 'px';
+      };
+      const sp = _scrollParent(el);
+      sp.addEventListener('scroll', reposition, { passive: true });
+      el._mapsACUnbind = () => sp.removeEventListener('scroll', reposition);
     });
   }
 
   // Reset de autocomplete-koppeling op een element (bijv. bij hergebruik van modal).
   function resetAutocomplete(el) {
-    if (el) delete el._mapsAC;
+    if (!el) return;
+    if (el._mapsACUnbind) { el._mapsACUnbind(); delete el._mapsACUnbind; }
+    delete el._mapsAC;
   }
 
   // Bereken rijdtijd in minuten van thuisadres naar bestemming.
