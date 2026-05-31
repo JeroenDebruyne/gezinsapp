@@ -171,6 +171,12 @@
     </div>
   </div>
 
+  <!-- Speciale gezinsdatums -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Speciale gezinsdatums</div>
+  <div class="info-box">Voeg speciale datums toe die gezinsbreed worden getoond in de agenda als informatieve kaart. Zowel éénmalig als jaarlijks herhalend, en meerdaags mogelijk.</div>
+  <div id="gezinsdatums-lijst"></div>
+  <button class="btn btn-secondary btn-sm" style="margin-bottom:16px;" onclick="voegGezinsDatumToe()">+ Datum toevoegen</button>
+
   <!-- Persoonlijke abonnementen -->
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Persoonlijke abonnementen</div>
   <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd. Voeg toe via 📥 in de Agenda.</div>
@@ -316,7 +322,7 @@ const WERKDAGEN_LABELS=DLANG.slice(0,5);
 const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
 
-laadOp().then(async ()=>{ await Auth.laadProfielen(); renderInstellingen(); renderIcalAbonnementen(); initMobileAccordion(); }).catch(async ()=>{ laadLokaal(); await Auth.laadProfielen().catch(()=>{}); renderInstellingen(); initMobileAccordion(); });
+laadOp().then(async ()=>{ await Auth.laadProfielen(); renderInstellingen(); renderIcalAbonnementen(); renderGezinsDatums(); initMobileAccordion(); }).catch(async ()=>{ laadLokaal(); await Auth.laadProfielen().catch(()=>{}); renderInstellingen(); renderGezinsDatums(); initMobileAccordion(); });
 
 function renderInstellingen(){
   // Profiel
@@ -763,6 +769,87 @@ function scrollNaar(sectionId){
     });
   },{passive:true});
 })();
+
+// ── Gezinsdatums ─────────────────────────────────────────────
+const EMOJI_OPTIES = ['🎉','💍','🏖️','🎂','🎄','❤️','🏆','✈️','🎓','🎊','🌟','📅'];
+
+function renderGezinsDatums() {
+  const wrap = document.getElementById('gezinsdatums-lijst');
+  if (!wrap) return;
+  if (!gezinsDatums.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = gezinsDatums.map((d, i) => `
+    <div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="position:relative;">
+          <button onclick="_kiesEmoji(${i})" style="font-size:22px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1.2;" title="Emoji kiezen">${d.emoji||'📅'}</button>
+          <div id="emoji-picker-${i}" style="display:none;position:absolute;top:34px;left:0;z-index:200;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px;display:none;flex-wrap:wrap;width:160px;gap:4px;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+            ${EMOJI_OPTIES.map(e=>`<span onclick="_setEmoji(${i},'${e}')" style="font-size:20px;cursor:pointer;padding:2px 4px;border-radius:4px;" onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background=''">${e}</span>`).join('')}
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <input type="text" value="${escHtml(d.label||'')}" placeholder="Naam (bijv. Huwelijksverjaardag)"
+            oninput="gezinsDatums[${i}].label=this.value"
+            style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <label style="font-size:10px;color:var(--muted);font-weight:600;">Startdatum</label>
+              <input type="date" value="${d.startDatum||''}" oninput="gezinsDatums[${i}].startDatum=this.value"
+                style="padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <label style="font-size:10px;color:var(--muted);font-weight:600;">Einddatum <span style="font-weight:400;">(opt.)</span></label>
+              <input type="date" value="${d.eindDatum||''}" oninput="gezinsDatums[${i}].eindDatum=this.value||null"
+                style="padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <label style="font-size:10px;color:var(--muted);font-weight:600;">&nbsp;</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:6px 0;">
+                <input type="checkbox" ${d.herhalend?'checked':''} onchange="gezinsDatums[${i}].herhalend=this.checked" style="width:14px;height:14px;cursor:pointer;"/>
+                Jaarlijks herhalen
+              </label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary btn-sm" onclick="slaGezinsDatumOp(${i})" style="white-space:nowrap;">Opslaan</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);white-space:nowrap;" onclick="verwijderGezinsDatum(${i})">🗑 Verwijder</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function _kiesEmoji(i) {
+  document.querySelectorAll('[id^="emoji-picker-"]').forEach(p => { if (p.id !== `emoji-picker-${i}`) p.style.display = 'none'; });
+  const p = document.getElementById(`emoji-picker-${i}`);
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+}
+function _setEmoji(i, emoji) {
+  gezinsDatums[i].emoji = emoji;
+  document.getElementById(`emoji-picker-${i}`).style.display = 'none';
+  renderGezinsDatums();
+}
+
+function voegGezinsDatumToe() {
+  gezinsDatums.push({label:'', startDatum:'', eindDatum:null, herhalend:false, emoji:'📅'});
+  renderGezinsDatums();
+  document.getElementById('gezinsdatums-lijst').lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function slaGezinsDatumOp(i) {
+  const d = gezinsDatums[i];
+  if (!d.label?.trim() || !d.startDatum) { alert('Vul naam en startdatum in.'); return; }
+  if (d.eindDatum && d.eindDatum < d.startDatum) { alert('Einddatum mag niet voor startdatum liggen.'); return; }
+  await slaGezinsDatumsOp();
+  toonOpslagStatus('✅ Opgeslagen');
+  renderGezinsDatums();
+}
+
+async function verwijderGezinsDatum(i) {
+  if (!confirm('Datum verwijderen?')) return;
+  gezinsDatums.splice(i, 1);
+  await slaGezinsDatumsOp();
+  renderGezinsDatums();
+}
 
 // ── Feestdagen ────────────────────────────────────────────────
 const FEESTDAGEN_NAAM = 'Belgische feestdagen';

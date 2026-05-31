@@ -740,7 +740,9 @@ function renderDagDetail(datumISO){
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
           ${v.type==='contactdatum'
             ?`<div class="verjaardag-info">👨‍👩‍👧 ${escHtml(v.sub||'')}</div>`
-            :v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'
+            :v.type==='gezinsdatum'
+              ?`<div class="verjaardag-info">${v.meerdaags?(v.isEerstedag?'📆 Meerdaags':'📆 Loopt door'):'📅 Vandaag'}&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span></div>`
+              :v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'
           }
         </div>
       </div>`).join('')}
@@ -887,6 +889,34 @@ function getVerjaardagsOpDatum(datumISO){
         if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
       }
     });
+  });
+  // Gezinsdatums (incl. meerdaags)
+  (typeof gezinsDatums!=='undefined'?gezinsDatums:[]).forEach(gd=>{
+    if(!gd.startDatum) return;
+    const eind=gd.eindDatum||gd.startDatum;
+    let treffer=false;
+    if(gd.herhalend){
+      // Vervang het jaar door het huidige jaar voor de vergelijking
+      const adjStart=datumISO.slice(0,4)+'-'+gd.startDatum.slice(5);
+      const adjEind =datumISO.slice(0,4)+'-'+eind.slice(5);
+      if(adjStart<=adjEind){
+        treffer=datumISO>=adjStart&&datumISO<=adjEind;
+      } else {
+        // Spant over de jaarwisseling (bijv. 28 dec – 3 jan)
+        const prevYear=String(parseInt(datumISO.slice(0,4))-1);
+        const adjStartPrev=prevYear+'-'+gd.startDatum.slice(5);
+        treffer=datumISO>=adjStartPrev||datumISO<=adjEind;
+      }
+    } else {
+      treffer=datumISO>=gd.startDatum&&datumISO<=eind;
+    }
+    if(treffer){
+      const isEerstedag=gd.herhalend
+        ?(datumISO.slice(5)===gd.startDatum.slice(5))
+        :(datumISO===gd.startDatum);
+      const meerdaags=eind!==gd.startDatum;
+      result.push({naam:gd.label||'Speciale datum',emoji:gd.emoji||'📅',type:'gezinsdatum',meerdaags,isEerstedag});
+    }
   });
   return result;
 }
