@@ -479,39 +479,17 @@
   <div class="modal-handle"></div>
   <h3>📥 Agenda importeren</h3>
 
-  <!-- Tabs -->
-  <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px;">
-    <button id="ical-tab-btn-bestand" onclick="icalTab('bestand')"
-      style="flex:1;padding:9px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:13px;">
-      📁 Bestand
-    </button>
-    <button id="ical-tab-btn-url" onclick="icalTab('url')"
-      style="flex:1;padding:9px;border:none;background:var(--surface-2);color:var(--muted);font-weight:600;cursor:pointer;font-size:13px;">
-      🔗 Via link
-    </button>
+  <!-- URL invoer -->
+  <div class="form-row">
+    <label>iCal-link (webcal:// of https://)</label>
+    <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
+      style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
   </div>
-
-  <!-- Bestand tab -->
-  <div id="ical-pane-bestand">
-    <div class="form-row">
-      <label>Kies een .ics bestand</label>
-      <input type="file" id="ical-file" accept=".ics,.ical" onchange="icalLaadBestand(this)"/>
-    </div>
-  </div>
-
-  <!-- URL tab -->
-  <div id="ical-pane-url" style="display:none;">
-    <div class="form-row">
-      <label>iCal-link (webcal:// of https://)</label>
-      <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
-        style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
-    <p style="font-size:11px;color:var(--muted);margin:4px 0 0;">
-      Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
-      Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
-    </p>
-  </div>
+  <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
+  <p style="font-size:11px;color:var(--muted);margin:4px 0 8px;">
+    Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
+    Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
+  </p>
 
   <!-- Laadstatus -->
   <div id="ical-status" style="font-size:13px;color:var(--muted);margin:8px 0;min-height:18px;"></div>
@@ -1243,34 +1221,15 @@ async function icalAutoSync(){
 // ── Modal openen/sluiten ──────────────────────────────────────
 function openIcalModal(){
   _icalEvents=[]; _icalWie=[]; _icalSrcUrl=null;
-  document.getElementById('ical-file').value='';
   document.getElementById('ical-url').value='';
   document.getElementById('ical-status').textContent='';
   document.getElementById('ical-preview').style.display='none';
   document.getElementById('ical-import-btn').style.display='none';
-  icalTab('bestand');
   icalToonAbonnementen();
   const _icalEl=document.getElementById('ical-modal-bg');
   _icalEl.classList.add('open');
   _icalEl.querySelector('.modal').scrollTop=0;
 }
-function closeIcalModal(){ document.getElementById('ical-modal-bg').classList.remove('open'); }
-
-function icalTab(tab){
-  ['bestand','url'].forEach(t=>{
-    document.getElementById(`ical-pane-${t}`).style.display = t===tab?'block':'none';
-    const btn=document.getElementById(`ical-tab-btn-${t}`);
-    btn.style.background = t===tab?'var(--accent)':'var(--surface-2)';
-    btn.style.color      = t===tab?'#fff':'var(--muted)';
-  });
-}
-
-// ── Bestand uploaden ──────────────────────────────────────────
-function icalLaadBestand(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ icalVerwerk(e.target.result, null); };
-  reader.readAsText(file,'UTF-8');
 }
 
 // ── URL laden ─────────────────────────────────────────────────
