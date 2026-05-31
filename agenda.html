@@ -735,10 +735,13 @@ function renderDagDetail(datumISO){
     ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:12px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
-        <span style="font-size:20px;">🎂</span>
+        <span style="font-size:20px;">${v.emoji||'🎂'}</span>
         <div style="flex:1;">
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
-          ${v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'}
+          ${v.type==='contactdatum'
+            ?`<div class="verjaardag-info">👨‍👩‍👧 ${escHtml(v.sub||'')}</div>`
+            :v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'
+          }
         </div>
       </div>`).join('')}
     ${alleActs.length===0
@@ -873,6 +876,17 @@ function getVerjaardagsOpDatum(datumISO){
     if(p2){_chk(((p2.voornaam||'')+' '+(p2.achternaam||'')).trim(),p2.verjaardag);}
     const kids=c.kinderenData&&typeof c.kinderenData==='object'?c.kinderenData:(c.kinderenData?_tryParse(c.kinderenData):null);
     (kids||[]).forEach(k=>_chk(((k.voornaam||'')+' '+(k.achternaam||'')).trim()||'Kind',k.verjaardag));
+    // Belangrijke datums
+    const contactNaam=c.naam||((p1?.voornaam||'')+' '+(p1?.achternaam||'')).trim()||'Contact';
+    (c.belangrijkeDatums||[]).forEach(bd=>{
+      if(!bd.datum) return;
+      const [bdy,bdm,bdd]=bd.datum.split('-');
+      if(bd.herhalend){
+        if(bdm===mm&&bdd===dd) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+      } else {
+        if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+      }
+    });
   });
   return result;
 }
