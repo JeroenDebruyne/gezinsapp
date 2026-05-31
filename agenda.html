@@ -1217,7 +1217,7 @@ async function icalAutoSync(){
     try {
       const text=await icalFetchUrl(abo.url);
       const events=parseIcal(text,abo.url);
-      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url,{informatief:!!abo.informatief});
       totaalNieuw+=nieuw; totaalUpdate+=geupdate;
     } catch(e){ console.warn('[iCal sync]',abo.url,e.message); }
   }
@@ -1364,7 +1364,7 @@ async function icalSyncEnkel(i){
   try {
     const text=await icalFetchUrl(abo.url);
     const events=parseIcal(text,abo.url);
-    const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+    const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url,{informatief:!!abo.informatief});
     icalAbonnementen[i].lastSync=new Date().toISOString();
     await slaIcalAbonnementenOp();
     slaLokaalOp(); renderAlles();
