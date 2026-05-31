@@ -368,7 +368,7 @@
   <div class="form-row">
     <label>Locatie</label>
     <div style="display:flex;gap:6px;">
-      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" oninput="renderContactKeuze()"/>
+      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" oninput="renderContactKeuze();locatieCheckThuis(this)"/>
       <button type="button" id="btn-reistijd-auto" onclick="berekenReistijdAuto()" title="Reistijd berekenen via Google Maps"
         style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;">🗺️</button>
     </div>
@@ -479,39 +479,17 @@
   <div class="modal-handle"></div>
   <h3>📥 Agenda importeren</h3>
 
-  <!-- Tabs -->
-  <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px;">
-    <button id="ical-tab-btn-bestand" onclick="icalTab('bestand')"
-      style="flex:1;padding:9px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:13px;">
-      📁 Bestand
-    </button>
-    <button id="ical-tab-btn-url" onclick="icalTab('url')"
-      style="flex:1;padding:9px;border:none;background:var(--surface-2);color:var(--muted);font-weight:600;cursor:pointer;font-size:13px;">
-      🔗 Via link
-    </button>
+  <!-- URL invoer -->
+  <div class="form-row">
+    <label>iCal-link (webcal:// of https://)</label>
+    <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
+      style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
   </div>
-
-  <!-- Bestand tab -->
-  <div id="ical-pane-bestand">
-    <div class="form-row">
-      <label>Kies een .ics bestand</label>
-      <input type="file" id="ical-file" accept=".ics,.ical" onchange="icalLaadBestand(this)"/>
-    </div>
-  </div>
-
-  <!-- URL tab -->
-  <div id="ical-pane-url" style="display:none;">
-    <div class="form-row">
-      <label>iCal-link (webcal:// of https://)</label>
-      <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
-        style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
-    <p style="font-size:11px;color:var(--muted);margin:4px 0 0;">
-      Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
-      Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
-    </p>
-  </div>
+  <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
+  <p style="font-size:11px;color:var(--muted);margin:4px 0 8px;">
+    Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
+    Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
+  </p>
 
   <!-- Laadstatus -->
   <div id="ical-status" style="font-size:13px;color:var(--muted);margin:8px 0;min-height:18px;"></div>
@@ -1037,6 +1015,17 @@ function suggestMaaltijdThuis(){
   });
 }
 
+// ── Locatie: "thuis" herkennen en vervangen door thuisadres ───
+function locatieCheckThuis(input) {
+  const val = input.value.trim().toLowerCase();
+  if (val !== 'thuis') return;
+  const adres = Maps.getThuisadres();
+  if (!adres) return;
+  input.value = adres;
+  // Sluit eventuele Places-dropdown
+  input.blur(); input.focus();
+}
+
 // ── Locatie: contacten met adres als keuze ────────────────────
 function renderContactKeuze(){
   const wrap=document.getElementById('locatie-contact-wrap');
@@ -1228,7 +1217,7 @@ async function icalAutoSync(){
     try {
       const text=await icalFetchUrl(abo.url);
       const events=parseIcal(text,abo.url);
-      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url,{informatief:!!abo.informatief});
       totaalNieuw+=nieuw; totaalUpdate+=geupdate;
     } catch(e){ console.warn('[iCal sync]',abo.url,e.message); }
   }
@@ -1243,34 +1232,15 @@ async function icalAutoSync(){
 // ── Modal openen/sluiten ──────────────────────────────────────
 function openIcalModal(){
   _icalEvents=[]; _icalWie=[]; _icalSrcUrl=null;
-  document.getElementById('ical-file').value='';
   document.getElementById('ical-url').value='';
   document.getElementById('ical-status').textContent='';
   document.getElementById('ical-preview').style.display='none';
   document.getElementById('ical-import-btn').style.display='none';
-  icalTab('bestand');
   icalToonAbonnementen();
   const _icalEl=document.getElementById('ical-modal-bg');
   _icalEl.classList.add('open');
   _icalEl.querySelector('.modal').scrollTop=0;
 }
-function closeIcalModal(){ document.getElementById('ical-modal-bg').classList.remove('open'); }
-
-function icalTab(tab){
-  ['bestand','url'].forEach(t=>{
-    document.getElementById(`ical-pane-${t}`).style.display = t===tab?'block':'none';
-    const btn=document.getElementById(`ical-tab-btn-${t}`);
-    btn.style.background = t===tab?'var(--accent)':'var(--surface-2)';
-    btn.style.color      = t===tab?'#fff':'var(--muted)';
-  });
-}
-
-// ── Bestand uploaden ──────────────────────────────────────────
-function icalLaadBestand(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ icalVerwerk(e.target.result, null); };
-  reader.readAsText(file,'UTF-8');
 }
 
 // ── URL laden ─────────────────────────────────────────────────
@@ -1394,7 +1364,7 @@ async function icalSyncEnkel(i){
   try {
     const text=await icalFetchUrl(abo.url);
     const events=parseIcal(text,abo.url);
-    const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url);
+    const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url,{informatief:!!abo.informatief});
     icalAbonnementen[i].lastSync=new Date().toISOString();
     await slaIcalAbonnementenOp();
     slaLokaalOp(); renderAlles();

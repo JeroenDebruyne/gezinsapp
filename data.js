@@ -262,6 +262,7 @@ async function laadOp() {
         kerstmis: x.kerstmis===true||x.kerstmis==='ja'||x.kerstmis===1,
         cadeauNj: x.cadeau_nj, cadeauVj: x.cadeau_vj,
         adres: x.adres||null,
+        belangrijkeDatums: isNieuwFormaat ? (partnerData.bd||[]) : [],
       };
     });
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
@@ -477,7 +478,8 @@ async function sbSaveContact(contact) {
   // partner1+partner2 worden opgeslagen als JSON in de 'partner' kolom
   const p1 = contact.partner1||null;
   const p2 = contact.partner2||null;
-  const partnerJson = JSON.stringify({p1, p2});
+  const bd = Array.isArray(contact.belangrijkeDatums) ? contact.belangrijkeDatums : [];
+  const partnerJson = JSON.stringify({p1, p2, bd});
   const kinderenData = Array.isArray(contact.kinderenData) ? contact.kinderenData : [];
   const kerstmis = contact.kerstmis===true||contact.kerstmis==='ja'||contact.kerstmis===1;
   const data = {
@@ -633,10 +635,11 @@ async function icalFetchUrl(rawUrl) {
   return t;
 }
 
-async function icalMerge(parsedEvents, wie, sourceUrl) {
+async function icalMerge(parsedEvents, wie, sourceUrl, opties = {}) {
   let nieuw = 0, geupdate = 0;
   for (const ev of parsedEvents) {
-    ev.wie = wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean);
+    ev.wie = ev.wie?.length ? ev.wie : (wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean));
+    if (opties.informatief) ev.informatief = true;
     if (!ev.icalUid) {
       // Geen UID: altijd toevoegen (eenmalige import zonder deduplicatie)
       activiteiten.push(ev); await sbSaveActiviteit(ev); nieuw++; continue;

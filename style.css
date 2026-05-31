@@ -199,6 +199,7 @@ body{
     border-radius:0;overflow:hidden;white-space:nowrap;
     min-height:44px;text-decoration:none;color:var(--ink-2);
     transition:background .12s,color .12s;
+    position:relative;
   }
   .bottom-nav-item:hover{background:var(--accent-l);color:var(--accent);}
   .bottom-nav-item:hover .nav-icon{color:var(--accent);}

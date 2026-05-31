@@ -141,6 +141,14 @@
     + Kind toevoegen
   </button>
 
+  <!-- Belangrijke datums -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">📅 Belangrijke datums <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
+  <div id="c-datums-rijen"></div>
+  <button type="button" onclick="voegBelangrijkeDatumToe()" id="c-datum-add-btn"
+    style="width:100%;padding:10px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:14px;">
+    + Datum toevoegen
+  </button>
+
   <!-- Kerstkaart -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;cursor:pointer;" onclick="toggleKerstkaart()">
     <div>
@@ -175,8 +183,9 @@ Auth.initPagina('contacten');
 let actieveContactId=null;
 let _kerstkaartAan=true;
 let _aantalKinderen=0;
+let _aantalDatums=0;
 
-laadOp().then(renderCrm).catch(()=>{laadLokaal();renderCrm();});
+laadOp().then(()=>{renderCrm();renderVerjaarDagAlerts();}).catch(()=>{laadLokaal();renderCrm();renderVerjaarDagAlerts();});
 
 // ── Helpers ───────────────────────────────────────────────────
 function _parseObj(v){ if(!v) return null; if(typeof v==='object') return v; try{return JSON.parse(v);}catch{return null;} }
@@ -256,6 +265,122 @@ function verwijderKind(index){
   }
   alle.splice(index,1);
   _renderKinderenRijen(alle);
+}
+
+// ── Belangrijke datums velden ─────────────────────────────────
+function _renderDatumsRijen(datums){
+  const el=document.getElementById('c-datums-rijen');
+  if(!el) return;
+  el.innerHTML='';
+  datums.forEach((d,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;position:relative;';
+    row.innerHTML=`
+      <button onclick="verwijderDatum(${i})" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:14px;padding:0;">✕</button>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
+        <div class="form-row" style="margin:0;">
+          <label>Omschrijving</label>
+          <input type="text" id="c-datum-lbl-${i}" value="${escHtml(d.label||'')}" placeholder="bijv. Huwelijksverjaardag"/>
+        </div>
+        <div class="form-row" style="margin:0;">
+          <label>Datum</label>
+          <input type="date" id="c-datum-dt-${i}" value="${escHtml(d.datum||'')}"/>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
+        <input type="checkbox" id="c-datum-rep-${i}" style="width:auto;accent-color:var(--accent);" ${d.herhalend?'checked':''}/>
+        Herhaalt jaarlijks
+      </label>`;
+    el.appendChild(row);
+  });
+  _aantalDatums=datums.length;
+}
+function _leesDatumsVelden(){
+  const result=[];
+  for(let i=0;i<_aantalDatums;i++){
+    const label=document.getElementById(`c-datum-lbl-${i}`)?.value.trim()||'';
+    const datum=document.getElementById(`c-datum-dt-${i}`)?.value||'';
+    const herhalend=document.getElementById(`c-datum-rep-${i}`)?.checked||false;
+    if(label||datum) result.push({label,datum,herhalend});
+  }
+  return result;
+}
+function voegBelangrijkeDatumToe(){
+  const huidige=_leesDatumsVelden();
+  _renderDatumsRijen([...huidige,{label:'',datum:'',herhalend:true}]);
+}
+function verwijderDatum(index){
+  const alle=_leesDatumsVelden();
+  alle.splice(index,1);
+  _renderDatumsRijen(alle);
+}
+
+// ── Datumhulpfuncties ─────────────────────────────────────────
+function _dagenTotVolgende(datumStr, herhalend){
+  if(!datumStr) return null;
+  const nu=new Date(); nu.setHours(0,0,0,0);
+  const d=new Date(datumStr+'T12:00:00');
+  if(!herhalend){
+    const diff=Math.round((d-nu)/(86400000));
+    return diff;
+  }
+  // Jaarlijks: zoek eerstvolgende
+  let jaar=nu.getFullYear();
+  let volgende=new Date(jaar,d.getMonth(),d.getDate());
+  if(volgende<nu) volgende=new Date(jaar+1,d.getMonth(),d.getDate());
+  return Math.round((volgende-nu)/(86400000));
+}
+
+// ── Aankomende datums alerts ──────────────────────────────────
+function renderVerjaarDagAlerts(){
+  const el=document.getElementById('verjaardag-alerts');
+  if(!el) return;
+  const VENSTER=30; // dagen vooruit
+  const items=[];
+  contacten.forEach(c=>{
+    const nm=c.naam||_familieNaam(c);
+    // Partners
+    [_parseObj(c.partner1),_parseObj(c.partner2)].filter(Boolean).forEach(p=>{
+      if(!p.verjaardag) return;
+      const pnm=((p.voornaam||'')+' '+(p.achternaam||'')).trim()||nm;
+      const dagen=_dagenTotVolgende(p.verjaardag,true);
+      if(dagen!==null&&dagen>=0&&dagen<=VENSTER)
+        items.push({type:'verjaardag',label:`🎂 ${pnm}`,dagen,datum:p.verjaardag,herhalend:true});
+    });
+    // Kinderen
+    (_parseObj(c.kinderenData)||[]).forEach(k=>{
+      if(!k.verjaardag) return;
+      const kn=((k.voornaam||'')+' '+(k.achternaam||'')).trim()||'Kind';
+      const dagen=_dagenTotVolgende(k.verjaardag,true);
+      if(dagen!==null&&dagen>=0&&dagen<=VENSTER)
+        items.push({type:'verjaardag',label:`🎂 ${kn}`,dagen,datum:k.verjaardag,herhalend:true});
+    });
+    // Belangrijke datums
+    (c.belangrijkeDatums||[]).forEach(bd=>{
+      if(!bd.datum) return;
+      const dagen=_dagenTotVolgende(bd.datum,bd.herhalend);
+      if(dagen!==null&&(bd.herhalend?dagen>=0&&dagen<=VENSTER:dagen>=0&&dagen<=VENSTER))
+        items.push({type:'datum',label:`📅 ${bd.label||'Datum'} — ${nm}`,dagen,datum:bd.datum,herhalend:bd.herhalend});
+    });
+  });
+  items.sort((a,b)=>a.dagen-b.dagen);
+  if(!items.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="margin-bottom:12px;">
+    ${items.map(it=>{
+      const d=new Date(it.datum+'T12:00:00');
+      const dagStr=it.herhalend
+        ?d.toLocaleDateString('nl-BE',{day:'numeric',month:'long'})
+        :d.toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'});
+      const wanneer=it.dagen===0?'vandaag':it.dagen===1?'morgen':`over ${it.dagen} dagen`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${it.dagen<=7?'var(--normaal-bg)':'var(--surface-2)'};border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;">
+        <div style="flex:1;font-size:13px;font-weight:600;color:var(--ink);">${it.label}</div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:12px;font-weight:600;color:${it.dagen<=7?'var(--normaal-clr)':'var(--accent)'};">${wanneer}</div>
+          <div style="font-size:11px;color:var(--muted);">${dagStr}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 // ── Render lijst ──────────────────────────────────────────────
@@ -368,6 +493,25 @@ function renderContactFicheHtml(c,metSluitknop){
   <div class="fiche-meta" style="margin-top:10px;">
     <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstkaart: ${kerstmis?'Ja':'Nee'}</span>
   </div>
+  ${(c.belangrijkeDatums||[]).length?`
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Belangrijke datums</div>
+    ${(c.belangrijkeDatums||[]).map(bd=>{
+      const d=new Date((bd.datum||'')+'T12:00:00');
+      const dagStr=bd.datum?(bd.herhalend
+        ?d.toLocaleDateString('nl-BE',{day:'numeric',month:'long'})
+        :d.toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'})):'—';
+      const dagen=bd.datum?_dagenTotVolgende(bd.datum,bd.herhalend):null;
+      const binnenkort=dagen!==null&&dagen>=0&&dagen<=14;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;">
+        <span style="font-size:18px;flex-shrink:0;">${bd.herhalend?'🔁':'📅'}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);">${escHtml(bd.label||'Datum')}</div>
+          <div style="font-size:12px;color:var(--muted);">${dagStr}${bd.herhalend?' · jaarlijks':''}</div>
+        </div>
+        ${binnenkort?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--normaal-bg);color:var(--normaal-clr);font-weight:600;flex-shrink:0;">${dagen===0?'vandaag':dagen===1?'morgen':'over '+dagen+'d'}</span>`:''}
+      </div>`;
+    }).join('')}
+  `:''}
   ${c.cadeauNj||c.cadeauVj?`<div class="fiche-sectie-label" style="margin-top:14px;">Cadeaus</div>`:''}
   ${c.cadeauNj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎊 NIEUWJAAR</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div></div>`:''}
   ${c.cadeauVj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎂 VERJAARDAG</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div></div>`:''}
@@ -400,6 +544,8 @@ function openCrmModal(contact){
   document.getElementById('c-kerstkaart-switch').className='ios-switch'+(_kerstkaartAan?' on':'');
   // Adres
   document.getElementById('c-adres').value=contact?.adres||'';
+  // Belangrijke datums
+  _renderDatumsRijen(contact?.belangrijkeDatums||[]);
   // Cadeaus
   document.getElementById('c-cadeau-nj').value=contact?.cadeauNj||'';
   document.getElementById('c-cadeau-vj').value=contact?.cadeauVj||'';
@@ -447,11 +593,12 @@ function saveContact(){
     cadeauNj:document.getElementById('c-cadeau-nj').value,
     cadeauVj:document.getElementById('c-cadeau-vj').value,
     adres:document.getElementById('c-adres').value.trim()||null,
+    belangrijkeDatums:_leesDatumsVelden(),
   };
 
   if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
   else contacten.push(contact);
-  closeCrmModal();renderCrm();slaLokaalOp();sbSaveContact(contact);
+  closeCrmModal();renderCrm();renderVerjaarDagAlerts();slaLokaalOp();sbSaveContact(contact);
 }
 
 function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}

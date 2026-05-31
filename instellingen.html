@@ -90,11 +90,12 @@
 <nav class="inst-nav" id="inst-nav">
   <div class="inst-nav-label">Instellingen</div>
   <button class="inst-nav-item" onclick="scrollNaar('sect-profiel')">👤 Mijn profiel</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')">📅 Vaste roosters</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-vakanties')">☀️ Schoolvakanties</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-ical')">📅 Agenda import</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')">📋 Vaste roosters</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-kalenders')">📆 Kalenders</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-data')">🗄️ Data beheer</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutel</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-ingredienten')">🥦 Ingrediënten</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')">🏠 Adressen</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutels</button>
   <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')">👥 Gebruikers</button>
 </nav>
 
@@ -120,19 +121,62 @@
   <div id="roosters-container"></div>
   <button class="btn btn-primary" onclick="slaVastRoosterOp()" style="margin-top:4px;">💾 Roosters opslaan</button>
 
-  <!-- Schoolvakanties -->
-  <div class="section-label" id="sect-vakanties" style="margin-top:1.5rem;">📅 Schoolvakanties Vlaanderen 2025-2026</div>
-  <div class="info-box">Vakantiedagen worden gemarkeerd in de agenda.</div>
-  <div id="vakantie-lijst"></div>
+  <!-- Kalenders -->
+  <div class="section-label" id="sect-kalenders" style="margin-top:1.5rem;">📆 Kalenders</div>
 
-  <!-- iCal import -->
-  <div class="section-label" id="sect-ical" style="margin-top:1.5rem;">📆 Agenda-abonnementen</div>
-  <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd.</div>
+  <!-- Systeemkalenders -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Systeemkalenders</div>
 
-  <!-- Abonnementenlijst -->
+  <!-- Schoolvakanties kaart -->
+  <div class="card" style="margin-bottom:8px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">☀️</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div style="font-size:14px;font-weight:600;">Schoolvakanties Vlaanderen</div>
+          <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);font-weight:600;">Ingebouwd</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Worden automatisch gemarkeerd in de agenda en gelden als "geen impact" op de druktebarometer.</div>
+        <details style="margin-top:8px;">
+          <summary style="font-size:12px;color:var(--accent);cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:4px;">
+            <span>Bekijk schooljaar 2025–2026</span><span style="font-size:10px;">▾</span>
+          </summary>
+          <div id="vakantie-lijst" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feestdagen kaart -->
+  <div class="card" style="margin-bottom:16px;" id="feestdagen-kaart">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">🎉</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div style="font-size:14px;font-weight:600;">Belgische feestdagen</div>
+          <span id="feestdagen-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);font-weight:600;">Actief</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Koppel via een iCal-link. Feestdagen verschijnen als informatieve activiteiten en tellen niet mee voor de druktebarometer.</div>
+        <div id="feestdagen-actief-info" style="display:none;font-size:12px;color:var(--muted);margin-bottom:8px;" id="feestdagen-url-lbl"></div>
+        <div id="feestdagen-invoer-rij" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="url" id="feestdagen-url" placeholder="webcal:// of https://…"
+            style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+          <button class="btn btn-primary btn-sm" onclick="koppelFeestdagen()">Activeren</button>
+        </div>
+        <div id="feestdagen-acties" style="display:none;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="syncFeestdagen()">↻ Sync nu</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="ontkoppelFeestdagen()">🗑 Verwijderen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Persoonlijke abonnementen -->
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Persoonlijke abonnementen</div>
+  <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd. Voeg toe via 📥 in de Agenda.</div>
   <div id="ical-abo-lijst-wrap">
     <div class="card" id="ical-abo-leeg" style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">
-      Geen abonnementen. Voeg er een toe via 📥 in de Agenda.
+      Nog geen persoonlijke abonnementen.
     </div>
     <div id="ical-abo-kaarten"></div>
   </div>
@@ -166,8 +210,23 @@
     <span style="font-size:20px;color:var(--muted);">›</span>
   </a>
 
-  <!-- API key -->
-  <div class="section-label" id="sect-api" style="margin-top:1.5rem;">🔑 API instellingen</div>
+  <!-- Adressen -->
+  <div class="section-label" id="sect-adressen" style="margin-top:1.5rem;">🏠 Adressen</div>
+  <div class="card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🏠 Thuisadres</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt voor reistijdberekening in de Agenda. Typ "thuis" in een locatieveld om dit adres automatisch in te vullen.</div>
+    <input type="text" id="inst-thuisadres" placeholder="Straat, huisnummer, gemeente"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
+    <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
+  </div>
+  <div class="card" style="margin-top:8px;" id="werkadres-sectie">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">💼 Werkadressen</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt door de maaltijdassistent om de verwachte thuiskomst te berekenen.</div>
+    <div id="werkadres-container"></div>
+  </div>
+
+  <!-- API sleutels -->
+  <div class="section-label" id="sect-api" style="margin-top:1.5rem;">🔑 API sleutels</div>
   <div class="card" style="display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div style="font-size:14px;font-weight:600;">Anthropic API key</div>
@@ -181,19 +240,6 @@
       <div style="font-size:12px;color:var(--muted);" id="maps-key-status">Laden…</div>
     </div>
     <button class="btn btn-secondary btn-sm" onclick="resetMapsKey()">🗺️ Wijzigen</button>
-  </div>
-  <div class="card" style="margin-top:8px;">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🏠 Thuisadres</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt voor automatische reistijdberekening in de Agenda.</div>
-    <input type="text" id="inst-thuisadres" placeholder="Straat, huisnummer, gemeente"
-      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
-    <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
-  </div>
-
-  <div class="card" style="margin-top:8px;" id="werkadres-sectie">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">💼 Werkadressen</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt door de maaltijdassistent om de verwachte thuiskomst te berekenen.</div>
-    <div id="werkadres-container"></div>
   </div>
 
   <!-- Admin: gebruikersbeheer (alleen gezinshoofd) -->
@@ -291,13 +337,15 @@ function renderInstellingen(){
   renderRoosters();
   // Vakanties
   document.getElementById('vakantie-lijst').innerHTML=SCHOOLVAKANTIES.map(v=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-      <div style="width:10px;height:10px;border-radius:50%;background:${v.kleur};border:1px solid var(--border-2);flex-shrink:0;"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${v.kleur==='#faeeda'?'var(--normaal-dot, #ba7517)':v.kleur==='#e1f5ee'?'var(--rustig-dot, #1d9e75)':'var(--accent)'};flex-shrink:0;"></div>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:600;">${v.naam}</div>
         <div style="font-size:11px;color:var(--muted);">${v.van===v.tot?v.van:v.van+' → '+v.tot}</div>
       </div>
     </div>`).join('');
+  // Feestdagen kaart initialiseren
+  renderFeestdagenKaart();
   // Werkadressen
   renderWerkadressen();
   // Admin sectie
@@ -701,7 +749,7 @@ function scrollNaar(sectionId){
 (function(){
   const scroller=document.querySelector('.main-content');
   if(!scroller) return;
-  const secties=['sect-profiel','sect-roosters','sect-vakanties','sect-ical','sect-data','sect-ingredienten','sect-api','sect-gebruikers'];
+  const secties=['sect-profiel','sect-roosters','sect-kalenders','sect-data','sect-ingredienten','sect-adressen','sect-api','sect-gebruikers'];
   scroller.addEventListener('scroll',()=>{
     let actief='sect-profiel';
     for(const id of secties){
@@ -716,19 +764,97 @@ function scrollNaar(sectionId){
   },{passive:true});
 })();
 
+// ── Feestdagen ────────────────────────────────────────────────
+const FEESTDAGEN_NAAM = 'Belgische feestdagen';
+const FEESTDAGEN_SYS  = 'feestdagen';
+
+function _feestdagenAbo() {
+  return icalAbonnementen.find(a => a.systeem === FEESTDAGEN_SYS);
+}
+
+function renderFeestdagenKaart() {
+  const abo = _feestdagenAbo();
+  const badge    = document.getElementById('feestdagen-badge');
+  const invoer   = document.getElementById('feestdagen-invoer-rij');
+  const acties   = document.getElementById('feestdagen-acties');
+  const actInfo  = document.getElementById('feestdagen-actief-info');
+  if (abo && !abo.paused) {
+    if (badge)   { badge.style.display='inline'; badge.textContent='Actief'; }
+    if (invoer)  invoer.style.display='none';
+    if (acties)  acties.style.display='flex';
+    if (actInfo) { actInfo.style.display='block'; actInfo.textContent='🔗 ' + abo.url; }
+  } else {
+    if (badge)   badge.style.display='none';
+    if (invoer)  invoer.style.display='flex';
+    if (acties)  acties.style.display='none';
+    if (actInfo) actInfo.style.display='none';
+    if (abo?.url) document.getElementById('feestdagen-url').value = abo.url;
+  }
+}
+
+async function koppelFeestdagen() {
+  const url = document.getElementById('feestdagen-url').value.trim();
+  if (!url) { alert('Vul een iCal-link in.'); return; }
+  toonOpslagStatus('⏳ Feestdagen ophalen…');
+  try {
+    const text   = await icalFetchUrl(url);
+    const events = parseIcal(text, url);
+    const {nieuw, geupdate} = await icalMerge(events, [], url, {informatief: true});
+    const idx = icalAbonnementen.findIndex(a => a.systeem === FEESTDAGEN_SYS);
+    const abo = {url, naam: FEESTDAGEN_NAAM, wie: [], systeem: FEESTDAGEN_SYS, informatief: true, lastSync: new Date().toISOString()};
+    if (idx >= 0) icalAbonnementen[idx] = abo; else icalAbonnementen.push(abo);
+    await slaIcalAbonnementenOp();
+    slaLokaalOp();
+    toonOpslagStatus(`✅ Feestdagen: ${nieuw} toegevoegd, ${geupdate} bijgewerkt`);
+    renderFeestdagenKaart();
+    renderIcalAbonnementen();
+  } catch(e) { toonOpslagStatus('❌ ' + e.message); }
+}
+
+async function syncFeestdagen() {
+  const abo = _feestdagenAbo(); if (!abo) return;
+  toonOpslagStatus('⏳ Feestdagen synchroniseren…');
+  try {
+    const text   = await icalFetchUrl(abo.url);
+    const events = parseIcal(text, abo.url);
+    const {nieuw, geupdate} = await icalMerge(events, [], abo.url, {informatief: true});
+    _feestdagenAbo().lastSync = new Date().toISOString();
+    await slaIcalAbonnementenOp();
+    slaLokaalOp();
+    toonOpslagStatus(`✅ Feestdagen: ${nieuw} nieuw, ${geupdate} bijgewerkt`);
+  } catch(e) { toonOpslagStatus('❌ ' + e.message); }
+}
+
+async function ontkoppelFeestdagen() {
+  const abo = _feestdagenAbo(); if (!abo) return;
+  if (!confirm('Feestdagen verwijderen?\n\nAlle feestdagactiviteiten worden uit de agenda gewist.')) return;
+  toonOpslagStatus('⏳ Verwijderen…');
+  await sbVerwijderIcalActiviteiten(abo.url);
+  const idx = icalAbonnementen.findIndex(a => a.systeem === FEESTDAGEN_SYS);
+  if (idx >= 0) icalAbonnementen.splice(idx, 1);
+  await slaIcalAbonnementenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Feestdagen verwijderd');
+  renderFeestdagenKaart();
+}
+
 // ── iCal Abonnementen beheer ──────────────────────────────────
 // parseIcal, icalFetchUrl, icalMerge, laadIcalAbonnementen,
 // slaIcalAbonnementenOp, sbVerwijderIcalActiviteiten → zie data.js
 async function renderIcalAbonnementen(){
   await laadIcalAbonnementen();
+  renderFeestdagenKaart();
   const kaarten = document.getElementById('ical-abo-kaarten');
   const leeg    = document.getElementById('ical-abo-leeg');
   if (!kaarten) return;
-  if (!icalAbonnementen.length) {
+  // Filter systeem-abonnementen eruit (worden apart getoond)
+  const persoonlijk = icalAbonnementen.filter(a => !a.systeem);
+  if (!persoonlijk.length) {
     leeg.style.display = 'block'; kaarten.innerHTML = ''; return;
   }
   leeg.style.display = 'none';
-  kaarten.innerHTML = icalAbonnementen.map((abo, i) => {
+  kaarten.innerHTML = persoonlijk.map((abo) => {
+    const i = icalAbonnementen.indexOf(abo);
     const opgeschort = abo.paused || false;
     const lastSync   = abo.lastSync ? new Date(abo.lastSync).toLocaleDateString('nl-BE') : '—';
     const wie        = (abo.wie||[]).map(k => PEMOJI[k]||k).join(' ') || '—';
@@ -774,7 +900,7 @@ async function aboHervatten(i){
   try {
     const text   = await icalFetchUrl(abo.url);
     const events = parseIcal(text, abo.url);
-    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url);
+    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url, {informatief:!!abo.informatief});
     icalAbonnementen[i].paused   = false;
     icalAbonnementen[i].lastSync = new Date().toISOString();
     await slaIcalAbonnementenOp();
@@ -792,7 +918,7 @@ async function aboSyncNu(i){
   try {
     const text   = await icalFetchUrl(abo.url);
     const events = parseIcal(text, abo.url);
-    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url);
+    const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url, {informatief:!!abo.informatief});
     icalAbonnementen[i].lastSync = new Date().toISOString();
     await slaIcalAbonnementenOp();
     slaLokaalOp();
