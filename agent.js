@@ -19,9 +19,19 @@ function bouwGezinsContext() {
 }
 
 function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen }) {
-  // ids: { berichten, input, bevestiging, bevestigingTekst? }
+  // ids: { berichten, input, bevestiging, bevestigingTekst?, storageKey? }
   let chatGeschiedenis = [];
   let _pending = null;
+
+  const _sk = ids.storageKey || null;
+  if (_sk) {
+    try { chatGeschiedenis = JSON.parse(localStorage.getItem(_sk) || '[]'); } catch {}
+  }
+
+  function _slaGeschiedenisOp() {
+    if (!_sk) return;
+    try { localStorage.setItem(_sk, JSON.stringify(chatGeschiedenis.slice(-40))); } catch {}
+  }
 
   // Strip internal tracking fields before sending to the Anthropic API.
   // tool_use blocks may only contain type/id/name/input.
@@ -161,6 +171,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
           _toonBevestiging(block.input.bevestiging_bericht || 'Wil je dit uitvoeren?');
           chatGeschiedenis.push({ role: 'assistant', content: data.content });
           chatGeschiedenis.push({ role: 'user', content: [...toolResults, { type: 'tool_result', tool_use_id: block.id, content: 'Wacht op gebruikersbevestiging.' }] });
+          _slaGeschiedenisOp();
           return null;
         }
         const result = await execute(block.name, block.input);
@@ -168,6 +179,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       }
       chatGeschiedenis.push({ role: 'assistant', content: data.content });
       chatGeschiedenis.push({ role: 'user', content: toolResults });
+      _slaGeschiedenisOp();
       data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
     }
     return data;
@@ -193,6 +205,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     voegBerichtToe('user', tekst);
     chatGeschiedenis.push({ role: 'user', content: tekst });
     if (chatGeschiedenis.length > 40) chatGeschiedenis = chatGeschiedenis.slice(-40);
+    _slaGeschiedenisOp();
     const container = document.getElementById(ids.berichten);
     let streamWrap = null, streamBubble = null, streamedText = '';
     if (container) {
@@ -220,10 +233,12 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         const finaleTekst = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
         voegBerichtToe('assistant', finaleTekst);
         chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+        _slaGeschiedenisOp();
       } else {
         const finaleTekst = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
         if (streamBubble) streamBubble.innerHTML = formateerAntwoord(finaleTekst);
         chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+        _slaGeschiedenisOp();
       }
     } catch (e) {
       if (streamWrap) streamWrap.remove();
@@ -253,6 +268,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       const tekst = (resultData.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
       voegBerichtToe('assistant', tekst);
       chatGeschiedenis.push({ role: 'assistant', content: tekst });
+      _slaGeschiedenisOp();
     } catch (e) {
       typingEl?.remove();
       voegBerichtToe('assistant', '❌ Fout: ' + e.message);
@@ -265,10 +281,12 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     const msg = '❌ Geannuleerd.';
     voegBerichtToe('assistant', msg);
     chatGeschiedenis.push({ role: 'assistant', content: msg });
+    _slaGeschiedenisOp();
   }
 
   function wis(welkomHtml) {
     chatGeschiedenis = [];
+    if (_sk) try { localStorage.removeItem(_sk); } catch {}
     const container = document.getElementById(ids.berichten);
     if (container) container.innerHTML = welkomHtml || '';
   }
