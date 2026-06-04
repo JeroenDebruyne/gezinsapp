@@ -73,6 +73,9 @@
       document.getElementById('module-overlay').classList.remove('open');
   };
 
+  // Service worker registratie
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
   // Fill sidebar user info after DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof Auth !== 'undefined') {

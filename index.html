@@ -147,7 +147,7 @@ function openActDetail(id){
       ${a.beginDatum?`<div>📅 ${a.beginDatum}${a.eindDatum&&a.eindDatum!==a.beginDatum?' – '+a.eindDatum:''}</div>`:''}
       ${a.informatief?`<span class="badge" style="background:var(--bg-2);color:var(--muted);">📌 Informatief</span>`:''}
     </div>`;
-  document.getElementById('act-detail-agenda-btn').onclick=()=>location.href=`agenda.html?datum=${_hNuISO()}`;
+  document.getElementById('act-detail-agenda-btn').onclick=()=>location.href=`agenda.html?datum=${_atNuISO()}`;
   document.getElementById('act-detail-bg').classList.add('open');
 }
 function sluitActDetail(e){
@@ -160,6 +160,7 @@ function sluitActDetail(e){
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script src="agent.js"></script>
+<script src="agent-tools.js"></script>
 <script>
 Auth.initPagina('index');
 laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
@@ -325,36 +326,18 @@ function toggleTodo(id){
 
 // ── Agent op homepage ─────────────────────────────────────────
 
-// ── Datum (leest uit localStorage dat renderHomepage() zojuist heeft gezet)
-function _hNuISO(){ return localStorage.getItem('gezinsapp_vandaag')||fDateISO(new Date()); }
-function _hGetWeekDates(offset){ return getWeekDatesFrom(_hNuISO(),offset); }
-const _hSPEC={shake:'Shake',uiteten:'Uit eten',afhalen:'Afhalen',restjes:'Restjes'};
-function _hGetNaam(k){if(!k)return'–';if(_hSPEC[k])return _hSPEC[k];const r=recepten.find(r=>r.id===k||r.id==k);return r?r.naam:'–';}
-function _hTransportVoorDag(datum){
-  const dagKey=DAGMAP[new Date(datum+'T12:00:00').getDay()];
-  const result={};['nora','odiel'].forEach(kind=>{
-    const std=(standaardTransport||{})[kind]?.[dagKey]||{};
-    const uit=(transportUitzonderingen||{})[datum]?.[kind]||{};
-    result[kind]={...std,...uit};
-  });return result;
-}
-function _hVerjDatumDitJaar(vj,nu){
-  const[,m,d]=vj.split('-');const dt=new Date(nu.getFullYear(),parseInt(m)-1,parseInt(d));
-  if(dt<nu)dt.setFullYear(dt.getFullYear()+1);return dt;
-}
-
 // ── Systeemprompt ─────────────────────────────────────────────
 function _hSysteemPrompt(){
-  const vandaagISO=_hNuISO();
+  const vandaagISO=_atNuISO();
   const dagNaamNL=DLANG_GD[new Date(vandaagISO+'T12:00:00').getDay()];
   let planCtx='';
   try{
-    const dates=_hGetWeekDates(0);
+    const dates=_atGetWeekDates(0);
     planCtx='\n\nHUIDIGE WEEK:\n'+dates.map((d,i)=>{
       const key=fDateISO(d);const dag=planning[key]||{};
       const acts=activiteiten.filter(a=>isActiefOpDatum(a,key)).map(a=>a.naam+(a.start?' '+a.start:'')).join(', ');
       return '  '+DKORT[i]+' '+key+(key===vandaagISO?' ←VANDAAG':'')+
-        ': O='+_hGetNaam(dag.ontbijt)+' L='+_hGetNaam(dag.lunch)+' A='+_hGetNaam(dag.avond)+(acts?' ['+acts+']':'');
+        ': O='+_atGetNaam(dag.ontbijt)+' L='+_atGetNaam(dag.lunch)+' A='+_atGetNaam(dag.avond)+(acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
   return `Je bent de gezinsassistent.
@@ -369,152 +352,10 @@ REGELS:
 - Antwoord altijd in het Nederlands. Wees bondig en concreet.${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g,i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
 }
 
-// ── Tools (zelfde 30 tools als agent.html) ───────────────────
-const HOME_AGENT_TOOLS=[
-  {name:'get_dag',description:'Volledig dagoverzicht: activiteiten, maaltijden, transport, drukte.',input_schema:{type:'object',properties:{datum:{type:'string',description:'YYYY-MM-DD. Leeg = vandaag.'}},required:[]}},
-  {name:'get_week',description:'Weekoverzicht met per dag activiteiten, maaltijden, transport, drukte.',input_schema:{type:'object',properties:{offset:{type:'integer',description:'0=huidig, 1=volgend, -1=vorig'}},required:[]}},
-  {name:'get_activiteiten',description:'Alle activiteiten, optioneel gefilterd op persoon of zoekterm.',input_schema:{type:'object',properties:{persoon:{type:'string'},zoekterm:{type:'string'}},required:[]}},
-  {name:'get_recepten',description:'Recepten met filters. Gebruik dit ALTIJD vóór stel_weekmenu_in.',input_schema:{type:'object',properties:{zoekterm:{type:'string'},type:{type:'string',description:'avond/lunch/ontbijt/weekend'},max_tijd:{type:'integer'},tag:{type:'string'},wie:{type:'string'},max_resultaten:{type:'integer'}},required:[]}},
-  {name:'get_todos',description:'To-dos ophalen. Geeft id terug voor wijzigen of afvinken.',input_schema:{type:'object',properties:{wie:{type:'string'},prioriteit:{type:'string'},inclusief_gedaan:{type:'boolean'}},required:[]}},
-  {name:'get_boodschappenlijst',description:'Boodschappenlijst per winkel op basis van weekmenu + extra items.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_contacten',description:'Contacten met verjaardagen en kerstkaart-info.',input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:[]}},
-  {name:'get_verjaardagen',description:'Aankomende verjaardagen, gesorteerd op datum.',input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
-  {name:'get_transport',description:'Transport kinderen (brengt/haalt/grootouders) voor een dag of week.',input_schema:{type:'object',properties:{datum:{type:'string'},week:{type:'boolean'}},required:[]}},
-  {name:'get_schoolvakanties',description:'Schoolvakanties Vlaanderen en uitzonderingen.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_eethistoriek',description:'Maaltijdhistoriek afgelopen weken. Gebruik ALTIJD vóór weekmenu plannen.',input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
-  {name:'get_weer',description:'Huidig weer op thuislocatie.',input_schema:{type:'object',properties:{},required:[]}},
-  {name:'get_conflicten',description:'Detecteer overlappende activiteiten voor dezelfde persoon.',input_schema:{type:'object',properties:{offset:{type:'integer'}},required:[]}},
-  {name:'zoek_ingredienten',description:'Zoek in ingrediëntenlijst (gebruik vóór voeg_ingredient_toe).',input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:['zoekterm']}},
-  {name:'stel_weekmenu_in',description:'Plan maaltijden. Gebruik NUMERIEK recept-id. ALTIJD bevestiging.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
-  {name:'wis_weekmenu_slot',description:'Wis één maaltijdslot op een datum. ALTIJD bevestiging.',input_schema:{type:'object',properties:{datum:{type:'string'},slot:{type:'string',description:'ontbijt/lunch/avond'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','slot']}},
-  {name:'voeg_activiteit_toe',description:'Voeg activiteit toe. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},wie:{type:'array',items:{type:'string'},description:'jeroen/kelly/nora/odiel — optioneel'},dagen:{type:'array',items:{type:'string'},description:'ma/di/wo/do/vr/za/zo (altijd 2-letter afkorting)'},start:{type:'string',description:'HH:MM'},eind_uur:{type:'string',description:'HH:MM'},locatie:{type:'string'},freq:{type:'string',description:'wekelijks/tweewekelijks/maandelijks/eenmalig'},begin_datum:{type:'string',description:'YYYY-MM-DD'},eind_datum:{type:'string',description:'YYYY-MM-DD'},prep:{type:'integer',description:'voorbereiding in minuten'},informatief:{type:'boolean'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
-  {name:'wijzig_activiteit',description:'Wijzig bestaande activiteit op naam. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},nieuw_naam:{type:'string'},wie:{type:'array',items:{type:'string'}},dagen:{type:'array',items:{type:'string'}},start:{type:'string'},eind_uur:{type:'string'},locatie:{type:'string'},freq:{type:'string'},begin_datum:{type:'string'},eind_datum:{type:'string'},prep:{type:'integer'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
-  {name:'verwijder_activiteit',description:'Verwijder activiteit permanent. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
-  {name:'voeg_todo_toe',description:'Voeg to-do toe. ALTIJD bevestiging.',input_schema:{type:'object',properties:{titel:{type:'string'},notitie:{type:'string'},deadline:{type:'string'},prioriteit:{type:'string',description:'hoog/middel/laag'},wie:{type:'array',items:{type:'string'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['titel']}},
-  {name:'wijzig_todo',description:'Wijzig to-do op id. ALTIJD bevestiging.',input_schema:{type:'object',properties:{id:{type:'string'},titel:{type:'string'},notitie:{type:'string'},deadline:{type:'string'},prioriteit:{type:'string'},wie:{type:'array',items:{type:'string'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
-  {name:'vink_todo_af',description:'Markeer to-do als gedaan. ALTIJD bevestiging.',input_schema:{type:'object',properties:{id:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
-  {name:'verwijder_todo',description:'Verwijder to-do. ALTIJD bevestiging.',input_schema:{type:'object',properties:{id:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['id']}},
-  {name:'stel_transport_in',description:'Éénmalige transport-uitzondering voor een dag. ALTIJD bevestiging.',input_schema:{type:'object',properties:{datum:{type:'string'},kind:{type:'string',description:'nora/odiel'},brengt:{type:'string'},haalt:{type:'string'},eet_groo:{type:'boolean'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','kind']}},
-  {name:'wijzig_standaard_transport',description:'Wijzig vast weekrooster transport (permanent). ALTIJD bevestiging.',input_schema:{type:'object',properties:{kind:{type:'string'},dag:{type:'string',description:'ma/di/wo/do/vr'},brengt:{type:'string'},haalt:{type:'string'},eet_groo:{type:'boolean'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['kind','dag']}},
-  {name:'overschrijf_drukte',description:'Stel drukte van een dag in. ALTIJD bevestiging.',input_schema:{type:'object',properties:{datum:{type:'string'},drukte:{type:'string',description:'rustig/normaal/druk'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['datum','drukte']}},
-  {name:'voeg_aan_boodschappenlijst_toe',description:'Voeg extra item toe aan boodschappenlijst. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'voeg_ingredient_toe',description:'Voeg standaard-ingrediënt toe. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},winkel:{type:'string'},eenheid:{type:'string'},categorie:{type:'string'},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','winkel']}},
-  {name:'voeg_recept_toe',description:'Voeg volledig recept toe met ingrediënten en bereiding. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},types:{type:'array',items:{type:'string'}},porties:{type:'integer',description:'aantal porties/servings'},tijd:{type:'integer'},moeilijk:{type:'string',description:'Snel/Normaal/Uitgebreid'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},score:{type:'integer',description:'Beoordeling 1–5 (optioneel, weglaten als onbekend)'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object',properties:{naam:{type:'string'},hoev:{type:'string'},eenheid:{type:'string'},winkel:{type:'string'}}}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam','types']}},
-  {name:'wijzig_recept',description:'Wijzig bestaand recept op naam. ALTIJD bevestiging.',input_schema:{type:'object',properties:{naam:{type:'string'},nieuw_naam:{type:'string'},types:{type:'array',items:{type:'string'}},tijd:{type:'integer'},moeilijk:{type:'string'},wie:{type:'string'},bron:{type:'string'},bereiding:{type:'string'},score:{type:'integer'},tags:{type:'array',items:{type:'string'}},ingredienten:{type:'array',items:{type:'object'}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['naam']}},
-  {name:'onthoud', description:'Sla een herinnering of voorkeur op in het permanente geheugen van de agent. Gebruik dit wanneer de gebruiker zegt "onthoud dit", "vergeet niet", "houd bij" of iets wil bewaren voor later.', input_schema:{type:'object',properties:{tekst:{type:'string',description:'De tekst om te onthouden, volledig en zelfstandig leesbaar'}},required:['tekst']}},
-  {name:'vergeet_herinnering', description:'Verwijder een specifieke herinnering uit het geheugen op basis van de index (0-gebaseerd).', input_schema:{type:'object',properties:{index:{type:'integer',description:'Index van de herinnering om te verwijderen (0 = eerste)'}},required:['index']}},
-];
-
-// ── Tool executor ─────────────────────────────────────────────
-async function _hExec(naam,input){
-  switch(naam){
-    case 'get_dag':{
-      const datum=input.datum||_hNuISO();
-      const dag=planning[datum]||{};const dObj=new Date(datum+'T12:00:00');const dagNr=dObj.getDay();
-      const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||'',informatief:a.informatief||false}));
-      return JSON.stringify({datum,dag:DLANG_GD[dagNr],isVandaag:datum===_hNuISO(),isSchooldag:!isSchoolvakantie(datum)&&dagNr>=1&&dagNr<=5,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)});
-    }
-    case 'get_week':{
-      const dates=_hGetWeekDates(input.offset||0);const vandaagISO=_hNuISO();
-      return JSON.stringify(dates.map((d,i)=>{const datum=fDateISO(d);const dag=planning[datum]||{};const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)).map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),start:a.start||'',eind:a.eindUur||''}));return{dag:DKORT[i],datum,isVandaag:datum===vandaagISO,vakantie:isSchoolvakantie(datum)?getVakantieNaam(datum)||true:false,drukte:getDagDrukte(datum),ontbijt:_hGetNaam(dag.ontbijt),lunch:_hGetNaam(dag.lunch),avond:_hGetNaam(dag.avond),activiteiten:acts,transport:_hTransportVoorDag(datum)};}));
-    }
-    case 'get_activiteiten':{
-      let acts=activiteiten;
-      if(input.persoon)acts=acts.filter(a=>(a.wie||[]).includes(input.persoon));
-      if(input.zoekterm)acts=acts.filter(a=>a.naam.toLowerCase().includes(input.zoekterm.toLowerCase()));
-      return JSON.stringify(acts.map(a=>({naam:a.naam,wie:(a.wie||[]).join(','),dagen:(a.dagen||[]).join(','),start:a.start||'',eind:a.eindUur||'',locatie:a.locatie||'',freq:a.freq,beginDatum:a.beginDatum,eindDatum:a.eindDatum})));
-    }
-    case 'get_recepten':{
-      let recs=recepten;
-      if(input.zoekterm){const q=input.zoekterm.toLowerCase();recs=recs.filter(r=>r.naam.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q)));}
-      if(input.type)recs=recs.filter(r=>(r.types||[r.type]).includes(input.type));
-      if(input.max_tijd)recs=recs.filter(r=>r.tijd&&r.tijd<=input.max_tijd);
-      if(input.tag)recs=recs.filter(r=>(r.tags||[]).includes(input.tag));
-      if(input.wie)recs=recs.filter(r=>!r.wie||r.wie===input.wie);
-      return JSON.stringify(recs.slice(0,input.max_resultaten||50).map(r=>({id:r.id,naam:r.naam,types:r.types||[r.type],tijd:r.tijd,moeilijk:r.moeilijk,wie:r.wie,score:r.score??null,tags:r.tags||[],ingredienten:(r.ingredienten||[]).map(i=>i.naam)})));
-    }
-    case 'get_todos':{
-      let td=todos;if(!input.inclusief_gedaan)td=td.filter(t=>!t.gedaan);
-      if(input.wie)td=td.filter(t=>(t.wie||[]).includes(input.wie));
-      if(input.prioriteit)td=td.filter(t=>t.prioriteit===input.prioriteit);
-      return JSON.stringify(td.map(t=>({id:t.id,titel:t.titel,notitie:t.notitie||'',deadline:t.deadline||'',prioriteit:t.prioriteit,wie:(t.wie||[]).join(','),gedaan:t.gedaan})));
-    }
-    case 'get_boodschappenlijst':{
-      const res={};WINKELS.forEach(w=>res[w]=[]);
-      Object.values(planning).forEach(dag=>['ontbijt','lunch','avond'].forEach(slot=>{const keuze=dag[slot];const numId=Number(keuze);if(keuze&&!isNaN(numId)&&numId>0){const r=recepten.find(r=>r.id==keuze);if(r)(r.ingredienten||[]).forEach(ing=>{const w=ing.winkel||'Andere';if(res[w])res[w].push({naam:ing.naam,hoev:ing.hoev||'',eenheid:ing.eenheid||'',recept:r.naam});});}}));
-      (extraItems||[]).forEach(item=>{const w=item.winkel||'Andere';if(res[w])res[w].push({naam:item.naam,hoev:item.hoev||'',eenheid:item.eenheid||'',extra:true});});
-      return JSON.stringify(Object.fromEntries(Object.entries(res).filter(([,v])=>v.length)));
-    }
-    case 'get_contacten':{
-      const q=(input.zoekterm||'').toLowerCase();let ct=contacten;if(q)ct=ct.filter(c=>(c.naam||'').toLowerCase().includes(q));
-      return JSON.stringify(ct.map(c=>{let partners=[];try{const p=typeof c.partner==='string'?JSON.parse(c.partner):(c.partner||{});partners=Object.values(p).filter(p=>p&&p.voornaam);}catch{}let kinderen=[];try{kinderen=typeof c.kinderen_namen==='string'?JSON.parse(c.kinderen_namen):(c.kinderen_namen||[]);}catch{}return{familie:c.naam,partners:partners.map(p=>({naam:`${p.voornaam||''} ${p.achternaam||''}`.trim(),verjaardag:p.verjaardag||''})),kinderen:kinderen.map(k=>({naam:`${k.voornaam||''} ${k.achternaam||''}`.trim(),verjaardag:k.verjaardag||''})),kerstmis:c.kerstmis||false};}));
-    }
-    case 'get_verjaardagen':{
-      const weken=input.weken||8;const nu=new Date(_hNuISO()+'T00:00:00');const tot=new Date(nu);tot.setDate(tot.getDate()+weken*7);
-      const vj=[];contacten.forEach(c=>{let personen=[];try{const p=typeof c.partner==='string'?JSON.parse(c.partner):(c.partner||{});personen.push(...Object.values(p).filter(p=>p&&p.voornaam));}catch{}try{const k=typeof c.kinderen_namen==='string'?JSON.parse(c.kinderen_namen):(c.kinderen_namen||[]);personen.push(...k);}catch{}personen.forEach(p=>{if(!p||!p.verjaardag)return;const d=_hVerjDatumDitJaar(p.verjaardag,nu);if(d>=nu&&d<=tot)vj.push({naam:`${p.voornaam||''} ${p.achternaam||''}`.trim(),familie:c.naam,datum:fDateISO(d),over:Math.round((d-nu)/(24*3600*1000))});});});
-      vj.sort((a,b)=>a.over-b.over);return JSON.stringify(vj.length?vj:`Geen verjaardagen de komende ${weken} weken.`);
-    }
-    case 'get_transport':{
-      if(input.week){const dates=_hGetWeekDates(0);return JSON.stringify(dates.map(d=>({datum:fDateISO(d),dag:DLANG_GD[d.getDay()],transport:_hTransportVoorDag(fDateISO(d))})));}
-      const datum=input.datum||_hNuISO();return JSON.stringify({datum,dag:DLANG_GD[new Date(datum+'T12:00:00').getDay()],transport:_hTransportVoorDag(datum)});
-    }
-    case 'get_schoolvakanties':return JSON.stringify({vakanties:SCHOOLVAKANTIES,uitzonderingen:(uitzonderingen||[]).filter(u=>u.datum>=_hNuISO())});
-    case 'get_eethistoriek':{
-      const weken=input.weken||8;const vandaagISO=_hNuISO();const nu=new Date(vandaagISO+'T12:00:00');const van=new Date(nu);van.setDate(van.getDate()-weken*7);const vanISO=fDateISO(van);
-      const hist=[];Object.entries(planning).forEach(([datum,dag])=>{if(datum>=vanISO&&datum<vandaagISO){const e={datum};if(dag.ontbijt)e.ontbijt=_hGetNaam(dag.ontbijt);if(dag.lunch)e.lunch=_hGetNaam(dag.lunch);if(dag.avond)e.avond=_hGetNaam(dag.avond);if(e.ontbijt||e.lunch||e.avond)hist.push(e);}});
-      hist.sort((a,b)=>b.datum.localeCompare(a.datum));return JSON.stringify(hist.length?hist:'Geen eethistoriek.');
-    }
-    case 'get_weer':{
-      try{const coords=(typeof Maps!=='undefined'&&Maps.getCoords())||{lat:50.97,lng:3.19};const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);const d=await r.json();const c=d.current.weather_code||0;const icons=[['☀️',0],['⛅',2],['☁️',3],['🌫️',49],['🌧️',69],['🌨️',79],['🌦️',82],['❄️',86],['⛈️',99]];const icon=(icons.find(([,t])=>c<=t)||['🌡️'])[0];return JSON.stringify({temp:Math.round(d.current.temperature_2m),regen:d.current.precipitation_probability,icon});}catch(e){return'Weersdata niet beschikbaar.';}
-    }
-    case 'get_conflicten':{
-      const dates=_hGetWeekDates(input.offset||0);const conflicten=[];const personen=PERSONEN.length?PERSONEN:['jeroen','kelly','nora','odiel'];
-      dates.forEach(d=>{const datum=fDateISO(d);const acts=activiteiten.filter(a=>isActiefOpDatum(a,datum)&&!a.informatief&&a.start&&a.eindUur);personen.forEach(persoon=>{const pA=acts.filter(a=>(a.wie||[]).includes(persoon));for(let i=0;i<pA.length;i++)for(let j=i+1;j<pA.length;j++){const a1=pA[i],a2=pA[j];if(a1.start<a2.eindUur&&a2.start<a1.eindUur)conflicten.push({datum,dag:DLANG_GD[d.getDay()],persoon:PLABEL[persoon]||persoon,act1:a1.naam,act2:a2.naam});}});});
-      return JSON.stringify(conflicten.length?conflicten:'Geen conflicten gevonden.');
-    }
-    case 'zoek_ingredienten':{const q=(input.zoekterm||'').toLowerCase();return JSON.stringify(standaardIngredienten.filter(i=>(i.naam||'').toLowerCase().includes(q)).map(i=>({naam:i.naam,winkel:i.winkel,eenheid:i.eenheid||''})));}
-    case 'stel_weekmenu_in':{
-      if(!input.menu||!Array.isArray(input.menu))return'Fout formaat.';
-      input.menu.forEach(dd=>{const key=dd.datum;if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(key))return;if(!planning[key])planning[key]={};['ontbijt','lunch','avond'].forEach(slot=>{if(dd[slot]===undefined)return;let val=dd[slot];if(val===null||val==='')val=null;else if(typeof val==='string'&&_hSPEC[val])val=val;else if(typeof val==='number'||!isNaN(Number(val)))val=Number(val);else{const rec=recepten.find(r=>r.naam.toLowerCase()===String(val).toLowerCase());val=rec?rec.id:val;}planning[key][slot]=val;sbSavePlanning(key,slot,val,planning[key].porties||{});});});
-      slaLokaalOp();return'✅ Weekmenu ingesteld.';
-    }
-    case 'wis_weekmenu_slot':{if(!planning[input.datum])planning[input.datum]={};planning[input.datum][input.slot]=null;sbSavePlanning(input.datum,input.slot,null,planning[input.datum].porties||{});slaLokaalOp();return`✅ ${input.slot} op ${input.datum} gewist.`;}
-    case 'voeg_activiteit_toe':{const act={id:Date.now(),naam:input.naam,wie:input.wie||[],dagen:input.dagen||[],start:input.start||null,eindUur:input.eind_uur||null,duur:0,reisHeen:0,reisTerug:0,prep:input.prep||0,locatie:input.locatie||'',freq:input.freq||'wekelijks',beginDatum:input.begin_datum||null,eindDatum:input.eind_datum||null,meerdaags:false,prive:false,informatief:input.informatief||false,transport:{},maaltijdThuis:{}};activiteiten.push(act);slaLokaalOp();sbSaveActiviteit(act);return`✅ Activiteit "${act.naam}" toegevoegd.`;}
-    case 'wijzig_activiteit':{const act=activiteiten.find(a=>a.naam.toLowerCase().includes(input.naam.toLowerCase()));if(!act)return`Activiteit "${input.naam}" niet gevonden.`;if(input.nieuw_naam!==undefined)act.naam=input.nieuw_naam;if(input.wie!==undefined)act.wie=input.wie;if(input.dagen!==undefined)act.dagen=input.dagen;if(input.start!==undefined)act.start=input.start;if(input.eind_uur!==undefined)act.eindUur=input.eind_uur;if(input.locatie!==undefined)act.locatie=input.locatie;if(input.freq!==undefined)act.freq=input.freq;if(input.begin_datum!==undefined)act.beginDatum=input.begin_datum;if(input.eind_datum!==undefined)act.eindDatum=input.eind_datum;if(input.prep!==undefined)act.prep=input.prep;slaLokaalOp();sbSaveActiviteit(act);return`✅ Activiteit "${act.naam}" gewijzigd.`;}
-    case 'verwijder_activiteit':{const idx=activiteiten.findIndex(a=>a.naam.toLowerCase().includes(input.naam.toLowerCase()));if(idx<0)return`Activiteit "${input.naam}" niet gevonden.`;const[rm]=activiteiten.splice(idx,1);slaLokaalOp();if(rm._sbId)sbDeleteActiviteit(rm._sbId);return`✅ Activiteit "${rm.naam}" verwijderd.`;}
-    case 'voeg_todo_toe':{const t={id:String(Date.now()),titel:input.titel,notitie:input.notitie||'',deadline:input.deadline||'',prioriteit:input.prioriteit||'middel',wie:input.wie||[],gedaan:false,aangemaaktDoor:Auth.profiel()?.persoonKey,aangemaaktOp:_hNuISO()};todos.push(t);slaLokaalOp();sbSaveTodo(t);renderTodosPreview(Auth.profiel());return`✅ To-do "${t.titel}" toegevoegd.`;}
-    case 'wijzig_todo':{const t=todos.find(t=>t.id===input.id);if(!t)return'To-do niet gevonden.';if(input.titel!==undefined)t.titel=input.titel;if(input.notitie!==undefined)t.notitie=input.notitie;if(input.deadline!==undefined)t.deadline=input.deadline;if(input.prioriteit!==undefined)t.prioriteit=input.prioriteit;if(input.wie!==undefined)t.wie=input.wie;slaLokaalOp();sbSaveTodo(t);return`✅ To-do "${t.titel}" gewijzigd.`;}
-    case 'vink_todo_af':{const t=todos.find(t=>t.id===input.id);if(!t)return'To-do niet gevonden.';t.gedaan=true;t.gedaanOp=_hNuISO();slaLokaalOp();sbSaveTodo(t);renderTodosPreview(Auth.profiel());return`✅ "${t.titel}" afgevinkt.`;}
-    case 'verwijder_todo':{const idx=todos.findIndex(t=>t.id===input.id);if(idx<0)return'To-do niet gevonden.';const[rm]=todos.splice(idx,1);slaLokaalOp();if(rm._sbId)sbDeleteTodo(rm._sbId);return`✅ To-do "${rm.titel}" verwijderd.`;}
-    case 'stel_transport_in':{if(!transportUitzonderingen[input.datum])transportUitzonderingen[input.datum]={};if(!transportUitzonderingen[input.datum][input.kind])transportUitzonderingen[input.datum][input.kind]={};const t=transportUitzonderingen[input.datum][input.kind];if(input.brengt!==undefined)t.brengt=input.brengt;if(input.haalt!==undefined)t.haalt=input.haalt;if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;slaLokaalOp();sbSaveInstellingen();maakTransportActiviteit(input.datum,input.kind,t.brengt,t.haalt);return`✅ Transport ${input.kind} op ${input.datum} ingesteld.`;}
-    case 'wijzig_standaard_transport':{if(!standaardTransport[input.kind])standaardTransport[input.kind]={};if(!standaardTransport[input.kind][input.dag])standaardTransport[input.kind][input.dag]={};const t=standaardTransport[input.kind][input.dag];if(input.brengt!==undefined)t.brengt=input.brengt;if(input.haalt!==undefined)t.haalt=input.haalt;if(input.eet_groo!==undefined)t.eetGroo=input.eet_groo;slaLokaalOp();sbSaveInstellingen();return`✅ Standaard transport ${input.kind} op ${input.dag} gewijzigd.`;}
-    case 'overschrijf_drukte':{drukteOverride[input.datum]=input.drukte;slaLokaalOp();sbSaveDrukte(input.datum,input.drukte);return`✅ Drukte op ${input.datum} = "${input.drukte}".`;}
-    case 'voeg_aan_boodschappenlijst_toe':{const item={id:Date.now(),naam:input.naam,winkel:input.winkel||'Andere',hoev:input.hoev||'',eenheid:input.eenheid||''};extraItems.push(item);slaLokaalOp();sbSaveExtra(item);return`✅ "${input.naam}" toegevoegd aan boodschappenlijst.`;}
-    case 'voeg_ingredient_toe':{const ing={id:String(Date.now()),naam:input.naam,winkel:input.winkel||'Andere',eenheid:input.eenheid||'',categorie:input.categorie||''};standaardIngredienten.push(ing);slaLokaalOp();sbSaveIngredient(ing);return`✅ Ingrediënt "${input.naam}" toegevoegd.`;}
-    case 'voeg_recept_toe':{const rec={id:Date.now(),naam:input.naam,types:input.types||['avond'],type:input.types?.[0]||'avond',porties:input.porties||4,tijd:input.tijd||null,moeilijk:input.moeilijk||'Normaal',wie:input.wie?[input.wie]:null,bron:input.bron||'',bereiding:input.bereiding||'',tags:input.tags||[],score:input.score??null,prive:false,ingredienten:input.ingredienten||[]};recepten.push(rec);slaLokaalOp();const _r=await sbSaveRecept(rec);return _r===true?`✅ Recept "${rec.naam}" opgeslagen.`:`❌ Opslaan mislukt: ${_r}`;}
-    case 'wijzig_recept':{const rec=recepten.find(r=>r.naam.toLowerCase().includes(input.naam.toLowerCase()));if(!rec)return`Recept "${input.naam}" niet gevonden.`;if(input.nieuw_naam!==undefined)rec.naam=input.nieuw_naam;if(input.types!==undefined){rec.types=input.types;rec.type=input.types[0];}if(input.tijd!==undefined)rec.tijd=input.tijd;if(input.moeilijk!==undefined)rec.moeilijk=input.moeilijk;if(input.wie!==undefined)rec.wie=[input.wie];if(input.bron!==undefined)rec.bron=input.bron;if(input.bereiding!==undefined)rec.bereiding=input.bereiding;if(input.score!==undefined)rec.score=input.score;if(input.tags!==undefined)rec.tags=input.tags;if(input.ingredienten!==undefined)rec.ingredienten=input.ingredienten;slaLokaalOp();const _r2=await sbSaveRecept(rec);return _r2===true?`✅ Recept "${rec.naam}" gewijzigd.`:`❌ Opslaan mislukt: ${_r2}`;}
-    case 'onthoud': {
-      const item = {tekst: input.tekst, aangemaakt_op: new Date().toISOString()};
-      geheugen.push(item);
-      slaLokaalOp();
-      sbSaveGeheugen();
-      return `✅ Onthouden: "${input.tekst}"`;
-    }
-    case 'vergeet_herinnering': {
-      if (input.index < 0 || input.index >= geheugen.length) return `⚠️ Geen herinnering op index ${input.index}.`;
-      const verwijderd = geheugen.splice(input.index, 1)[0];
-      slaLokaalOp();
-      sbSaveGeheugen();
-      return `✅ Vergeten: "${verwijderd.tekst}"`;
-    }
-    default:return`Onbekende tool: ${naam}`;
-  }
-}
-
 const homeAgent = createAgentChat({
-  tools: HOME_AGENT_TOOLS,
+  tools: AGENT_TOOLS,
   buildSystemPrompt: _hSysteemPrompt,
-  execute: _hExec,
+  execute: agentExecute,
   ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop' },
 });
 
