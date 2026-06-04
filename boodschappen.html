@@ -10,8 +10,6 @@
 <title>Gezinsapp — Boodschappen</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.voortgang-balk{background:var(--border);border-radius:99px;height:8px;margin:6px 0 14px;}
-.voortgang-fill{background:var(--rustig-dot);border-radius:99px;height:8px;transition:width .3s;}
 .voortgang-wrap-tekst{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--ink-2);font-weight:500;margin-bottom:4px;}
 .boodschap-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .boodschap-cirkel{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
@@ -79,7 +77,6 @@
         <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
       </div>
     </div>
-    <div class="voortgang-balk"><div class="voortgang-fill" id="voortgang-fill"></div></div>
   </div>
 
   <!-- Boodschappenlijst -->
@@ -162,7 +159,6 @@ function _updateVoortgang(aantalAfgevinkt,totaal){
   if(totaal>0){
     wrap.style.display='block';
     document.getElementById('voortgang-tekst').textContent=`${aantalAfgevinkt} van ${totaal} in mandje`;
-    document.getElementById('voortgang-fill').style.width=Math.round((aantalAfgevinkt/totaal)*100)+'%';
     document.getElementById('btn-verwijder-afgevinkt').style.display=aantalAfgevinkt>0?'flex':'none';
   } else {
     wrap.style.display='none';
@@ -323,10 +319,10 @@ function voegExtraToe(){
   const nieuwItem={id:Date.now()+1,naam,winkel};
   extraItems.push(nieuwItem);
   if(input)input.value='';
-  renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
+  renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
 }
 
-function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
+function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
 
 function wijzigIngWinkel(naam,nieuweWinkel){
   const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
