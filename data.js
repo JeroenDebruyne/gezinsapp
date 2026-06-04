@@ -435,7 +435,7 @@ function _flashGreen(btn) {
 }
 
 function toonOpslagStatus(tekst) {
-  document.querySelectorAll('.opslag-status').forEach(el => el.textContent = tekst);
+  document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
   if (tekst && tekst.startsWith('✅')) _flashGreen(_lastClickedBtn);
 }
 
