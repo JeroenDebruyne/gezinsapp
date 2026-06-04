@@ -81,7 +81,8 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
           else if (ev.delta.type === 'input_json_delta') { b._json = (b._json || '') + ev.delta.partial_json; }
         } else if (ev.type === 'content_block_stop') {
           const b = blks[ev.index]; if (!b) continue;
-          if (b._json) { try { b.input = JSON.parse(b._json); } catch {} delete b._json; }
+          if (b._json) { try { b.input = JSON.parse(b._json); } catch {} }
+          delete b._json;
           msg.content.push(b);
         } else if (ev.type === 'message_delta') {
           msg.stop_reason = ev.delta.stop_reason;
