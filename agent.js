@@ -23,6 +23,22 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   let chatGeschiedenis = [];
   let _pending = null;
 
+  // Strip internal tracking fields before sending to the Anthropic API.
+  // tool_use blocks may only contain type/id/name/input.
+  function _cleanMessages(messages) {
+    return messages.map(m => ({
+      role: m.role,
+      content: Array.isArray(m.content)
+        ? m.content.map(b => {
+            if (!b || typeof b !== 'object') return b;
+            if (b.type === 'tool_use') return { type: b.type, id: b.id, name: b.name, input: b.input ?? {} };
+            if (b.type === 'text') return { type: b.type, text: b.text ?? '' };
+            return b;
+          })
+        : m.content,
+    }));
+  }
+
   async function _fetch(apiKey, body) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -32,7 +48,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, messages: _cleanMessages(body.messages || []) }),
     });
     const d = await r.json();
     if (!r.ok) {
@@ -51,7 +67,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body: JSON.stringify({ ...body, stream: true }),
+      body: JSON.stringify({ ...body, stream: true, messages: _cleanMessages(body.messages || []) }),
     });
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
