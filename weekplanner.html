@@ -267,6 +267,7 @@ laadOp().then(renderPlanner).catch(()=>{laadLokaal();renderPlanner();});
 if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderPlanner(); };
 }
+onGezinsappUpdate(renderPlanner);
 
 function changeWeekP(dir){weekOffsetP+=dir;_openDagen.clear();renderPlanner();}
 

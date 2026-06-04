@@ -221,6 +221,7 @@ let weekOffsetKL = 0;
 let kindFilter = 'alle';
 
 laadOp().then(()=>{ renderKindFilterTabs(); renderStandaardRooster(); renderKL(); }).catch(()=>{ laadLokaal(); renderKindFilterTabs(); renderStandaardRooster(); renderKL(); });
+onGezinsappUpdate(()=>{ renderKindFilterTabs(); renderStandaardRooster(); renderKL(); });
 
 function renderKindFilterTabs(){
   const kinderen = Auth.getProfielen().filter(p=>p.isKind);
