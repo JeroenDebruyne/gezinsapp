@@ -402,6 +402,7 @@ function slaaThuisadresOp(){
   localStorage.setItem(Maps.THUIS_KEY,adres);
   sbSaveInstellingen();
   toonOpslagStatus('✅ Thuisadres opgeslagen');
+  if(adres) Maps.geocodeerAdres(adres).catch(()=>{});
 }
 function renderWerkadressen(){
   const container=document.getElementById('werkadres-container');if(!container)return;

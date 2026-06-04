@@ -3,13 +3,41 @@
  * Laden na auth.js en data.js
  */
 const Maps = (() => {
-  const KEY_KEY   = 'google_maps_key';
-  const THUIS_KEY = 'gezinsapp_thuisadres';
+  const KEY_KEY    = 'google_maps_key';
+  const THUIS_KEY  = 'gezinsapp_thuisadres';
+  const COORDS_KEY = 'gezinsapp_thuisadres_coords';
 
   let _ready = false, _loading = false, _queue = [];
 
   function getKey()        { return localStorage.getItem(KEY_KEY)   || ''; }
   function getThuisadres() { return localStorage.getItem(THUIS_KEY) || ''; }
+
+  // Geeft {lat, lng} terug vanuit cache, of null als er nog geen coords zijn.
+  function getCoords() {
+    try { return JSON.parse(localStorage.getItem(COORDS_KEY) || 'null'); } catch { return null; }
+  }
+
+  function _slaCoördinatenOp(lat, lng) {
+    localStorage.setItem(COORDS_KEY, JSON.stringify({ lat, lng }));
+  }
+
+  // Geocodeer een adresstring via Nominatim (OSM, geen API-key nodig).
+  // Slaat het resultaat op in localStorage voor hergebruik.
+  async function geocodeerAdres(adres) {
+    if (!adres) return null;
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(adres)}&format=json&limit=1&countrycodes=be`;
+      const r = await fetch(url, { headers: { 'Accept-Language': 'nl', 'User-Agent': 'GezinsApp/1.0' } });
+      const data = await r.json();
+      if (data[0]) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        _slaCoördinatenOp(lat, lng);
+        return { lat, lng };
+      }
+    } catch (e) { console.warn('[Maps] Geocoderen mislukt:', e); }
+    return null;
+  }
 
   function laad(cb) {
     if (_ready)   { cb && cb(); return; }
@@ -103,5 +131,5 @@ const Maps = (() => {
     });
   }
 
-  return { laad, autocomplete, resetAutocomplete, reistijd, getKey, getThuisadres, KEY_KEY, THUIS_KEY };
+  return { laad, autocomplete, resetAutocomplete, reistijd, getKey, getThuisadres, getCoords, geocodeerAdres, KEY_KEY, THUIS_KEY, COORDS_KEY };
 })();
