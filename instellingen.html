@@ -95,6 +95,7 @@
   <button class="inst-nav-item" onclick="scrollNaar('sect-data')">🗄️ Data beheer</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-ingredienten')">🥦 Ingrediënten</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')">🏠 Adressen</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-transport')">🚗 Transport</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutels</button>
   <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')">👥 Gebruikers</button>
 </nav>
@@ -132,17 +133,10 @@
     <div style="display:flex;align-items:flex-start;gap:12px;">
       <div style="font-size:26px;line-height:1.2;flex-shrink:0;">☀️</div>
       <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-          <div style="font-size:14px;font-weight:600;">Schoolvakanties Vlaanderen</div>
-          <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);font-weight:600;">Ingebouwd</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted);">Worden automatisch gemarkeerd in de agenda en gelden als "geen impact" op de druktebarometer.</div>
-        <details style="margin-top:8px;">
-          <summary style="font-size:12px;color:var(--accent);cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:4px;">
-            <span>Bekijk schooljaar 2025–2026</span><span style="font-size:10px;">▾</span>
-          </summary>
-          <div id="vakantie-lijst" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"></div>
-        </details>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Schoolvakanties Vlaanderen</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde vakanties kunnen worden gedupliceerd en aangepast. Eigen vakanties worden opgeslagen.</div>
+        <div id="schoolvakanties-lijst"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="voegCustomVakantieTO()">+ Vakantie toevoegen</button>
       </div>
     </div>
   </div>
@@ -171,6 +165,19 @@
     </div>
   </div>
 
+  <!-- Feestdagen beheer -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">🎉</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Feestdagen beheer</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde feestdagen kunnen worden gedupliceerd en aangepast. Gegroepeerd per kalenderjaar.</div>
+        <div id="feestdagen-lijst"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="voegCustomFeestdagTO()">+ Feestdag toevoegen</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Speciale gezinsdatums -->
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Speciale gezinsdatums</div>
   <div class="info-box">Voeg speciale datums toe die gezinsbreed worden getoond in de agenda als informatieve kaart. Zowel éénmalig als jaarlijks herhalend, en meerdaags mogelijk.</div>
@@ -185,6 +192,19 @@
       Nog geen persoonlijke abonnementen.
     </div>
     <div id="ical-abo-kaarten"></div>
+  </div>
+
+  <!-- Transport personen -->
+  <div class="section-label" id="sect-transport" style="margin-top:1.5rem;">🚗 Transport</div>
+  <div class="info-box">Stel in wie kinderen kan brengen en halen. Deze personen verschijnen als keuze in het kinderlogistiek-rooster.</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div id="transportpersonen-lijst"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input type="text" id="nieuw-transport-naam" placeholder="Naam (bijv. Geert &amp; Nadine)"
+        style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"
+        onkeydown="if(event.key==='Enter')voegTransportPersoonToe()"/>
+      <button class="btn btn-primary btn-sm" onclick="voegTransportPersoonToe()">+ Toevoegen</button>
+    </div>
   </div>
 
   <!-- Data beheer -->
@@ -341,16 +361,11 @@ function renderInstellingen(){
   document.getElementById('inst-thuisadres').value=Maps.getThuisadres();
   // Roosters
   renderRoosters();
-  // Vakanties
-  document.getElementById('vakantie-lijst').innerHTML=SCHOOLVAKANTIES.map(v=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
-      <div style="width:8px;height:8px;border-radius:50%;background:${v.kleur==='#faeeda'?'var(--normaal-dot, #ba7517)':v.kleur==='#e1f5ee'?'var(--rustig-dot, #1d9e75)':'var(--accent)'};flex-shrink:0;"></div>
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:600;">${v.naam}</div>
-        <div style="font-size:11px;color:var(--muted);">${v.van===v.tot?v.van:v.van+' → '+v.tot}</div>
-      </div>
-    </div>`).join('');
-  // Feestdagen kaart initialiseren
+  // Schoolvakanties, feestdagen, transport
+  renderSchoolvakanties();
+  renderFeestdagen();
+  renderTransportPersonen();
+  // Feestdagen iCal kaart initialiseren
   renderFeestdagenKaart();
   // Werkadressen
   renderWerkadressen();
@@ -853,6 +868,214 @@ async function verwijderGezinsDatum(i) {
   gezinsDatums.splice(i, 1);
   await slaGezinsDatumsOp();
   renderGezinsDatums();
+}
+
+// ── Schoolvakanties beheer ────────────────────────────────────
+function _svJaar(datum) {
+  const d = new Date(datum + 'T12:00:00');
+  const y = d.getFullYear();
+  return d.getMonth() >= 8 ? `${y}–${y+1}` : `${y-1}–${y}`;
+}
+
+function _svItemHtml(v, isIngebouwd, idx) {
+  const dot = `<div style="width:10px;height:10px;border-radius:50%;background:${escHtml(v.kleur||'#e1f5ee')};flex-shrink:0;border:1px solid rgba(0,0,0,.08);"></div>`;
+  if (isIngebouwd) {
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+      ${dot}
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${escHtml(v.naam)}</div>
+        <div style="font-size:11px;color:var(--muted);">${v.van===v.tot?v.van:v.van+' → '+v.tot}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="dupliceerVakantie(${idx})">Dupliceer</button>
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+    <input type="color" value="${escHtml(v.kleur||'#e1f5ee')}" oninput="customSchoolvakanties[${idx}].kleur=this.value"
+      style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;flex-shrink:0;"/>
+    <input type="text" value="${escHtml(v.naam||'')}" placeholder="Naam"
+      oninput="customSchoolvakanties[${idx}].naam=this.value"
+      style="flex:1;min-width:100px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <input type="date" value="${v.van||''}" oninput="customSchoolvakanties[${idx}].van=this.value"
+      style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <span style="font-size:11px;color:var(--muted);">→</span>
+    <input type="date" value="${v.tot||''}" oninput="customSchoolvakanties[${idx}].tot=this.value"
+      style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <button class="btn btn-primary btn-sm" onclick="slaCustomVakantieOp(${idx})">✓</button>
+    <button onclick="verwijderCustomVakantie(${idx})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+  </div>`;
+}
+
+function renderSchoolvakanties() {
+  const alle = [
+    ...SCHOOLVAKANTIES.map((v, i) => ({...v, _ingebouwd: true, _idx: i})),
+    ...customSchoolvakanties.map((v, i) => ({...v, _ingebouwd: false, _idx: i})),
+  ].sort((a, b) => a.van.localeCompare(b.van));
+  const groepen = {};
+  alle.forEach(v => {
+    const k = _svJaar(v.van);
+    if (!groepen[k]) groepen[k] = [];
+    groepen[k].push(v);
+  });
+  document.getElementById('schoolvakanties-lijst').innerHTML = Object.entries(groepen).map(([lbl, items]) =>
+    `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Schooljaar ${lbl}</div>
+      ${items.map(v => _svItemHtml(v, v._ingebouwd, v._idx)).join('')}
+    </div>`
+  ).join('');
+}
+
+function dupliceerVakantie(idx) {
+  const v = SCHOOLVAKANTIES[idx];
+  customSchoolvakanties.push({naam: v.naam + ' (kopie)', van: v.van, tot: v.tot, kleur: v.kleur});
+  renderSchoolvakanties();
+}
+
+async function slaCustomVakantieOp(idx) {
+  const v = customSchoolvakanties[idx];
+  if (!v.naam?.trim() || !v.van) { alert('Vul naam en startdatum in.'); return; }
+  if (!v.tot) customSchoolvakanties[idx].tot = v.van;
+  await slaCustomSchoolvakantiesOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+  renderSchoolvakanties();
+}
+
+async function verwijderCustomVakantie(idx) {
+  customSchoolvakanties.splice(idx, 1);
+  await slaCustomSchoolvakantiesOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Verwijderd');
+  renderSchoolvakanties();
+}
+
+function voegCustomVakantieTO() {
+  customSchoolvakanties.push({naam: '', van: '', tot: '', kleur: '#e1f5ee'});
+  renderSchoolvakanties();
+  document.getElementById('schoolvakanties-lijst').lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── Feestdagen beheer ─────────────────────────────────────────
+function _fdItemHtml(v, isIngebouwd, idx) {
+  const dot = `<div style="width:10px;height:10px;border-radius:50%;background:${escHtml(v.kleur||'#fbeaf0')};flex-shrink:0;border:1px solid rgba(0,0,0,.08);"></div>`;
+  if (isIngebouwd) {
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+      ${dot}
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${escHtml(v.naam)}</div>
+        <div style="font-size:11px;color:var(--muted);">${v.van}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="dupliceerFeestdag(${idx})">Dupliceer</button>
+    </div>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+    <input type="color" value="${escHtml(v.kleur||'#fbeaf0')}" oninput="customFeestdagen[${idx}].kleur=this.value"
+      style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;flex-shrink:0;"/>
+    <input type="text" value="${escHtml(v.naam||'')}" placeholder="Naam"
+      oninput="customFeestdagen[${idx}].naam=this.value"
+      style="flex:1;min-width:100px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <input type="date" value="${v.van||''}" oninput="customFeestdagen[${idx}].van=this.value;customFeestdagen[${idx}].tot=this.value"
+      style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <button class="btn btn-primary btn-sm" onclick="slaCustomFeestdagOp(${idx})">✓</button>
+    <button onclick="verwijderCustomFeestdag(${idx})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+  </div>`;
+}
+
+function renderFeestdagen() {
+  const alle = [
+    ...FEESTDAGEN.map((v, i) => ({...v, _ingebouwd: true, _idx: i})),
+    ...customFeestdagen.map((v, i) => ({...v, _ingebouwd: false, _idx: i})),
+  ].sort((a, b) => a.van.localeCompare(b.van));
+  const groepen = {};
+  alle.forEach(v => {
+    const y = new Date(v.van + 'T12:00:00').getFullYear();
+    if (!groepen[y]) groepen[y] = [];
+    groepen[y].push(v);
+  });
+  document.getElementById('feestdagen-lijst').innerHTML = Object.entries(groepen).map(([jaar, items]) =>
+    `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${jaar}</div>
+      ${items.map(v => _fdItemHtml(v, v._ingebouwd, v._idx)).join('')}
+    </div>`
+  ).join('');
+}
+
+function dupliceerFeestdag(idx) {
+  const v = FEESTDAGEN[idx];
+  customFeestdagen.push({naam: v.naam + ' (kopie)', van: v.van, tot: v.van, kleur: v.kleur});
+  renderFeestdagen();
+}
+
+async function slaCustomFeestdagOp(idx) {
+  const v = customFeestdagen[idx];
+  if (!v.naam?.trim() || !v.van) { alert('Vul naam en datum in.'); return; }
+  await slaCustomFeestdagenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+  renderFeestdagen();
+}
+
+async function verwijderCustomFeestdag(idx) {
+  customFeestdagen.splice(idx, 1);
+  await slaCustomFeestdagenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Verwijderd');
+  renderFeestdagen();
+}
+
+function voegCustomFeestdagTO() {
+  customFeestdagen.push({naam: '', van: '', tot: '', kleur: '#fbeaf0'});
+  renderFeestdagen();
+  document.getElementById('feestdagen-lijst').lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── Transport personen ────────────────────────────────────────
+function renderTransportPersonen() {
+  const el = document.getElementById('transportpersonen-lijst');
+  if (!el) return;
+  if (!transportPersonen.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Nog geen transportpersonen.</div>';
+    return;
+  }
+  el.innerHTML = transportPersonen.map((p, i) => {
+    const naam = typeof p === 'object' ? (p.naam || '') : p;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <input type="text" value="${escHtml(naam)}"
+        oninput="transportPersonen[${i}] = typeof transportPersonen[${i}]==='object' ? {...transportPersonen[${i}],naam:this.value} : {naam:this.value}"
+        style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+      <button class="btn btn-primary btn-sm" onclick="slaTransportPersoonNaamOp(${i},this.previousElementSibling.value)">✓</button>
+      <button onclick="verwijderTransportPersoon(${i})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function voegTransportPersoonToe() {
+  const input = document.getElementById('nieuw-transport-naam');
+  const naam = input?.value?.trim();
+  if (!naam) return;
+  transportPersonen.push({naam});
+  await slaTransportPersonenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+  if (input) input.value = '';
+  renderTransportPersonen();
+}
+
+async function slaTransportPersoonNaamOp(idx, naam) {
+  if (!naam?.trim()) return;
+  transportPersonen[idx] = typeof transportPersonen[idx] === 'object'
+    ? {...transportPersonen[idx], naam: naam.trim()}
+    : {naam: naam.trim()};
+  await slaTransportPersonenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+}
+
+async function verwijderTransportPersoon(idx) {
+  transportPersonen.splice(idx, 1);
+  await slaTransportPersonenOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Verwijderd');
+  renderTransportPersonen();
 }
 
 // ── Feestdagen ────────────────────────────────────────────────
