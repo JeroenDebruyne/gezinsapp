@@ -818,6 +818,50 @@ body{
 .leeg-titel { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .leeg-sub { font-size: 14px; }
 
+/* ── Dark mode ────────────────────────────────────────────────
+   Overschrijft alle CSS-variabelen; hardcoded rgba-waarden worden
+   apart overridden. Accent iets helderder voor voldoende contrast.
+   ─────────────────────────────────────────────────────────────── */
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:        #0a1818;
+    --bg-2:      #0f2020;
+    --surface:   #132e2e;
+    --surface-2: #0d2222;
+    --border:    #1e3c3c;
+    --border-2:  #285050;
+    --ink:       #e0eeee;
+    --ink-2:     #9dc4c4;
+    --muted:     #5e9898;
+    --muted-2:   #305a5a;
+    --accent:    #0fb8a8;
+    --accent-dark:#0d9488;
+    --accent-l:  #062820;
+    --c-jeroen:   #1c1a3c; --c-jeroen-t:  #a8a4f0; --c-jeroen-dot: #8884e6;
+    --c-kelly:    #301424; --c-kelly-t:   #f090c0; --c-kelly-dot:  #e8608a;
+    --c-nora:     #0c2418; --c-nora-t:    #60d898; --c-nora-dot:   #34b870;
+    --c-odiel:    #2c1c08; --c-odiel-t:   #f0b060; --c-odiel-dot:  #d88820;
+    --c-familie:  #0e2030; --c-familie-t: #70a8d8;
+    --rustig-bg:  #0c2418; --rustig-clr:  #60d898; --rustig-dot:  #34b870;
+    --normaal-bg: #2c1c08; --normaal-clr: #f0b060; --normaal-dot: #d88820;
+    --druk-bg:    #300e0e; --druk-clr:    #f07070; --druk-dot:    #e84040;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.4), 0 1px 8px rgba(0,0,0,0.3);
+    --shadow:    0 4px 16px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.35);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  }
+  /* Hardcoded rgba overrides */
+  .topbar{background:rgba(10,24,24,0.96);}
+  .bottom-nav-mobile{background:rgba(10,24,24,0.98);}
+  .modal-bg{background:rgba(0,0,0,0.65);}
+  .module-overlay{background:rgba(0,0,0,0.6);}
+  .recept-fiche-overlay{background:rgba(0,0,0,0.65);}
+  .thumb-weekend{background:#2a1a10;}
+  .verjaardag-kaart{background:linear-gradient(135deg,#2a1e00,#3a2c00);border-color:#806800;}
+  .verjaardag-naam{color:#d4a820;}
+  .verjaardag-info{color:#a88010;}
+  .herhaling-btn-enkel{background:#2a1e00;border-color:#806800;color:#d4a820;}
+}
+
 /* Mobile filter select: hidden on desktop, shown as styled dropdown on mobile */
 .mob-filter-sel{display:none;}
 @media(max-width:767px){
