@@ -96,57 +96,7 @@
   </div>
 </header>
 
-<nav class="bottom-nav" id="sidebar">
-  <a class="bottom-nav-item" data-pagina="index" href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
-  <a class="bottom-nav-item" data-pagina="agenda" href="agenda.html"><span class="nav-icon">📅</span><span class="nav-label">Agenda</span></a>
-  <a class="bottom-nav-item" data-pagina="todos" href="todos.html"><span class="nav-icon">✅</span><span class="nav-label">To-do's</span></a>
-  <a class="bottom-nav-item" data-pagina="weekplanner" href="weekplanner.html"><span class="nav-icon">🍽️</span><span class="nav-label">Maaltijden</span></a>
-  <a class="bottom-nav-item" data-pagina="recepten" href="recepten.html"><span class="nav-icon">📖</span><span class="nav-label">Recepten</span></a>
-  <a class="bottom-nav-item" data-pagina="boodschappen" href="boodschappen.html"><span class="nav-icon">🛒</span><span class="nav-label">Boodschappen</span></a>
-  <a class="bottom-nav-item" data-pagina="ingredienten" href="ingredienten.html"><span class="nav-icon">🌿</span><span class="nav-label">Ingrediënten</span></a>
-  <a class="bottom-nav-item" data-pagina="contacten" href="contacten.html"><span class="nav-icon">👥</span><span class="nav-label">Contacten</span></a>
-  <a class="bottom-nav-item" data-pagina="kinderlogistiek" href="kinderlogistiek.html"><span class="nav-icon">👶</span><span class="nav-label">Kinderen</span></a>
-  <a class="bottom-nav-item" data-pagina="agent" href="agent.html"><span class="nav-icon">🤖</span><span class="nav-label">Agent</span></a>
-  <div class="sidebar-footer">
-    <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
-    <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen"><span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span></a>
-    <div class="sidebar-user">
-      <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
-      <div class="sidebar-user-info">
-        <span class="sidebar-user-naam" id="sidebar-naam">…</span>
-        <span class="sidebar-user-sub" id="sidebar-rol">…</span>
-      </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
-    </div>
-  </div>
-</nav>
-<nav class="bottom-nav-mobile">
-  <a class="mobile-nav-item" href="index.html" data-pagina="index">
-    <span class="mobile-nav-icon">🏠</span><span class="mobile-nav-label">Home</span>
-  </a>
-  <button class="mobile-nav-item" onclick="toggleModules()">
-    <span class="mobile-nav-icon">☰</span><span class="mobile-nav-label">Alles</span>
-  </button>
-</nav>
-
-<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
-  <div class="module-sheet" onclick="event.stopPropagation()">
-    <div class="module-sheet-handle"></div>
-    <div class="module-tiles">
-      <a class="module-tile" href="agenda.html"><span class="module-tile-icon">📅</span><span class="module-tile-naam">Agenda</span></a>
-      <a class="module-tile" href="todos.html"><span class="module-tile-icon">✅</span><span class="module-tile-naam">To-do's</span></a>
-      <a class="module-tile" href="weekplanner.html"><span class="module-tile-icon">🍽️</span><span class="module-tile-naam">Maaltijden</span></a>
-      <a class="module-tile" href="recepten.html"><span class="module-tile-icon">📖</span><span class="module-tile-naam">Recepten</span></a>
-      <a class="module-tile" href="boodschappen.html"><span class="module-tile-icon">🛒</span><span class="module-tile-naam">Boodschappen</span></a>
-      <a class="module-tile" href="ingredienten.html"><span class="module-tile-icon">🌿</span><span class="module-tile-naam">Ingrediënten</span></a>
-      <a class="module-tile" href="contacten.html"><span class="module-tile-icon">👥</span><span class="module-tile-naam">Contacten</span></a>
-      <a class="module-tile" href="kinderlogistiek.html"><span class="module-tile-icon">👶</span><span class="module-tile-naam">Kinderen</span></a>
-      <a class="module-tile" href="agent.html"><span class="module-tile-icon">🤖</span><span class="module-tile-naam">Agent</span></a>
-      <a class="module-tile" href="instellingen.html"><span class="module-tile-icon">⚙️</span><span class="module-tile-naam">Instellingen</span></a>
-    </div>
-  </div>
-</div>
-
+<script src="nav.js"></script>
 <main class="main-content">
 <div class="page-content">
 
@@ -616,14 +566,6 @@ function beheerTransportTodo(act, datum, kind, type, vervoerder) {
 <script>
 function toggleProfielMenu(e){ e&&e.stopPropagation(); document.getElementById('profiel-menu')?.classList.toggle('open'); }
 document.addEventListener('click',function(){ document.getElementById('profiel-menu')?.classList.remove('open'); });
-function toggleModules(){ document.getElementById('module-overlay')?.classList.toggle('open'); }
-function sluitModules(e){ if(e.target===document.getElementById('module-overlay')) document.getElementById('module-overlay').classList.remove('open'); }
-(function(){ const p=window.location.pathname.split('/').pop().replace('.html','')||'index'; document.querySelectorAll('.mobile-nav-item[data-pagina],.bottom-nav-item[data-pagina]').forEach(el=>el.classList.toggle('active',el.dataset.pagina===p)); })();
-document.addEventListener('DOMContentLoaded',function(){
-  if(typeof Auth!=='undefined'){ const p=Auth.profiel(); if(p){ const av=document.getElementById('sidebar-avatar'); const nm=document.getElementById('sidebar-naam'); const rl=document.getElementById('sidebar-rol'); if(av)av.textContent=p.emoji||'🧑'; if(nm)nm.textContent=p.naam||''; if(rl)rl.textContent=Auth.ROLLEN[p.rol]?.label||p.rol||''; } }
-  const _orig=window.toonOpslagStatus;
-  window.toonOpslagStatus=function(t){ document.querySelectorAll('.opslag-status,.sidebar-sync').forEach(el=>el.textContent=t); if(t&&t.startsWith('✅'))_flashGreen(_lastClickedBtn); };
-});
 </script>
 </body>
 </html>

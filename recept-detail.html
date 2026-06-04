@@ -101,7 +101,7 @@ body {
 }
 </style>
 </head>
-<body>
+<body data-no-nav>
 
 <!-- Topbar -->
 <header class="topbar">
@@ -135,6 +135,7 @@ body {
   <button class="btn btn-primary" style="flex:2;" id="btn-bewerk" onclick="bewerkRecept()">✏️ Bewerken</button>
 </div>
 
+<script src="nav.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
@@ -248,34 +249,7 @@ function toggleProfielMenu(e){
 document.addEventListener('click', function(){
   document.getElementById('profiel-menu')?.classList.remove('open');
 });
-// ── Module overlay (mobiel) ───────────────────────────────────
-function toggleModules(){
-  document.getElementById('module-overlay')?.classList.toggle('open');
-}
-function sluitModules(e){
-  if(e.target === document.getElementById('module-overlay'))
-    document.getElementById('module-overlay').classList.remove('open');
-}
-// ── Actieve pagina in mobiele nav ─────────────────────────────
-(function(){
-  const pagina = window.location.pathname.split('/').pop().replace('.html','') || 'index';
-  document.querySelectorAll('.mobile-nav-item[data-pagina], .bottom-nav-item[data-pagina]').forEach(el => {
-    el.classList.toggle('active', el.dataset.pagina === pagina);
-  });
-})();
-// ── Sidebar footer vullen met gebruikersinfo ─────────────────
 document.addEventListener('DOMContentLoaded', function(){
-  if(typeof Auth !== 'undefined'){
-    const p = Auth.profiel();
-    if(p){
-      const av = document.getElementById('sidebar-avatar');
-      const nm = document.getElementById('sidebar-naam');
-      const rl = document.getElementById('sidebar-rol');
-      if(av) av.textContent = p.emoji || '🧑';
-      if(nm) nm.textContent = p.naam || '';
-      if(rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
-    }
-  }
   // ── Sluitknop injecteren in alle modals ──────────────────────
   document.querySelectorAll('.modal-bg .modal').forEach(modal => {
     if(modal.querySelector('.modal-sluit-btn')) return;
@@ -291,11 +265,6 @@ document.addEventListener('DOMContentLoaded', function(){
     modal.insertBefore(btn, modal.firstChild);
   });
 });
-// ── Sync status ook in sidebar bijwerken ─────────────────────
-const _origToonOpslag = window.toonOpslagStatus;
-window.toonOpslagStatus = function(tekst){
-  document.querySelectorAll('.opslag-status, .sidebar-sync').forEach(el => el.textContent = tekst);
-};
 </script>
 </body>
 </html>
