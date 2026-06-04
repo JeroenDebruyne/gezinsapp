@@ -572,7 +572,7 @@ function _wpThuiskomstCtx(){
         dagInfo.push(`${p.naam}: thuis/remote tot ${tot}`);
       }
     });
-    if(dagInfo.length) lines.push(`  ${WP_WEEK_VOLGORDE[i]} ${datum}: ${dagInfo.join('; ')}`);
+    if(dagInfo.length) lines.push(`  ${DKORT[i]} ${datum}: ${dagInfo.join('; ')}`);
   });
   return lines.length ? '\n\nTHUISKOMST DEZE WEEK:\n'+lines.join('\n') : '';
 }
