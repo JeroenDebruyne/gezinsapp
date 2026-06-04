@@ -459,15 +459,15 @@ async function laadWeer(){
     const buienUrl=localStorage.getItem('gezinsapp_buienradar_url')||'https://www.buienradar.be';
     const wLink=document.getElementById('weer-widget');
     if(wLink){ wLink.href=buienUrl; wLink.setAttribute('onclick',`window.open('${buienUrl.replace(/'/g,"\\'")}','_blank','noopener');event.preventDefault();`); }
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,weather_code&hourly=precipitation_probability&forecast_hours=1&timezone=Europe%2FBrussels`);
     const d=await r.json();
     const temp=Math.round(d.current.temperature_2m);
-    const regen=d.current.precipitation_probability??0;
+    const regen=d.hourly?.precipitation_probability?.[0]??0;
     const code=d.current.weather_code??0;
     const icon=weerIcon(code);
     document.getElementById('weer-icon').textContent=icon;
     document.getElementById('weer-temp').textContent=temp+'°C';
-    document.getElementById('weer-regen').textContent='🌧 '+regen+'%';
+    document.getElementById('weer-regen').textContent=regen>0?'🌧 '+regen+'%':'';
   }catch(e){ document.getElementById('weer-temp').textContent='—'; }
 }
 function weerIcon(code){
