@@ -456,9 +456,9 @@ function homeWisChat(){ homeAgent.wis('<div style="align-self:flex-start;"><div 
 async function laadWeer(){
   try{
     const coords=(typeof Maps!=='undefined'&&Maps.getCoords())||{lat:50.97,lng:3.19};
-    const buienUrl=`https://www.buienradar.be/nl/weerbericht/weerkaartneerslag?lat=${coords.lat}&lon=${coords.lng}`;
+    const buienUrl=localStorage.getItem('gezinsapp_buienradar_url')||'https://www.buienradar.be';
     const wLink=document.getElementById('weer-widget');
-    if(wLink){ wLink.href=buienUrl; wLink.onclick=function(){ window.open(buienUrl,'_blank','noopener'); event.preventDefault(); }; }
+    if(wLink){ wLink.href=buienUrl; wLink.setAttribute('onclick',`window.open('${buienUrl.replace(/'/g,"\\'")}','_blank','noopener');event.preventDefault();`); }
     const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);
     const d=await r.json();
     const temp=Math.round(d.current.temperature_2m);

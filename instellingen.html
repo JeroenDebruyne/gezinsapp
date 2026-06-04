@@ -179,6 +179,13 @@
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
     <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
   </div>
+  <div class="card" style="margin-top:8px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🌧️ Buienradar link</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Plak hier de URL van jouw locatie op Buienradar (bijv. <code style="font-size:11px;">https://www.buienradar.be/weer/ardooie/BE/2800000</code>). Deze link wordt gebruikt in het weerwidget op de homepage.</div>
+    <input type="url" id="inst-buienradar-url" placeholder="https://www.buienradar.be/weer/..."
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
+    <button class="btn btn-primary btn-sm" onclick="slaaBuienradarUrlOp()">Opslaan</button>
+  </div>
   <div class="card" style="margin-top:8px;" id="werkadres-sectie">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">💼 Werkadressen</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt door de maaltijdassistent om de verwachte thuiskomst te berekenen.</div>
@@ -293,6 +300,7 @@ function renderInstellingen(){
   const mapsKey=Maps.getKey();
   document.getElementById('maps-key-status').textContent=mapsKey?'✅ Ingesteld':'❌ Nog niet ingesteld';
   document.getElementById('inst-thuisadres').value=Maps.getThuisadres();
+  document.getElementById('inst-buienradar-url').value=localStorage.getItem('gezinsapp_buienradar_url')||'';
   // Roosters
   renderRoosters();
   // Schoolvakanties, feestdagen, transport
@@ -403,6 +411,13 @@ function slaaThuisadresOp(){
   sbSaveInstellingen();
   toonOpslagStatus('✅ Thuisadres opgeslagen');
   if(adres) Maps.geocodeerAdres(adres).catch(()=>{});
+}
+function slaaBuienradarUrlOp(){
+  const url=document.getElementById('inst-buienradar-url').value.trim();
+  if(url) localStorage.setItem('gezinsapp_buienradar_url',url);
+  else localStorage.removeItem('gezinsapp_buienradar_url');
+  sbSaveInstellingen();
+  toonOpslagStatus('✅ Buienradar link opgeslagen');
 }
 function renderWerkadressen(){
   const container=document.getElementById('werkadres-container');if(!container)return;
