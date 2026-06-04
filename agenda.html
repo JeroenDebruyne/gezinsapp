@@ -184,6 +184,15 @@
   background:var(--surface-2);border:1.5px solid var(--border);
   border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;
 }
+
+/* Desktop 2-kolom layout */
+@media(min-width:768px){
+  .agenda-split{display:flex;align-items:flex-start;gap:0;}
+  .agenda-split-left{flex:0 0 420px;max-width:420px;}
+  .agenda-split-right{flex:1 1 0;min-width:0;border-left:2px solid var(--border);min-height:400px;}
+  .dag-detail{border-top:none;min-height:400px;}
+  .week-header{position:static;}
+}
 </style>
 </head>
 <body>
@@ -209,39 +218,45 @@
 <script src="nav.js"></script>
 
 <main class="main-content">
-  <!-- Maand titel -->
-  <div class="agenda-maand-titel" id="agenda-maand-titel"></div>
-  <div class="agenda-jaar" id="agenda-jaar" onclick="naarVandaag()">← Terug naar vandaag</div>
+  <div class="agenda-split">
+    <div class="agenda-split-left">
+      <!-- Maand titel -->
+      <div class="agenda-maand-titel" id="agenda-maand-titel"></div>
+      <div class="agenda-jaar" id="agenda-jaar" onclick="naarVandaag()">← Terug naar vandaag</div>
 
-  <!-- Persoon legenda -->
-  <div class="persoon-legenda" id="persoon-legenda"></div>
+      <!-- Persoon legenda -->
+      <div class="persoon-legenda" id="persoon-legenda"></div>
 
-  <!-- Maand navigatie -->
-  <div class="maand-nav">
-    <div style="display:flex;align-items:center;gap:2px;">
-      <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
-      <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
-      <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
-    </div>
-    <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;">📥</button>
-  </div>
+      <!-- Maand navigatie -->
+      <div class="maand-nav">
+        <div style="display:flex;align-items:center;gap:2px;">
+          <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
+          <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
+          <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+        <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;">📥</button>
+      </div>
 
-  <!-- Weekdagen header: Ma t/m Zo -->
-  <div class="week-header">
-    <div class="week-header-dag">Ma</div>
-    <div class="week-header-dag">Di</div>
-    <div class="week-header-dag">Wo</div>
-    <div class="week-header-dag">Do</div>
-    <div class="week-header-dag">Vr</div>
-    <div class="week-header-dag weekend">Za</div>
-    <div class="week-header-dag weekend">Zo</div>
-  </div>
+      <!-- Weekdagen header: Ma t/m Zo -->
+      <div class="week-header">
+        <div class="week-header-dag">Ma</div>
+        <div class="week-header-dag">Di</div>
+        <div class="week-header-dag">Wo</div>
+        <div class="week-header-dag">Do</div>
+        <div class="week-header-dag">Vr</div>
+        <div class="week-header-dag weekend">Za</div>
+        <div class="week-header-dag weekend">Zo</div>
+      </div>
 
-  <!-- Maand grid -->
-  <div class="maand-grid" id="maand-grid"></div>
+      <!-- Maand grid -->
+      <div class="maand-grid" id="maand-grid"></div>
+    </div><!-- .agenda-split-left -->
 
-  <!-- Dag detail -->
-  <div class="dag-detail" id="dag-detail"></div>
+    <div class="agenda-split-right">
+      <!-- Dag detail -->
+      <div class="dag-detail" id="dag-detail"></div>
+    </div><!-- .agenda-split-right -->
+  </div><!-- .agenda-split -->
 </main>
 
 <!-- FAB -->
