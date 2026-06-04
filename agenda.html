@@ -362,11 +362,11 @@
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
-          <select id="a-brengt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-brengt-nora"><option value="">— Standaard —</option></select>
         </div>
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie haalt?</label>
-          <select id="a-haalt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-haalt-nora"><option value="">— Standaard —</option></select>
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
@@ -380,11 +380,11 @@
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
-          <select id="a-brengt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-brengt-odiel"><option value="">— Standaard —</option></select>
         </div>
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie haalt?</label>
-          <select id="a-haalt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-haalt-odiel"><option value="">— Standaard —</option></select>
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
@@ -881,6 +881,17 @@ function _tryParse(s){try{return JSON.parse(s);}catch{return null;}}
 // standaardTransport en transportUitzonderingen zijn gedeclareerd in data.js
 // en worden gevuld via laadOp() vanuit de database.
 
+function _vulTransportOpties(){
+  const opties=transportPersonen.map(p=>`<option>${escHtml(typeof p==='object'?p.naam:p)}</option>`).join('');
+  ['a-brengt-nora','a-haalt-nora','a-brengt-odiel','a-haalt-odiel'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const huidig=sel.value;
+    sel.innerHTML='<option value="">— Standaard —</option>'+opties;
+    if(huidig)sel.value=huidig;
+  });
+}
+
 // ── Modal: Activiteit ─────────────────────────────────────────
 function openActModal(act){
   actEditId=act?.id||null;
@@ -931,6 +942,8 @@ function openActModal(act){
   ).join('');
 
   checkKindjeSection();
+  // Vul transport opties dynamisch vanuit transportPersonen
+  _vulTransportOpties();
   // Vul transport in
   ['nora','odiel'].forEach(kind=>{
     const cap=kind.charAt(0).toUpperCase()+kind.slice(1);

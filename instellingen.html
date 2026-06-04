@@ -151,6 +151,19 @@
     </div>
   </div>
 
+  <!-- Winkels -->
+  <div class="section-label" id="sect-winkels" style="margin-top:1.5rem;">🛒 Winkels</div>
+  <div class="info-box">Stel in welke winkels beschikbaar zijn voor boodschappen en recepten.</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div id="winkels-lijst"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input type="text" id="nieuw-winkel-naam" placeholder="Naam (bijv. Aldi)"
+        style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"
+        onkeydown="if(event.key==='Enter')voegWinkelToe()"/>
+      <button class="btn btn-primary btn-sm" onclick="voegWinkelToe()">+ Toevoegen</button>
+    </div>
+  </div>
+
   <!-- Data beheer -->
   <div class="section-label" id="sect-data" style="margin-top:1.5rem;">💾 Data beheer</div>
   <div class="card">
@@ -307,6 +320,7 @@ function renderInstellingen(){
   renderSchoolvakanties();
   renderFeestdagen();
   renderTransportPersonen();
+  renderWinkels();
   // Feestdagen iCal kaart initialiseren
   renderFeestdagenKaart();
   // Werkadressen
@@ -1026,6 +1040,51 @@ async function verwijderTransportPersoon(idx) {
   slaLokaalOp();
   toonOpslagStatus('✅ Verwijderd');
   renderTransportPersonen();
+}
+
+// ── Winkels ──────────────────────────────────────────────────
+function renderWinkels() {
+  const el = document.getElementById('winkels-lijst');
+  if (!el) return;
+  if (!WINKELS.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Nog geen winkels.</div>';
+    return;
+  }
+  el.innerHTML = WINKELS.map((w, i) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+    <input type="text" value="${escHtml(w)}"
+      oninput="WINKELS[${i}]=this.value"
+      style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+    <button class="btn btn-primary btn-sm" onclick="slaWinkelNaamOp(${i},this.previousElementSibling.value)">✓</button>
+    <button onclick="verwijderWinkel(${i})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+  </div>`).join('');
+}
+
+async function voegWinkelToe() {
+  const input = document.getElementById('nieuw-winkel-naam');
+  const naam = input?.value?.trim();
+  if (!naam) return;
+  WINKELS.push(naam);
+  input.value = '';
+  await slaWinkelsOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+  renderWinkels();
+}
+
+async function slaWinkelNaamOp(idx, naam) {
+  if (!naam?.trim()) return;
+  WINKELS[idx] = naam.trim();
+  await slaWinkelsOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
+}
+
+async function verwijderWinkel(idx) {
+  WINKELS.splice(idx, 1);
+  await slaWinkelsOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Verwijderd');
+  renderWinkels();
 }
 
 // ── Feestdagen ────────────────────────────────────────────────
