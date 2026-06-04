@@ -57,7 +57,13 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     wrap.style.cssText = 'align-self:' + (rol === 'user' ? 'flex-end' : 'flex-start') + ';max-width:90%;';
     const bubble = document.createElement('div');
     bubble.className = rol === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot';
-    if (rol === 'user') { bubble.textContent = tekst; } else { bubble.innerHTML = isTyping ? tekst : formateerAntwoord(tekst); }
+    if (rol === 'user') {
+      bubble.textContent = tekst;
+    } else if (isTyping) {
+      bubble.textContent = tekst;
+    } else {
+      bubble.innerHTML = formateerAntwoord(tekst);
+    }
     wrap.appendChild(bubble);
     container.appendChild(wrap);
     container.scrollTop = container.scrollHeight;
