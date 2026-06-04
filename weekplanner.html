@@ -154,16 +154,16 @@
       <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
       <div id="wp-bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" onclick="wpBevestigActie()">✅ Bevestigen</button>
-        <button class="btn btn-secondary" onclick="wpAnnuleerActie()">❌ Annuleren</button>
+        <button class="btn btn-primary" onclick="wpAgent.bevestig()">✅ Bevestigen</button>
+        <button class="btn btn-secondary" onclick="wpAgent.annuleer()">❌ Annuleren</button>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:10px;">
       <input type="text" id="wp-chat-input" placeholder="Stel een vraag over maaltijden…"
         style="flex:1;padding:10px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"
-        onkeydown="if(event.key==='Enter')wpStuurBericht()"/>
-      <button class="btn btn-primary" onclick="wpStuurBericht()" style="border-radius:99px;padding:10px 18px;">Stuur</button>
+        onkeydown="if(event.key==='Enter')wpAgent.stuurBericht(this.value)"/>
+      <button class="btn btn-primary" onclick="wpAgent.stuurBericht(document.getElementById('wp-chat-input').value)" style="border-radius:99px;padding:10px 18px;">Stuur</button>
     </div>
   </div>
 
@@ -217,6 +217,7 @@
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="agent.js"></script>
 <script>
 Auth.initPagina('weekplanner');
 let weekOffsetP=0, activeSlot=null, selectedKeuze=null, selectedWie=[];
@@ -582,7 +583,6 @@ document.getElementById('plan-modal-bg').addEventListener('click',e=>{if(e.targe
 // ════════════════════════════════════════════════════════════════
 // WEEKPLANNER MAALTIJDASSISTENT — volledig agent
 // ════════════════════════════════════════════════════════════════
-let wpChatGeschiedenis=[], wpPendingActie=null;
 const WP_SPEC={'uiteten':'Uiteten','afhalen':'Afhalen','restjes':'Restjes','shake':'Shake'};
 
 function openWpAgent(){document.getElementById('wp-agent-panel').style.display='block';}
@@ -709,37 +709,6 @@ PORTIES & BOODSCHAPPENLIJST:
 - Gebruik extra_eters in stel_weekmenu_in en voeg_maaltijd_toe om gasten aan te duiden.
 - Bij get_boodschappenlijst worden ingrediënten automatisch geschaald op basis van berekende porties.
 - De kok kan enkel een volwassene of jeugdlid zijn (niet Nora of Odiel).${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g,i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
-}
-
-async function _wpFetch(apiKey,body){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
-  const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;
-}
-
-function wpVoegBerichtToe(rol,tekst,isTyping=false){
-  const el=document.getElementById('wp-chat-berichten');
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};`;
-  const bub=document.createElement('div');
-  bub.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  bub.style.cssText='white-space:pre-wrap;font-size:13px;';
-  bub.textContent=tekst;
-  wrap.appendChild(bub);el.appendChild(wrap);el.scrollTop=el.scrollHeight;
-  return isTyping?wrap:null;
-}
-
-function wpToonBevestiging(tekst){
-  document.getElementById('wp-bevestiging-tekst').textContent=tekst;
-  document.getElementById('wp-bevestiging-panel').style.display='block';
-}
-
-async function wpVoerToolUit(naam,input){
-  if(input.bevestiging_vereist){
-    wpPendingActie={naam,input:JSON.parse(JSON.stringify(input))};
-    wpToonBevestiging(input.bevestiging_bericht||'Wil je dit uitvoeren?');
-    return'WACHT_OP_BEVESTIGING';
-  }
-  return await _wpExec(naam,input);
 }
 
 async function _wpExec(naam,input){
@@ -891,85 +860,16 @@ async function _wpExec(naam,input){
   }
 }
 
-async function wpBevestigActie(){
-  document.getElementById('wp-bevestiging-panel').style.display='none';
-  if(!wpPendingActie)return;
-  const{naam,input,toolUseId}=wpPendingActie;wpPendingActie=null;
-  const typingEl=wpVoegBerichtToe('assistant','⏳…',true);
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  try{
-    const result=await _wpExec(naam,input);
-    const lastUser=wpChatGeschiedenis[wpChatGeschiedenis.length-1];
-    if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){const ph=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);if(ph)ph.content=result;}
-    const systeemPrompt=_wpSysteemPrompt();
-    let data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const toolResults=[];
-      for(const block of(data.content||[])){
-        if(block.type==='tool_use'){
-          const res=await wpVoerToolUit(block.name,block.input);
-          if(res==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();
-            wpPendingActie.toolUseId=block.id;
-            wpChatGeschiedenis.push({role:'assistant',content:data.content});
-            wpChatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          toolResults.push({type:'tool_result',tool_use_id:block.id,content:String(res)});
-        }
-      }
-      wpChatGeschiedenis.push({role:'assistant',content:data.content});
-      wpChatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
-    }
-    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();wpVoegBerichtToe('assistant',tekst);wpChatGeschiedenis.push({role:'assistant',content:tekst});
-  }catch(e){typingEl?.remove();wpVoegBerichtToe('assistant','❌ Fout: '+e.message);}
-}
+const wpAgent = createAgentChat({
+  tools: WP_AGENT_TOOLS,
+  buildSystemPrompt: _wpSysteemPrompt,
+  execute: _wpExec,
+  ids: { berichten:'wp-chat-berichten', input:'wp-chat-input', bevestiging:'wp-bevestiging-panel', bevestigingTekst:'wp-bevestiging-tekst' },
+});
 
-function wpAnnuleerActie(){
-  document.getElementById('wp-bevestiging-panel').style.display='none';
-  wpPendingActie=null;const msg='❌ Geannuleerd.';wpVoegBerichtToe('assistant',msg);wpChatGeschiedenis.push({role:'assistant',content:msg});
-}
-
-async function wpStuurBericht(){
-  const inputEl=document.getElementById('wp-chat-input');
-  const tekst=inputEl.value.trim();if(!tekst)return;
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  if(!apiKey){wpVoegBerichtToe('user',tekst);wpVoegBerichtToe('assistant','🔑 Geen API key. Ga naar ⚙️ Instellingen.');inputEl.value='';return;}
-  inputEl.value='';wpVoegBerichtToe('user',tekst);wpChatGeschiedenis.push({role:'user',content:tekst});
-  if(wpChatGeschiedenis.length>40)wpChatGeschiedenis=wpChatGeschiedenis.slice(-40);
-  const typingEl=wpVoegBerichtToe('assistant','⏳…',true);
-  const systeemPrompt=_wpSysteemPrompt();
-  try{
-    let data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const results=[];
-      for(const b of(data.content||[])){
-        if(b.type==='tool_use'){
-          const res=await wpVoerToolUit(b.name,b.input);
-          if(res==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();wpPendingActie.toolUseId=b.id;
-            wpChatGeschiedenis.push({role:'assistant',content:data.content});
-            wpChatGeschiedenis.push({role:'user',content:[...results,{type:'tool_result',tool_use_id:b.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          results.push({type:'tool_result',tool_use_id:b.id,content:String(res)});
-        }
-      }
-      wpChatGeschiedenis.push({role:'assistant',content:data.content});
-      wpChatGeschiedenis.push({role:'user',content:results});
-      data=await _wpFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:WP_AGENT_TOOLS,messages:wpChatGeschiedenis});
-    }
-    const finaal=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();wpVoegBerichtToe('assistant',finaal);wpChatGeschiedenis.push({role:'assistant',content:finaal});
-  }catch(e){typingEl?.remove();wpVoegBerichtToe('assistant','❌ Fout: '+e.message);}
-}
-
-async function wpStuurVoorbeeldVraag(tekst){
+function wpStuurVoorbeeldVraag(tekst){
   document.getElementById('wp-agent-panel').style.display='block';
-  document.getElementById('wp-chat-input').value=tekst;
-  await wpStuurBericht();
+  wpAgent.stuurVoorbeeldVraag(tekst);
 }
 </script>
 <script>

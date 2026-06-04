@@ -63,7 +63,7 @@ const DRUKTE_BG  = { rustig:'#e1f5ee', normaal:'#faeeda', druk:'#fcebeb' };
 const DRUKTE_CLR = { rustig:'#085041', normaal:'#633806', druk:'#a32d2d' };
 const DRUKTE_DOT = { rustig:'#1d9e75', normaal:'#ba7517', druk:'#e24b4a' };
 
-// Schoolvakanties Vlaanderen 2025-2026
+// Schoolvakanties Vlaanderen — hardcoded baselines (uitbreidbaar via instellingen)
 const SCHOOLVAKANTIES = [
   { naam:'Herfstvakantie',       van:'2025-10-27', tot:'2025-11-02', kleur:'#faeeda' },
   { naam:'Wapenstilstand',       van:'2025-11-11', tot:'2025-11-11', kleur:'#e6f1fb' },
@@ -74,6 +74,30 @@ const SCHOOLVAKANTIES = [
   { naam:'O.L.H. Hemelvaart',   van:'2026-05-14', tot:'2026-05-15', kleur:'#e6f1fb' },
   { naam:'Pinksteren',           van:'2026-05-25', tot:'2026-05-25', kleur:'#e6f1fb' },
   { naam:'Zomervakantie',        van:'2026-07-01', tot:'2026-08-31', kleur:'#faeeda' },
+];
+
+// Belgische feestdagen — hardcoded baselines (uitbreidbaar via instellingen)
+const FEESTDAGEN = [
+  { naam:'Nieuwjaarsdag',        van:'2025-01-01', tot:'2025-01-01', kleur:'#e6f1fb' },
+  { naam:'Paasmaandag',          van:'2025-04-21', tot:'2025-04-21', kleur:'#fbeaf0' },
+  { naam:'Dag van de Arbeid',    van:'2025-05-01', tot:'2025-05-01', kleur:'#e6f1fb' },
+  { naam:'O.L.H. Hemelvaart',   van:'2025-05-29', tot:'2025-05-29', kleur:'#e6f1fb' },
+  { naam:'Pinkstermaandag',      van:'2025-06-09', tot:'2025-06-09', kleur:'#e6f1fb' },
+  { naam:'Nationale feestdag',   van:'2025-07-21', tot:'2025-07-21', kleur:'#e6f1fb' },
+  { naam:'O.L.V. Hemelvaart',   van:'2025-08-15', tot:'2025-08-15', kleur:'#e6f1fb' },
+  { naam:'Allerheiligen',        van:'2025-11-01', tot:'2025-11-01', kleur:'#eeedfe' },
+  { naam:'Wapenstilstand',       van:'2025-11-11', tot:'2025-11-11', kleur:'#e6f1fb' },
+  { naam:'Kerstmis',             van:'2025-12-25', tot:'2025-12-25', kleur:'#e1f5ee' },
+  { naam:'Nieuwjaarsdag',        van:'2026-01-01', tot:'2026-01-01', kleur:'#e6f1fb' },
+  { naam:'Paasmaandag',          van:'2026-04-06', tot:'2026-04-06', kleur:'#fbeaf0' },
+  { naam:'Dag van de Arbeid',    van:'2026-05-01', tot:'2026-05-01', kleur:'#e6f1fb' },
+  { naam:'O.L.H. Hemelvaart',   van:'2026-05-14', tot:'2026-05-14', kleur:'#e6f1fb' },
+  { naam:'Pinkstermaandag',      van:'2026-05-25', tot:'2026-05-25', kleur:'#e6f1fb' },
+  { naam:'Nationale feestdag',   van:'2026-07-21', tot:'2026-07-21', kleur:'#e6f1fb' },
+  { naam:'O.L.V. Hemelvaart',   van:'2026-08-15', tot:'2026-08-15', kleur:'#e6f1fb' },
+  { naam:'Allerheiligen',        van:'2026-11-01', tot:'2026-11-01', kleur:'#eeedfe' },
+  { naam:'Wapenstilstand',       van:'2026-11-11', tot:'2026-11-11', kleur:'#e6f1fb' },
+  { naam:'Kerstmis',             van:'2026-12-25', tot:'2026-12-25', kleur:'#e1f5ee' },
 ];
 
 // ── App state ─────────────────────────────────────────────────
@@ -91,6 +115,9 @@ let uitzonderingen = [];
 let transportUitzonderingen = {};   // { 'YYYY-MM-DD': { nora:{brengt,haalt,eetGroo}, odiel:{...} } }
 let standaardTransport = {};
 let vasteRoosters = {};
+let customSchoolvakanties = [];     // Aangepaste/extra schoolvakanties (opgeslagen in Supabase)
+let customFeestdagen = [];          // Aangepaste/extra feestdagen (opgeslagen in Supabase)
+let transportPersonen = [];         // Configureerbare transportpersonen [{naam:'Kelly'}, ...]
 
 // ── Hulpfuncties datum ────────────────────────────────────────
 function getWeekDatesFrom(isoDate, offset) {
@@ -138,13 +165,22 @@ function maakTransportActiviteit(datum, kind, brengt, haalt) {
 
 function isSchoolvakantie(datum) {
   const d = new Date(datum+'T12:00:00');
-  return SCHOOLVAKANTIES.some(v=>d>=new Date(v.van)&&d<=new Date(v.tot)) ||
+  return [...SCHOOLVAKANTIES, ...customSchoolvakanties].some(v=>d>=new Date(v.van)&&d<=new Date(v.tot)) ||
     uitzonderingen.some(u=>u.datum===datum&&(u.type==='vrij'||u.type==='kindjes-vrij'));
 }
 function getVakantieNaam(datum) {
   const d = new Date(datum+'T12:00:00');
-  const v = SCHOOLVAKANTIES.find(v=>d>=new Date(v.van)&&d<=new Date(v.tot));
+  const v = [...SCHOOLVAKANTIES, ...customSchoolvakanties].find(v=>d>=new Date(v.van)&&d<=new Date(v.tot));
   return v ? v.naam : 'Vakantie';
+}
+function isFeestdag(datum) {
+  const d = new Date(datum+'T12:00:00');
+  return [...FEESTDAGEN, ...customFeestdagen].some(v=>d>=new Date(v.van)&&d<=new Date(v.tot));
+}
+function getFeestdagNaam(datum) {
+  const d = new Date(datum+'T12:00:00');
+  const v = [...FEESTDAGEN, ...customFeestdagen].find(v=>d>=new Date(v.van)&&d<=new Date(v.tot));
+  return v ? v.naam : 'Feestdag';
 }
 function getDagDrukte(datum) {
   if (drukteOverride[datum]) return drukteOverride[datum];
@@ -281,6 +317,9 @@ async function laadOp() {
       if (r.id.startsWith('werkadres_')&&r.waarde) localStorage.setItem('gezinsapp_'+r.id, r.waarde);
       if (r.id.startsWith('reistijd_')&&r.waarde) localStorage.setItem('gezinsapp_'+r.id, r.waarde);
       if (r.id==='gezinsDatums'&&r.waarde) gezinsDatums = r.waarde;
+      if (r.id==='customSchoolvakanties'&&r.waarde) customSchoolvakanties = r.waarde;
+      if (r.id==='customFeestdagen'&&r.waarde) customFeestdagen = r.waarde;
+      if (r.id==='transportPersonen'&&r.waarde) transportPersonen = r.waarde;
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
     const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
@@ -604,6 +643,18 @@ async function laadGezinsDatums() {
     const rows = await sbFetch(`instellingen${f}`).catch(() => []);
     if (rows[0]?.waarde) gezinsDatums = rows[0].waarde;
   } catch(_) {}
+}
+async function slaCustomSchoolvakantiesOp() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch('instellingen','POST',{id:'customSchoolvakanties',waarde:customSchoolvakanties,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+}
+async function slaCustomFeestdagenOp() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch('instellingen','POST',{id:'customFeestdagen',waarde:customFeestdagen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+}
+async function slaTransportPersonenOp() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch('instellingen','POST',{id:'transportPersonen',waarde:transportPersonen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaGezinsDatumsOp() {
   const gid = _gid();

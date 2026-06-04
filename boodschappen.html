@@ -279,6 +279,16 @@ function _getSbIdVoorKey(key){
 function toggleAfgevinkt(key){
   afgevinkt[key]=!afgevinkt[key];
   _slaAfgevinktOp();
+  // Sync to Supabase
+  if(key.startsWith('ing_')){
+    const naam=key.slice(4);
+    const item=boodschappenReceptItems.find(i=>i.naam.toLowerCase()===naam);
+    if(item?._sbId) sbToggleAfgevinktItem(item._sbId, !!afgevinkt[key]);
+  } else if(key.startsWith('extra_')){
+    const id=key.slice(6);
+    const item=extraItems.find(i=>String(i.id)===id||String(i._sbId)===id);
+    if(item?._sbId) sbToggleAfgevinktItem(item._sbId, !!afgevinkt[key]);
+  }
   renderBoodschappen();renderExtraItems();
 }
 

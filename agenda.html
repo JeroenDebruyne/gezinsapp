@@ -704,6 +704,7 @@ function maakDots(acts,datumISO){
   }
   if(heeftPrive)html+=`<div class="dot dot-prive"></div>`;
   if(datumISO&&getVerjaardagsOpDatum(datumISO).length>0)html+=`<div class="dot dot-verjaardag"></div>`;
+  if(datumISO&&typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))html+=`<div class="dot" style="background:var(--rustig-dot);"></div>`;
   return html;
 }
 function selecteerDag(datum){geselecteerdeDatum=datum;renderMaand();renderDagDetail(datum);}
@@ -732,7 +733,8 @@ function renderDagDetail(datumISO){
           onclick="openDOModal('${datumISO}','${dagLabel}')">${dc.lbl}</span>
       </div>
     </div>
-    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:12px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
+    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
+    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;">🎉 ${getFeestdagNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
         <span style="font-size:20px;">${v.emoji||'🎂'}</span>
