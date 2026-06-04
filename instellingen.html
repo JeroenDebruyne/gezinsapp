@@ -93,7 +93,6 @@
   <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')">📋 Vaste roosters</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-kalenders')">📆 Kalenders</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-data')">🗄️ Data beheer</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-ingredienten')">🥦 Ingrediënten</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')">🏠 Adressen</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-transport')">🚗 Transport</button>
   <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutels</button>
@@ -225,16 +224,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Ingrediënten -->
-  <div class="section-label" id="sect-ingredienten" style="margin-top:1.5rem;">🥦 Ingrediënten</div>
-  <a href="ingredienten.html" class="card" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:inherit;">
-    <div>
-      <div style="font-size:14px;font-weight:600;">Ingrediënten beheren</div>
-      <div style="font-size:12px;color:var(--muted);">Standaardlijst, winkel per ingredient en productlinks</div>
-    </div>
-    <span style="font-size:20px;color:var(--muted);">›</span>
-  </a>
 
   <!-- Adressen -->
   <div class="section-label" id="sect-adressen" style="margin-top:1.5rem;">🏠 Adressen</div>
@@ -770,7 +759,7 @@ function scrollNaar(sectionId){
 (function(){
   const scroller=document.querySelector('.main-content');
   if(!scroller) return;
-  const secties=['sect-profiel','sect-roosters','sect-kalenders','sect-data','sect-ingredienten','sect-adressen','sect-api','sect-gebruikers'];
+  const secties=['sect-profiel','sect-roosters','sect-kalenders','sect-data','sect-adressen','sect-transport','sect-api','sect-gebruikers'];
   scroller.addEventListener('scroll',()=>{
     let actief='sect-profiel';
     for(const id of secties){
