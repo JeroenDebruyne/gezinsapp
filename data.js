@@ -338,7 +338,7 @@ async function laadOp() {
       syncOk = results.every(r => r !== false);
     }
     if (syncOk) toonOpslagStatus('✅ Gesynchroniseerd');
-    _initRealtime();
+    _initPolling();
   } catch(e) {
     console.warn('Laden mislukt:', e);
     toonOpslagStatus('⚠️ Offline');
@@ -370,41 +370,25 @@ function laadLokaal() {
 
 const _dataChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('gezinsapp_data') : null;
 
-// ── Supabase Realtime ─────────────────────────────────────────
-let _rtDebounce = null;
+// ── Polling (vervangt Supabase Realtime WebSocket) ────────────
+// Elke 30s worden wijzigingen van andere toestellen opgepikt.
+// Eigen schrijfacties worden genegeerd via _eigenTs (2s venster).
 const _updateCallbacks = [];
 
 function onGezinsappUpdate(fn) { _updateCallbacks.push(fn); }
 
-function _handleRealtimeUpdate() {
-  if (Date.now() - _eigenTs < 2000) return;
-  clearTimeout(_rtDebounce);
-  _rtDebounce = setTimeout(() => {
-    if (document.querySelector('.modal-bg.open')) return;
+function _initPolling() {
+  if (window._sbPollingInit) return;
+  window._sbPollingInit = true;
+  setInterval(() => {
+    if (document.hidden) return;               // tab niet actief: overslaan
+    if (Date.now() - _eigenTs < 2000) return;  // eigen schrijfactie: overslaan
+    if (document.querySelector('.modal-bg.open')) return; // modal open: overslaan
     laadOp().then(() => {
-      _updateCallbacks.forEach(fn => { try { fn(); } catch(e) { console.warn('[Realtime] render fout', e); } });
+      _updateCallbacks.forEach(fn => { try { fn(); } catch(e) { console.warn('[Polling] render fout', e); } });
       _dataChannel?.postMessage('changed');
     }).catch(() => {});
-  }, 800);
-}
-
-function _initRealtime() {
-  const gid = _gid();
-  if (!gid || window._sbRealtimeInit) return;
-  window._sbRealtimeInit = true;
-  const s = document.createElement('script');
-  s.src = 'supabase.js';
-  s.onload = () => {
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const session = Auth.session?.();
-    if (session?.access_token) sb.realtime.setAuth(session.access_token);
-    const TABELLEN = ['activiteiten','planning','todos','recepten','instellingen','boodschappen_extra','contacten','drukte_override'];
-    const ch = sb.channel('gezinsapp_' + gid);
-    TABELLEN.forEach(t => ch.on('postgres_changes', { event: '*', schema: 'public', table: t, filter: `gezin_id=eq.${gid}` }, _handleRealtimeUpdate));
-    ch.subscribe(status => { if (status === 'SUBSCRIBED') window._sbRealtimeChannel = ch; });
-  };
-  s.onerror = () => console.warn('[Realtime] SDK laden mislukt');
-  document.head.appendChild(s);
+  }, 30_000);
 }
 
 function slaLokaalOp() {
