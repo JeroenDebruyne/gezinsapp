@@ -157,7 +157,7 @@
           <span id="feestdagen-badge" style="display:none;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--rustig-bg);color:var(--rustig-clr);font-weight:600;">Actief</span>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Koppel via een iCal-link. Feestdagen verschijnen als informatieve activiteiten en tellen niet mee voor de druktebarometer.</div>
-        <div id="feestdagen-actief-info" style="display:none;font-size:12px;color:var(--muted);margin-bottom:8px;" id="feestdagen-url-lbl"></div>
+        <div id="feestdagen-actief-info" style="display:none;font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
         <div id="feestdagen-invoer-rij" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="url" id="feestdagen-url" placeholder="webcal:// of https://…"
             style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
@@ -781,7 +781,7 @@ function renderGezinsDatums() {
     <div class="card" style="margin-bottom:8px;">
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <div style="position:relative;">
-          <button onclick="_kiesEmoji(${i})" style="font-size:22px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1.2;" title="Emoji kiezen">${d.emoji||'📅'}</button>
+          <button onclick="_kiesEmoji(event,${i})" style="font-size:22px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1.2;" title="Emoji kiezen">${d.emoji||'📅'}</button>
           <div id="emoji-picker-${i}" style="display:none;position:absolute;top:34px;left:0;z-index:200;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px;display:none;flex-wrap:wrap;width:160px;gap:4px;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
             ${EMOJI_OPTIES.map(e=>`<span onclick="_setEmoji(${i},'${e}')" style="font-size:20px;cursor:pointer;padding:2px 4px;border-radius:4px;" onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background=''">${e}</span>`).join('')}
           </div>
@@ -818,7 +818,8 @@ function renderGezinsDatums() {
     </div>`).join('');
 }
 
-function _kiesEmoji(i) {
+function _kiesEmoji(e, i) {
+  e.stopPropagation();
   document.querySelectorAll('[id^="emoji-picker-"]').forEach(p => { if (p.id !== `emoji-picker-${i}`) p.style.display = 'none'; });
   const p = document.getElementById(`emoji-picker-${i}`);
   p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
@@ -828,6 +829,9 @@ function _setEmoji(i, emoji) {
   document.getElementById(`emoji-picker-${i}`).style.display = 'none';
   renderGezinsDatums();
 }
+document.addEventListener('click', () => {
+  document.querySelectorAll('[id^="emoji-picker-"]').forEach(p => { p.style.display = 'none'; });
+});
 
 function voegGezinsDatumToe() {
   gezinsDatums.push({label:'', startDatum:'', eindDatum:null, herhalend:false, emoji:'📅'});

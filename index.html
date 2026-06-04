@@ -131,14 +131,14 @@
       <div class="home-bevestiging-titel">✋ Bevestiging vereist</div>
       <div id="home-bevestiging-tekst-desktop" class="home-bevestiging-tekst"></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary btn-sm" onclick="homeBevestig('desktop')">✅ Ja</button>
-        <button class="btn btn-secondary btn-sm" onclick="homeAnnuleer('desktop')">❌ Nee</button>
+        <button class="btn btn-primary btn-sm" onclick="homeAgent.bevestig()">✅ Ja</button>
+        <button class="btn btn-secondary btn-sm" onclick="homeAgent.annuleer()">❌ Nee</button>
       </div>
     </div>
     <div class="home-chat-input-row">
       <input type="text" id="home-chat-input-desktop" placeholder="Stel een vraag of geef een opdracht…"
-        onkeydown="if(event.key==='Enter')homeStuurBericht('desktop')"/>
-      <button class="btn btn-primary btn-sm" onclick="homeStuurBericht('desktop')" style="flex-shrink:0;">→</button>
+        onkeydown="if(event.key==='Enter')homeAgent.stuurBericht(this.value)"/>
+      <button class="btn btn-primary btn-sm" onclick="homeAgent.stuurBericht(document.getElementById('home-chat-input-desktop').value)" style="flex-shrink:0;">→</button>
     </div>
   </div>
 
@@ -213,6 +213,7 @@ function sluitActDetail(e){
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="agent.js"></script>
 <script>
 Auth.initPagina('index');
 laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
@@ -306,8 +307,7 @@ function toggleTodo(id){
   renderTodosPreview(Auth.profiel());
 }
 
-// ── Agent op homepage — volledig toolset (gelijk aan agent.html) ─
-let homeChatGeschiedenis=[], homePendingActie=null, homeMobielOpen=false;
+// ── Agent op homepage ─────────────────────────────────────────
 
 // ── Datum (leest uit localStorage dat renderHomepage() zojuist heeft gezet)
 function _hNuISO(){ return localStorage.getItem('gezinsapp_vandaag')||fDateISO(new Date()); }
@@ -390,18 +390,6 @@ const HOME_AGENT_TOOLS=[
 ];
 
 // ── Tool executor ─────────────────────────────────────────────
-async function homeVoerToolUit(naam,input,kanaal){
-  if(input.bevestiging_vereist){
-    homePendingActie={naam,input:JSON.parse(JSON.stringify(input)),kanaal};
-    const tekst=document.getElementById('home-bevestiging-tekst-'+kanaal);
-    const panel=document.getElementById('home-bevestiging-'+kanaal);
-    if(tekst)tekst.textContent=input.bevestiging_bericht||'Wil je dit uitvoeren?';
-    if(panel)panel.style.display='block';
-    return'WACHT_OP_BEVESTIGING';
-  }
-  return await _hExec(naam,input);
-}
-
 async function _hExec(naam,input){
   switch(naam){
     case 'get_dag':{
@@ -507,106 +495,15 @@ async function _hExec(naam,input){
   }
 }
 
-// ── Bevestiging ───────────────────────────────────────────────
-async function homeBevestig(kanaal){
-  const panel=document.getElementById('home-bevestiging-'+kanaal);if(panel)panel.style.display='none';
-  if(!homePendingActie)return;
-  const{naam,input,toolUseId}=homePendingActie;homePendingActie=null;
-  const typingEl=homeVoegBerichtToe(kanaal,'assistant','⏳…',true);
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  try{
-    const result=await _hExec(naam,input);
-    const lastUser=homeChatGeschiedenis[homeChatGeschiedenis.length-1];
-    if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){const ph=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);if(ph)ph.content=result;}
-    const systeemPrompt=_hSysteemPrompt();
-    let data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const results=[];
-      for(const b of(data.content||[])){
-        if(b.type==='tool_use'){
-          const res=await homeVoerToolUit(kanaal,b.name,b.input);
-          if(res==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();
-            homePendingActie.toolUseId=b.id;
-            homeChatGeschiedenis.push({role:'assistant',content:data.content});
-            homeChatGeschiedenis.push({role:'user',content:[...results,{type:'tool_result',tool_use_id:b.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          results.push({type:'tool_result',tool_use_id:b.id,content:String(res)});
-        }
-      }
-      homeChatGeschiedenis.push({role:'assistant',content:data.content});
-      homeChatGeschiedenis.push({role:'user',content:results});
-      data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
-    }
-    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant',tekst);homeChatGeschiedenis.push({role:'assistant',content:tekst});
-  }catch(e){typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant','❌ Fout: '+e.message);}
-}
-function homeAnnuleer(kanaal){
-  const panel=document.getElementById('home-bevestiging-'+kanaal);if(panel)panel.style.display='none';
-  homePendingActie=null;const msg='❌ Geannuleerd.';homeVoegBerichtToe(kanaal,'assistant',msg);homeChatGeschiedenis.push({role:'assistant',content:msg});
-}
+const homeAgent = createAgentChat({
+  tools: HOME_AGENT_TOOLS,
+  buildSystemPrompt: _hSysteemPrompt,
+  execute: _hExec,
+  ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop' },
+});
 
-async function _hFetch(apiKey,body){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
-  const d=await r.json();if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}return d;
-}
-
-async function homeStuurBericht(kanaal){
-  const input=document.getElementById('home-chat-input-'+kanaal);
-  const tekst=input.value.trim();if(!tekst)return;
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  if(!apiKey){homeVoegBerichtToe(kanaal,'user',tekst);homeVoegBerichtToe(kanaal,'assistant','🔑 Geen API key. Ga naar ⚙️ Instellingen.');input.value='';return;}
-  input.value='';homeVoegBerichtToe(kanaal,'user',tekst);homeChatGeschiedenis.push({role:'user',content:tekst});
-  if(homeChatGeschiedenis.length>40)homeChatGeschiedenis=homeChatGeschiedenis.slice(-40);
-  const typingEl=homeVoegBerichtToe(kanaal,'assistant','⏳…',true);
-  const systeemPrompt=_hSysteemPrompt();
-  try{
-    let data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const results=[];
-      for(const b of(data.content||[])){
-        if(b.type==='tool_use'){
-          const res=await homeVoerToolUit(b.name,b.input,kanaal);
-          if(res==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();homePendingActie.toolUseId=b.id;
-            homeChatGeschiedenis.push({role:'assistant',content:data.content});
-            homeChatGeschiedenis.push({role:'user',content:[...results,{type:'tool_result',tool_use_id:b.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          results.push({type:'tool_result',tool_use_id:b.id,content:String(res)});
-        }
-      }
-      homeChatGeschiedenis.push({role:'assistant',content:data.content});
-      homeChatGeschiedenis.push({role:'user',content:results});
-      data=await _hFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:HOME_AGENT_TOOLS,messages:homeChatGeschiedenis});
-    }
-    const finaal=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant',finaal);homeChatGeschiedenis.push({role:'assistant',content:finaal});
-  }catch(e){typingEl?.remove();homeVoegBerichtToe(kanaal,'assistant','❌ Fout: '+e.message);if(e.message.includes('401'))localStorage.removeItem('anthropic_api_key');}
-}
-
-function stuurVoorbeeldHome(tekst){document.getElementById('home-chat-input-desktop').value=tekst;homeStuurBericht('desktop');}
-
-function homeVoegBerichtToe(kanaal,rol,tekst,isTyping=false){
-  const container=document.getElementById('home-chat-berichten-'+kanaal);if(!container)return null;
-  const wrap=document.createElement('div');wrap.style.cssText='align-self:'+(rol==='user'?'flex-end':'flex-start')+';max-width:90%;';
-  const bubble=document.createElement('div');bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  if(rol==='user'){bubble.textContent=tekst;}else{bubble.innerHTML=escHtml(tekst).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/^#{1,3}\s(.+)$/gm,'<strong>$1</strong>').replace(/\n/g,'<br>');}
-  wrap.appendChild(bubble);container.appendChild(wrap);container.scrollTop=container.scrollHeight;return isTyping?wrap:null;
-}
-
-function homeWisChat(){
-  homeChatGeschiedenis=[];
-  ['mobile','desktop'].forEach(k=>{const c=document.getElementById('home-chat-berichten-'+k);if(c)c.innerHTML='<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. 👋 Waarmee kan ik helpen?</div></div>';});
-}
-
-function toggleMobielAgent(){
-  homeMobielOpen=!homeMobielOpen;
-  document.getElementById('home-agent-mobile-body')?.classList.toggle('open',homeMobielOpen);
-  document.getElementById('home-agent-chevron').textContent=homeMobielOpen?'▾':'›';
-}
+function stuurVoorbeeldHome(tekst){ homeAgent.stuurVoorbeeldVraag(tekst); }
+function homeWisChat(){ homeAgent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. 👋 Waarmee kan ik helpen?</div></div>'); }
 // ── Buienradar / Weer (Open-Meteo) ────────────────────────────
 async function laadWeer(){
   try{

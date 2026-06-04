@@ -115,29 +115,30 @@
     <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
     <div id="bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" onclick="bevestigActie()">✅ Bevestigen</button>
-      <button class="btn btn-secondary" onclick="annuleerActie()">❌ Annuleren</button>
+      <button class="btn btn-primary" onclick="agent.bevestig()">✅ Bevestigen</button>
+      <button class="btn btn-secondary" onclick="agent.annuleer()">❌ Annuleren</button>
     </div>
   </div>
 
   <div style="display:flex;gap:8px;">
     <input type="text" id="chat-input" placeholder="Stel een vraag of geef een opdracht…"
       style="flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"
-      onkeydown="if(event.key==='Enter')stuurBericht()"/>
-    <button class="btn btn-primary" onclick="stuurBericht()" style="border-radius:99px;padding:12px 22px;">Stuur</button>
+      onkeydown="if(event.key==='Enter')agent.stuurBericht(this.value)"/>
+    <button class="btn btn-primary" onclick="agent.stuurBericht(document.getElementById('chat-input').value)" style="border-radius:99px;padding:12px 22px;">Stuur</button>
   </div>
 </div>
 </main>
 
 <script src="auth.js"></script>
 <script src="data.js"></script>
+<script src="agent.js"></script>
 <script>
 // ════════════════════════════════════════════════════════════════
 // GEZINSAGENT — volledig toolset (30 tools: 14 lezen + 16 schrijven)
 // ════════════════════════════════════════════════════════════════
 
 Auth.initPagina('agent');
-let chatGeschiedenis=[], pendingActie=null, _dataGeladen=false;
+let _dataGeladen=false;
 let _weerCache=null, _weerLaatst=0;
 let _vandaagISO=null, _dagNaamNL=null; // worden ingevuld via internet-API
 
@@ -385,15 +386,6 @@ function _verjDatumDitJaar(verjaardag,nu){
 }
 
 // ── Tool executor ────────────────────────────────────────────────
-async function voerToolUit(naam,input){
-  if(input.bevestiging_vereist){
-    pendingActie={naam,input:JSON.parse(JSON.stringify(input))};
-    toonBevestiging(input.bevestiging_bericht||'Wil je dit uitvoeren?');
-    return'WACHT_OP_BEVESTIGING';
-  }
-  return await _exec(naam,input);
-}
-
 async function _exec(naam,input){
   switch(naam){
 
@@ -774,152 +766,19 @@ async function _exec(naam,input){
   }
 }
 
-// ── Bevestiging ──────────────────────────────────────────────────
-function toonBevestiging(bericht){
-  document.getElementById('bevestiging-tekst').textContent=bericht;
-  document.getElementById('bevestiging-panel').style.display='block';
-}
+// ── Agent instantie ──────────────────────────────────────────────
+const agent = createAgentChat({
+  tools: AGENT_TOOLS,
+  buildSystemPrompt: _bouwSysteemPrompt,
+  execute: _exec,
+  isDataGeladen: () => _dataGeladen,
+  ids: { berichten:'chat-berichten', input:'chat-input', bevestiging:'bevestiging-panel', bevestigingTekst:'bevestiging-tekst' },
+});
 
-async function bevestigActie(){
-  if(!pendingActie)return;
-  document.getElementById('bevestiging-panel').style.display='none';
-  const{naam,input,toolUseId}=pendingActie;
-  pendingActie=null;
-  const typingEl=voegBerichtToe('assistant','⏳…',true);
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  try{
-    const result=await _exec(naam,input);
-    const lastUser=chatGeschiedenis[chatGeschiedenis.length-1];
-    if(lastUser?.role==='user'&&Array.isArray(lastUser.content)){
-      const placeholder=lastUser.content.find(b=>b.type==='tool_result'&&b.tool_use_id===toolUseId);
-      if(placeholder)placeholder.content=result;
-    }
-    const systeemPrompt=_bouwSysteemPrompt();
-    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const toolResults=[];
-      for(const block of(data.content||[])){
-        if(block.type==='tool_use'){
-          const res=await voerToolUit(block.name,block.input);
-          if(res==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();
-            pendingActie.toolUseId=block.id;
-            chatGeschiedenis.push({role:'assistant',content:data.content});
-            chatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          toolResults.push({type:'tool_result',tool_use_id:block.id,content:String(res)});
-        }
-      }
-      chatGeschiedenis.push({role:'assistant',content:data.content});
-      chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
-    }
-    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();
-    voegBerichtToe('assistant',tekst);
-    chatGeschiedenis.push({role:'assistant',content:tekst});
-  }catch(e){
-    typingEl?.remove();
-    voegBerichtToe('assistant','❌ Fout: '+e.message);
-  }
-}
+// Legacy-compatibele wrappers (gebruikt door stuurVoorbeeldVraag knop)
+function stuurVoorbeeldVraag(tekst){ agent.stuurVoorbeeldVraag(tekst); }
+function clearChat(){ agent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>'); }
 
-function annuleerActie(){
-  document.getElementById('bevestiging-panel').style.display='none';
-  pendingActie=null;
-  const msg='❌ Geannuleerd.';
-  voegBerichtToe('assistant',msg);
-  chatGeschiedenis.push({role:'assistant',content:msg});
-}
-
-// ── API ──────────────────────────────────────────────────────────
-async function _aFetch(apiKey,body){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify(body)
-  });
-  const d=await r.json();
-  if(!r.ok){if(r.status===401)localStorage.removeItem('anthropic_api_key');throw new Error(d.error?.message||'API fout '+r.status);}
-  return d;
-}
-
-// ── Chat ─────────────────────────────────────────────────────────
-async function stuurBericht(){
-  const inputEl=document.getElementById('chat-input');
-  const tekst=inputEl.value.trim();if(!tekst)return;
-  if(!_dataGeladen){
-    voegBerichtToe('assistant','⏳ Even wachten, data wordt nog geladen…');
-    await new Promise(r=>{const t=setInterval(()=>{if(_dataGeladen){clearInterval(t);r();}},200);});
-    document.querySelector('#chat-berichten > div:last-child')?.remove();
-  }
-  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side only, no backend available
-  if(!apiKey){apiKey=prompt('Anthropic API key (sk-ant-…):');if(!apiKey)return;localStorage.setItem('anthropic_api_key',apiKey);} // CodeQL[js/clear-text-storage-of-sensitive-information]
-  inputEl.value='';
-  voegBerichtToe('user',tekst);
-  chatGeschiedenis.push({role:'user',content:tekst});
-  if(chatGeschiedenis.length>40)chatGeschiedenis=chatGeschiedenis.slice(-40);
-  const typingEl=voegBerichtToe('assistant','⏳…',true);
-  const systeemPrompt=_bouwSysteemPrompt();
-  try{
-    let data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
-    while(data.stop_reason==='tool_use'){
-      const toolResults=[];
-      for(const block of(data.content||[])){
-        if(block.type==='tool_use'){
-          const result=await voerToolUit(block.name,block.input);
-          if(result==='WACHT_OP_BEVESTIGING'){
-            typingEl?.remove();
-            pendingActie.toolUseId=block.id;
-            chatGeschiedenis.push({role:'assistant',content:data.content});
-            chatGeschiedenis.push({role:'user',content:[...toolResults,{type:'tool_result',tool_use_id:block.id,content:'Wacht op gebruikersbevestiging.'}]});
-            return;
-          }
-          toolResults.push({type:'tool_result',tool_use_id:block.id,content:String(result)});
-        }
-      }
-      chatGeschiedenis.push({role:'assistant',content:data.content});
-      chatGeschiedenis.push({role:'user',content:toolResults});
-      data=await _aFetch(apiKey,{model:'claude-sonnet-4-6',max_tokens:4000,system:systeemPrompt,tools:AGENT_TOOLS,messages:chatGeschiedenis});
-    }
-    const finaleTekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    typingEl?.remove();
-    voegBerichtToe('assistant',finaleTekst);
-    chatGeschiedenis.push({role:'assistant',content:finaleTekst});
-  }catch(e){
-    typingEl?.remove();
-    voegBerichtToe('assistant','❌ Fout: '+e.message);
-    if(e.message.includes('401'))localStorage.removeItem('anthropic_api_key');
-  }
-}
-
-function stuurVoorbeeldVraag(tekst){document.getElementById('chat-input').value=tekst;stuurBericht();}
-
-function voegBerichtToe(rol,tekst,isTyping=false){
-  const container=document.getElementById('chat-berichten');
-  const wrap=document.createElement('div');
-  wrap.style.cssText=`align-self:${rol==='user'?'flex-end':'flex-start'};max-width:85%;`;
-  const bubble=document.createElement('div');
-  bubble.className=rol==='user'?'chat-bubble-user':'chat-bubble-bot';
-  if(rol==='user'){bubble.textContent=tekst;}else{bubble.innerHTML=formateerAntwoord(escHtml(tekst));}
-  wrap.appendChild(bubble);container.appendChild(wrap);
-  container.scrollTop=container.scrollHeight;
-  return isTyping?wrap:null;
-}
-
-function formateerAntwoord(tekst){
-  return tekst
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/^#{1,3}\s(.+)$/gm,'<strong>$1</strong>')
-    .replace(/\n/g,'<br>');
-}
-
-function clearChat(){
-  chatGeschiedenis=[];
-  document.getElementById('chat-berichten').innerHTML='<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>';
-}
 </script>
 <script>
 // ── Sidebar & navigatie ──────────────────────────────────────────

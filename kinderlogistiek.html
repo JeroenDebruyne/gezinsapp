@@ -189,13 +189,13 @@
       <div class="kl-modal-veld">
         <label>🚗→ Wie brengt?</label>
         <select id="kl-modal-brengt">
-          ${TRANSPORT_OPTIES?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
+          ${getTransportOpties()?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
         </select>
       </div>
       <div class="kl-modal-veld">
         <label>←🚗 Wie haalt?</label>
         <select id="kl-modal-haalt">
-          ${TRANSPORT_OPTIES?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
+          ${getTransportOpties()?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
         </select>
       </div>
     </div>
@@ -211,7 +211,11 @@
 <script>
 Auth.initPagina('kinderlogistiek');
 
-const TRANSPORT_OPTIES = ['','Kelly','Jeroen','Geert & Nadine','Patrick','Anne','Tine','Andere'];
+// Transportopties worden dynamisch geladen uit transportPersonen (instellingen)
+function getTransportOpties() {
+  const personen = (typeof transportPersonen !== 'undefined' ? transportPersonen : []).map(p => p.naam || p);
+  return ['', ...personen];
+}
 
 let weekOffsetKL = 0;
 let kindFilter = 'alle';
@@ -343,14 +347,14 @@ function renderKL(){
             <label>🚗→ School: wie brengt?</label>
             <select id="brengt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.brengt!==undefined?'override':''}">
-              ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.brengt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
+              ${getTransportOpties().map(o=>`<option value="${o}"${t.brengt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
             </select>
           </div>
           <div class="kl-transport-veld">
             <label>←🚗 School: wie haalt?</label>
             <select id="haalt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.haalt!==undefined?'override':''}">
-              ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${t.haalt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
+              ${getTransportOpties().map(o=>`<option value="${o}"${t.haalt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
             </select>
           </div>
           <div class="kl-transport-veld" style="display:flex;align-items:flex-end;padding-bottom:4px;">
@@ -449,11 +453,11 @@ function renderStandaardRooster() {
           <span class="kl-std-dag">${KL_WEEKDAGLABELS[i].slice(0,2)}</span>
           <select class="kl-std-select${std.brengt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','brengt',this.value)">
-            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗 Brengt?'}</option>`).join('')}
+            ${getTransportOpties().map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗 Brengt?'}</option>`).join('')}
           </select>
           <select class="kl-std-select${std.haalt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','haalt',this.value)">
-            ${TRANSPORT_OPTIES.map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'🚗 Haalt?'}</option>`).join('')}
+            ${getTransportOpties().map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'🚗 Haalt?'}</option>`).join('')}
           </select>
         </div>
         <div class="kl-std-rij" style="margin-top:-2px;margin-bottom:8px;">
@@ -504,7 +508,7 @@ function _vulModalOpties() {
   ['kl-modal-brengt','kl-modal-haalt'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel || sel.children.length > 1) return;
-    sel.innerHTML = TRANSPORT_OPTIES.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('');
+    sel.innerHTML = getTransportOpties().map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('');
   });
 }
 
