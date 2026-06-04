@@ -652,7 +652,16 @@ function maakDots(acts,datumISO){
   if(datumISO&&typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))html+=`<div class="dot" style="background:var(--rustig-dot);"></div>`;
   return html;
 }
-function selecteerDag(datum){geselecteerdeDatum=datum;renderMaand();renderDagDetail(datum);}
+function selecteerDag(datum){
+  geselecteerdeDatum=datum;
+  // Sync weekplanner: sla weekoffset op zodat weekplanner dezelfde week toont
+  const d=new Date(datum+'T12:00:00');
+  const nu=new Date();nu.setHours(0,0,0,0);
+  const ma=new Date(nu);ma.setDate(nu.getDate()-((nu.getDay()+6)%7));
+  const dMa=new Date(d);dMa.setDate(d.getDate()-((d.getDay()+6)%7));
+  sessionStorage.setItem('weekplanner_offset',Math.round((dMa-ma)/(7*86400000)));
+  renderMaand();renderDagDetail(datum);
+}
 
 // ── Dag detail ────────────────────────────────────────────────
 function renderDagDetail(datumISO){

@@ -10,8 +10,9 @@
 <title>Gezinsapp — Boodschappen</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.voortgang-balk{background:var(--border);border-radius:99px;height:7px;margin:6px 0 14px;}
-.voortgang-fill{background:var(--rustig-dot);border-radius:99px;height:7px;transition:width .3s;}
+.voortgang-balk{background:var(--border);border-radius:99px;height:8px;margin:6px 0 14px;}
+.voortgang-fill{background:var(--rustig-dot);border-radius:99px;height:8px;transition:width .3s;}
+.voortgang-wrap-tekst{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--ink-2);font-weight:500;margin-bottom:4px;}
 .boodschap-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .boodschap-cirkel{width:24px;height:24px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
 .boodschap-cirkel.gedaan{background:var(--rustig-dot);border-color:var(--rustig-dot);}
@@ -71,11 +72,11 @@
 
   <!-- Voortgang -->
   <div id="voortgang-wrap" style="display:none;">
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;">
+    <div class="voortgang-wrap-tekst">
       <span id="voortgang-tekst"></span>
-      <div style="display:flex;gap:10px;">
-        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:12px;color:var(--druk-clr);cursor:pointer;font-family:inherit;align-items:center;gap:4px;">🗑️ Verwijder afgevinkte</button>
-        <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:13px;color:var(--druk-clr);cursor:pointer;font-family:inherit;align-items:center;gap:4px;">🗑️ Verwijder afgevinkte</button>
+        <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
       </div>
     </div>
     <div class="voortgang-balk"><div class="voortgang-fill" id="voortgang-fill"></div></div>

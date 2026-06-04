@@ -192,9 +192,12 @@ function renderTodos() {
       gefilterd = zichtbaar;
   }
 
-  // Sorteren: hoog eerst, dan op deadline
+  // Sorteren: verlopen eerst, dan prioriteit, dan deadline
   gefilterd.sort((a,b)=>{
     if (a.gedaan !== b.gedaan) return a.gedaan?1:-1;
+    const verlA = !a.gedaan && a.deadline && a.deadline < vandaagISO;
+    const verlB = !b.gedaan && b.deadline && b.deadline < vandaagISO;
+    if (verlA !== verlB) return verlA?-1:1;
     const prioOrder = { hoog:0, middel:1, laag:2 };
     const po = (prioOrder[a.prioriteit]??1) - (prioOrder[b.prioriteit]??1);
     if (po!==0) return po;
