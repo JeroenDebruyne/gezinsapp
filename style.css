@@ -721,6 +721,57 @@ body{
   .home-chat-berichten{min-height:320px;max-height:500px;}
 }
 
+/* ── Agent pagina: keyboard-safe mobiel layout ──────────────── */
+/* --vvh wordt gezet via JS (visualViewport), 100dvh als CSS-fallback */
+@media (max-width: 767px) {
+  body.chat-volledig {
+    height: var(--vvh, 100dvh);
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  body.chat-volledig .main-content {
+    height: calc(var(--vvh, 100dvh) - var(--topbar-h));
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  body.chat-volledig .page-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 12px;
+    gap: 0;
+    box-sizing: border-box;
+  }
+  body.chat-volledig .info-box { display: none; }
+  body.chat-volledig .voorbeeld-btns {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 0 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  body.chat-volledig .voorbeeld-btns::-webkit-scrollbar { display: none; }
+  body.chat-volledig .chat-wis-wrap {
+    flex-shrink: 0;
+    padding: 2px 0 4px;
+  }
+  body.chat-volledig .chat-container {
+    flex: 1;
+    min-height: 0;
+    max-height: none !important;
+    margin-bottom: 0;
+  }
+  body.chat-volledig .bevestiging-modal { flex-shrink: 0; margin-top: 6px; }
+  body.chat-volledig .chat-input-wrap {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 4px);
+  }
+}
+
 /* ── To-do pagina specifiek ─────────────────────────────────── */
 /* (stijlen die niet al in de algemene sectie staan) */
 .topbar-titel { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }

@@ -20,7 +20,7 @@
 .bevestiging-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px;}
 </style>
 </head>
-<body>
+<body class="chat-volledig">
 <header class="topbar">
   <div class="topbar-title">🤖 Agent</div>
   <div class="topbar-actions">
@@ -50,7 +50,7 @@
     <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een volledig weekoverzicht: drukte, maaltijden en activiteiten per dag.')">📊 Weekoverzicht</button>
   </div>
 
-  <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+  <div class="chat-wis-wrap" style="display:flex;justify-content:flex-end;">
     <button class="btn btn-secondary btn-sm" onclick="clearChat()" title="Wis de chatgeschiedenis">🗑️ Wis chat</button>
   </div>
   <div class="chat-container" id="chat-berichten">
@@ -68,11 +68,11 @@
     </div>
   </div>
 
-  <div style="display:flex;gap:8px;">
+  <div class="chat-input-wrap">
     <input type="text" id="chat-input" placeholder="Stel een vraag of geef een opdracht…"
       style="flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"
       onkeydown="if(event.key==='Enter')agent.stuurBericht(this.value)"/>
-    <button class="btn btn-primary" onclick="agent.stuurBericht(document.getElementById('chat-input').value)" style="border-radius:99px;padding:12px 22px;">Stuur</button>
+    <button class="btn btn-primary" onclick="agent.stuurBericht(document.getElementById('chat-input').value)" style="border-radius:99px;padding:12px 22px;flex-shrink:0;">Stuur</button>
   </div>
 </div>
 </main>
@@ -733,6 +733,14 @@ function clearChat(){ agent.wis('<div style="align-self:flex-start;"><div class=
 // ── Sidebar & navigatie ──────────────────────────────────────────
 function toggleProfielMenu(e){e&&e.stopPropagation();document.getElementById('profiel-menu')?.classList.toggle('open');}
 document.addEventListener('click',function(){document.getElementById('profiel-menu')?.classList.remove('open');});
+
+// iOS keyboard fix: --vvh volgt de visual viewport zodat de chat-layout
+// krimpt zodra het toetsenbord verschijnt (fallback voor iOS < 15.4 zonder dvh)
+if (window.visualViewport) {
+  const _setVVH = () => document.documentElement.style.setProperty('--vvh', window.visualViewport.height + 'px');
+  window.visualViewport.addEventListener('resize', _setVVH);
+  _setVVH();
+}
 </script>
 </body>
 </html>
