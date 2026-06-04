@@ -217,6 +217,7 @@ function sluitActDetail(e){
 <script>
 Auth.initPagina('index');
 laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+onGezinsappUpdate(renderHomepage);
 (function(){
   const welkom=document.getElementById('home-chat-welkom');
   if(!welkom) return;

@@ -593,6 +593,7 @@ laadOp().then(()=>{
 if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderAlles(); };
 }
+onGezinsappUpdate(renderAlles);
 
 function renderAlles(){
   renderLegenda();

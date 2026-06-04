@@ -160,6 +160,7 @@ laadOp().then(()=>{
   _slaAfgevinktOp();
   renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();
 }).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();});
+onGezinsappUpdate(()=>{ renderBoodschappen(); renderExtraItems(); });
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>
