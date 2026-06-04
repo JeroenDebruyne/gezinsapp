@@ -42,6 +42,55 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     return d;
   }
 
+  async function _fetchStream(apiKey, body, onChunk) {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ ...body, stream: true }),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 401) localStorage.removeItem('anthropic_api_key');
+      throw new Error(d.error?.message || 'API fout ' + r.status);
+    }
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    const msg = { content: [], stop_reason: null };
+    const blks = {};
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        let ev; try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+        if (ev.type === 'content_block_start') {
+          blks[ev.index] = { ...ev.content_block };
+          if (ev.content_block.type === 'tool_use') blks[ev.index]._json = '';
+        } else if (ev.type === 'content_block_delta') {
+          const b = blks[ev.index]; if (!b) continue;
+          if (ev.delta.type === 'text_delta') { b.text = (b.text || '') + ev.delta.text; onChunk(ev.delta.text); }
+          else if (ev.delta.type === 'input_json_delta') { b._json = (b._json || '') + ev.delta.partial_json; }
+        } else if (ev.type === 'content_block_stop') {
+          const b = blks[ev.index]; if (!b) continue;
+          if (b._json) { try { b.input = JSON.parse(b._json); } catch {} delete b._json; }
+          msg.content.push(b);
+        } else if (ev.type === 'message_delta') {
+          msg.stop_reason = ev.delta.stop_reason;
+        }
+      }
+    }
+    return msg;
+  }
+
   function formateerAntwoord(tekst) {
     return escHtml(tekst)
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -127,17 +176,40 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     voegBerichtToe('user', tekst);
     chatGeschiedenis.push({ role: 'user', content: tekst });
     if (chatGeschiedenis.length > 40) chatGeschiedenis = chatGeschiedenis.slice(-40);
-    const typingEl = voegBerichtToe('assistant', '⏳…', true);
+    const container = document.getElementById(ids.berichten);
+    let streamWrap = null, streamBubble = null, streamedText = '';
+    if (container) {
+      streamWrap = document.createElement('div');
+      streamWrap.style.cssText = 'align-self:flex-start;max-width:90%;';
+      streamBubble = document.createElement('div');
+      streamBubble.className = 'chat-bubble-bot';
+      streamBubble.textContent = '⏳';
+      streamWrap.appendChild(streamBubble);
+      container.appendChild(streamWrap);
+      container.scrollTop = container.scrollHeight;
+    }
     try {
-      let data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
-      typingEl?.remove();
-      const result = await _toolLoop(apiKey, data);
-      if (!result) return;
-      const finaleTekst = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-      voegBerichtToe('assistant', finaleTekst);
-      chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+      let data = await _fetchStream(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
+        if (!streamedText && streamBubble) streamBubble.textContent = '';
+        streamedText += chunk;
+        if (streamBubble) { streamBubble.innerHTML = formateerAntwoord(streamedText); if (container) container.scrollTop = container.scrollHeight; }
+      });
+      if (data.stop_reason === 'tool_use') {
+        if (streamWrap) { streamWrap.remove(); streamWrap = null; }
+        const typingEl = voegBerichtToe('assistant', '⏳…', true);
+        const result = await _toolLoop(apiKey, data);
+        typingEl?.remove();
+        if (!result) return;
+        const finaleTekst = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+        voegBerichtToe('assistant', finaleTekst);
+        chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+      } else {
+        const finaleTekst = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+        if (streamBubble) streamBubble.innerHTML = formateerAntwoord(finaleTekst);
+        chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+      }
     } catch (e) {
-      typingEl?.remove();
+      if (streamWrap) streamWrap.remove();
       voegBerichtToe('assistant', '❌ Fout: ' + e.message);
       if (e.message.includes('401')) localStorage.removeItem('anthropic_api_key');
     }

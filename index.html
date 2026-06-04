@@ -300,7 +300,7 @@ function renderTodosPreview(p){
   const el=document.getElementById('todos-preview');
   const perspectief=sessionStorage.getItem('perspectief')||p?.persoonKey;
   const open=todos.filter(t=>!t.gedaan&&(!t.wie||t.wie.includes(perspectief))).slice(0,5);
-  if(!open.length){el.innerHTML='<div class="card" style="color:var(--muted);font-size:13px;text-align:center;padding:1rem;">✅ Geen openstaande to-do\'s</div>';return;}
+  if(!open.length){el.innerHTML='<div class="leeg"><div class="leeg-icon">✅</div><div class="leeg-titel">Geen openstaande to-do\'s</div><div class="leeg-sub">Tik op + om een taak toe te voegen</div></div>';return;}
   el.innerHTML=open.map(t=>`
     <div class="todo-item${t.gedaan?' gedaan':''}">
       <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan&&t.prioriteit?' '+t.prioriteit:''}" onclick="toggleTodo('${t.id}')"></button>

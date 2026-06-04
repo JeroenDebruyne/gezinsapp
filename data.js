@@ -14,7 +14,7 @@ function escHtml(s){
 const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
 
-const WINKELS      = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
+let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
 
 // Personen — leeg bij opstart, herbouwd via herbouwPersonenData() na laadProfielen()
@@ -118,6 +118,7 @@ let vasteRoosters = {};
 let customSchoolvakanties = [];     // Aangepaste/extra schoolvakanties (opgeslagen in Supabase)
 let customFeestdagen = [];          // Aangepaste/extra feestdagen (opgeslagen in Supabase)
 let transportPersonen = [];         // Configureerbare transportpersonen [{naam:'Kelly'}, ...]
+let portiesKindRatio  = 0.5;       // Portie-gewicht per kind (default 0.5 = halve portie)
 
 // ── Hulpfuncties datum ────────────────────────────────────────
 function getWeekDatesFrom(isoDate, offset) {
@@ -323,6 +324,8 @@ async function laadOp() {
       if (r.id==='customSchoolvakanties'&&r.waarde) customSchoolvakanties = r.waarde;
       if (r.id==='customFeestdagen'&&r.waarde) customFeestdagen = r.waarde;
       if (r.id==='transportPersonen'&&r.waarde) transportPersonen = r.waarde;
+      if (r.id==='winkels'&&r.waarde&&Array.isArray(r.waarde)&&r.waarde.length) WINKELS = r.waarde;
+      if (r.id==='portiesKindRatio'&&typeof r.waarde==='number') portiesKindRatio = r.waarde;
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
     const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
@@ -681,6 +684,14 @@ async function slaCustomFeestdagenOp() {
 async function slaTransportPersonenOp() {
   const gid = _gid(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'transportPersonen',waarde:transportPersonen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+}
+async function slaWinkelsOp() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch('instellingen','POST',{id:'winkels',waarde:WINKELS,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+}
+async function slaPortiesKindRatioOp() {
+  const gid = _gid(); if (!gid) return;
+  try { await sbFetch('instellingen','POST',{id:'portiesKindRatio',waarde:portiesKindRatio,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaGezinsDatumsOp() {
   const gid = _gid();

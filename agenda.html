@@ -115,6 +115,7 @@
 }
 .act-rij:last-child{border-bottom:none;}
 .act-rij:hover{background:var(--surface-2);}
+.conflict-rij{background:var(--druk-bg,#fff0f0) !important;border-left:3px solid var(--druk-dot,#e53e3e);}
 .act-kleur-balk{width:4px;border-radius:2px;align-self:stretch;min-height:36px;flex-shrink:0;}
 .act-rij-body{flex:1;min-width:0;}
 .act-rij-naam{font-size:15px;font-weight:600;color:var(--ink);}
@@ -362,11 +363,11 @@
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
-          <select id="a-brengt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-brengt-nora"><option value="">— Standaard —</option></select>
         </div>
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie haalt?</label>
-          <select id="a-haalt-nora"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-haalt-nora"><option value="">— Standaard —</option></select>
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
@@ -380,11 +381,11 @@
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
-          <select id="a-brengt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-brengt-odiel"><option value="">— Standaard —</option></select>
         </div>
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie haalt?</label>
-          <select id="a-haalt-odiel"><option value="">— Standaard —</option><option>Kelly</option><option>Jeroen</option><option>Geert &amp; Nadine</option><option>Patrick</option><option>Anne</option><option>Tine</option></select>
+          <select id="a-haalt-odiel"><option value="">— Standaard —</option></select>
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
@@ -496,6 +497,29 @@
       <span style="font-size:12px;font-weight:400;">Verwijder alle herhalingen definitief</span>
     </button>
     <button onclick="closeVerwijderModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL: Bewerk herhaling ══ -->
+<div class="modal-bg" id="edit-recur-modal-bg">
+<div class="modal" style="max-width:360px;">
+  <div class="modal-handle"></div>
+  <h3>✏️ Activiteit bewerken</h3>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:18px;">
+    "<span id="er-act-naam"></span>" is een herhalende activiteit.
+    Wat wil je bewerken?
+  </p>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <button onclick="wijzigEnkelDit()" class="herhaling-btn-enkel">
+      🗓️ Alleen deze dag<br>
+      <span class="herhaling-btn-sub">Wijzig enkel deze ene herhaling</span>
+    </button>
+    <button onclick="wijzigAlleHerhalingen()" style="padding:14px;border:2px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+      🔁 Alle herhalingen<br>
+      <span style="font-size:12px;font-weight:400;">Wijzig de activiteit voor alle data</span>
+    </button>
+    <button onclick="closeEditRecurModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
   </div>
 </div>
 </div>
@@ -652,7 +676,16 @@ function maakDots(acts,datumISO){
   if(datumISO&&typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))html+=`<div class="dot" style="background:var(--rustig-dot);"></div>`;
   return html;
 }
-function selecteerDag(datum){geselecteerdeDatum=datum;renderMaand();renderDagDetail(datum);}
+function selecteerDag(datum){
+  geselecteerdeDatum=datum;
+  // Sync weekplanner: sla weekoffset op zodat weekplanner dezelfde week toont
+  const d=new Date(datum+'T12:00:00');
+  const nu=new Date();nu.setHours(0,0,0,0);
+  const ma=new Date(nu);ma.setDate(nu.getDate()-((nu.getDay()+6)%7));
+  const dMa=new Date(d);dMa.setDate(d.getDate()-((d.getDay()+6)%7));
+  sessionStorage.setItem('weekplanner_offset',Math.round((dMa-ma)/(7*86400000)));
+  renderMaand();renderDagDetail(datum);
+}
 
 // ── Dag detail ────────────────────────────────────────────────
 function renderDagDetail(datumISO){
@@ -669,6 +702,18 @@ function renderDagDetail(datumISO){
     ...getActsOpDatum(datumISO)
   ].sort((a,b)=>tijdMinuten(a.start)-tijdMinuten(b.start));
   const kanBewerken=Auth.kan('kanActiviteitenBeheren');
+  // Detecteer overlappende activiteiten per persoon
+  const conflictIds=new Set();
+  const metTijd=alleActs.filter(a=>a.start&&a.eindUur&&!a.informatief);
+  for(let i=0;i<metTijd.length;i++){
+    for(let j=i+1;j<metTijd.length;j++){
+      const a1=metTijd[i],a2=metTijd[j];
+      const gemeenschappelijk=(a1.wie||[]).some(p=>(a2.wie||[]).includes(p));
+      if(gemeenschappelijk&&a1.start<a2.eindUur&&a2.start<a1.eindUur){
+        conflictIds.add(a1.id);conflictIds.add(a2.id);
+      }
+    }
+  }
 
   el.innerHTML=`
     <div class="dag-detail-header">
@@ -707,11 +752,11 @@ function renderDagDetail(datumISO){
               </span>`).join('');
           const transportHtml=renderTransportDetail(a,datumISO);
           return `
-          <div class="act-rij${a.informatief?' informatief-rij':''}" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
-            <div class="act-kleur-balk" style="background:${a.informatief?'var(--muted-2)':balk};${a.meerdaags?'border-radius:2px;':''}${a.informatief?'opacity:0.5;':''}" ></div>
+          <div class="act-rij${a.informatief?' informatief-rij':''}${conflictIds.has(a.id)?' conflict-rij':''}" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
+            <div class="act-kleur-balk" style="background:${conflictIds.has(a.id)?'var(--druk-dot)':(a.informatief?'var(--muted-2)':balk)};${a.meerdaags?'border-radius:2px;':''}${a.informatief?'opacity:0.5;':''}" ></div>
             <div class="act-rij-body">
               <div class="act-rij-naam${a.prive?' prive':''}">
-                ${a.informatief?'📌 ':''}${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}${a.informatief?'&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span>':''}
+                ${conflictIds.has(a.id)?'⚠️ ':''}${a.informatief?'📌 ':''}${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}${a.informatief?'&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span>':''}
               </div>
               <div class="act-rij-meta">
                 ${a.meerdaags&&a.beginDatum?`${escHtml(a.beginDatum)} → ${escHtml(a.eindDatum)}`:
@@ -872,6 +917,17 @@ function _tryParse(s){try{return JSON.parse(s);}catch{return null;}}
 // standaardTransport en transportUitzonderingen zijn gedeclareerd in data.js
 // en worden gevuld via laadOp() vanuit de database.
 
+function _vulTransportOpties(){
+  const opties=transportPersonen.map(p=>`<option>${escHtml(typeof p==='object'?p.naam:p)}</option>`).join('');
+  ['a-brengt-nora','a-haalt-nora','a-brengt-odiel','a-haalt-odiel'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const huidig=sel.value;
+    sel.innerHTML='<option value="">— Standaard —</option>'+opties;
+    if(huidig)sel.value=huidig;
+  });
+}
+
 // ── Modal: Activiteit ─────────────────────────────────────────
 function openActModal(act){
   actEditId=act?.id||null;
@@ -922,6 +978,8 @@ function openActModal(act){
   ).join('');
 
   checkKindjeSection();
+  // Vul transport opties dynamisch vanuit transportPersonen
+  _vulTransportOpties();
   // Vul transport in
   ['nora','odiel'].forEach(kind=>{
     const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
@@ -935,7 +993,42 @@ function openActModal(act){
   _actModalEl.querySelector('.modal').scrollTop=0;
 }
 function openActModalVoorDatum(datum){geselecteerdeDatum=datum;openActModal();}
-function editActiviteit(id){openActModal(activiteiten.find(a=>a.id===id));}
+let _editRecurActId=null,_editRecurDatum=null;
+function editActiviteit(id){
+  const act=activiteiten.find(a=>a.id===id);
+  if(!act)return;
+  const isHerhaling=(act.freq&&act.freq!=='eenmalig')&&(act.dagen||[]).length>0;
+  if(isHerhaling&&geselecteerdeDatum){
+    _editRecurActId=id;_editRecurDatum=geselecteerdeDatum;
+    document.getElementById('er-act-naam').textContent=act.naam;
+    const el=document.getElementById('edit-recur-modal-bg');
+    el.classList.add('open');el.querySelector('.modal').scrollTop=0;
+  } else {
+    openActModal(act);
+  }
+}
+function closeEditRecurModal(){document.getElementById('edit-recur-modal-bg').classList.remove('open');}
+async function wijzigEnkelDit(){
+  const origAct=activiteiten.find(a=>a.id===_editRecurActId);
+  if(!origAct||!_editRecurDatum)return;
+  closeEditRecurModal();
+  // Sla datum op als uitzondering op het origineel
+  origAct.uitgesloten=(origAct.uitgesloten||[]).filter(d=>d!==_editRecurDatum).concat(_editRecurDatum);
+  slaLokaalOp();await sbSaveActiviteit(origAct);
+  // Maak een eenmalige kopie voor deze datum
+  const kopie={
+    ...origAct,
+    id:Date.now(),_sbId:undefined,
+    freq:'eenmalig',dagen:[],
+    beginDatum:_editRecurDatum,eindDatum:'',
+    uitgesloten:[],
+  };
+  openActModal(kopie);
+}
+function wijzigAlleHerhalingen(){
+  closeEditRecurModal();
+  openActModal(activiteiten.find(a=>a.id===_editRecurActId));
+}
 function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 function closeActModal(){
   const el=document.getElementById('act-modal-bg');
