@@ -181,7 +181,7 @@
   <div class="card">
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:14px;font-weight:600;">Exporteer backup</div><div style="font-size:12px;color:var(--muted);">Download alle data als JSON</div></div>
+        <div><div style="font-size:14px;font-weight:600;">Exporteer backup</div><div style="font-size:12px;color:var(--muted);">Download alle data als JSON</div><div style="font-size:11px;color:var(--muted-2);margin-top:3px;">🔑 API-sleutels worden <em>niet</em> geëxporteerd en moeten na een herstel opnieuw worden ingesteld.</div></div>
         <button class="btn btn-secondary btn-sm" onclick="exporteerData()">⬇️ Exporteer</button>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
@@ -219,19 +219,39 @@
 
   <!-- API sleutels -->
   <div class="section-label" id="sect-api" style="margin-top:1.5rem;">🔑 API sleutels</div>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div style="font-size:14px;font-weight:600;">Anthropic API key</div>
-      <div style="font-size:12px;color:var(--muted);" id="api-key-status">Laden…</div>
+  <div class="card" style="margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Anthropic API key</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="api-key-status">Laden…</div>
+    <div id="api-key-form" style="display:none;margin-bottom:8px;">
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off"
+          style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleApiKeyZicht()" id="api-key-toon" title="Toon/verberg">👁</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="slaApiKeyOp()">Opslaan</button>
+        <button class="btn btn-secondary btn-sm" onclick="sluitApiKeyForm()">Annuleren</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderApiKey()">🗑 Verwijderen</button>
+      </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="resetApiKey()">🔑 Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" onclick="openApiKeyForm()">🔑 Wijzigen</button>
   </div>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-    <div>
-      <div style="font-size:14px;font-weight:600;">Google Maps API key</div>
-      <div style="font-size:12px;color:var(--muted);" id="maps-key-status">Laden…</div>
+  <div class="card" style="margin-top:8px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Google Maps API key</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="maps-key-status">Laden…</div>
+    <div id="maps-key-form" style="display:none;margin-bottom:8px;">
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="password" id="maps-key-input" placeholder="AIza…" autocomplete="off"
+          style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMapsKeyZicht()" id="maps-key-toon" title="Toon/verberg">👁</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="slaMapsKeyOp()">Opslaan</button>
+        <button class="btn btn-secondary btn-sm" onclick="sluitMapsKeyForm()">Annuleren</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderMapsKey()">🗑 Verwijderen</button>
+      </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="resetMapsKey()">🗺️ Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="maps-key-wijzig-btn" onclick="openMapsKeyForm()">🗺️ Wijzigen</button>
   </div>
 
   <!-- Admin: gebruikersbeheer (alleen gezinshoofd) -->
@@ -416,22 +436,74 @@ function updateVastRooster(persoon,dag,veld,waarde){
 }
 function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');setTimeout(()=>toonOpslagStatus('💾 Automatisch opgeslagen'),2000);}
 
-function resetApiKey(){
-  const key=prompt('Anthropic API key (sk-ant-...):');
-  if(key!==null){
-    if(key.trim()) localStorage.setItem('anthropic_api_key',key.trim());
-    else localStorage.removeItem('anthropic_api_key');
-    sbSaveInstellingen();
-    renderInstellingen();
-  }
+function openApiKeyForm() {
+  document.getElementById('api-key-form').style.display = 'block';
+  document.getElementById('api-key-wijzig-btn').style.display = 'none';
+  document.getElementById('api-key-input').focus();
 }
-function resetMapsKey(){
-  const key=prompt('Google Maps API key:');
-  if(key!==null){
-    localStorage.setItem(Maps.KEY_KEY,key.trim());
-    sbSaveInstellingen();
-    renderInstellingen();
-  }
+function sluitApiKeyForm() {
+  document.getElementById('api-key-form').style.display = 'none';
+  document.getElementById('api-key-wijzig-btn').style.display = '';
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('api-key-input').type = 'password';
+  document.getElementById('api-key-toon').textContent = '👁';
+}
+function toggleApiKeyZicht() {
+  const inp = document.getElementById('api-key-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  document.getElementById('api-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function slaApiKeyOp() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { alert('Vul een API key in.'); return; }
+  localStorage.setItem('anthropic_api_key', key); // CodeQL[js/clear-text-storage-of-sensitive-information]
+  sbSaveInstellingen();
+  sluitApiKeyForm();
+  renderInstellingen();
+  toonOpslagStatus('✅ API key opgeslagen');
+}
+function verwijderApiKey() {
+  if (!confirm('Anthropic API key verwijderen?')) return;
+  localStorage.removeItem('anthropic_api_key');
+  sbSaveInstellingen();
+  sluitApiKeyForm();
+  renderInstellingen();
+  toonOpslagStatus('✅ API key verwijderd');
+}
+
+function openMapsKeyForm() {
+  document.getElementById('maps-key-form').style.display = 'block';
+  document.getElementById('maps-key-wijzig-btn').style.display = 'none';
+  document.getElementById('maps-key-input').focus();
+}
+function sluitMapsKeyForm() {
+  document.getElementById('maps-key-form').style.display = 'none';
+  document.getElementById('maps-key-wijzig-btn').style.display = '';
+  document.getElementById('maps-key-input').value = '';
+  document.getElementById('maps-key-input').type = 'password';
+  document.getElementById('maps-key-toon').textContent = '👁';
+}
+function toggleMapsKeyZicht() {
+  const inp = document.getElementById('maps-key-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  document.getElementById('maps-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function slaMapsKeyOp() {
+  const key = document.getElementById('maps-key-input').value.trim();
+  if (!key) { alert('Vul een API key in.'); return; }
+  localStorage.setItem(Maps.KEY_KEY, key); // CodeQL[js/clear-text-storage-of-sensitive-information]
+  sbSaveInstellingen();
+  sluitMapsKeyForm();
+  renderInstellingen();
+  toonOpslagStatus('✅ Maps key opgeslagen');
+}
+function verwijderMapsKey() {
+  if (!confirm('Google Maps API key verwijderen?')) return;
+  localStorage.removeItem(Maps.KEY_KEY);
+  sbSaveInstellingen();
+  sluitMapsKeyForm();
+  renderInstellingen();
+  toonOpslagStatus('✅ Maps key verwijderd');
 }
 function slaaThuisadresOp(){
   const adres=document.getElementById('inst-thuisadres').value.trim();

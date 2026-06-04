@@ -56,10 +56,7 @@
   </div>
   <div class="form-row">
     <label>Standaard winkel</label>
-    <select id="i-winkel">
-      <option>Colruyt</option><option>Delhaize</option><option>Lidl</option>
-      <option>Albert Heijn</option><option>Beenhouwerij</option><option>Markt</option><option>Andere</option>
-    </select>
+    <select id="i-winkel"></select>
   </div>
   <div class="form-row">
     <label>Productlink <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel)</span></label>
@@ -124,7 +121,9 @@ function filterIngWinkel(w) { activeIngWinkelFilter = w; renderIngredienten(); }
 function openIngModal(ing) {
   document.getElementById('ing-modal-titel').textContent = ing ? 'Ingrediënt bewerken' : 'Ingrediënt toevoegen';
   document.getElementById('i-naam').value = ing ? ing.naam : '';
-  document.getElementById('i-winkel').value = ing ? ing.winkel : 'Colruyt';
+  const winkelSel = document.getElementById('i-winkel');
+  winkelSel.innerHTML = WINKELS.map(w => `<option>${escHtml(w)}</option>`).join('');
+  winkelSel.value = ing ? ing.winkel : (WINKELS[0] || '');
   document.getElementById('i-link').value = ing ? (ing.productLink || '') : '';
   document.getElementById('ing-modal-bg').dataset.editId = ing ? ing.id : '';
   document.getElementById('ing-modal-bg').classList.add('open');
