@@ -393,7 +393,7 @@ function _initRealtime() {
   if (!gid || window._sbRealtimeInit) return;
   window._sbRealtimeInit = true;
   const s = document.createElement('script');
-  s.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s.src = 'supabase.js';
   s.onload = () => {
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const session = Auth.session?.();
