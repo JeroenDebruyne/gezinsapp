@@ -151,6 +151,18 @@
     </div>
   </div>
 
+  <!-- Maaltijden -->
+  <div class="section-label" id="sect-maaltijden" style="margin-top:1.5rem;">🍽️ Maaltijden</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Portie per kind</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Hoeveel van een volwassen portie eet een kind? (0.5 = halve portie)</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="inst-porties-kind" min="0.1" max="1.5" step="0.05" value="0.5"
+        style="width:80px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
+      <button class="btn btn-primary btn-sm" onclick="slaPortiesKindOp()">Opslaan</button>
+    </div>
+  </div>
+
   <!-- Winkels -->
   <div class="section-label" id="sect-winkels" style="margin-top:1.5rem;">🛒 Winkels</div>
   <div class="info-box">Stel in welke winkels beschikbaar zijn voor boodschappen en recepten.</div>
@@ -321,6 +333,8 @@ function renderInstellingen(){
   renderFeestdagen();
   renderTransportPersonen();
   renderWinkels();
+  const pkEl = document.getElementById('inst-porties-kind');
+  if (pkEl) pkEl.value = portiesKindRatio;
   // Feestdagen iCal kaart initialiseren
   renderFeestdagenKaart();
   // Werkadressen
@@ -1040,6 +1054,16 @@ async function verwijderTransportPersoon(idx) {
   slaLokaalOp();
   toonOpslagStatus('✅ Verwijderd');
   renderTransportPersonen();
+}
+
+// ── Maaltijden ────────────────────────────────────────────────
+async function slaPortiesKindOp() {
+  const v = parseFloat(document.getElementById('inst-porties-kind')?.value);
+  if (isNaN(v) || v <= 0) return;
+  portiesKindRatio = Math.round(v * 100) / 100;
+  await slaPortiesKindRatioOp();
+  slaLokaalOp();
+  toonOpslagStatus('✅ Opgeslagen');
 }
 
 // ── Winkels ──────────────────────────────────────────────────

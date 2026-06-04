@@ -702,8 +702,11 @@ function naarStap(n){
 async function startImport(){
   const url=document.getElementById('import-url').value.trim();
   if(!url||!url.startsWith('http')){ alert('Plak een geldige URL.'); return; }
-  let apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
-  if(!apiKey){ apiKey=prompt('Anthropic API key (sk-ant-…):'); if(!apiKey)return; localStorage.setItem('anthropic_api_key',apiKey); } // CodeQL[js/clear-text-storage-of-sensitive-information]
+  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
+  if(!apiKey){
+    document.getElementById('import-error-tekst').innerHTML='<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
+    naarStap(4); return;
+  }
   naarStap(2);
   document.getElementById('import-loader-tekst').textContent='Recept ophalen van '+url.replace(/^https?:\/\//,'').split('/')[0]+'…';
   try{

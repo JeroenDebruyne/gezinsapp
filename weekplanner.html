@@ -211,7 +211,7 @@ function _berekenPorties(item, datum){
     const prof=Auth.getProfielen().find(pr=>pr.persoonKey===p);
     if(prof?.rol==='kind'){
       if(datum&&_isEetGrooOpDag(p,datum)) return sum;
-      return sum+0.5;
+      return sum+(typeof portiesKindRatio!=='undefined'?portiesKindRatio:0.5);
     }
     return sum+1.0;
   },0);
