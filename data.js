@@ -280,6 +280,7 @@ async function laadOp() {
       if (r.id==='geheugen' && r.waarde) geheugen = r.waarde;
       if (r.id.startsWith('werkadres_')&&r.waarde) localStorage.setItem('gezinsapp_'+r.id, r.waarde);
       if (r.id.startsWith('reistijd_')&&r.waarde) localStorage.setItem('gezinsapp_'+r.id, r.waarde);
+      if (r.id==='gezinsDatums'&&r.waarde) gezinsDatums = r.waarde;
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
     const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
@@ -591,6 +592,27 @@ async function sbSaveGeheugen() {
       {id:'geheugen', waarde:geheugen, updated_at:new Date().toISOString(), gezin_id:gid},
       '','resolution=merge-duplicates');
   } catch(e) { _opslagFout(e,'geheugen'); }
+}
+
+// ── Gezinsdatums ─────────────────────────────────────────────
+let gezinsDatums = [];
+
+async function laadGezinsDatums() {
+  try {
+    const gid = _gid();
+    const f = gid ? `?id=eq.gezinsDatums&gezin_id=eq.${gid}` : `?id=eq.gezinsDatums`;
+    const rows = await sbFetch(`instellingen${f}`).catch(() => []);
+    if (rows[0]?.waarde) gezinsDatums = rows[0].waarde;
+  } catch(_) {}
+}
+async function slaGezinsDatumsOp() {
+  const gid = _gid();
+  if (!gid) return;
+  try {
+    await sbFetch('instellingen','POST',
+      {id:'gezinsDatums',waarde:gezinsDatums,updated_at:new Date().toISOString(),gezin_id:gid},
+      '','resolution=merge-duplicates');
+  } catch(_) {}
 }
 
 // ── iCal gedeelde functies ────────────────────────────────────
