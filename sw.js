@@ -1,11 +1,11 @@
-const CACHE = 'gezinsapp-v2';
+const CACHE = 'gezinsapp-v3';
 const STATIC = [
   'index.html', 'agent.html', 'agenda.html', 'boodschappen.html',
   'contacten.html', 'ingredienten.html', 'instellingen.html',
   'kinderlogistiek.html', 'recepten.html', 'recept-detail.html',
   'todos.html', 'weekplanner.html', 'login.html', 'app.html',
   'style.css', 'nav.js', 'auth.js', 'data.js', 'agent.js',
-  'agent-tools.js', 'favicon.svg',
+  'agent-tools.js', 'agenda.js', 'favicon.svg',
 ];
 
 self.addEventListener('install', e => {
