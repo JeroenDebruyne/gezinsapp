@@ -106,6 +106,8 @@
     </button>
   </div>
 
+  <div id="verjaardag-home"></div>
+
   <div class="section-label">Vandaag</div>
   <div id="vandaag-lijst"><div class="spinner"></div></div>
 
@@ -191,6 +193,72 @@ function renderHomepage(){
   renderPersoonStrip(p);
   renderVandaag(datumISO,p);
   renderTodosPreview(p);
+  renderVerjaardagHome();
+}
+
+// ── Verjaardagsalerts homepage ────────────────────────────────
+function _vhParseObj(v){ if(!v) return null; if(typeof v==='string'){ try{ return JSON.parse(v); }catch{ return null; } } return v; }
+function _vhDagen(datumStr,herhalend){
+  if(!datumStr) return null;
+  const nu=new Date(); nu.setHours(0,0,0,0);
+  const d=new Date(datumStr+'T12:00:00');
+  if(!herhalend) return Math.round((d-nu)/86400000);
+  let jaar=nu.getFullYear();
+  let vl=new Date(jaar,d.getMonth(),d.getDate());
+  if(vl<nu) vl=new Date(jaar+1,d.getMonth(),d.getDate());
+  return Math.round((vl-nu)/86400000);
+}
+function renderVerjaardagHome(){
+  const el=document.getElementById('verjaardag-home');
+  if(!el) return;
+  const VENSTER=7;
+  const items=[];
+  // Gezinsleden
+  (Auth.getProfielen()||[]).forEach(p=>{
+    if(!p.geboortedatum) return;
+    const d=_vhDagen(p.geboortedatum,true);
+    if(d!==null&&d>=0&&d<=VENSTER)
+      items.push({label:`🎂 ${p.naam}`,dagen:d,datum:p.geboortedatum});
+  });
+  // Contacten
+  contacten.forEach(c=>{
+    const nm=c.naam||'Contact';
+    [_vhParseObj(c.partner1),_vhParseObj(c.partner2)].filter(Boolean).forEach(p=>{
+      if(!p.verjaardag) return;
+      const pnm=((p.voornaam||'')+' '+(p.achternaam||'')).trim()||nm;
+      const d=_vhDagen(p.verjaardag,true);
+      if(d!==null&&d>=0&&d<=VENSTER) items.push({label:`🎂 ${pnm}`,dagen:d,datum:p.verjaardag});
+    });
+    (_vhParseObj(c.kinderenData)||[]).forEach(k=>{
+      if(!k.verjaardag) return;
+      const kn=((k.voornaam||'')+' '+(k.achternaam||'')).trim()||'Kind';
+      const d=_vhDagen(k.verjaardag,true);
+      if(d!==null&&d>=0&&d<=VENSTER) items.push({label:`🎂 ${kn}`,dagen:d,datum:k.verjaardag});
+    });
+    (c.belangrijkeDatums||[]).forEach(bd=>{
+      if(!bd.datum) return;
+      const d=_vhDagen(bd.datum,bd.herhalend);
+      if(d!==null&&d>=0&&d<=VENSTER) items.push({label:`📅 ${bd.label||'Datum'} — ${nm}`,dagen:d,datum:bd.datum});
+    });
+  });
+  items.sort((a,b)=>a.dagen-b.dagen);
+  if(!items.length){ el.innerHTML=''; return; }
+  el.innerHTML=items.map(it=>{
+    const datObj=new Date(it.datum+'T12:00:00');
+    const dagStr=datObj.toLocaleDateString('nl-BE',{day:'numeric',month:'long'});
+    const wanneer=it.dagen===0?'🎉 Vandaag!':it.dagen===1?'Morgen':`Over ${it.dagen} dagen`;
+    const vandaag=it.dagen===0;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+      background:${vandaag?'var(--normaal-bg)':'var(--surface-2)'};
+      border:1.5px solid ${vandaag?'var(--normaal-dot)':'var(--border)'};
+      border-radius:var(--radius-sm);margin-bottom:6px;">
+      <div style="flex:1;font-size:14px;font-weight:${vandaag?700:500};color:var(--ink);">${escHtml(it.label)}</div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:13px;font-weight:600;color:${vandaag?'var(--normaal-clr)':'var(--accent)'};">${wanneer}</div>
+        <div style="font-size:11px;color:var(--muted);">${dagStr}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderPersoonStrip(p){
