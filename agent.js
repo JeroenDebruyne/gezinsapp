@@ -1,6 +1,23 @@
 // agent.js — Gedeelde chat-engine voor alle gezinsassistenten
 // Gebruik: const myAgent = createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen })
 
+// Bouwt een dynamische gezinsbeschrijving op basis van de geladen profielen.
+// Voorbeeld: "Gezin: Jeroen (gezinshoofd, key:jeroen), Kelly (gezinshoofd, key:kelly), Nora (kind 6j, key:nora)."
+function bouwGezinsContext() {
+  const profielen = (typeof Auth !== 'undefined' ? Auth.getProfielen() : []);
+  if (!profielen.length) return 'Gezin: onbekend (profielen nog niet geladen).';
+  const jaar = new Date().getFullYear();
+  const delen = profielen.map(p => {
+    let label = (typeof Auth !== 'undefined' ? Auth.ROLLEN[p.rol]?.label?.toLowerCase() : null) || p.rol || 'gezinslid';
+    if (p.geboortedatum) {
+      const leeftijd = jaar - new Date(p.geboortedatum + 'T12:00:00').getFullYear();
+      if (leeftijd > 0 && leeftijd < 25) label += ` ${leeftijd}j`;
+    }
+    return `${p.naam} (${label}, key:${p.persoonKey})`;
+  });
+  return 'Gezin: ' + delen.join(', ') + '.';
+}
+
 function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen }) {
   // ids: { berichten, input, bevestiging, bevestigingTekst? }
   let chatGeschiedenis = [];

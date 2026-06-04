@@ -43,7 +43,7 @@
       <div class="dag-overzicht-titel" id="dag-begroeting">Laden…</div>
     </div>
     <div class="dag-compact-rechts" style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-      <a id="weer-widget" class="weer-widget-link" href="https://www.buienradar.be/weer/ardooie/be/2803091/14daagse" target="_blank" rel="noopener" title="Weer in Ardooie — Buienradar" onclick="window.open('https://www.buienradar.be/weer/ardooie/be/2803091/14daagse','_blank','noopener');event.preventDefault();">
+      <a id="weer-widget" class="weer-widget-link" href="https://www.buienradar.be" target="_blank" rel="noopener" title="Weer — Buienradar">
         <span id="weer-icon">🌤️</span>
         <span id="weer-temp">…</span>
         <span class="weer-widget-regen" id="weer-regen"></span>
@@ -161,6 +161,9 @@ function sluitActDetail(e){
 <script>
 Auth.initPagina('index');
 laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+// Geocodeer thuisadres bij eerste gebruik (als coords nog niet gecacht zijn)
+if(typeof Maps!=='undefined'&&!Maps.getCoords()&&Maps.getThuisadres())
+  Maps.geocodeerAdres(Maps.getThuisadres()).catch(()=>{});
 onGezinsappUpdate(renderHomepage);
 (function(){
   const welkom=document.getElementById('home-chat-welkom');
@@ -286,9 +289,9 @@ function _hSysteemPrompt(){
         ': O='+_hGetNaam(dag.ontbijt)+' L='+_hGetNaam(dag.lunch)+' A='+_hGetNaam(dag.avond)+(acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
-  return `Je bent de gezinsassistent van de familie Debruyne-Dewaegenaere.
+  return `Je bent de gezinsassistent.
 Vandaag: ${dagNaamNL} ${vandaagISO}.
-Gezin: Jeroen (vader/admin, key:jeroen), Kelly (moeder, key:kelly), Nora (dochter 6j, key:nora), Odiel (zoon 3j, key:odiel).
+${bouwGezinsContext()}
 Week loopt ma→zo. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
 
 REGELS:
@@ -311,7 +314,7 @@ const HOME_AGENT_TOOLS=[
   {name:'get_transport',description:'Transport kinderen (brengt/haalt/grootouders) voor een dag of week.',input_schema:{type:'object',properties:{datum:{type:'string'},week:{type:'boolean'}},required:[]}},
   {name:'get_schoolvakanties',description:'Schoolvakanties Vlaanderen en uitzonderingen.',input_schema:{type:'object',properties:{},required:[]}},
   {name:'get_eethistoriek',description:'Maaltijdhistoriek afgelopen weken. Gebruik ALTIJD vóór weekmenu plannen.',input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
-  {name:'get_weer',description:'Huidig weer in Ardooie.',input_schema:{type:'object',properties:{},required:[]}},
+  {name:'get_weer',description:'Huidig weer op thuislocatie.',input_schema:{type:'object',properties:{},required:[]}},
   {name:'get_conflicten',description:'Detecteer overlappende activiteiten voor dezelfde persoon.',input_schema:{type:'object',properties:{offset:{type:'integer'}},required:[]}},
   {name:'zoek_ingredienten',description:'Zoek in ingrediëntenlijst (gebruik vóór voeg_ingredient_toe).',input_schema:{type:'object',properties:{zoekterm:{type:'string'}},required:['zoekterm']}},
   {name:'stel_weekmenu_in',description:'Plan maaltijden. Gebruik NUMERIEK recept-id. ALTIJD bevestiging.',input_schema:{type:'object',properties:{menu:{type:'array',items:{type:'object',properties:{datum:{type:'string'},ontbijt:{type:['number','string','null']},lunch:{type:['number','string','null']},avond:{type:['number','string','null']}},required:['datum']}},bevestiging_vereist:{type:'boolean'},bevestiging_bericht:{type:'string'}},required:['menu']}},
@@ -394,7 +397,7 @@ async function _hExec(naam,input){
       hist.sort((a,b)=>b.datum.localeCompare(a.datum));return JSON.stringify(hist.length?hist:'Geen eethistoriek.');
     }
     case 'get_weer':{
-      try{const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.97&longitude=3.19&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels');const d=await r.json();const c=d.current.weather_code||0;const icons=[['☀️',0],['⛅',2],['☁️',3],['🌫️',49],['🌧️',69],['🌨️',79],['🌦️',82],['❄️',86],['⛈️',99]];const icon=(icons.find(([,t])=>c<=t)||['🌡️'])[0];return JSON.stringify({temp:Math.round(d.current.temperature_2m),regen:d.current.precipitation_probability,icon});}catch(e){return'Weersdata niet beschikbaar.';}
+      try{const coords=(typeof Maps!=='undefined'&&Maps.getCoords())||{lat:50.97,lng:3.19};const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);const d=await r.json();const c=d.current.weather_code||0;const icons=[['☀️',0],['⛅',2],['☁️',3],['🌫️',49],['🌧️',69],['🌨️',79],['🌦️',82],['❄️',86],['⛈️',99]];const icon=(icons.find(([,t])=>c<=t)||['🌡️'])[0];return JSON.stringify({temp:Math.round(d.current.temperature_2m),regen:d.current.precipitation_probability,icon});}catch(e){return'Weersdata niet beschikbaar.';}
     }
     case 'get_conflicten':{
       const dates=_hGetWeekDates(input.offset||0);const conflicten=[];const personen=PERSONEN.length?PERSONEN:['jeroen','kelly','nora','odiel'];
@@ -452,7 +455,11 @@ function homeWisChat(){ homeAgent.wis('<div style="align-self:flex-start;"><div 
 // ── Buienradar / Weer (Open-Meteo) ────────────────────────────
 async function laadWeer(){
   try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.97&longitude=3.19&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels');
+    const coords=(typeof Maps!=='undefined'&&Maps.getCoords())||{lat:50.97,lng:3.19};
+    const buienUrl=`https://www.buienradar.be/nl/weerbericht/weerkaartneerslag?lat=${coords.lat}&lon=${coords.lng}`;
+    const wLink=document.getElementById('weer-widget');
+    if(wLink){ wLink.href=buienUrl; wLink.onclick=function(){ window.open(buienUrl,'_blank','noopener'); event.preventDefault(); }; }
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);
     const d=await r.json();
     const temp=Math.round(d.current.temperature_2m);
     const regen=d.current.precipitation_probability??0;

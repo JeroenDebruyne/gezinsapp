@@ -93,19 +93,26 @@
 <script>
 Auth.initPagina('boodschappen');
 let activeWinkel='Alles';
-// afgevinkt: primair vanuit Supabase (item.afgevinkt), localStorage als fallback
-let afgevinkt=JSON.parse(localStorage.getItem('gezinsapp_afgevinkt')||'{}');
+// afgevinkt: volledig vanuit Supabase, localStorage als offline-fallback
+let afgevinkt={};
 
 function _slaAfgevinktOp(){localStorage.setItem('gezinsapp_afgevinkt',JSON.stringify(afgevinkt));}
 
-laadOp().then(()=>{
-  // Supabase-staat heeft voorrang: merge per item
+function _herbouwAfgevinkt(){
+  afgevinkt={};
   boodschappenReceptItems.forEach(i=>{ if(i.afgevinkt) afgevinkt['ing_'+i.naam.toLowerCase()]=true; });
   extraItems.forEach(i=>{ if(i.afgevinkt) afgevinkt['extra_'+i.id]=true; });
   _slaAfgevinktOp();
+}
+
+laadOp().then(()=>{
+  _herbouwAfgevinkt();
   renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();
-}).catch(()=>{laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();});
-onGezinsappUpdate(()=>{ renderBoodschappen(); renderExtraItems(); });
+}).catch(()=>{
+  afgevinkt=JSON.parse(localStorage.getItem('gezinsapp_afgevinkt')||'{}');
+  laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();
+});
+onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderBoodschappen(); renderExtraItems(); });
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>

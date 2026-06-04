@@ -144,7 +144,7 @@ const AGENT_TOOLS=[
    input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
 
   {name:'get_weer',
-   description:'Huidig weer in Ardooie: temperatuur, neerslagkans en weersomschrijving.',
+   description:'Huidig weer op thuislocatie: temperatuur, neerslagkans en weersomschrijving.',
    input_schema:{type:'object',properties:{},required:[]}},
 
   {name:'get_conflicten',
@@ -240,9 +240,9 @@ function _bouwSysteemPrompt(){
         (acts?' ['+acts+']':'');
     }).join('\n');
   }catch(e){}
-  return `Je bent de gezinsassistent van de familie Debruyne-Dewaegenaere.
+  return `Je bent de gezinsassistent.
 Vandaag: ${dagNaamNL} ${vandaagISO}.
-Gezin: Jeroen (vader/admin, key:jeroen), Kelly (moeder, key:kelly), Nora (dochter 6j, key:nora), Odiel (zoon 3j, key:odiel).
+${bouwGezinsContext()}
 Week loopt ma→zo. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
 
 REGELS:
@@ -256,7 +256,8 @@ REGELS:
 async function _laadWeer(){
   if(_weerCache&&Date.now()-_weerLaatst<30*60*1000)return;
   try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.97&longitude=3.19&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels');
+    const coords=(typeof Maps!=='undefined'&&Maps.getCoords())||{lat:50.97,lng:3.19};
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);
     const d=await r.json();
     _weerCache={temp:Math.round(d.current.temperature_2m),regen:d.current.precipitation_probability,omschrijving:_weerOmschrijving(d.current.weather_code||0),icon:_weerIcon(d.current.weather_code||0)};
     _weerLaatst=Date.now();
