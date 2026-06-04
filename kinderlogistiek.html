@@ -222,7 +222,9 @@ function renderKL(){
 
   const alleKinderenCheck = Auth.getProfielen().filter(p=>p.isKind);
   if (!alleKinderenCheck.length) {
-    document.getElementById('kl-grid').innerHTML = '<div class="empty-state"><div class="empty-icon">👶</div><p>Geen kinderen ingesteld.</p><p style="font-size:13px;color:var(--muted);">Ga naar ⚙️ Instellingen en stel de rol van Nora en Odiel in op "Kind".</p></div>';
+    const _ghNamen = Auth.getProfielen().filter(p=>!p.isKind).map(p=>p.naam);
+    const _ghLabel = _ghNamen.length ? _ghNamen.join(' of ') : 'een gezinshoofd';
+    document.getElementById('kl-grid').innerHTML = `<div class="empty-state"><div class="empty-icon">👶</div><p>Geen kinderen ingesteld.</p><p style="font-size:13px;color:var(--muted);">Ga naar ⚙️ Instellingen en stel een gezinslid in op de rol "Kind".</p></div>`;
     return;
   }
 

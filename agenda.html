@@ -694,7 +694,7 @@ function renderDagDetail(datumISO){
         </div>
       </div>`).join('')}
     ${alleActs.length===0
-      ?`<div class="leeg"><span class="empty-icon">📅</span><p>Geen activiteiten</p></div>`
+      ?`<div class="empty-state"><span class="empty-icon">📅</span><p>Geen activiteiten</p></div>`
       :alleActs.map(a=>{
           const wie=a.wie||[];
           const isFamilie=PERSONEN.length>1&&PERSONEN.every(p=>wie.includes(p));
