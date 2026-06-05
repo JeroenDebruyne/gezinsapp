@@ -432,9 +432,16 @@ body{
 .avatar-chip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);font-size:13px;cursor:pointer;transition:all .15s;font-weight:500;}
 .avatar-chip.active{border-color:var(--accent);background:var(--accent);color:#fff;}
 
+/* Lucide inline icons */
+.icon-inline{display:inline-block;width:1em;height:1em;vertical-align:-0.15em;stroke-width:2;flex-shrink:0;}
+svg.icon-inline{width:1em;height:1em;vertical-align:-0.15em;stroke-width:2;}
+@keyframes lucide-spin{to{transform:rotate(360deg);}}
+.icon-spin{animation:lucide-spin 1s linear infinite;}
+
 /* Lege staat & spinner */
 .empty-state,.leeg{text-align:center;padding:3rem 2rem;color:var(--muted);}
 .empty-state .empty-icon,.leeg-icon{font-size:44px;margin-bottom:12px;display:block;}
+svg.empty-icon,.empty-state svg.lucide{width:44px;height:44px;display:block;margin:0 auto 12px;color:var(--muted-2);stroke-width:1.5;}
 .leeg-titel{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px;}
 .leeg-sub{font-size:14px;}
 .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:2.5rem auto;display:block;}

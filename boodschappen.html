@@ -29,7 +29,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🛒 Boodschappen</div>
+  <div class="topbar-title"><i data-lucide="shopping-cart" class="icon-inline"></i> Boodschappen</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -39,7 +39,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -73,7 +73,7 @@
     <div class="voortgang-wrap-tekst">
       <span id="voortgang-tekst"></span>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:13px;color:var(--druk-clr);cursor:pointer;font-family:inherit;align-items:center;gap:4px;">🗑️ Verwijder afgevinkte</button>
+        <button id="btn-verwijder-afgevinkt" onclick="verwijderAfgevinkt()" style="display:none;background:none;border:none;font-size:13px;color:var(--druk-clr);cursor:pointer;font-family:inherit;align-items:center;gap:4px;"><i data-lucide="trash-2" class="icon-inline"></i> Verwijder afgevinkte</button>
         <button onclick="resetAfgevinkt()" style="background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;">↺ Reset</button>
       </div>
     </div>
@@ -166,7 +166,7 @@ function _updateVoortgang(aantalAfgevinkt,totaal){
   }
 }
 
-const _geenLijstHtml=`<div class="empty-state"><span class="empty-icon">🛒</span><p>Nog geen boodschappenlijst.<br>Ga naar <a href="weekplanner.html" style="color:var(--accent);">Maaltijden</a> en klik <strong>🛒 Voeg toe aan lijst</strong>.</p></div>`;
+const _geenLijstHtml=`<div class="empty-state"><i data-lucide="shopping-cart" class="empty-icon"></i><p>Nog geen boodschappenlijst.<br>Ga naar <a href="weekplanner.html" style="color:var(--accent);">Maaltijden</a> en klik <strong><i data-lucide="shopping-cart" class="icon-inline"></i> Voeg toe aan lijst</strong>.</p></div>`;
 
 function renderBoodschappen(){
   const label=document.getElementById('extra-items-label');
@@ -204,7 +204,7 @@ function renderBoodschappen(){
   const aantalAfgevinkt=items.filter(i=>afgevinkt['ing_'+i.naam.toLowerCase()]).length;
   _updateVoortgang(aantalAfgevinkt,items.length);
   document.getElementById('boodschappen-inhoud').innerHTML=items.length===0
-    ?`<div class="empty-state"><span class="empty-icon">✅</span><p>Geen items meer voor ${activeWinkel}</p></div>`
+    ?`<div class="empty-state"><i data-lucide="check-circle" class="empty-icon"></i><p>Geen items meer voor ${activeWinkel}</p></div>`
     :items.map(i=>_ingItemHtml(i)).join('');
 }
 
@@ -273,7 +273,7 @@ function filterBoodCombo(){
   let html=matches.map(i=>`
     <div class="ing-combo-option" onmousedown="kiesBoodIng('${escHtml(i.naam).replace(/'/g,"\\'")}','${escHtml(i.winkel)}')">
       <span>${escHtml(i.naam)}</span>
-      <span class="winkel-hint">🏪 ${escHtml(i.winkel)}</span>
+      <span class="winkel-hint"><i data-lucide="store" style="width:11px;height:11px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(i.winkel)}</span>
     </div>`).join('');
   const bestaatExact=standaardIngredienten.some(i=>i.naam.toLowerCase()===zoek);
   if(zoek&&!bestaatExact){

@@ -163,7 +163,7 @@ function renderDagDetail(datumISO){
   const dagNamen=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
   const dagLabel=dagNamen[d.getDay()].charAt(0).toUpperCase()+dagNamen[d.getDay()].slice(1)+' '+d.getDate()+' '+MAANDEN[d.getMonth()].toLowerCase();
   const drukte=getDagDrukte(datumISO);
-  const drukteConfig={rustig:{bg:'var(--rustig-bg)',clr:'var(--rustig-clr)',lbl:'🟢 Rustige dag'},normaal:{bg:'var(--normaal-bg)',clr:'var(--normaal-clr)',lbl:'🟡 Drukke dag'},druk:{bg:'var(--druk-bg)',clr:'var(--druk-clr)',lbl:'🔴 Zeer druk'}};
+  const drukteConfig={rustig:{bg:'var(--rustig-bg)',clr:'var(--rustig-clr)',lbl:'Rustige dag',dot:'var(--rustig-dot)'},normaal:{bg:'var(--normaal-bg)',clr:'var(--normaal-clr)',lbl:'Drukke dag',dot:'var(--normaal-dot)'},druk:{bg:'var(--druk-bg)',clr:'var(--druk-clr)',lbl:'Zeer druk',dot:'var(--druk-dot)'}};
   const dc=drukteConfig[drukte];
   const vakantie=isSchoolvakantie(datumISO);
   const alleActs=[
@@ -187,33 +187,33 @@ function renderDagDetail(datumISO){
     <div class="dag-detail-header">
       <div class="dag-detail-titel">${dagLabel}</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span class="dag-detail-drukte" style="background:${dc.bg};color:${dc.clr};"
-          onclick="openDOModal('${datumISO}','${dagLabel}')">${dc.lbl}</span>
+        <span class="dag-detail-drukte" style="background:${dc.bg};color:${dc.clr};display:inline-flex;align-items:center;gap:5px;"
+          onclick="openDOModal('${datumISO}','${dagLabel}')"><span style="width:7px;height:7px;border-radius:50%;background:${dc.dot};flex-shrink:0;"></span>${dc.lbl}</span>
       </div>
     </div>
-    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;">🏖️ ${getVakantieNaam(datumISO)}</div>`:''}
-    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;">🎉 ${getFeestdagNaam(datumISO)}</div>`:''}
+    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${getVakantieNaam(datumISO)}</div>`:''}
+    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${getFeestdagNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
         <span style="font-size:20px;">${escHtml(v.emoji||'🎂')}</span>
         <div style="flex:1;">
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
           ${v.type==='contactdatum'
-            ?`<div class="verjaardag-info">👨‍👩‍👧 ${escHtml(v.sub||'')}</div>`
+            ?`<div class="verjaardag-info"><i data-lucide="users" class="icon-inline"></i> ${escHtml(v.sub||'')}</div>`
             :v.type==='gezinsdatum'
-              ?`<div class="verjaardag-info">${v.meerdaags?(v.isEerstedag?'📆 Meerdaags':'📆 Loopt door'):'📅 Vandaag'}&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span></div>`
-              :v.leeftijd?`<div class="verjaardag-info">🎉 Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info">🎉 Verjaardag!</div>'
+              ?`<div class="verjaardag-info"><i data-lucide="calendar-range" class="icon-inline"></i> ${v.meerdaags?(v.isEerstedag?'Meerdaags':'Loopt door'):'Vandaag'}&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span></div>`
+              :v.leeftijd?`<div class="verjaardag-info"><i data-lucide="cake" class="icon-inline"></i> Wordt ${v.leeftijd} jaar${v.type==='gezin'?' (gezin)':''}</div>`:'<div class="verjaardag-info"><i data-lucide="cake" class="icon-inline"></i> Verjaardag!</div>'
           }
         </div>
       </div>`).join('')}
     ${alleActs.length===0
-      ?`<div class="empty-state"><span class="empty-icon">📅</span><p>Geen activiteiten</p></div>`
+      ?`<div class="empty-state"><i data-lucide="calendar" class="empty-icon"></i><p>Geen activiteiten</p></div>`
       :alleActs.map(a=>{
           const wie=a.wie||[];
           const isFamilie=PERSONEN.length>1&&PERSONEN.every(p=>wie.includes(p));
           const balk=isFamilie?'var(--accent)':(KLEUR_BALK[wie[0]]||'var(--muted-2)');
           const badges=isFamilie
-            ?`<span class="act-rij-badge" style="background:var(--accent-l);color:var(--accent);border:1px solid var(--accent)55;">👨‍👩‍👧 Familie</span>`
+            ?`<span class="act-rij-badge" style="background:var(--accent-l);color:var(--accent);border:1px solid var(--accent)55;"><i data-lucide="users" class="icon-inline"></i> Familie</span>`
             :wie.map(w=>`
               <span class="act-rij-badge" style="background:${KLEUR_BALK[w]||'var(--bg-2)'}22;color:${KLEUR_BALK[w]||'var(--muted)'};border:1px solid ${KLEUR_BALK[w]||'var(--border)'}44;">
                 ${escHtml(PEMOJI[w]||'')} ${escHtml(PLABEL[w]||w)}
@@ -224,19 +224,19 @@ function renderDagDetail(datumISO){
             <div class="act-kleur-balk" style="background:${conflictIds.has(a.id)?'var(--druk-dot)':(a.informatief?'var(--muted-2)':balk)};${a.meerdaags?'border-radius:2px;':''}${a.informatief?'opacity:0.5;':''}" ></div>
             <div class="act-rij-body">
               <div class="act-rij-naam${a.prive?' prive':''}">
-                ${conflictIds.has(a.id)?'⚠️ ':''}${a.informatief?'📌 ':''}${a.meerdaags?'📆 ':''}${escHtml(a.naam)}${a.prive?' 🔒':''}${a.informatief?'&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span>':''}
+                ${conflictIds.has(a.id)?'<i data-lucide="triangle-alert" class="icon-inline"></i> ':''}${a.informatief?'<i data-lucide="pin" class="icon-inline"></i> ':''}${a.meerdaags?'<i data-lucide="calendar-range" class="icon-inline"></i> ':''}${escHtml(a.naam)}${a.prive?' <i data-lucide="lock" class="icon-inline"></i>':''}${a.informatief?'&nbsp;<span style="font-size:10px;background:var(--bg-2);color:var(--muted);padding:1px 6px;border-radius:99px;font-weight:600;vertical-align:middle;">geen impact</span>':''}
               </div>
               <div class="act-rij-meta">
                 ${a.meerdaags&&a.beginDatum?`${escHtml(a.beginDatum)} → ${escHtml(a.eindDatum)}`:
                   a.start?`${escHtml(a.start)}${a.eindUur?' – '+escHtml(a.eindUur):''}`:''}
-                ${a.locatie?` · 📍 ${escHtml(a.locatie)}`:''}
-                ${a.prep?` · ⚠️ ${escHtml(a.prep)}`:''}
+                ${a.locatie?` · <i data-lucide="map-pin" class="icon-inline"></i> ${escHtml(a.locatie)}`:''}
+                ${a.prep?` · <i data-lucide="triangle-alert" class="icon-inline" style="color:var(--normaal-dot);"></i> ${escHtml(a.prep)}`:''}
               </div>
               ${badges?`<div class="act-rij-badges">${badges}</div>`:''}
               ${transportHtml}
             </div>
             ${kanBewerken?`<div class="act-rij-acties">
-              <button class="act-icon-btn" onclick="event.stopPropagation();verwijderActiviteit(${a.id},'${datumISO}')">🗑️</button>
+              <button class="act-icon-btn" onclick="event.stopPropagation();verwijderActiviteit(${a.id},'${datumISO}')"><i data-lucide="trash-2" class="icon-inline"></i></button>
             </div>`:''}
           </div>`;
         }).join('')
@@ -271,9 +271,9 @@ function renderTransportDetail(act,datumISO){
     const isUitz=uitzondering&&uitzondering[kind];
     html+=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:3px;">
       <span style="font-weight:600;color:var(--ink);">${PEMOJI[kind]} ${PLABEL[kind]}:</span>
-      ${brengt?`<span>🚗→ ${escHtml(brengt)}</span>`:''}
-      ${haalt?`<span>←🚗 ${escHtml(haalt)}</span>`:''}
-      ${eetGroo?'<span style="font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;">🍽️ Eet bij grootouders</span>':''}
+      ${brengt?`<span><i data-lucide="car" class="icon-inline"></i>→ ${escHtml(brengt)}</span>`:''}
+      ${haalt?`<span>←<i data-lucide="car" class="icon-inline"></i> ${escHtml(haalt)}</span>`:''}
+      ${eetGroo?'<span style="font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><i data-lucide="utensils" class="icon-inline"></i> Eet bij grootouders</span>':''}
       ${isUitz?'<span style="font-size:10px;background:var(--normaal-bg);color:var(--normaal-clr);padding:1px 6px;border-radius:99px;font-weight:600;">⚡ Uitzondering</span>':''}
     </div>`;
   });
@@ -558,7 +558,7 @@ function renderContactKeuze(){
   if(!metAdres.length){wrap.innerHTML='';return;}
   wrap.innerHTML=`<select onchange="kiesLocatieContact(this.value)"
     style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;max-width:100%;">
-    <option value="">📋 Adres van contact kiezen…</option>
+    <option value="">Adres van contact kiezen…</option>
     ${metAdres.map(c=>`<option value="${escHtml(c.adres)}">${escHtml(c.naam)}</option>`).join('')}
   </select>`;
 }

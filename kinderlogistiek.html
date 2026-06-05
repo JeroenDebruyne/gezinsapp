@@ -81,7 +81,7 @@
 <body>
 
 <header class="topbar">
-  <div class="topbar-title">👶 Kinderlogistiek</div>
+  <div class="topbar-title"><i data-lucide="baby" class="icon-inline"></i> Kinderlogistiek</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <div class="topbar-user-wrap">
@@ -90,7 +90,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -111,13 +111,13 @@
   <!-- Kind filter -->
   <select class="mob-filter-sel" id="kl-sel-mob" onchange="setKindFilter(this.value,null)"></select>
   <div class="filter-tabs mob-hide-on-mobile" id="kl-filter-tabs" style="margin-bottom:1rem;">
-    <button class="filter-tab active" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>
+    <button class="filter-tab active" onclick="setKindFilter('alle',this)"><i data-lucide="users" class="icon-inline"></i> Alle</button>
   </div>
 
   <!-- Standaard weekrooster -->
   <div class="card" style="margin-bottom:1rem;">
     <div class="kl-rooster-header" onclick="toggleStandaardRooster()">
-      <span class="kl-rooster-titel">⚙️ Standaard weekrooster</span>
+      <span class="kl-rooster-titel"><i data-lucide="settings" class="icon-inline"></i> Standaard weekrooster</span>
       <span class="kl-rooster-chevron" id="standaard-chevron">›</span>
     </div>
     <div id="standaard-rooster-body" style="display:none;margin-top:12px;">
@@ -137,13 +137,13 @@
     <div class="kl-modal-sub" id="kl-modal-sub"></div>
     <div class="kl-modal-rij">
       <div class="kl-modal-veld">
-        <label>🚗→ Wie brengt?</label>
+        <label><i data-lucide="car" class="icon-inline"></i>→ Wie brengt?</label>
         <select id="kl-modal-brengt">
           ${getTransportOpties()?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
         </select>
       </div>
       <div class="kl-modal-veld">
-        <label>←🚗 Wie haalt?</label>
+        <label>←<i data-lucide="car" class="icon-inline"></i> Wie haalt?</label>
         <select id="kl-modal-haalt">
           ${getTransportOpties()?.map(o=>`<option value="${o}">${o||'— Niet van toepassing —'}</option>`).join('')||''}
         </select>
@@ -179,10 +179,10 @@ function renderKindFilterTabs(){
   const container = document.getElementById('kl-filter-tabs');
   if(!container) return;
   container.innerHTML =
-    `<button class="filter-tab${kindFilter==='alle'?' active':''}" onclick="setKindFilter('alle',this)">👨‍👩‍👧‍👦 Alle</button>` +
+    `<button class="filter-tab${kindFilter==='alle'?' active':''}" onclick="setKindFilter('alle',this)"><i data-lucide="users" class="icon-inline"></i> Alle</button>` +
     kinderen.map(k=>`<button class="filter-tab${kindFilter===k.persoonKey?' active':''}" onclick="setKindFilter('${k.persoonKey}',this)">${k.emoji||'👧'} ${k.naam}</button>`).join('');
   const klMobSel=document.getElementById('kl-sel-mob');
-  if(klMobSel){klMobSel.innerHTML=`<option value="alle"${kindFilter==='alle'?' selected':''}>👨‍👩‍👧‍👦 Alle</option>`+kinderen.map(k=>`<option value="${k.persoonKey}"${kindFilter===k.persoonKey?' selected':''}>${k.emoji||'👧'} ${k.naam}</option>`).join('');}
+  if(klMobSel){klMobSel.innerHTML=`<option value="alle"${kindFilter==='alle'?' selected':''}>Alle</option>`+kinderen.map(k=>`<option value="${k.persoonKey}"${kindFilter===k.persoonKey?' selected':''}>${k.naam}</option>`).join('');}
 }
 
 function changeWeekKL(dir){ weekOffsetKL+=dir; renderKL(); }
@@ -225,7 +225,7 @@ function renderKL(){
   if (!alleKinderenCheck.length) {
     const _ghNamen = Auth.getProfielen().filter(p=>!p.isKind).map(p=>p.naam);
     const _ghLabel = _ghNamen.length ? _ghNamen.join(' of ') : 'een gezinshoofd';
-    document.getElementById('kl-grid').innerHTML = `<div class="empty-state"><div class="empty-icon">👶</div><p>Geen kinderen ingesteld.</p><p style="font-size:13px;color:var(--muted);">Ga naar ⚙️ Instellingen en stel een gezinslid in op de rol "Kind".</p></div>`;
+    document.getElementById('kl-grid').innerHTML = `<div class="empty-state"><i data-lucide="baby" class="empty-icon"></i><p>Geen kinderen ingesteld.</p><p style="font-size:13px;color:var(--muted);">Ga naar <i data-lucide="settings" class="icon-inline"></i> Instellingen en stel een gezinslid in op de rol "Kind".</p></div>`;
     return;
   }
 
@@ -251,9 +251,9 @@ function renderKL(){
 
     // Badges in header
     let badgesHtml = '';
-    if(vakantie) badgesHtml+=`<span class="kl-vakantie-badge">🏖️ ${getVakantieNaam(datum)}</span>`;
-    else if(school) badgesHtml+=`<span class="kl-act-badge">🏫 School</span>`;
-    kindActs.forEach(a=>{badgesHtml+=`<span class="kl-act-badge">📌 ${escHtml(a.naam)}</span>`;});
+    if(vakantie) badgesHtml+=`<span class="kl-vakantie-badge"><i data-lucide="umbrella" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${getVakantieNaam(datum)}</span>`;
+    else if(school) badgesHtml+=`<span class="kl-act-badge"><i data-lucide="graduation-cap" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> School</span>`;
+    kindActs.forEach(a=>{badgesHtml+=`<span class="kl-act-badge"><i data-lucide="pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.naam)}</span>`;});
 
     // Per-kind body
     const kindBodyHtml = kinderen.map(kind=>{
@@ -274,16 +274,16 @@ function renderKL(){
           const brengt = a[`brengt${cap}`]||'';
           const haalt  = a[`haalt${cap}`]||'';
           const transportInfo = [
-            brengt ? `🚗→ ${escHtml(brengt)}` : '',
-            haalt  ? `←🚗 ${escHtml(haalt)}` : '',
+            brengt ? `<i data-lucide="car" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i>→ ${escHtml(brengt)}` : '',
+            haalt  ? `←<i data-lucide="car" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(haalt)}` : '',
           ].filter(Boolean).join(' · ');
           return `
           <div class="kl-act-rij">
             <div class="kl-act-info">
-              <span class="kl-act-badge">📌 ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>
+              <span class="kl-act-badge"><i data-lucide="pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>
               ${transportInfo?`<span class="kl-act-transport">${transportInfo}</span>`:''}
             </div>
-            <button class="kl-edit-btn" onclick="openActTransportModal(${a.id},'${datum}','${kind}')" title="Transport bewerken">✏️</button>
+            <button class="kl-edit-btn" onclick="openActTransportModal(${a.id},'${datum}','${kind}')" title="Transport bewerken"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>
           </div>`;
         })
         .join('');
@@ -298,14 +298,14 @@ function renderKL(){
         ${kindActsHtml?`<div class="kl-acts-wrap">${kindActsHtml}</div>`:''}
         <div class="kl-transport-rij">
           <div class="kl-transport-veld">
-            <label>🚗→ School: wie brengt?</label>
+            <label><i data-lucide="car" class="icon-inline"></i>→ School: wie brengt?</label>
             <select id="brengt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.brengt!==undefined?'override':''}">
               ${getTransportOpties().map(o=>`<option value="${o}"${t.brengt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
             </select>
           </div>
           <div class="kl-transport-veld">
-            <label>←🚗 School: wie haalt?</label>
+            <label>←<i data-lucide="car" class="icon-inline"></i> School: wie haalt?</label>
             <select id="haalt-${dagKeyStr}" onchange="slaTransportOp('${datum}','${kind}')"
               class="${heeftOverride&&transportUitzonderingen[datum]?.[kind]?.haalt!==undefined?'override':''}">
               ${getTransportOpties().map(o=>`<option value="${o}"${t.haalt===o?' selected':''}>${o||'— Standaard —'}</option>`).join('')}
@@ -314,7 +314,7 @@ function renderKL(){
           <div class="kl-transport-veld" style="display:flex;align-items:flex-end;padding-bottom:4px;">
             <label class="kl-eetgroo" onclick="toggleEetGroo('${datum}','${kind}')">
               <div class="ios-switch${t.eetGroo?' on':''}" id="eetgroo-${dagKeyStr}" style="flex-shrink:0;"></div>
-              <span>🍽️ Eet bij grootouders</span>
+              <span><i data-lucide="utensils" class="icon-inline"></i> Eet bij grootouders</span>
             </label>
           </div>
         </div>
@@ -393,7 +393,7 @@ function renderStandaardRooster() {
   const el = document.getElementById('standaard-rooster-inhoud');
   if (!el) return;
   if (!kinderen.length) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Geen kinderen geconfigureerd. Ga naar ⚙️ Instellingen → Profielen en stel de rol in op "Kind".</div>';
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Geen kinderen geconfigureerd. Ga naar <i data-lucide="settings" class="icon-inline"></i> Instellingen → Profielen en stel de rol in op "Kind".</div>';
     return;
   }
   el.innerHTML = kinderen.map(kind => {
@@ -408,18 +408,18 @@ function renderStandaardRooster() {
           <span class="kl-std-dag">${KL_WEEKDAGLABELS[i].slice(0,2)}</span>
           <select class="kl-std-select${std.brengt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','brengt',this.value)">
-            ${getTransportOpties().map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'🚗 Brengt?'}</option>`).join('')}
+            ${getTransportOpties().map(o=>`<option value="${o}"${(std.brengt||'')=== o?' selected':''}>${o||'— Brengt? —'}</option>`).join('')}
           </select>
           <select class="kl-std-select${std.haalt?' ingevuld':''}"
             onchange="slaStandaardOp('${p}','${dag}','haalt',this.value)">
-            ${getTransportOpties().map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'🚗 Haalt?'}</option>`).join('')}
+            ${getTransportOpties().map(o=>`<option value="${o}"${(std.haalt||'')=== o?' selected':''}>${o||'— Haalt? —'}</option>`).join('')}
           </select>
         </div>
         <div class="kl-std-rij" style="margin-top:-2px;margin-bottom:8px;">
           <span></span>
           <label class="kl-std-eetgroo kl-std-eetgroo-rij" onclick="toggleStdEetGroo('${p}','${dag}')">
             <div class="ios-switch${std.eetGroo?' on':''}" id="std-eetgroo-${p}-${dag}"></div>
-            <span>🍽️ Eet bij grootouders</span>
+            <span><i data-lucide="utensils" class="icon-inline"></i> Eet bij grootouders</span>
           </label>
         </div>`;
       }).join('')}
@@ -520,8 +520,8 @@ function _subTijdstip(tijd, minuten) {
 function beheerTransportTodo(act, datum, kind, type, vervoerder) {
   const kindNaam = PLABEL[kind] || kind;
   const titel = type === 'brengt'
-    ? `🚗 Breng ${kindNaam} naar ${act.naam}`
-    : `🚗 Haal ${kindNaam} op van ${act.naam}`;
+    ? `Breng ${kindNaam} naar ${act.naam}`
+    : `Haal ${kindNaam} op van ${act.naam}`;
   const tijdstip = type === 'brengt'
     ? _subTijdstip(act.start,   act.reisHeen)
     : _subTijdstip(act.eindUur, act.reisTerug);
