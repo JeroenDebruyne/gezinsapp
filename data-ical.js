@@ -54,10 +54,11 @@ async function icalMerge(parsedEvents, wie, sourceUrl, opties = {}) {
     const bestaande = activiteiten.find(a => a.icalUid === ev.icalUid && a.icalSource === sourceUrl);
     if (bestaande) {
       const changed = bestaande.naam !== ev.naam || bestaande.beginDatum !== ev.beginDatum ||
-        bestaande.eindDatum !== ev.eindDatum || bestaande.start !== ev.start;
+        bestaande.eindDatum !== ev.eindDatum || bestaande.start !== ev.start ||
+        bestaande.locatie !== ev.locatie;
       if (changed) {
         Object.assign(bestaande, { naam:ev.naam, beginDatum:ev.beginDatum, eindDatum:ev.eindDatum,
-          start:ev.start, eindUur:ev.eindUur, meerdaags:ev.meerdaags, dagen:ev.dagen, freq:ev.freq });
+          locatie:ev.locatie, start:ev.start, eindUur:ev.eindUur, meerdaags:ev.meerdaags, dagen:ev.dagen, freq:ev.freq });
         await sbSaveActiviteit(bestaande); geupdate++;
       }
     } else {
