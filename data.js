@@ -11,8 +11,7 @@ function escHtml(s){
 }
 
 // ── Constanten ────────────────────────────────────────────────
-const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
+// SUPABASE_URL en SUPABASE_KEY komen uit config.js
 
 let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];

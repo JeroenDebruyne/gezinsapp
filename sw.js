@@ -4,7 +4,7 @@ const STATIC = [
   'contacten.html', 'ingredienten.html', 'instellingen.html',
   'kinderlogistiek.html', 'recepten.html', 'recept-detail.html',
   'todos.html', 'weekplanner.html', 'login.html',
-  'style.css', 'nav.js', 'auth.js', 'data.js', 'data-ical.js', 'agent.js',
+  'style.css', 'nav.js', 'config.js', 'auth.js', 'data.js', 'data-ical.js', 'agent.js',
   'agent-tools.js', 'agenda.js', 'instellingen.js', 'favicon.svg',
 ];
 
