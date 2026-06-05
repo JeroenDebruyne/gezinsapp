@@ -134,18 +134,18 @@ function openActDetail(id){
   if(!a)return;
   const emoji=a.wie?.length===1?(PEMOJI[a.wie[0]]||null):null;
   const emojiFallback=emoji?escHtml(emoji):'<i data-lucide="users" style="width:22px;height:22px;"></i>';
-  const wieHtml=(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join(' ');
+  const wieHtml=(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${escHtml(PLABEL[w]||w)}</span>`).join(' ');
   const freq={wekelijks:'Wekelijks',tweewekelijks:'Tweewekelijks',eenmalig:'Eenmalig',maandelijks:'Maandelijks'};
   document.getElementById('act-detail-inhoud').innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--ink);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--border);">
-      <span style="font-size:22px;display:flex;align-items:center;">${emojiFallback}</span><span>${a.naam}${a.prive?' <i data-lucide="lock" style="width:14px;height:14px;display:inline-block;vertical-align:-0.1em;"></i>':''}</span>
+      <span style="font-size:22px;display:flex;align-items:center;">${emojiFallback}</span><span>${escHtml(a.naam)}${a.prive?' <i data-lucide="lock" style="width:14px;height:14px;display:inline-block;vertical-align:-0.1em;"></i>':''}</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--ink-2);">
-      ${a.start?`<div><i data-lucide="clock" class="icon-inline"></i> <strong>${a.start}${a.eindUur?' – '+a.eindUur:''}</strong></div>`:''}
-      ${a.locatie?`<div><i data-lucide="map-pin" class="icon-inline"></i> ${a.locatie}</div>`:''}
+      ${a.start?`<div><i data-lucide="clock" class="icon-inline"></i> <strong>${escHtml(a.start)}${a.eindUur?' – '+escHtml(a.eindUur):''}</strong></div>`:''}
+      ${a.locatie?`<div><i data-lucide="map-pin" class="icon-inline"></i> ${escHtml(a.locatie)}</div>`:''}
       ${a.wie?.length?`<div><i data-lucide="user" class="icon-inline"></i> ${wieHtml}</div>`:''}
-      ${a.freq&&a.freq!=='eenmalig'?`<div><i data-lucide="refresh-cw" class="icon-inline"></i> ${freq[a.freq]||a.freq}</div>`:''}
-      ${a.beginDatum?`<div><i data-lucide="calendar" class="icon-inline"></i> ${a.beginDatum}${a.eindDatum&&a.eindDatum!==a.beginDatum?' – '+a.eindDatum:''}</div>`:''}
+      ${a.freq&&a.freq!=='eenmalig'?`<div><i data-lucide="refresh-cw" class="icon-inline"></i> ${escHtml(freq[a.freq]||a.freq)}</div>`:''}
+      ${a.beginDatum?`<div><i data-lucide="calendar" class="icon-inline"></i> ${escHtml(a.beginDatum)}${a.eindDatum&&a.eindDatum!==a.beginDatum?' – '+escHtml(a.eindDatum):''}</div>`:''}
       ${a.informatief?`<span class="badge" style="background:var(--bg-2);color:var(--muted);"><i data-lucide="pin" class="icon-inline"></i> Informatief</span>`:''}
     </div>`;
   document.getElementById('act-detail-agenda-btn').onclick=()=>location.href=`agenda.html?datum=${_atNuISO()}`;
@@ -256,7 +256,7 @@ function renderVerjaardagHome(){
       background:${vandaag?'var(--normaal-bg)':'var(--surface-2)'};
       border:1.5px solid ${vandaag?'var(--normaal-dot)':'var(--border)'};
       border-radius:var(--radius-sm);margin-bottom:6px;">
-      <div style="flex:1;font-size:14px;font-weight:${vandaag?700:500};color:var(--ink);display:flex;align-items:center;gap:6px;">${it.icon?`<i data-lucide="${it.icon}" style="width:14px;height:14px;flex-shrink:0;"></i>`:''} ${escHtml(it.label)}</div>
+      <div style="flex:1;font-size:14px;font-weight:${vandaag?700:500};color:var(--ink);display:flex;align-items:center;gap:6px;">${it.icon?`<i data-lucide="${escHtml(it.icon)}" style="width:14px;height:14px;flex-shrink:0;"></i>`:''} ${escHtml(it.label)}</div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:13px;font-weight:600;color:${vandaag?'var(--normaal-clr)':'var(--accent)'};">${wanneer}</div>
         <div style="font-size:11px;color:var(--muted);">${dagStr}</div>
@@ -268,8 +268,8 @@ function renderVerjaardagHome(){
 function renderPersoonStrip(p){
   const huidig=sessionStorage.getItem('perspectief')||p?.persoonKey;
   document.getElementById('persoon-strip').innerHTML=Auth.PROFIELEN.map(pr=>`
-    <div class="avatar-chip${pr.persoonKey===huidig?' active':''}" onclick="wisselPersoon('${pr.persoonKey}')">
-      <span>${pr.emoji}</span><span>${pr.naam}</span>
+    <div class="avatar-chip${pr.persoonKey===huidig?' active':''}" onclick="wisselPersoon('${escHtml(pr.persoonKey)}')">
+      <span>${escHtml(pr.emoji)}</span><span>${escHtml(pr.naam)}</span>
     </div>`).join('');
 }
 
@@ -286,14 +286,14 @@ function renderVandaag(datumISO,p){
   }).sort((a,b)=>tijdMinuten(a.start)-tijdMinuten(b.start));
   if(!dagActs.length){el.innerHTML='<div class="empty-state"><i data-lucide="leaf" class="empty-icon"></i><p>Geen activiteiten vandaag</p></div>';return;}
   el.innerHTML=dagActs.map(a=>`
-    <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openActDetail(${a.id})">
+    <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openActDetail(${Number(a.id)})">
       <div style="font-size:22px;display:flex;align-items:center;">${a.wie?.length===1?(PEMOJI[a.wie[0]]?`<span>${escHtml(PEMOJI[a.wie[0]])}</span>`:'<i data-lucide="calendar-range" style="width:20px;height:20px;"></i>'):'<i data-lucide="users" style="width:20px;height:20px;"></i>'}</div>
       <div style="flex:1;">
-        <div class="card-title">${a.informatief?'<i data-lucide="pin" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ':''}${a.naam}${a.prive?' <i data-lucide="lock" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i>':''}</div>
+        <div class="card-title">${a.informatief?'<i data-lucide="pin" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ':''}${escHtml(a.naam)}${a.prive?' <i data-lucide="lock" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i>':''}</div>
         <div class="meta">
-          ${a.start?`<span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${a.start}${a.eindUur?' – '+a.eindUur:''}</span>`:''}
-          ${a.locatie?`<span><i data-lucide="map-pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${a.locatie}</span>`:''}
-          ${(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
+          ${a.start?`<span><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.start)}${a.eindUur?' – '+escHtml(a.eindUur):''}</span>`:''}
+          ${a.locatie?`<span><i data-lucide="map-pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.locatie)}</span>`:''}
+          ${(a.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${escHtml(PLABEL[w]||w)}</span>`).join('')}
         </div>
       </div>
       <div style="color:var(--muted);font-size:14px;flex-shrink:0;">›</div>
@@ -307,12 +307,12 @@ function renderTodosPreview(p){
   if(!open.length){el.innerHTML='<div class="leeg"><div class="leeg-icon"><i data-lucide="check-circle" style="width:32px;height:32px;color:var(--muted-2);"></i></div><div class="leeg-titel">Geen openstaande to-do\'s</div><div class="leeg-sub">Tik op + om een taak toe te voegen</div></div>';return;}
   el.innerHTML=open.map(t=>`
     <div class="todo-item${t.gedaan?' gedaan':''}">
-      <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan&&t.prioriteit?' '+t.prioriteit:''}" onclick="toggleTodo('${t.id}')"></button>
+      <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan&&t.prioriteit?' '+t.prioriteit:''}" onclick="toggleTodo(${Number(t.id)})"></button>
       <div class="todo-body" style="cursor:pointer;" onclick="location.href='todos.html'">
-        <div class="todo-titel${t.gedaan?' gedaan':''}">${t.titel}</div>
+        <div class="todo-titel${t.gedaan?' gedaan':''}">${escHtml(t.titel)}</div>
         <div class="todo-meta">
-          ${t.deadline?`<span><i data-lucide="calendar" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${t.deadline}</span>`:''}
-          ${(t.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${PLABEL[w]||w}</span>`).join('')}
+          ${t.deadline?`<span><i data-lucide="calendar" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(t.deadline)}</span>`:''}
+          ${(t.wie||[]).map(w=>`<span class="badge ${PBADGE[w]||''}">${escHtml(PLABEL[w]||w)}</span>`).join('')}
         </div>
       </div>
     </div>`).join('')+
