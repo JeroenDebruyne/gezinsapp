@@ -131,9 +131,17 @@ function toggleApiKeyZicht() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
   document.getElementById('api-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
 }
-function slaApiKeyOp() {
+async function slaApiKeyOp() {
   const key = document.getElementById('api-key-input').value.trim();
   if (!key) { toonOpslagStatus('❌ Vul een API key in.'); return; }
+  toonOpslagStatus('⏳ API key valideren…');
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/models', {
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }
+    });
+    if (r.status === 401) { toonOpslagStatus('❌ Ongeldige API-sleutel.'); return; }
+    if (!r.ok) { toonOpslagStatus('❌ API key validatie mislukt (HTTP ' + r.status + ').'); return; }
+  } catch(e) { toonOpslagStatus('❌ Kan Anthropic API niet bereiken.'); return; }
   localStorage.setItem('anthropic_api_key', key); // CodeQL[js/clear-text-storage-of-sensitive-information]
   sbSaveInstellingen();
   sluitApiKeyForm();
@@ -166,9 +174,15 @@ function toggleMapsKeyZicht() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
   document.getElementById('maps-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
 }
-function slaMapsKeyOp() {
+async function slaMapsKeyOp() {
   const key = document.getElementById('maps-key-input').value.trim();
   if (!key) { toonOpslagStatus('❌ Vul een Maps key in.'); return; }
+  toonOpslagStatus('⏳ Maps key valideren…');
+  try {
+    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${encodeURIComponent(key)}`);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.status === 'REQUEST_DENIED') { toonOpslagStatus('❌ Ongeldige Maps API-sleutel of Geocoding API niet ingeschakeld.'); return; }
+  } catch(e) { toonOpslagStatus('❌ Kan Google Maps API niet bereiken.'); return; }
   localStorage.setItem(Maps.KEY_KEY, key); // CodeQL[js/clear-text-storage-of-sensitive-information]
   sbSaveInstellingen();
   sluitMapsKeyForm();

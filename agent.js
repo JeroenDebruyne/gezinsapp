@@ -43,6 +43,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   // ids: { berichten, input, bevestiging, bevestigingTekst?, storageKey? }
   let chatGeschiedenis = [];
   let _pending = null;
+  let _bevestigingTimeout = null;
 
   const _sk = ids.storageKey || null;
   if (_sk) {
@@ -160,9 +161,12 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       if (el) el.textContent = bericht;
     }
     panel.style.display = 'block';
+    _bevestigingTimeout = setTimeout(() => annuleer(), 5 * 60 * 1000);
   }
 
   function _verbergBevestiging() {
+    clearTimeout(_bevestigingTimeout);
+    _bevestigingTimeout = null;
     const panel = document.getElementById(ids.bevestiging);
     if (panel) panel.style.display = 'none';
   }
@@ -248,8 +252,11 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       }
     } catch (e) {
       if (streamWrap) streamWrap.remove();
-      voegBerichtToe('assistant', '❌ Fout: ' + e.message);
-      if (e.message.includes('401')) localStorage.removeItem('anthropic_api_key');
+      if (e.message.includes('401')) {
+        voegBerichtToe('assistant', '❌ API-sleutel ongeldig of verlopen. Stel een nieuwe in via Instellingen.');
+      } else {
+        voegBerichtToe('assistant', '❌ Fout: ' + e.message);
+      }
     }
   }
 
