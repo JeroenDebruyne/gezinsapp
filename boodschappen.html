@@ -114,7 +114,7 @@ onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderBoodschappen(); renderExtraIt
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>
-    `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${w}')">${w}</button>`
+    `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${escHtml(w)}')">${escHtml(w)}</button>`
   ).join('');
   const mobSel=document.getElementById('winkel-sel-mob');
   if(mobSel){mobSel.innerHTML=['Alles',...WINKELS].map(w=>`<option value="${w}"${activeWinkel===w?' selected':''}>${w}</option>`).join('');}

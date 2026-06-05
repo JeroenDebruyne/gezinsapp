@@ -789,6 +789,10 @@ async function doNieuwWachtwoord() {
 // ── Redirect als al ingelogd / recovery token detecteren ─────────────────────
 (function checkAlreadyLoggedIn() {
   try {
+    // Foutmelding vanuit auth.js (bijv. geen gezinsprofiel)
+    const loginFout = sessionStorage.getItem('login-fout');
+    if (loginFout) { sessionStorage.removeItem('login-fout'); showMsg('❌ ' + loginFout); return; }
+
     // Supabase hash parameters parsen (#access_token=...&type=recovery)
     const hash = window.location.hash.substring(1);
     if (hash) {
@@ -798,6 +802,10 @@ async function doNieuwWachtwoord() {
         return;
       }
       if (params.type === 'recovery' && params.access_token) {
+        if (params.expires_at && Date.now()/1000 > Number(params.expires_at)) {
+          showMsg('❌ Deze resetlink is verlopen. Vraag een nieuwe aan.');
+          return;
+        }
         _recoveryToken = params.access_token;
         document.getElementById('mode-tabs').style.display = 'none';
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));

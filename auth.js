@@ -70,8 +70,7 @@ const Auth = (() => {
     const s = _readSession();
     if (!s?.user) return null;
     const email = s.user.email?.toLowerCase()||'';
-    return _profielenCache.find(p => p.email?.toLowerCase() === email)
-      || { email, naam:email.split('@')[0], emoji:'👤', rol:'jeugd', persoonKey:'onbekend' };
+    return _profielenCache.find(p => p.email?.toLowerCase() === email) || null;
   }
 
   async function laadProfielen() {
@@ -178,6 +177,11 @@ const Auth = (() => {
       if (!ok) return;
       await laadProfielen();   // eerst profielen laden zodat naam/emoji beschikbaar zijn
       const p = profiel();
+      if (!p) {
+        sessionStorage.setItem('login-fout', 'Je e-mailadres heeft geen toegang tot deze app.');
+        window.location.replace('login.html');
+        return;
+      }
       // Topbar
       const nEl = document.getElementById('topbar-naam');
       const eEl = document.getElementById('topbar-emoji');
