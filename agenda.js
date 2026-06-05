@@ -47,8 +47,8 @@ function renderLegenda(){
     {key:'alle',label:'Alle',dot:''},
     ...PERSONEN.map(p=>({key:p,label:PLABEL[p],dot:DOT_KLEUR[p]}))
   ].map(item=>`
-    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" onclick="setFilter('${item.key}')">
-      ${item.dot?`<div class="legenda-dot ${item.dot}"></div>`:''}${item.label}
+    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" onclick="setFilter('${escHtml(item.key)}')">
+      ${item.dot?`<div class="legenda-dot ${item.dot}"></div>`:''}${escHtml(item.label)}
     </div>`).join('');
 }
 function setFilter(key){actievePersoonFilter=key;renderLegenda();renderMaand();renderDagDetail(geselecteerdeDatum);}
@@ -191,8 +191,8 @@ function renderDagDetail(datumISO){
           onclick="openDOModal('${datumISO}','${dagLabel}')"><span style="width:7px;height:7px;border-radius:50%;background:${dc.dot};flex-shrink:0;"></span>${dc.lbl}</span>
       </div>
     </div>
-    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${getVakantieNaam(datumISO)}</div>`:''}
-    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${getFeestdagNaam(datumISO)}</div>`:''}
+    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${escHtml(getVakantieNaam(datumISO))}</div>`:''}
+    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${escHtml(getFeestdagNaam(datumISO))}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
         ${v.icon?`<i data-lucide="${escHtml(v.icon)}" style="width:20px;height:20px;flex-shrink:0;"></i>`:`<span style="font-size:20px;">${escHtml(v.emoji||'')}</span>`}
@@ -485,8 +485,8 @@ function closeActModal(){
 
 function renderPersonenMS(){
   document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${p}')">
-      ${PEMOJI[p]} ${PLABEL[p]}
+    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${escHtml(p)}')">
+      ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 }
 function togglePersoon(p){
@@ -793,8 +793,8 @@ function icalToonPreview(){
     (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${p}')">
-      ${PEMOJI[p]||''} ${PLABEL[p]||p}
+    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${escHtml(p)}')">
+      ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 
   const isAbo=_icalSrcUrl&&!icalAbonnementen.find(a=>a.url===_icalSrcUrl);
