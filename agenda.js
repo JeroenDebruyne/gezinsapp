@@ -105,7 +105,7 @@ function renderMaand(){
       <div class="dag-num${isVandaag?' vandaag':''}${isWeekend&&!isVandaag?' weekend':''}">${cel.dagNr}</div>
       ${meerdaagsActs.slice(0,2).map(a=>{
         const kleur=KLEUR_BALK[(a.wie||[])[0]]||'var(--accent)';
-        return `<div class="meerdaags-balk" style="background:${kleur};" title="${a.naam}">${cel.dagNr===parseInt(a.beginDatum?.split('-')[2])?a.naam:''}</div>`;
+        return `<div class="meerdaags-balk" style="background:${kleur};" title="${escHtml(a.naam)}">${cel.dagNr===parseInt(a.beginDatum?.split('-')[2])?escHtml(a.naam):''}</div>`;
       }).join('')}
       <div class="dag-dots">${dots}${vakantie?'<div class="dot" style="background:var(--normaal-dot);opacity:.6;"></div>':''}</div>
     </div>`;
@@ -215,7 +215,7 @@ function renderDagDetail(datumISO){
             ?`<span class="act-rij-badge" style="background:var(--accent-l);color:var(--accent);border:1px solid var(--accent)55;">👨‍👩‍👧 Familie</span>`
             :wie.map(w=>`
               <span class="act-rij-badge" style="background:${KLEUR_BALK[w]||'var(--bg-2)'}22;color:${KLEUR_BALK[w]||'var(--muted)'};border:1px solid ${KLEUR_BALK[w]||'var(--border)'}44;">
-                ${PEMOJI[w]||''} ${PLABEL[w]||w}
+                ${escHtml(PEMOJI[w]||'')} ${escHtml(PLABEL[w]||w)}
               </span>`).join('');
           const transportHtml=renderTransportDetail(a,datumISO);
           return `
