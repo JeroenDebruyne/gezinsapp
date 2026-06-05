@@ -372,6 +372,7 @@ function saveTodo() {
 
   slaLokaalOp();
   sbSaveTodo(todo);
+  toonOpslagStatus('✅ Opgeslagen');
   closeModal();
   renderTodos();
 }
@@ -383,6 +384,7 @@ function verwijderTodo(id) {
   closeModal();
   slaLokaalOp();
   if (t?._sbId) sbDeleteTodo(t._sbId);
+  toonOpslagStatus('✅ Verwijderd');
   renderTodos();
 }
 

@@ -380,6 +380,7 @@ function resetTransport(datum, kind){
     delete transportUitzonderingen[datum];
   slaLokaalOp();
   sbSaveInstellingen();
+  toonOpslagStatus('✅ Uitzondering verwijderd');
   renderKL();
 }
 
@@ -497,6 +498,7 @@ function slaActTransportOp() {
   act[`haalt${cap}`]  = haalt;
   slaLokaalOp();
   sbSaveActiviteit(act);
+  toonOpslagStatus('✅ Opgeslagen');
   // Todo aanmaken/bijwerken voor gezinshoofd
   beheerTransportTodo(act, _modalDatum, _modalKind, 'brengt', brengt);
   beheerTransportTodo(act, _modalDatum, _modalKind, 'haalt',  haalt);

@@ -319,14 +319,14 @@ function voegExtraToe(){
   const nieuwItem={id:Date.now()+1,naam,winkel};
   extraItems.push(nieuwItem);
   if(input)input.value='';
-  renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
+  renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);toonOpslagStatus('✅ Toegevoegd');
 }
 
-function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
+function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);toonOpslagStatus('✅ Verwijderd');}
 
 function wijzigIngWinkel(naam,nieuweWinkel){
   const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
-  if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);}
+  if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);toonOpslagStatus('✅ Opgeslagen');}
   activeWinkel=nieuweWinkel;
   renderWinkelTabs();renderBoodschappen();renderExtraItems();
 }

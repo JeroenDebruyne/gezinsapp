@@ -459,7 +459,7 @@ async function wijzigEnkelDit(){
   if(!origAct||!_editRecurDatum)return;
   closeEditRecurModal();
   origAct.uitgesloten=(origAct.uitgesloten||[]).filter(d=>d!==_editRecurDatum).concat(_editRecurDatum);
-  slaLokaalOp();await sbSaveActiviteit(origAct);
+  slaLokaalOp();await sbSaveActiviteit(origAct);toonOpslagStatus('✅ Opgeslagen');
   const kopie={
     ...origAct,
     id:Date.now(),_sbId:undefined,
@@ -647,7 +647,7 @@ async function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  slaLokaalOp();renderAlles();await sbSaveActiviteit(act);closeActModal();
+  slaLokaalOp();renderAlles();await sbSaveActiviteit(act);toonOpslagStatus('✅ Opgeslagen');closeActModal();
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
@@ -669,7 +669,7 @@ async function verwijderEnkelHerhaling(){
   const act=activiteiten.find(a=>a.id===_verwijderActId);
   if(!act||!_verwijderDatum) return;
   act.uitgesloten=(act.uitgesloten||[]).filter(d=>d!==_verwijderDatum).concat(_verwijderDatum);
-  closeVerwijderModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);
+  closeVerwijderModal();slaLokaalOp();renderAlles();await sbSaveActiviteit(act);toonOpslagStatus('✅ Opgeslagen');
 }
 function verwijderVolleActiviteit(){
   closeVerwijderModal();
@@ -681,7 +681,7 @@ function verwijderVolleActiviteit(){
 function _doVerwijderVolledig(id){
   const act=activiteiten.find(a=>a.id===id);
   activiteiten=activiteiten.filter(a=>a.id!==id);
-  slaLokaalOp();if(act?._sbId)sbDeleteActiviteit(act._sbId);renderAlles();
+  slaLokaalOp();if(act?._sbId)sbDeleteActiviteit(act._sbId);toonOpslagStatus('✅ Verwijderd');renderAlles();
 }
 function closeVerwijderModal(){document.getElementById('verwijder-modal-bg').classList.remove('open');}
 
@@ -700,7 +700,7 @@ function selectOverride(d,el){
   el.style.opacity='1';el.style.outline='2px solid var(--ink)';
 }
 function saveDOModal(){
-  if(doKey&&tempOverride){drukteOverride[doKey]=tempOverride;sbSaveDrukte(doKey,tempOverride);slaLokaalOp();}
+  if(doKey&&tempOverride){drukteOverride[doKey]=tempOverride;sbSaveDrukte(doKey,tempOverride);slaLokaalOp();toonOpslagStatus('✅ Opgeslagen');}
   closeDOModal();renderAlles();
 }
 function closeDOModal(){
