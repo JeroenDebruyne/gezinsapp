@@ -1,6 +1,27 @@
 // agent.js — Gedeelde chat-engine voor alle gezinsassistenten
 // Gebruik: const myAgent = createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen })
 
+const AGENT_MODEL = 'claude-sonnet-4-6';
+
+async function agentFetch(apiKey, body) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    if (r.status === 401) localStorage.removeItem('anthropic_api_key');
+    throw new Error(d.error?.message || 'API fout ' + r.status);
+  }
+  return d;
+}
+
 // Bouwt een dynamische gezinsbeschrijving op basis van de geladen profielen.
 // Voorbeeld: "Gezin: Jeroen (gezinshoofd, key:jeroen), Kelly (gezinshoofd, key:kelly), Nora (kind 6j, key:nora)."
 function bouwGezinsContext() {
@@ -50,22 +71,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   }
 
   async function _fetch(apiKey, body) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({ ...body, messages: _cleanMessages(body.messages || []) }),
-    });
-    const d = await r.json();
-    if (!r.ok) {
-      if (r.status === 401) localStorage.removeItem('anthropic_api_key');
-      throw new Error(d.error?.message || 'API fout ' + r.status);
-    }
-    return d;
+    return agentFetch(apiKey, { ...body, messages: _cleanMessages(body.messages || []) });
   }
 
   async function _fetchStream(apiKey, body, onChunk) {
@@ -180,7 +186,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       chatGeschiedenis.push({ role: 'assistant', content: data.content });
       chatGeschiedenis.push({ role: 'user', content: toolResults });
       _slaGeschiedenisOp();
-      data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
     }
     return data;
   }
@@ -219,7 +225,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       container.scrollTop = container.scrollHeight;
     }
     try {
-      let data = await _fetchStream(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
+      let data = await _fetchStream(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
         if (!streamedText && streamBubble) streamBubble.textContent = '';
         streamedText += chunk;
         if (streamBubble) { streamBubble.innerHTML = formateerAntwoord(streamedText); if (container) container.scrollTop = container.scrollHeight; }
@@ -261,7 +267,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         const ph = last.content.find(b => b.type === 'tool_result' && b.tool_use_id === toolUseId);
         if (ph) ph.content = String(result);
       }
-      let data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      let data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
       typingEl?.remove();
       const resultData = await _toolLoop(apiKey, data);
       if (!resultData) return;

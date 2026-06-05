@@ -303,7 +303,7 @@ function sluitBoodCombo(){
 function voegExtraToe(){
   const input=document.getElementById('bood-combo-input');
   const naam=(input?.value||'').trim();
-  if(!naam)return;
+  if(!naam){ toonOpslagStatus('❌ Vul een naam in.'); return; }
   const winkel=document.getElementById('bood-winkel-sel')?.value||activeWinkel;
   // Sla op als nieuw standaard-ingrediënt als het nog niet bestaat
   const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase());

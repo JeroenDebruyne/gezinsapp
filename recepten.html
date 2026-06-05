@@ -614,9 +614,9 @@ function closeReceptModal(){ document.getElementById('recept-modal-bg').classLis
 
 function saveRecept(){
   const naam=document.getElementById('f-naam').value.trim();
-  if(!naam){ alert('Geef een naam in.'); return; }
+  if(!naam){ toonOpslagStatus('❌ Geef een naam in.'); return; }
   const types=getGeselecteerdeTypes();
-  if(!types.length){ alert('Selecteer minstens één type.'); return; }
+  if(!types.length){ toonOpslagStatus('❌ Selecteer minstens één type.'); return; }
 
   const editId=document.getElementById('recept-modal-bg').dataset.editId;
   const tags=[...document.querySelectorAll('#tag-selector span[data-sel="1"]')].map(el=>el.textContent);
@@ -657,7 +657,7 @@ function saveRecept(){
     porties:parseInt(document.getElementById('f-porties').value)||4,
     moeilijk:document.getElementById('f-moeilijk').value,
     score:parseInt(document.getElementById('f-score').value)||null,
-    wie:PERSONEN.length?[...PERSONEN]:['jeroen','kelly','nora','odiel'],
+    wie:[...PERSONEN],
     bron:document.getElementById('f-bron').value,
     bereiding:document.getElementById('f-bereiding').value,
     tags,
@@ -675,6 +675,8 @@ function saveRecept(){
 
   if(nieuweIngs.length){
     toonOpslagStatus(`✅ Opgeslagen + ${nieuweIngs.length} nieuw ingrediënt${nieuweIngs.length>1?'en':''} toegevoegd`);
+  } else {
+    toonOpslagStatus('✅ Opgeslagen');
   }
 }
 
@@ -684,6 +686,7 @@ function verwijderRecept(id){
   recepten=recepten.filter(r=>r.id!==id&&r.id!=id);
   if(actieveFicheId==id){ actieveFicheId=null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
   renderRecepten();slaLokaalOp();if(r?._sbId)sbDeleteRecept(r._sbId);
+  toonOpslagStatus('✅ Verwijderd');
 }
 
 // ── Import via link ───────────────────────────────────────────
@@ -701,7 +704,7 @@ function naarStap(n){
 
 async function startImport(){
   const url=document.getElementById('import-url').value.trim();
-  if(!url||!url.startsWith('http')){ alert('Plak een geldige URL.'); return; }
+  if(!url||!url.startsWith('http')){ toonOpslagStatus('❌ Plak een geldige URL.'); return; }
   const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
   if(!apiKey){
     document.getElementById('import-error-tekst').innerHTML='<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
@@ -726,13 +729,7 @@ Formaat:
 types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
 tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
     let berichten=[{role:'user',content:`Haal het recept op van: ${url}`}];
-    let response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten})
-    });
-    if(!response.ok){ const e=await response.json().catch(()=>({})); if(response.status===401)localStorage.removeItem('anthropic_api_key'); throw new Error(e.error?.message||'API fout '+response.status); }
-    let data=await response.json();
+    let data=await agentFetch(apiKey,{model:AGENT_MODEL,max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten});
     let max=5;
     while(data.stop_reason==='tool_use'&&max-->0){
       document.getElementById('import-loader-tekst').textContent='Pagina wordt gelezen…';
@@ -742,8 +739,7 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
       }
       berichten.push({role:'assistant',content:data.content});
       berichten.push({role:'user',content:toolResults});
-      response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten})});
-      data=await response.json();
+      data=await agentFetch(apiKey,{model:AGENT_MODEL,max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten});
     }
     const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
     const jsonStr=tekst.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
@@ -810,7 +806,7 @@ function sluitLinkModal(){ document.getElementById('link-modal-bg').classList.re
 
 async function startScrape(){
   const url=document.getElementById('link-url').value.trim();
-  if(!url||!url.startsWith('http')){ alert('Plak een geldige URL (begin met https://)'); return; }
+  if(!url||!url.startsWith('http')){ toonOpslagStatus('❌ Plak een geldige URL (begin met https://).'); return; }
   const statusEl=document.getElementById('link-status');
   const btn=document.getElementById('btn-scrape');
   btn.disabled=true; btn.textContent='⏳ Bezig…';
@@ -886,7 +882,7 @@ function maakReceptVanJsonLd(data,url){
     bron:url,
     bereiding:inst.slice(0,3000),
     ingredienten:parseerIngredienten(data.recipeIngredient||[]),
-    tags:[], wie:['jeroen','kelly','nora','odiel'], prive:false,
+    tags:[], wie:[...PERSONEN], prive:false,
   };
 }
 
