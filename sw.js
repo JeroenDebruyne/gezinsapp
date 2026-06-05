@@ -1,4 +1,4 @@
-const CACHE = 'gezinsapp-v14';
+const CACHE = 'gezinsapp-v15';
 const STATIC = [
   'index.html', 'agent.html', 'agenda.html', 'boodschappen.html',
   'contacten.html', 'ingredienten.html', 'instellingen.html',

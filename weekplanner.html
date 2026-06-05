@@ -224,7 +224,7 @@ function renderPlanner(){
       const first=items[0];
       const naam=SPEC[first.waarde]?SPEC[first.waarde]:(recepten.find(r=>r.id===first.waarde||r.id===parseInt(first.waarde))?.naam||null);
       if(!naam)return null;
-      return naam+(items.length>1?` +${items.length-1}`:'');
+      return escHtml(naam)+(items.length>1?` +${items.length-1}`:'');
     }).filter(Boolean);
     const preview=previewItems.join(' · ');
     const slotsHtml=SLOTS.map(slot=>{
@@ -343,7 +343,7 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
   const top3El=document.getElementById('top3-sectie');
   if(top3.length){
     document.getElementById('top3-recepten').innerHTML=top3.map(r=>
-      `<button onclick="kiesPlanK(${r.id})" style="padding:6px 12px;border-radius:99px;border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;">${r.naam}</button>`
+      `<button onclick="kiesPlanK(${r.id})" style="padding:6px 12px;border-radius:99px;border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;">${escHtml(r.naam)}</button>`
     ).join('');
     top3El.style.display='block';
   } else { top3El.style.display='none'; }

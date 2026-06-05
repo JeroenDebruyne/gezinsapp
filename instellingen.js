@@ -78,7 +78,7 @@ function slaaMijnKleurOp() {
 function renderRoosters(){
   const personen = Auth.getProfielen().map(p => ({
     key: p.persoonKey,
-    label: `${p.emoji} ${p.naam}`,
+    label: `${escHtml(p.emoji||'')} ${escHtml(p.naam)}`,
     metLocatie: p.rol === 'gezinshoofd',
   }));
   document.getElementById('roosters-container').innerHTML=personen.map(p=>`
@@ -404,7 +404,7 @@ async function laadGebruikersLijst() {
               ${verjaardag ? `<span>${verjaardag}</span>` : ''}
             </div>
           </div>
-          <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;flex-shrink:0;">${ROLLABEL[p.rol]||p.rol}</span>
+          <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;flex-shrink:0;">${escHtml(ROLLABEL[p.rol]||p.rol)}</span>
           <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')" style="flex-shrink:0;"><i data-lucide="pencil" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Bewerken</button>
         </div>
         <!-- Bewerk modus (verborgen) -->
