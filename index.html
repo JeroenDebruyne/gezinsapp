@@ -164,7 +164,8 @@ function sluitActDetail(e){
 <script src="agent-tools.js"></script>
 <script>
 Auth.initPagina('index');
-laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+Promise.race([laadOp(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))])
+  .then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
 // Geocodeer thuisadres bij eerste gebruik (als coords nog niet gecacht zijn)
 if(typeof Maps!=='undefined'&&!Maps.getCoords()&&Maps.getThuisadres())
   Maps.geocodeerAdres(Maps.getThuisadres()).catch(()=>{});

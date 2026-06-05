@@ -337,7 +337,7 @@ function renderRecepten(){
       return types.includes(activeRType);
     });
   }
-  if(search) filtered=filtered.filter(r=>r.naam.toLowerCase().includes(search.toLowerCase())||(r.tags||[]).some(t=>t.toLowerCase().includes(search.toLowerCase())));
+  if(search){const q=search.toLowerCase();filtered=filtered.filter(r=>r.naam.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))||(r.ingredienten||[]).some(i=>i.naam.toLowerCase().includes(q)));}
   const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
   document.getElementById('recipes-grid').innerHTML=filtered.map(r=>{
     const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);

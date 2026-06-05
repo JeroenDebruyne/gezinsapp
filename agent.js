@@ -201,7 +201,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     // Wacht tot data geladen is (optioneel)
     if (isDataGeladen && !isDataGeladen()) {
       const typWait = voegBerichtToe('assistant', '⏳ Even wachten, data wordt nog geladen…', true);
-      await new Promise(r => { const t = setInterval(() => { if (isDataGeladen()) { clearInterval(t); r(); } }, 200); });
+      await new Promise(r => { const start = Date.now(); const t = setInterval(() => { if (isDataGeladen() || Date.now() - start > 8000) { clearInterval(t); r(); } }, 200); });
       typWait?.remove();
     }
     let apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
