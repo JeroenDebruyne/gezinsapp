@@ -195,6 +195,7 @@ function _saveItems(dagKey,slotKey,items){
   }
   slaLokaalOp();
   sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
+  toonOpslagStatus('✅ Opgeslagen');
 }
 // Geeft true als kind (persoonKey) eet bij grootouders op die datum
 function _isEetGrooOpDag(kindKey, datum){
@@ -440,6 +441,7 @@ function voegItemToe(){
 
 // ── Item bewerken ──────────────────────────────────────────────
 function wisItem(dagKey,slotKey,idx){
+  if(!confirm('Maaltijd verwijderen?')) return;
   const items=getSlotItems(planning[dagKey]||{},slotKey);
   items.splice(idx,1);
   _saveItems(dagKey,slotKey,items);

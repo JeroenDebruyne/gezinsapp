@@ -133,7 +133,7 @@ function toggleApiKeyZicht() {
 }
 function slaApiKeyOp() {
   const key = document.getElementById('api-key-input').value.trim();
-  if (!key) { alert('Vul een API key in.'); return; }
+  if (!key) { toonOpslagStatus('❌ Vul een API key in.'); return; }
   localStorage.setItem('anthropic_api_key', key); // CodeQL[js/clear-text-storage-of-sensitive-information]
   sbSaveInstellingen();
   sluitApiKeyForm();
@@ -168,7 +168,7 @@ function toggleMapsKeyZicht() {
 }
 function slaMapsKeyOp() {
   const key = document.getElementById('maps-key-input').value.trim();
-  if (!key) { alert('Vul een API key in.'); return; }
+  if (!key) { toonOpslagStatus('❌ Vul een Maps key in.'); return; }
   localStorage.setItem(Maps.KEY_KEY, key); // CodeQL[js/clear-text-storage-of-sensitive-information]
   sbSaveInstellingen();
   sluitMapsKeyForm();
@@ -584,8 +584,8 @@ function voegGezinsDatumToe() {
 
 async function slaGezinsDatumOp(i) {
   const d = gezinsDatums[i];
-  if (!d.label?.trim() || !d.startDatum) { alert('Vul naam en startdatum in.'); return; }
-  if (d.eindDatum && d.eindDatum < d.startDatum) { alert('Einddatum mag niet voor startdatum liggen.'); return; }
+  if (!d.label?.trim() || !d.startDatum) { toonOpslagStatus('❌ Vul naam en startdatum in.'); return; }
+  if (d.eindDatum && d.eindDatum < d.startDatum) { toonOpslagStatus('❌ Einddatum mag niet voor startdatum liggen.'); return; }
   await slaGezinsDatumsOp();
   toonOpslagStatus('✅ Opgeslagen');
   renderGezinsDatums();
@@ -660,7 +660,7 @@ function dupliceerVakantie(idx) {
 
 async function slaCustomVakantieOp(idx) {
   const v = customSchoolvakanties[idx];
-  if (!v.naam?.trim() || !v.van) { alert('Vul naam en startdatum in.'); return; }
+  if (!v.naam?.trim() || !v.van) { toonOpslagStatus('❌ Vul naam en startdatum in.'); return; }
   if (!v.tot) customSchoolvakanties[idx].tot = v.van;
   await slaCustomSchoolvakantiesOp();
   slaLokaalOp();
@@ -735,7 +735,7 @@ function dupliceerFeestdag(idx) {
 
 async function slaCustomFeestdagOp(idx) {
   const v = customFeestdagen[idx];
-  if (!v.naam?.trim() || !v.van) { alert('Vul naam en datum in.'); return; }
+  if (!v.naam?.trim() || !v.van) { toonOpslagStatus('❌ Vul naam en datum in.'); return; }
   await slaCustomFeestdagenOp();
   slaLokaalOp();
   toonOpslagStatus('✅ Opgeslagen');
@@ -891,7 +891,7 @@ function renderFeestdagenKaart() {
 
 async function koppelFeestdagen() {
   const url = document.getElementById('feestdagen-url').value.trim();
-  if (!url) { alert('Vul een iCal-link in.'); return; }
+  if (!url) { toonOpslagStatus('❌ Vul een iCal-link in.'); return; }
   toonOpslagStatus('⏳ Feestdagen ophalen…');
   try {
     const text   = await icalFetchUrl(url);
