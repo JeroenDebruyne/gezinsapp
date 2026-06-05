@@ -199,7 +199,7 @@
 
 <!-- Topbar -->
 <header class="topbar">
-  <div class="topbar-title">📅 Agenda</div>
+  <div class="topbar-title"><i data-lucide="calendar" class="icon-inline"></i> Agenda</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -234,7 +234,7 @@
           <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
           <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
         </div>
-        <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;">📥</button>
+        <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;"><i data-lucide="download" style="width:16px;height:16px;"></i></button>
       </div>
 
       <!-- Weekdagen header: Ma t/m Zo -->
@@ -281,7 +281,7 @@
   <!-- Meerdaagse toggle -->
   <div class="meerdaags-toggle-rij" onclick="toggleMeerdaags()">
     <div>
-      <div style="font-size:15px;font-weight:500;color:var(--ink);">📆 Meerdaagse activiteit</div>
+      <div style="font-size:15px;font-weight:500;color:var(--ink);"><i data-lucide="calendar-range" class="icon-inline"></i> Meerdaagse activiteit</div>
       <div style="font-size:12px;color:var(--muted);">Bijv. vakantie, schoolkamp, …</div>
     </div>
     <div class="ios-switch" id="meerdaags-switch"></div>
@@ -330,7 +330,7 @@
     <div style="display:flex;gap:6px;">
       <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" oninput="renderContactKeuze();locatieCheckThuis(this)"/>
       <button type="button" id="btn-reistijd-auto" onclick="berekenReistijdAuto()" title="Reistijd berekenen via Google Maps"
-        style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;">🗺️</button>
+        style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;"><i data-lucide="map" style="width:16px;height:16px;"></i></button>
     </div>
     <div id="locatie-contact-wrap" style="margin-top:6px;"></div>
   </div>
@@ -339,9 +339,9 @@
   <div class="form-row">
     <label>Maaltijd niet thuis <span style="font-size:11px;font-weight:400;color:var(--muted);">(auto-berekend op basis van tijdstip)</span></label>
     <div style="display:flex;gap:14px;margin-top:6px;">
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> 🥐 Ontbijt</label>
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> 🥗 Lunch</label>
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> 🍽️ Avond</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> <i data-lucide="coffee" class="icon-inline"></i> Ontbijt</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> <i data-lucide="leaf" class="icon-inline"></i> Lunch</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> <i data-lucide="utensils" class="icon-inline"></i> Avond</label>
     </div>
   </div>
 
@@ -353,7 +353,7 @@
   <!-- Privé toggle -->
   <div class="prive-toggle" onclick="togglePrive()">
     <div class="prive-toggle-left">
-      <span class="prive-toggle-label">🔒 Privé activiteit</span>
+      <span class="prive-toggle-label"><i data-lucide="lock" class="icon-inline"></i> Privé activiteit</span>
       <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
     </div>
     <div class="ios-switch" id="prive-switch"></div>
@@ -362,7 +362,7 @@
   <!-- Informatief toggle -->
   <div class="prive-toggle" onclick="toggleInformatief()">
     <div class="prive-toggle-left">
-      <span class="prive-toggle-label">📌 Informatieve activiteit</span>
+      <span class="prive-toggle-label"><i data-lucide="pin" class="icon-inline"></i> Informatieve activiteit</span>
       <span class="prive-toggle-sub">Geen impact op drukte (schoolreis, herinnering, …)</span>
     </div>
     <div class="ios-switch" id="informatief-switch"></div>
@@ -370,11 +370,11 @@
 
   <!-- Transport kindje -->
   <div class="kindje-sectie-modal" id="kindje-sectie" style="display:none;">
-    <div class="kindje-sectie-lbl">🚗 Transport kindje</div>
+    <div class="kindje-sectie-lbl"><i data-lucide="car" class="icon-inline"></i> Transport kindje</div>
 
     <!-- Nora -->
     <div id="transport-nora" style="display:none;">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👧 Nora</div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;display:flex;align-items:center;gap:5px;"><i data-lucide="baby" class="icon-inline"></i> Nora</div>
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
@@ -392,7 +392,7 @@
 
     <!-- Odiel -->
     <div id="transport-odiel" style="display:none;">
-      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">👦 Odiel</div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;display:flex;align-items:center;gap:5px;"><i data-lucide="baby" class="icon-inline"></i> Odiel</div>
       <div class="form-grid">
         <div class="form-row" style="margin:0 0 10px;">
           <label>Wie brengt?</label>
@@ -437,7 +437,7 @@
 <div class="modal-bg" id="ical-modal-bg">
 <div class="modal">
   <div class="modal-handle"></div>
-  <h3>📥 Agenda importeren</h3>
+  <h3><i data-lucide="download" class="icon-inline"></i> Agenda importeren</h3>
 
   <!-- URL invoer -->
   <div class="form-row">
@@ -456,7 +456,7 @@
 
   <!-- Huidige abonnementen -->
   <div id="ical-abonnementen-sectie" style="display:none;margin-bottom:14px;">
-    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🔄 Actieve abonnementen</div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i data-lucide="refresh-cw" class="icon-inline"></i> Actieve abonnementen</div>
     <div id="ical-abonnementen-lijst" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;"></div>
   </div>
 
@@ -472,7 +472,7 @@
       <input type="checkbox" id="ical-abo-check" style="width:auto;accent-color:var(--accent);"
         onchange="document.getElementById('ical-abo-naam-rij').style.display=this.checked?'block':'none'"/>
       <div style="flex:1;">
-        <div style="font-size:13px;font-weight:600;color:var(--ink);">🔄 Bewaar als abonnement</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:5px;"><i data-lucide="refresh-cw" class="icon-inline"></i> Bewaar als abonnement</div>
         <div style="font-size:11px;color:var(--muted);">Wijzigingen worden automatisch bijgehouden</div>
       </div>
     </div>
@@ -497,18 +497,18 @@
 <div class="modal-bg" id="verwijder-modal-bg">
 <div class="modal" style="max-width:360px;">
   <div class="modal-handle"></div>
-  <h3>🗑️ Activiteit verwijderen</h3>
+  <h3><i data-lucide="trash-2" class="icon-inline"></i> Activiteit verwijderen</h3>
   <p style="font-size:14px;color:var(--muted);margin-bottom:18px;">
     "<span id="vd-act-naam"></span>" is een herhalende activiteit.
     Wat wil je verwijderen?
   </p>
   <div style="display:flex;flex-direction:column;gap:10px;">
     <button onclick="verwijderEnkelHerhaling()" class="herhaling-btn-enkel">
-      🗓️ Alleen deze dag<br>
+      <i data-lucide="calendar-days" class="icon-inline"></i> Alleen deze dag<br>
       <span class="herhaling-btn-sub">Verwijder enkel deze ene herhaling</span>
     </button>
     <button onclick="verwijderVolleActiviteit()" style="padding:14px;border:2px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
-      🗑️ Volledige activiteit<br>
+      <i data-lucide="trash-2" class="icon-inline"></i> Volledige activiteit<br>
       <span style="font-size:12px;font-weight:400;">Verwijder alle herhalingen definitief</span>
     </button>
     <button onclick="closeVerwijderModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
@@ -520,18 +520,18 @@
 <div class="modal-bg" id="edit-recur-modal-bg">
 <div class="modal" style="max-width:360px;">
   <div class="modal-handle"></div>
-  <h3>✏️ Activiteit bewerken</h3>
+  <h3><i data-lucide="pencil" class="icon-inline"></i> Activiteit bewerken</h3>
   <p style="font-size:14px;color:var(--muted);margin-bottom:18px;">
     "<span id="er-act-naam"></span>" is een herhalende activiteit.
     Wat wil je bewerken?
   </p>
   <div style="display:flex;flex-direction:column;gap:10px;">
     <button onclick="wijzigEnkelDit()" class="herhaling-btn-enkel">
-      🗓️ Alleen deze dag<br>
+      <i data-lucide="calendar-days" class="icon-inline"></i> Alleen deze dag<br>
       <span class="herhaling-btn-sub">Wijzig enkel deze ene herhaling</span>
     </button>
     <button onclick="wijzigAlleHerhalingen()" style="padding:14px;border:2px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
-      🔁 Alle herhalingen<br>
+      <i data-lucide="repeat" class="icon-inline"></i> Alle herhalingen<br>
       <span style="font-size:12px;font-weight:400;">Wijzig de activiteit voor alle data</span>
     </button>
     <button onclick="closeEditRecurModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
