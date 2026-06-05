@@ -338,7 +338,7 @@ body {
         <label>Wachtwoord</label>
         <div class="pw-wrap">
           <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password"/>
-          <button class="pw-toggle" onclick="togglePw('login-pw',this)" type="button" aria-label="Wachtwoord tonen">👁</button>
+          <button class="pw-toggle" onclick="togglePw('login-pw')" type="button" aria-label="Wachtwoord tonen">👁</button>
         </div>
       </div>
       <a class="link-small" onclick="switchMode('reset')">Wachtwoord vergeten?</a>
@@ -392,7 +392,7 @@ body {
         <label>Wachtwoord</label>
         <div class="pw-wrap">
           <input type="password" id="setup-pw" placeholder="min. 8 tekens" autocomplete="new-password"/>
-          <button class="pw-toggle" onclick="togglePw('setup-pw',this)" type="button" aria-label="Wachtwoord tonen">👁</button>
+          <button class="pw-toggle" onclick="togglePw('setup-pw')" type="button" aria-label="Wachtwoord tonen">👁</button>
         </div>
       </div>
       <button class="btn-submit" id="btn-setup" onclick="maakGezinAan()">
@@ -410,14 +410,14 @@ body {
         <label>Nieuw wachtwoord</label>
         <div class="pw-wrap">
           <input type="password" id="nieuw-pw" placeholder="••••••••" autocomplete="new-password"/>
-          <button class="pw-toggle" onclick="togglePw('nieuw-pw',this)" type="button" aria-label="Wachtwoord tonen">👁</button>
+          <button class="pw-toggle" onclick="togglePw('nieuw-pw')" type="button" aria-label="Wachtwoord tonen">👁</button>
         </div>
       </div>
       <div class="form-row">
         <label>Bevestig wachtwoord</label>
         <div class="pw-wrap">
           <input type="password" id="nieuw-pw2" placeholder="••••••••" autocomplete="new-password"/>
-          <button class="pw-toggle" onclick="togglePw('nieuw-pw2',this)" type="button" aria-label="Wachtwoord tonen">👁</button>
+          <button class="pw-toggle" onclick="togglePw('nieuw-pw2')" type="button" aria-label="Wachtwoord tonen">👁</button>
         </div>
       </div>
       <button class="btn-submit" id="btn-nieuw" onclick="doNieuwWachtwoord()">
@@ -452,10 +452,10 @@ body {
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
+// SUPABASE_URL en SUPABASE_KEY komen uit config.js
 const SESSION_KEY  = 'sb-' + new URL(SUPABASE_URL).hostname.split('.')[0] + '-auth-token';
 
 // ── Gezin & avatar initialisatie ─────────────────────────────────────────────
@@ -662,14 +662,9 @@ function setLoading(btnId, loading) {
   btn.classList.toggle('loading', loading);
 }
 
-function togglePw(inputId, btn) {
+function togglePw(inputId) {
   const inp = document.getElementById(inputId);
-  const icon = btn.querySelector('i');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-  } else {
-    inp.type = 'password';
-  }
+  inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
 function switchMode(mode) {
@@ -766,7 +761,7 @@ async function doNieuwWachtwoord() {
   hideMsg();
   const pw  = document.getElementById('nieuw-pw').value;
   const pw2 = document.getElementById('nieuw-pw2').value;
-  if (!pw || pw.length < 6) { showMsg('Wachtwoord moet minstens 6 tekens zijn.'); return; }
+  if (!pw || pw.length < 8) { showMsg('Wachtwoord moet minstens 8 tekens zijn.'); return; }
   if (pw !== pw2) { showMsg('Wachtwoorden komen niet overeen.'); return; }
 
   setLoading('btn-nieuw', true);
@@ -789,6 +784,10 @@ async function doNieuwWachtwoord() {
 // ── Redirect als al ingelogd / recovery token detecteren ─────────────────────
 (function checkAlreadyLoggedIn() {
   try {
+    // Foutmelding vanuit auth.js (bijv. geen gezinsprofiel)
+    const loginFout = sessionStorage.getItem('login-fout');
+    if (loginFout) { sessionStorage.removeItem('login-fout'); showMsg('❌ ' + loginFout); return; }
+
     // Supabase hash parameters parsen (#access_token=...&type=recovery)
     const hash = window.location.hash.substring(1);
     if (hash) {
@@ -798,6 +797,10 @@ async function doNieuwWachtwoord() {
         return;
       }
       if (params.type === 'recovery' && params.access_token) {
+        if (params.expires_at && Date.now()/1000 > Number(params.expires_at)) {
+          showMsg('❌ Deze resetlink is verlopen. Vraag een nieuwe aan.');
+          return;
+        }
         _recoveryToken = params.access_token;
         document.getElementById('mode-tabs').style.display = 'none';
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));

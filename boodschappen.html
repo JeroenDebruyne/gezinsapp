@@ -86,11 +86,12 @@
 </div>
 </main>
 
+<script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
 Auth.initPagina('boodschappen');
-let activeWinkel='Alles';
+let activeWinkel=sessionStorage.getItem('bood_winkel')||'Alles';
 // afgevinkt: volledig vanuit Supabase, localStorage als offline-fallback
 let afgevinkt={};
 
@@ -114,12 +115,12 @@ onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderBoodschappen(); renderExtraIt
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>
-    `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${w}')">${w}</button>`
+    `<button class="ptab${activeWinkel===w?' active':''}" onclick="switchWinkel('${escHtml(w)}')">${escHtml(w)}</button>`
   ).join('');
   const mobSel=document.getElementById('winkel-sel-mob');
   if(mobSel){mobSel.innerHTML=['Alles',...WINKELS].map(w=>`<option value="${w}"${activeWinkel===w?' selected':''}>${w}</option>`).join('');}
 }
-function switchWinkel(w){activeWinkel=w;renderWinkelTabs();renderBoodschappen();renderExtraItems();}
+function switchWinkel(w){activeWinkel=w;sessionStorage.setItem('bood_winkel',w);renderWinkelTabs();renderBoodschappen();renderExtraItems();}
 
 // Groepeer boodschappenReceptItems per naam voor een winkel
 function _ingVoorWinkel(w){
@@ -303,12 +304,12 @@ function sluitBoodCombo(){
 function voegExtraToe(){
   const input=document.getElementById('bood-combo-input');
   const naam=(input?.value||'').trim();
-  if(!naam)return;
+  if(!naam){ toonOpslagStatus('❌ Vul een naam in.'); return; }
   const winkel=document.getElementById('bood-winkel-sel')?.value||activeWinkel;
   // Sla op als nieuw standaard-ingrediënt als het nog niet bestaat
   const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase());
   if(!bestaatAl){
-    const nieuwIng={id:Date.now(),naam,winkel,categorie:'',productLink:null};
+    const nieuwIng={id:_maakId(),naam,winkel,categorie:'',productLink:null};
     standaardIngredienten.push(nieuwIng);
     sbSaveIngredient(nieuwIng);
   } else {
@@ -316,17 +317,17 @@ function voegExtraToe(){
     const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
     if(ing&&ing.winkel!==winkel){ing.winkel=winkel;sbSaveIngredient(ing);}
   }
-  const nieuwItem={id:Date.now()+1,naam,winkel};
+  const nieuwItem={id:_maakId(),naam,winkel};
   extraItems.push(nieuwItem);
   if(input)input.value='';
-  renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);
+  renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);toonOpslagStatus('✅ Toegevoegd');
 }
 
-function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);}
+function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);toonOpslagStatus('✅ Verwijderd');}
 
 function wijzigIngWinkel(naam,nieuweWinkel){
   const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
-  if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);}
+  if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);toonOpslagStatus('✅ Opgeslagen');}
   activeWinkel=nieuweWinkel;
   renderWinkelTabs();renderBoodschappen();renderExtraItems();
 }

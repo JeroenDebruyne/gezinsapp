@@ -11,8 +11,9 @@ function escHtml(s){
 }
 
 // ── Constanten ────────────────────────────────────────────────
-const SUPABASE_URL = 'https://ceeplmghvcaqvlpicwyi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
+// SUPABASE_URL en SUPABASE_KEY komen uit config.js
+
+function _maakId() { return Date.now() + Math.random(); }
 
 let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
@@ -256,14 +257,14 @@ async function laadOp() {
     await Auth.laadProfielen();
     herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
     const [r,i,a,p,b,c,d,t] = await Promise.all([
-      sbFetch(`recepten${_gidQ('?order=naam')}`),
-      sbFetch(`ingredienten${_gidQ('?order=naam')}`),
-      sbFetch(`activiteiten${_gidQ('?order=naam')}`),
-      sbFetch(`planning${_gidQ('')}`),
-      sbFetch(`boodschappen_extra${_gidQ('?order=naam')}`),
-      sbFetch(`contacten${_gidQ('?order=naam')}`),
-      sbFetch(`drukte_override${_gidQ('')}`),
-      sbFetch(`todos${_gidQ('?order=aangemaakt_op')}`).catch(()=>[]),
+      sbFetch(`recepten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`ingredienten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`activiteiten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`planning${_gezinIdQ('')}`),
+      sbFetch(`boodschappen_extra${_gezinIdQ('?order=naam')}`),
+      sbFetch(`contacten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`drukte_override${_gezinIdQ('')}`),
+      sbFetch(`todos${_gezinIdQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
     if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
     if (i.length) standaardIngredienten = i.map(x => ({...x, _sbId: x.id, productLink: x.product_link || null}));
@@ -307,7 +308,7 @@ async function laadOp() {
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
     if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
-    const inst = await sbFetch(`instellingen${_gidQ('')}`).catch(()=>[]);
+    const inst = await sbFetch(`instellingen${_gezinIdQ('')}`).catch(()=>[]);
     inst.forEach(r=>{
       if (r.id==='vasteRoosters'&&r.waarde) vasteRoosters={...vasteRoosters,...r.waarde};
       if (r.id==='uitzonderingen'&&r.waarde) uitzonderingen=r.waarde;
@@ -402,9 +403,9 @@ function slaLokaalOp() {
 
 // Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties
 // Fallback op localStorage zodat saves ook werken als laadProfielen faalde
-function _gid() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
-// Voegt gezin_id toe aan een query string: _gidQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
-function _gidQ(base = '') {
+function _gezinId() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
+// Voegt gezin_id toe aan een query string: _gezinIdQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
+function _gezinIdQ(base = '') {
   const id = _gid();
   if (!id) return base;
   return base ? `${base}&gezin_id=eq.${id}` : `?gezin_id=eq.${id}`;
@@ -703,144 +704,7 @@ async function slaGezinsDatumsOp() {
   } catch(_) {}
 }
 
-// ── iCal gedeelde functies ────────────────────────────────────
-let icalAbonnementen = [];
-
-async function laadIcalAbonnementen() {
-  try {
-    const gid = _gid();
-    const f = gid ? `?id=eq.icalAbonnementen&gezin_id=eq.${gid}` : `?id=eq.icalAbonnementen`;
-    const rows = await sbFetch(`instellingen${f}`).catch(() => []);
-    if (rows[0]?.waarde) icalAbonnementen = rows[0].waarde;
-  } catch(_) {}
-}
-async function slaIcalAbonnementenOp() {
-  const gid = _gid();
-  if (!gid) return;
-  try {
-    await sbFetch('instellingen','POST',
-      {id:'icalAbonnementen',waarde:icalAbonnementen,updated_at:new Date().toISOString(),gezin_id:gid},
-      '','resolution=merge-duplicates');
-  } catch(_) {}
-}
-
-async function sbVerwijderIcalActiviteiten(sourceUrl) {
-  const gid = _gid();
-  const filter = gid
-    ? `?ical_source=eq.${encodeURIComponent(sourceUrl)}&gezin_id=eq.${gid}`
-    : `?ical_source=eq.${encodeURIComponent(sourceUrl)}`;
-  try { await sbFetch(`activiteiten${filter}`, 'DELETE'); } catch(e) { console.warn('[iCal delete]', e); }
-  activiteiten = activiteiten.filter(a => a.icalSource !== sourceUrl);
-}
-
-async function icalFetchUrl(rawUrl) {
-  // Externe iCal-providers hebben zelden CORS-headers, dus altijd via proxy ophalen.
-  // Directe fetch vermijden: dat logt altijd een CORS-error in de console, ook al is hij gevangen.
-  const url = rawUrl.replace(/^webcal:\/\//i, 'https://');
-  const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-  const r = await fetch(proxy);
-  if (!r.ok) throw new Error(`Kan agenda niet ophalen (HTTP ${r.status})`);
-  const t = await r.text();
-  if (!t.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand ontvangen.');
-  return t;
-}
-
-async function icalMerge(parsedEvents, wie, sourceUrl, opties = {}) {
-  let nieuw = 0, geupdate = 0;
-  for (const ev of parsedEvents) {
-    ev.wie = ev.wie?.length ? ev.wie : (wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean));
-    if (opties.informatief) ev.informatief = true;
-    if (!ev.icalUid) {
-      // Geen UID: altijd toevoegen (eenmalige import zonder deduplicatie)
-      activiteiten.push(ev); await sbSaveActiviteit(ev); nieuw++; continue;
-    }
-    const bestaande = activiteiten.find(a => a.icalUid === ev.icalUid && a.icalSource === sourceUrl);
-    if (bestaande) {
-      const changed = bestaande.naam !== ev.naam || bestaande.beginDatum !== ev.beginDatum ||
-        bestaande.eindDatum !== ev.eindDatum || bestaande.start !== ev.start;
-      if (changed) {
-        Object.assign(bestaande, { naam:ev.naam, beginDatum:ev.beginDatum, eindDatum:ev.eindDatum,
-          start:ev.start, eindUur:ev.eindUur, meerdaags:ev.meerdaags, dagen:ev.dagen, freq:ev.freq });
-        await sbSaveActiviteit(bestaande); geupdate++;
-      }
-    } else {
-      activiteiten.push(ev); await sbSaveActiviteit(ev); nieuw++;
-    }
-  }
-  return { nieuw, geupdate };
-}
-
-function parseIcal(icsText, sourceUrl = null) {
-  const text = icsText.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n[ \t]/g,'');
-  const events = [];
-  const blocks = text.split('BEGIN:VEVENT');
-  for (let bi = 1; bi < blocks.length; bi++) {
-    const block = blocks[bi].split('END:VEVENT')[0];
-    const prop = {};
-    for (const line of block.split('\n')) {
-      const ci = line.indexOf(':'); if (ci < 0) continue;
-      const fullKey = line.slice(0, ci).toUpperCase();
-      const val = line.slice(ci + 1).trimEnd();
-      const baseKey = fullKey.split(';')[0];
-      if (!prop[baseKey]) prop[baseKey] = { val, fullKey };
-    }
-    const summary = _icalUnescape(prop['SUMMARY']?.val || ''); if (!summary) continue;
-    const location = _icalUnescape(prop['LOCATION']?.val || '');
-    const uid = prop['UID']?.val || null;
-    const dtsFull = prop['DTSTART']?.fullKey || '';
-    const dtsVal  = prop['DTSTART']?.val || '';
-    const dteVal  = prop['DTEND']?.val || '';
-    const allDay  = dtsFull.includes('VALUE=DATE') || /^\d{8}$/.test(dtsVal);
-    let beginDatum, eindDatum, startTijd = '', eindTijd = '';
-    if (allDay) {
-      beginDatum = _icalD(dtsVal);
-      let ed = _icalD(dteVal || dtsVal);
-      if (ed && ed > beginDatum) { const d = new Date(ed+'T12:00:00'); d.setDate(d.getDate()-1); ed = fDateISO(d); }
-      eindDatum = ed || beginDatum;
-    } else {
-      const ps = _icalDT(dtsVal), pe = _icalDT(dteVal);
-      beginDatum = ps?.date || null; eindDatum = pe?.date || beginDatum;
-      startTijd = ps?.time || ''; eindTijd = pe?.time || '';
-    }
-    if (!beginDatum) continue;
-    let freq = 'eenmalig', dagen = [], rruleEind = null;
-    if (prop['RRULE']) {
-      const rp = {};
-      prop['RRULE'].val.split(';').forEach(s => { const [k,v] = s.split('='); if (k&&v) rp[k]=v; });
-      const interval = parseInt(rp['INTERVAL'] || '1');
-      const dm = {MO:'ma',TU:'di',WE:'wo',TH:'do',FR:'vr',SA:'za',SU:'zo'};
-      if (rp['FREQ']==='WEEKLY')      { freq=interval===2?'tweewekelijks':'wekelijks'; if(rp['BYDAY']) dagen=rp['BYDAY'].split(',').map(d=>dm[d.trim()]).filter(Boolean); }
-      else if (rp['FREQ']==='MONTHLY') { freq='maandelijks'; }
-      else if (rp['FREQ']==='DAILY')   { freq='wekelijks'; dagen=['ma','di','wo','do','vr','za','zo']; }
-      if (rp['UNTIL']) rruleEind = _icalD(rp['UNTIL'].slice(0,8));
-    }
-    if (freq !== 'eenmalig' && dagen.length === 0 && beginDatum)
-      dagen = [['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
-    const meerdaags = allDay && beginDatum !== (rruleEind||eindDatum) && freq === 'eenmalig';
-    events.push({
-      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:null,
-      prive:false, meerdaags, beginDatum, eindDatum:rruleEind||eindDatum,
-      start:startTijd, eindUur:eindTijd, freq, dagen:meerdaags?[]:dagen,
-      duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,
-      reisHeen:0, reisTerug:0, transport:{}, icalUid:uid, icalSource:sourceUrl,
-    });
-  }
-  return events;
-}
-function _icalD(val) {
-  if (!val||val.length<8) return null; const s=val.slice(0,8);
-  return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
-}
-function _icalDT(val) {
-  if (!val||val.length<8) return {date:_icalD(val),time:''};
-  const date=_icalD(val); if(val.length<15) return {date,time:''};
-  const isUTC=val.endsWith('Z'); const h=val.slice(9,11),m=val.slice(11,13);
-  if (isUTC) { const d=new Date(`${date}T${h}:${m}:00Z`); return {date:d.toLocaleDateString('sv'),time:d.toTimeString().slice(0,5)}; }
-  return {date, time:`${h}:${m}`};
-}
-function _icalUnescape(s) {
-  return s.replace(/\\n/g,' ').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
-}
+// ── iCal: zie data-ical.js ────────────────────────────────────
 
 // ── Export / import ───────────────────────────────────────────
 function exporteerData() {

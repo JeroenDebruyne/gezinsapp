@@ -127,6 +127,7 @@
 </div>
 </div>
 
+<script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
@@ -139,7 +140,11 @@ let priveAan      = false;
 let geselecteerdePersonen = [];
 let geselecteerdePrio = 'middel';
 
-const KLEUR_BALK = { jeroen:'#5e5ce6', kelly:'#ff6b9d', nora:'#30d158', odiel:'#ff9f0a' };
+const _KLEUR_ROT = ['#5e5ce6','#ff6b9d','#30d158','#ff9f0a','#007aff','#ff3b30','#34c759','#5ac8fa'];
+function getKleur(key) {
+  const idx = Auth.getProfielen().findIndex(p => p.persoonKey === key);
+  return _KLEUR_ROT[(idx >= 0 ? idx : 0) % _KLEUR_ROT.length];
+}
 const PRIO_KLEUR = { hoog:'#ff453a', middel:'#ff9f0a', laag:'#30d158' };
 
 // ── Laden ─────────────────────────────────────────────────────
@@ -232,7 +237,7 @@ function renderTodos() {
   el.innerHTML = gefilterd.map(t => {
     const deadlineBadge = maakDeadlineBadge(t.deadline, vandaagISO, t.gedaan);
     const wieBadges = (t.wie||[]).map(w=>`
-      <span class="todo-badge" style="background:${KLEUR_BALK[w]}22;color:${KLEUR_BALK[w]};">
+      <span class="todo-badge" style="background:${getKleur(w)}22;color:${getKleur(w)};">
         ${PEMOJI[w]||''} ${PLABEL[w]||w}
       </span>`).join('');
     const duurLabel = t.duur ? `⏱ ${t.duur>=60?Math.round(t.duur/60)+'u':t.duur+'min'}` : '';
@@ -286,7 +291,7 @@ function toggleTodo(id) {
 function openModal(todo) {
   todoEditId = todo?.id || null;
   priveAan   = todo?.prive || false;
-  geselecteerdePersonen = todo ? [...(todo.wie||[])] : [Auth.profiel()?.persoonKey||'jeroen'];
+  geselecteerdePersonen = todo ? [...(todo.wie||[])] : [Auth.profiel()?.persoonKey].filter(Boolean);
   geselecteerdePrio = todo?.prioriteit || 'middel';
 
   document.getElementById('modal-titel').textContent = todo ? 'To-do bewerken' : 'Nieuwe to-do';
@@ -352,7 +357,7 @@ function saveTodo() {
 
   const bestaande = todoEditId ? todos.find(t=>t.id==todoEditId) : null;
   const todo = {
-    id:       todoEditId || String(Date.now()),
+    id:       todoEditId || String(_maakId()),
     _sbId:    bestaande?._sbId,
     titel,
     notitie:  document.getElementById('t-notitie').value.trim(),
@@ -372,6 +377,7 @@ function saveTodo() {
 
   slaLokaalOp();
   sbSaveTodo(todo);
+  toonOpslagStatus('✅ Opgeslagen');
   closeModal();
   renderTodos();
 }
@@ -383,6 +389,7 @@ function verwijderTodo(id) {
   closeModal();
   slaLokaalOp();
   if (t?._sbId) sbDeleteTodo(t._sbId);
+  toonOpslagStatus('✅ Verwijderd');
   renderTodos();
 }
 

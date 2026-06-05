@@ -1,6 +1,27 @@
 // agent.js — Gedeelde chat-engine voor alle gezinsassistenten
 // Gebruik: const myAgent = createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen })
 
+const AGENT_MODEL = 'claude-sonnet-4-6';
+
+async function agentFetch(apiKey, body) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    if (r.status === 401) localStorage.removeItem('anthropic_api_key');
+    throw new Error(d.error?.message || 'API fout ' + r.status);
+  }
+  return d;
+}
+
 // Bouwt een dynamische gezinsbeschrijving op basis van de geladen profielen.
 // Voorbeeld: "Gezin: Jeroen (gezinshoofd, key:jeroen), Kelly (gezinshoofd, key:kelly), Nora (kind 6j, key:nora)."
 function bouwGezinsContext() {
@@ -19,9 +40,20 @@ function bouwGezinsContext() {
 }
 
 function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen }) {
-  // ids: { berichten, input, bevestiging, bevestigingTekst? }
+  // ids: { berichten, input, bevestiging, bevestigingTekst?, storageKey? }
   let chatGeschiedenis = [];
   let _pending = null;
+  let _bevestigingTimeout = null;
+
+  const _sk = ids.storageKey || null;
+  if (_sk) {
+    try { chatGeschiedenis = JSON.parse(localStorage.getItem(_sk) || '[]'); } catch {}
+  }
+
+  function _slaGeschiedenisOp() {
+    if (!_sk) return;
+    try { localStorage.setItem(_sk, JSON.stringify(chatGeschiedenis.slice(-40))); } catch {}
+  }
 
   // Strip internal tracking fields before sending to the Anthropic API.
   // tool_use blocks may only contain type/id/name/input.
@@ -40,22 +72,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   }
 
   async function _fetch(apiKey, body) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({ ...body, messages: _cleanMessages(body.messages || []) }),
-    });
-    const d = await r.json();
-    if (!r.ok) {
-      if (r.status === 401) localStorage.removeItem('anthropic_api_key');
-      throw new Error(d.error?.message || 'API fout ' + r.status);
-    }
-    return d;
+    return agentFetch(apiKey, { ...body, messages: _cleanMessages(body.messages || []) });
   }
 
   async function _fetchStream(apiKey, body, onChunk) {
@@ -144,9 +161,12 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       if (el) el.textContent = bericht;
     }
     panel.style.display = 'block';
+    _bevestigingTimeout = setTimeout(() => annuleer(), 5 * 60 * 1000);
   }
 
   function _verbergBevestiging() {
+    clearTimeout(_bevestigingTimeout);
+    _bevestigingTimeout = null;
     const panel = document.getElementById(ids.bevestiging);
     if (panel) panel.style.display = 'none';
   }
@@ -161,6 +181,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
           _toonBevestiging(block.input.bevestiging_bericht || 'Wil je dit uitvoeren?');
           chatGeschiedenis.push({ role: 'assistant', content: data.content });
           chatGeschiedenis.push({ role: 'user', content: [...toolResults, { type: 'tool_result', tool_use_id: block.id, content: 'Wacht op gebruikersbevestiging.' }] });
+          _slaGeschiedenisOp();
           return null;
         }
         const result = await execute(block.name, block.input);
@@ -168,7 +189,8 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       }
       chatGeschiedenis.push({ role: 'assistant', content: data.content });
       chatGeschiedenis.push({ role: 'user', content: toolResults });
-      data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      _slaGeschiedenisOp();
+      data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
     }
     return data;
   }
@@ -179,7 +201,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     // Wacht tot data geladen is (optioneel)
     if (isDataGeladen && !isDataGeladen()) {
       const typWait = voegBerichtToe('assistant', '⏳ Even wachten, data wordt nog geladen…', true);
-      await new Promise(r => { const t = setInterval(() => { if (isDataGeladen()) { clearInterval(t); r(); } }, 200); });
+      await new Promise(r => { const start = Date.now(); const t = setInterval(() => { if (isDataGeladen() || Date.now() - start > 8000) { clearInterval(t); r(); } }, 200); });
       typWait?.remove();
     }
     let apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
@@ -193,6 +215,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     voegBerichtToe('user', tekst);
     chatGeschiedenis.push({ role: 'user', content: tekst });
     if (chatGeschiedenis.length > 40) chatGeschiedenis = chatGeschiedenis.slice(-40);
+    _slaGeschiedenisOp();
     const container = document.getElementById(ids.berichten);
     let streamWrap = null, streamBubble = null, streamedText = '';
     if (container) {
@@ -206,7 +229,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       container.scrollTop = container.scrollHeight;
     }
     try {
-      let data = await _fetchStream(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
+      let data = await _fetchStream(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
         if (!streamedText && streamBubble) streamBubble.textContent = '';
         streamedText += chunk;
         if (streamBubble) { streamBubble.innerHTML = formateerAntwoord(streamedText); if (container) container.scrollTop = container.scrollHeight; }
@@ -220,15 +243,20 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         const finaleTekst = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
         voegBerichtToe('assistant', finaleTekst);
         chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+        _slaGeschiedenisOp();
       } else {
         const finaleTekst = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
         if (streamBubble) streamBubble.innerHTML = formateerAntwoord(finaleTekst);
         chatGeschiedenis.push({ role: 'assistant', content: finaleTekst });
+        _slaGeschiedenisOp();
       }
     } catch (e) {
       if (streamWrap) streamWrap.remove();
-      voegBerichtToe('assistant', '❌ Fout: ' + e.message);
-      if (e.message.includes('401')) localStorage.removeItem('anthropic_api_key');
+      if (e.message.includes('401')) {
+        voegBerichtToe('assistant', '❌ API-sleutel ongeldig of verlopen. Stel een nieuwe in via Instellingen.');
+      } else {
+        voegBerichtToe('assistant', '❌ Fout: ' + e.message);
+      }
     }
   }
 
@@ -246,13 +274,14 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         const ph = last.content.find(b => b.type === 'tool_result' && b.tool_use_id === toolUseId);
         if (ph) ph.content = String(result);
       }
-      let data = await _fetch(apiKey, { model: 'claude-sonnet-4-6', max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      let data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
       typingEl?.remove();
       const resultData = await _toolLoop(apiKey, data);
       if (!resultData) return;
       const tekst = (resultData.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
       voegBerichtToe('assistant', tekst);
       chatGeschiedenis.push({ role: 'assistant', content: tekst });
+      _slaGeschiedenisOp();
     } catch (e) {
       typingEl?.remove();
       voegBerichtToe('assistant', '❌ Fout: ' + e.message);
@@ -265,10 +294,12 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     const msg = '❌ Geannuleerd.';
     voegBerichtToe('assistant', msg);
     chatGeschiedenis.push({ role: 'assistant', content: msg });
+    _slaGeschiedenisOp();
   }
 
   function wis(welkomHtml) {
     chatGeschiedenis = [];
+    if (_sk) try { localStorage.removeItem(_sk); } catch {}
     const container = document.getElementById(ids.berichten);
     if (container) container.innerHTML = welkomHtml || '';
   }

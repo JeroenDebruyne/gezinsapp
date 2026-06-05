@@ -119,6 +119,7 @@
 </div>
 </div>
 
+<script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script src="maps.js"></script>
@@ -344,7 +345,12 @@ function renderCrm(){
       (p2?.achternaam||'').toLowerCase().includes(sq);
   });
   const el=document.getElementById('crm-lijst');
-  if(!filtered.length){el.innerHTML=`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;return;}
+  if(!filtered.length){
+    el.innerHTML=search
+      ?`<div class="empty-state"><span class="empty-icon">🔍</span><p>Geen contacten gevonden voor "${escHtml(search)}"</p></div>`
+      :`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;
+    return;
+  }
   el.innerHTML=filtered.map(c=>{
     const isActief=actieveContactId!=null&&actieveContactId==c.id;
     const nm=c.naam||_familieNaam(c);
@@ -436,6 +442,11 @@ function renderContactFicheHtml(c,metSluitknop){
   </div>
   ${personenHtml}
   ${kinderenHtml}
+  ${c.adres?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.adres)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-top:10px;text-decoration:none;">
+    <span style="font-size:18px;flex-shrink:0;">📍</span>
+    <span style="flex:1;font-size:13px;color:var(--ink);">${escHtml(c.adres)}</span>
+    <span style="font-size:12px;color:var(--accent);flex-shrink:0;">Kaart ↗</span>
+  </a>`:''}
   <div class="fiche-meta" style="margin-top:10px;">
     <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstkaart: ${kerstmis?'Ja':'Nee'}</span>
   </div>
@@ -509,7 +520,7 @@ function closeCrmModal(){document.getElementById('crm-modal-bg').classList.remov
 function saveContact(){
   const p1v=document.getElementById('c-p1-voornaam').value.trim();
   const p1a=document.getElementById('c-p1-achternaam').value.trim();
-  if(!p1v&&!p1a){alert('Vul minstens de voornaam of achternaam van Partner 1 in.');return;}
+  if(!p1v&&!p1a){toonOpslagStatus('❌ Vul minstens de voornaam of achternaam van Partner 1 in.');return;}
 
   const partner1={voornaam:p1v,achternaam:p1a,verjaardag:document.getElementById('c-p1-verjaardag').value||''};
   const p2v=document.getElementById('c-p2-voornaam').value.trim();
@@ -544,7 +555,7 @@ function saveContact(){
 
   if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
   else contacten.push(contact);
-  closeCrmModal();renderCrm();renderVerjaarDagAlerts();slaLokaalOp();sbSaveContact(contact);
+  closeCrmModal();renderCrm();renderVerjaarDagAlerts();slaLokaalOp();sbSaveContact(contact);toonOpslagStatus('✅ Opgeslagen');
 }
 
 function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
@@ -553,7 +564,7 @@ function verwijderContact(id){
   const c=contacten.find(c=>c.id===id||c.id==id);
   contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
   if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
-  renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);
+  renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
 }
 document.getElementById('crm-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('crm-modal-bg'))closeCrmModal();});
 </script>

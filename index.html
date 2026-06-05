@@ -157,13 +157,15 @@ function sluitActDetail(e){
 </script>
 
 
+<script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script src="agent.js"></script>
 <script src="agent-tools.js"></script>
 <script>
 Auth.initPagina('index');
-laadOp().then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
+Promise.race([laadOp(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))])
+  .then(renderHomepage).catch(()=>{laadLokaal();renderHomepage();});
 // Geocodeer thuisadres bij eerste gebruik (als coords nog niet gecacht zijn)
 if(typeof Maps!=='undefined'&&!Maps.getCoords()&&Maps.getThuisadres())
   Maps.geocodeerAdres(Maps.getThuisadres()).catch(()=>{});
@@ -356,7 +358,7 @@ const homeAgent = createAgentChat({
   tools: AGENT_TOOLS,
   buildSystemPrompt: _hSysteemPrompt,
   execute: agentExecute,
-  ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop' },
+  ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop', storageKey:'home_chat_history' },
 });
 
 function stuurVoorbeeldHome(tekst){ homeAgent.stuurVoorbeeldVraag(tekst); }
