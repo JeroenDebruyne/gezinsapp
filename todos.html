@@ -238,7 +238,7 @@ function renderTodos() {
     const deadlineBadge = maakDeadlineBadge(t.deadline, vandaagISO, t.gedaan);
     const wieBadges = (t.wie||[]).map(w=>`
       <span class="todo-badge" style="background:${getKleur(w)}22;color:${getKleur(w)};">
-        ${PEMOJI[w]||''} ${PLABEL[w]||w}
+        ${PEMOJI[w]||''} ${escHtml(PLABEL[w]||w)}
       </span>`).join('');
     const duurLabel = t.duur ? `<i data-lucide="timer" class="icon-inline"></i> ${t.duur>=60?Math.round(t.duur/60)+'u':t.duur+'min'}` : '';
     const kanBewerken = Auth.kan('kanTodosBeheren') || (t.wie||[]).includes(mijnKey);
@@ -246,10 +246,10 @@ function renderTodos() {
     return `
     <div class="todo-item${t.gedaan?' gedaan':''}">
       <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan?' '+t.prioriteit:''}"
-        onclick="toggleTodo('${t.id}')"></button>
-      <div class="todo-body" onclick="${kanBewerken?`editTodo('${t.id}')`:''}" style="${kanBewerken?'':'cursor:default'}">
-        <div class="todo-titel${t.gedaan?' gedaan':''}">${t.titel}</div>
-        ${t.notitie?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${t.notitie}</div>`:''}
+        onclick="toggleTodo(${Number(t.id)})"></button>
+      <div class="todo-body" onclick="${kanBewerken?`editTodo(${Number(t.id)})`:''}" style="${kanBewerken?'':'cursor:default'}">
+        <div class="todo-titel${t.gedaan?' gedaan':''}">${escHtml(t.titel)}</div>
+        ${t.notitie?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${escHtml(t.notitie)}</div>`:''}
         <div class="todo-meta" style="margin-top:5px;">
           ${deadlineBadge}
           ${duurLabel?`<span style="font-size:11px;">${duurLabel}</span>`:''}

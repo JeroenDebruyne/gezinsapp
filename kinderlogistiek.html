@@ -280,7 +280,7 @@ function renderKL(){
           return `
           <div class="kl-act-rij">
             <div class="kl-act-info">
-              <span class="kl-act-badge"><i data-lucide="pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.naam)}${a.start?' ('+a.start+')':''}</span>
+              <span class="kl-act-badge"><i data-lucide="pin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(a.naam)}${a.start?' ('+escHtml(a.start)+')':''}</span>
               ${transportInfo?`<span class="kl-act-transport">${transportInfo}</span>`:''}
             </div>
             <button class="kl-edit-btn" onclick="openActTransportModal(${a.id},'${datum}','${kind}')" title="Transport bewerken"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>
