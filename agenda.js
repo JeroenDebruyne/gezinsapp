@@ -274,7 +274,7 @@ function renderTransportDetail(act,datumISO){
       ${brengt?`<span><i data-lucide="car" class="icon-inline"></i>→ ${escHtml(brengt)}</span>`:''}
       ${haalt?`<span>←<i data-lucide="car" class="icon-inline"></i> ${escHtml(haalt)}</span>`:''}
       ${eetGroo?'<span style="font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><i data-lucide="utensils" class="icon-inline"></i> Eet bij grootouders</span>':''}
-      ${isUitz?'<span style="font-size:10px;background:var(--normaal-bg);color:var(--normaal-clr);padding:1px 6px;border-radius:99px;font-weight:600;">⚡ Uitzondering</span>':''}
+      ${isUitz?'<span style="font-size:10px;background:var(--normaal-bg);color:var(--normaal-clr);padding:1px 6px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><i data-lucide="zap" class="icon-inline"></i> Uitzondering</span>':''}
     </div>`;
   });
   return html?`<div class="transport-sectie" style="margin-top:8px;">${html}</div>`:'';
