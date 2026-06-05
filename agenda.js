@@ -194,7 +194,7 @@ function renderDagDetail(datumISO){
     ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;">🎉 ${getFeestdagNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
-        <span style="font-size:20px;">${v.emoji||'🎂'}</span>
+        <span style="font-size:20px;">${escHtml(v.emoji||'🎂')}</span>
         <div style="flex:1;">
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
           ${v.type==='contactdatum'
@@ -270,8 +270,8 @@ function renderTransportDetail(act,datumISO){
     const isUitz=uitzondering&&uitzondering[kind];
     html+=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:3px;">
       <span style="font-weight:600;color:var(--ink);">${PEMOJI[kind]} ${PLABEL[kind]}:</span>
-      ${brengt?`<span>🚗→ ${brengt}</span>`:''}
-      ${haalt?`<span>←🚗 ${haalt}</span>`:''}
+      ${brengt?`<span>🚗→ ${escHtml(brengt)}</span>`:''}
+      ${haalt?`<span>←🚗 ${escHtml(haalt)}</span>`:''}
       ${eetGroo?'<span style="font-size:10px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 6px;border-radius:99px;font-weight:600;">🍽️ Eet bij grootouders</span>':''}
       ${isUitz?'<span style="font-size:10px;background:var(--normaal-bg);color:var(--normaal-clr);padding:1px 6px;border-radius:99px;font-weight:600;">⚡ Uitzondering</span>':''}
     </div>`;
