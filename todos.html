@@ -357,7 +357,7 @@ function saveTodo() {
 
   const bestaande = todoEditId ? todos.find(t=>t.id==todoEditId) : null;
   const todo = {
-    id:       todoEditId || String(Date.now()),
+    id:       todoEditId || String(_newId()),
     _sbId:    bestaande?._sbId,
     titel,
     notitie:  document.getElementById('t-notitie').value.trim(),

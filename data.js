@@ -13,6 +13,8 @@ function escHtml(s){
 // ── Constanten ────────────────────────────────────────────────
 // SUPABASE_URL en SUPABASE_KEY komen uit config.js
 
+function _newId() { return Date.now() + Math.random(); }
+
 let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
 

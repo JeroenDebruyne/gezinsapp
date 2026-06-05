@@ -309,7 +309,7 @@ function voegExtraToe(){
   // Sla op als nieuw standaard-ingrediënt als het nog niet bestaat
   const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase());
   if(!bestaatAl){
-    const nieuwIng={id:Date.now(),naam,winkel,categorie:'',productLink:null};
+    const nieuwIng={id:_newId(),naam,winkel,categorie:'',productLink:null};
     standaardIngredienten.push(nieuwIng);
     sbSaveIngredient(nieuwIng);
   } else {
@@ -317,7 +317,7 @@ function voegExtraToe(){
     const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
     if(ing&&ing.winkel!==winkel){ing.winkel=winkel;sbSaveIngredient(ing);}
   }
-  const nieuwItem={id:Date.now()+1,naam,winkel};
+  const nieuwItem={id:_newId(),naam,winkel};
   extraItems.push(nieuwItem);
   if(input)input.value='';
   renderBoodschappen();renderExtraItems();slaLokaalOp();sbSaveExtra(nieuwItem);toonOpslagStatus('✅ Toegevoegd');
