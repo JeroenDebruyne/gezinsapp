@@ -13,7 +13,7 @@ function escHtml(s){
 // ── Constanten ────────────────────────────────────────────────
 // SUPABASE_URL en SUPABASE_KEY komen uit config.js
 
-function _newId() { return Date.now() + Math.random(); }
+function _maakId() { return Date.now() + Math.random(); }
 
 let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
@@ -257,14 +257,14 @@ async function laadOp() {
     await Auth.laadProfielen();
     herbouwPersonenData(); // PERSONEN, PLABEL, PBADGE, PEMOJI vullen vanuit profielen
     const [r,i,a,p,b,c,d,t] = await Promise.all([
-      sbFetch(`recepten${_gidQ('?order=naam')}`),
-      sbFetch(`ingredienten${_gidQ('?order=naam')}`),
-      sbFetch(`activiteiten${_gidQ('?order=naam')}`),
-      sbFetch(`planning${_gidQ('')}`),
-      sbFetch(`boodschappen_extra${_gidQ('?order=naam')}`),
-      sbFetch(`contacten${_gidQ('?order=naam')}`),
-      sbFetch(`drukte_override${_gidQ('')}`),
-      sbFetch(`todos${_gidQ('?order=aangemaakt_op')}`).catch(()=>[]),
+      sbFetch(`recepten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`ingredienten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`activiteiten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`planning${_gezinIdQ('')}`),
+      sbFetch(`boodschappen_extra${_gezinIdQ('?order=naam')}`),
+      sbFetch(`contacten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`drukte_override${_gezinIdQ('')}`),
+      sbFetch(`todos${_gezinIdQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
     if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
     if (i.length) standaardIngredienten = i.map(x => ({...x, _sbId: x.id, productLink: x.product_link || null}));
@@ -308,7 +308,7 @@ async function laadOp() {
     if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
     if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
-    const inst = await sbFetch(`instellingen${_gidQ('')}`).catch(()=>[]);
+    const inst = await sbFetch(`instellingen${_gezinIdQ('')}`).catch(()=>[]);
     inst.forEach(r=>{
       if (r.id==='vasteRoosters'&&r.waarde) vasteRoosters={...vasteRoosters,...r.waarde};
       if (r.id==='uitzonderingen'&&r.waarde) uitzonderingen=r.waarde;
@@ -403,9 +403,9 @@ function slaLokaalOp() {
 
 // Huidige gezin_id — gebruikt in alle lees- en schrijfoperaties
 // Fallback op localStorage zodat saves ook werken als laadProfielen faalde
-function _gid() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
-// Voegt gezin_id toe aan een query string: _gidQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
-function _gidQ(base = '') {
+function _gezinId() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
+// Voegt gezin_id toe aan een query string: _gezinIdQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
+function _gezinIdQ(base = '') {
   const id = _gid();
   if (!id) return base;
   return base ? `${base}&gezin_id=eq.${id}` : `?gezin_id=eq.${id}`;

@@ -339,7 +339,7 @@ async function laadGebruikersLijst() {
     let profielen = Auth.getProfielen().filter(p => p.id);
     if (!profielen.length) {
       // Fallback: haal vers op als cache leeg is
-      profielen = await sbFetch('gezin_profielen' + _gidQ('?order=naam')).catch(() => []);
+      profielen = await sbFetch('gezin_profielen' + _gezinIdQ('?order=naam')).catch(() => []);
       if (!profielen.length) { el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:6px 0;">Nog geen profielen in de tabel.</div>'; return; }
     }
     const ROLKLEUR = { gezinshoofd:'var(--druk-bg)', jeugd:'var(--normaal-bg)', kind:'var(--rustig-bg)' };

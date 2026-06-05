@@ -146,7 +146,7 @@ function saveIngredient() {
     const ing = standaardIngredienten.find(i => i.id == editId);
     if (ing) { ing.naam = naam; ing.winkel = winkel; ing.productLink = productLink; sbSaveIngredient(ing); }
   } else {
-    const n = { id: _newId(), naam, winkel, categorie: '', productLink };
+    const n = { id: _maakId(), naam, winkel, categorie: '', productLink };
     standaardIngredienten.push(n);
     sbSaveIngredient(n);
   }

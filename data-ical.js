@@ -1,18 +1,18 @@
 // data-ical.js — iCal ophalen, parsen en samenvoegen
-// Vereist: data.js geladen (gebruikt sbFetch, sbSaveActiviteit, activiteiten, Auth, fDateISO, tijdMinuten, _gid)
+// Vereist: data.js geladen (gebruikt sbFetch, sbSaveActiviteit, activiteiten, Auth, fDateISO, tijdMinuten, _gezinId)
 
 let icalAbonnementen = [];
 
 async function laadIcalAbonnementen() {
   try {
-    const gid = _gid();
+    const gid = _gezinId();
     const f = gid ? `?id=eq.icalAbonnementen&gezin_id=eq.${gid}` : `?id=eq.icalAbonnementen`;
     const rows = await sbFetch(`instellingen${f}`).catch(() => []);
     if (rows[0]?.waarde) icalAbonnementen = rows[0].waarde;
   } catch(_) {}
 }
 async function slaIcalAbonnementenOp() {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) return;
   try {
     await sbFetch('instellingen','POST',
@@ -22,7 +22,7 @@ async function slaIcalAbonnementenOp() {
 }
 
 async function sbVerwijderIcalActiviteiten(sourceUrl) {
-  const gid = _gid();
+  const gid = _gezinId();
   const filter = gid
     ? `?ical_source=eq.${encodeURIComponent(sourceUrl)}&gezin_id=eq.${gid}`
     : `?ical_source=eq.${encodeURIComponent(sourceUrl)}`;
@@ -116,7 +116,7 @@ function parseIcal(icsText, sourceUrl = null) {
       dagen = [['zo','ma','di','wo','do','vr','za'][new Date(beginDatum+'T12:00:00').getDay()]];
     const meerdaags = allDay && beginDatum !== (rruleEind||eindDatum) && freq === 'eenmalig';
     events.push({
-      id: Date.now()+Math.random(), naam:summary, wie:[], locatie:location, prep:null,
+      id: _maakId(), naam:summary, wie:[], locatie:location, prep:null,
       prive:false, meerdaags, beginDatum, eindDatum:rruleEind||eindDatum,
       start:startTijd, eindUur:eindTijd, freq, dagen:meerdaags?[]:dagen,
       duur:startTijd&&eindTijd?Math.max(0,tijdMinuten(eindTijd)-tijdMinuten(startTijd)):60,

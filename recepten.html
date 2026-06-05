@@ -640,7 +640,7 @@ function saveRecept(){
   ings.forEach(ing=>{
     const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===ing.naam.toLowerCase());
     if(!bestaatAl){
-      const nieuwIng={id:_newId(),naam:ing.naam,winkel:ing.winkel||'Colruyt',categorie:''};
+      const nieuwIng={id:_maakId(),naam:ing.naam,winkel:ing.winkel||'Colruyt',categorie:''};
       standaardIngredienten.push(nieuwIng);
       sbSaveIngredient(nieuwIng);
       nieuweIngs.push(nieuwIng);
@@ -649,7 +649,7 @@ function saveRecept(){
 
   const bestaande=editId?recepten.find(r=>r.id==editId):null;
   const recept={
-    id:editId?parseInt(editId)||editId:_newId(),
+    id:editId?parseInt(editId)||editId:_maakId(),
     _sbId:bestaande?._sbId,
     naam,
     types,
