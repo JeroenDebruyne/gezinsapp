@@ -195,7 +195,7 @@ function renderDagDetail(datumISO){
     ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${getFeestdagNaam(datumISO)}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
-        <span style="font-size:20px;">${escHtml(v.emoji||'🎂')}</span>
+        ${v.icon?`<i data-lucide="${escHtml(v.icon)}" style="width:20px;height:20px;flex-shrink:0;"></i>`:`<span style="font-size:20px;">${escHtml(v.emoji||'')}</span>`}
         <div style="flex:1;">
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
           ${v.type==='contactdatum'
@@ -322,7 +322,7 @@ function getVerjaardagsOpDatum(datumISO){
       const [by,bm,bd]=parts;
       if(bm===mm&&bd===dd){
         const leeftijd=by&&by!=='0000'?jaar-parseInt(by):null;
-        result.push({naam,emoji:'🎂',leeftijd,type:'contact'});
+        result.push({naam,icon:'cake',leeftijd,type:'contact'});
       }
     };
     const p1=c.partner1&&typeof c.partner1==='object'?c.partner1:(c.partner1?_tryParse(c.partner1):null);
@@ -336,9 +336,9 @@ function getVerjaardagsOpDatum(datumISO){
       if(!bd.datum) return;
       const [bdy,bdm,bdd]=bd.datum.split('-');
       if(bd.herhalend){
-        if(bdm===mm&&bdd===dd) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+        if(bdm===mm&&bdd===dd) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,icon:'calendar',type:'contactdatum'});
       } else {
-        if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+        if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,icon:'calendar',type:'contactdatum'});
       }
     });
   });
@@ -578,7 +578,7 @@ async function berekenReistijdAuto(){
   if(mins===null){toonOpslagStatus('❌ Kon reistijd niet berekenen. Controleer thuisadres en Maps key in Instellingen.');return;}
   document.getElementById('a-reis-heen').value=mins;
   document.getElementById('a-reis-terug').value=mins;
-  toonOpslagStatus('🗺️ Reistijd: '+mins+' min');
+  toonOpslagStatus('Reistijd: '+mins+' min');
 }
 
 async function saveActiviteit(){

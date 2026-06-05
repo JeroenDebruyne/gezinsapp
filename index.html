@@ -72,7 +72,7 @@
       <div style="align-self:flex-start;" id="home-chat-welkom"></div>
     </div>
     <div id="home-bevestiging-desktop" class="home-bevestiging-panel" style="display:none;">
-      <div class="home-bevestiging-titel">✋ Bevestiging vereist</div>
+      <div class="home-bevestiging-titel"><i data-lucide="hand" class="icon-inline"></i> Bevestiging vereist</div>
       <div id="home-bevestiging-tekst-desktop" class="home-bevestiging-tekst"></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary btn-sm" onclick="homeAgent.bevestig()"><i data-lucide="check" class="icon-inline"></i> Ja</button>
@@ -176,7 +176,7 @@ onGezinsappUpdate(renderHomepage);
   if(!welkom) return;
   const heeftKey=!!localStorage.getItem('anthropic_api_key');
   welkom.innerHTML=heeftKey
-    ?'<div class="chat-bubble-bot">Hallo! 👋 Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div>'
+    ?'<div class="chat-bubble-bot">Hallo! Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div>'
     :'<div class="chat-bubble-bot"><i data-lucide="key" class="icon-inline"></i> Gezinsassistent is niet actief. Stel je API key in via <i data-lucide="settings" class="icon-inline"></i> Instellingen om mij te activeren.</div>';
 })();
 
@@ -190,7 +190,7 @@ function renderHomepage(){
     ' '+nu.getDate()+' '+maandNamen[nu.getMonth()]+' '+nu.getFullYear();
   const uur=nu.getHours();
   document.getElementById('dag-begroeting').textContent=
-    (uur<12?'Goedemorgen':uur<18?'Goedemiddag':'Goedenavond')+', '+(p?.naam||'...')+' 👋';
+    (uur<12?'Goedemorgen':uur<18?'Goedemiddag':'Goedenavond')+', '+(p?.naam||'...')+'!';
   const drukte=getDagDrukte(datumISO);
   document.getElementById('dag-drukte-dot').style.background={rustig:'var(--rustig-dot)',normaal:'var(--normaal-dot)',druk:'var(--druk-dot)'}[drukte];
   document.getElementById('dag-drukte-label').textContent={rustig:'Rustige dag',normaal:'Drukke dag',druk:'Zeer drukke dag'}[drukte];
@@ -363,7 +363,7 @@ const homeAgent = createAgentChat({
 });
 
 function stuurVoorbeeldHome(tekst){ homeAgent.stuurVoorbeeldVraag(tekst); }
-function homeWisChat(){ homeAgent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. 👋 Waarmee kan ik helpen?</div></div>'); }
+function homeWisChat(){ homeAgent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Waarmee kan ik helpen?</div></div>'); }
 // ── Buienradar / Weer (Open-Meteo) ────────────────────────────
 async function laadWeer(){
   try{

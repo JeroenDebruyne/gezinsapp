@@ -91,12 +91,12 @@
 
     <div class="wp-chat-container" id="wp-chat-berichten">
       <div style="align-self:flex-start;">
-        <div class="chat-bubble-bot">Hallo! 👋 Ik ben de maaltijdassistent. Ik help met weekmenu's plannen, recepten zoeken en boodschappenlijsten. Ik vraag altijd bevestiging voor ik iets aanpast.</div>
+        <div class="chat-bubble-bot">Hallo! Ik ben de maaltijdassistent. Ik help met weekmenu's plannen, recepten zoeken en boodschappenlijsten. Ik vraag altijd bevestiging voor ik iets aanpast.</div>
       </div>
     </div>
 
     <div id="wp-bevestiging-panel" style="display:none;" class="wp-bevestiging-modal">
-      <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:8px;"><i data-lucide="hand" class="icon-inline"></i> Bevestiging vereist</div>
       <div id="wp-bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary" onclick="wpAgent.bevestig()"><i data-lucide="check" class="icon-inline"></i> Bevestigen</button>
@@ -134,7 +134,7 @@
       <div id="top3-recepten" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
     </div>
     <div class="section-label">Recepten</div>
-    <input type="text" id="plan-zoek" placeholder="🔍 Zoek recept…" oninput="zoekRecepten(this.value)"
+    <input type="text" id="plan-zoek" placeholder="Zoek recept…" oninput="zoekRecepten(this.value)"
       style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:8px;background:var(--bg);color:var(--ink);"/>
     <div id="plan-recepten" style="max-height:200px;overflow-y:auto;"></div>
     <div class="modal-actions">

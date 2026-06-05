@@ -44,7 +44,7 @@ function _atVerjDatumDitJaar(verjaardag, nu) {
   return dt;
 }
 
-function _weerIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';if(c<=79)return'🌨️';if(c<=82)return'🌦️';if(c<=86)return'❄️';if(c<=99)return'⛈️';return'🌡️';}
+function _weerIcon(c){const s='width:14px;height:14px;display:inline-block;vertical-align:-0.15em;';if(c===0)return`<i data-lucide="sun" style="${s}"></i>`;if(c<=2)return`<i data-lucide="cloud-sun" style="${s}"></i>`;if(c<=3)return`<i data-lucide="cloud" style="${s}"></i>`;if(c<=49)return`<i data-lucide="wind" style="${s}"></i>`;if(c<=69)return`<i data-lucide="cloud-rain" style="${s}"></i>`;if(c<=79)return`<i data-lucide="cloud-snow" style="${s}"></i>`;if(c<=82)return`<i data-lucide="cloud-drizzle" style="${s}"></i>`;if(c<=86)return`<i data-lucide="cloud-snow" style="${s}"></i>`;if(c<=99)return`<i data-lucide="cloud-lightning" style="${s}"></i>`;return`<i data-lucide="thermometer" style="${s}"></i>`;}
 function _weerOmschrijving(c){if(c===0)return'Helder';if(c<=2)return'Licht bewolkt';if(c<=3)return'Bewolkt';if(c<=49)return'Mist';if(c<=69)return'Regen';if(c<=79)return'Sneeuw';if(c<=82)return'Regenbuien';if(c<=86)return'Sneeuwbuien';if(c<=99)return'Onweer';return'Onbekend';}
 
 async function _laadWeer() {
