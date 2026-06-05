@@ -174,13 +174,7 @@ let aiMenuVoorstel=null, chatGeschiedenisWP=[];
 let _openDagen=new Set();
 
 // ── Multi-item helpers ────────────────────────────────────────
-function getSlotItems(dagPlan,slotKey){
-  const stored=(dagPlan.porties||{})['items_'+slotKey];
-  if(stored&&stored.length) return stored.map(i=>({...i,wie:i.wie||[]}));
-  const waarde=dagPlan[slotKey];
-  if(!waarde) return [];
-  return [{waarde,wie:[],kok:(dagPlan.porties||{})['kok_'+slotKey]||null,extra_eters:0}];
-}
+// getSlotItems / _isEetGrooOpDag / _berekenPorties: gedefinieerd in agent-tools.js
 function _saveItems(dagKey,slotKey,items){
   if(!planning[dagKey]) planning[dagKey]={};
   if(!planning[dagKey].porties) planning[dagKey].porties={};
@@ -198,30 +192,7 @@ function _saveItems(dagKey,slotKey,items){
   sbSavePlanning(dagKey,slotKey,planning[dagKey][slotKey],planning[dagKey].porties);
   toonOpslagStatus('✅ Opgeslagen');
 }
-// Geeft true als kind (persoonKey) eet bij grootouders op die datum
-function _isEetGrooOpDag(kindKey, datum){
-  const uitz=(transportUitzonderingen[datum]||{})[kindKey];
-  if(uitz&&uitz.eetGroo!==undefined) return uitz.eetGroo;
-  const d=new Date(datum+'T12:00:00');
-  const dagKey=DAGKEYS[(d.getDay()+6)%7];
-  const cap=kindKey.charAt(0).toUpperCase()+kindKey.slice(1);
-  if(activiteiten.some(a=>(a.dagen||[]).includes(dagKey)&&a[`eetGroo${cap}`])) return true;
-  return (standaardTransport[kindKey]||{})[dagKey]?.eetGroo||false;
-}
-// Bereken totaal porties: gewicht per eeter (kind=0.5, overige=1.0) + extra_eters gasten
-// datum: optioneel ISO datumstring om eetGroo-kinderen uit te sluiten
-function _berekenPorties(item, datum){
-  const wieEet=!item.wie||item.wie.length===0?PERSONEN:item.wie;
-  const portiesGezin=wieEet.reduce((sum,p)=>{
-    const prof=Auth.getProfielen().find(pr=>pr.persoonKey===p);
-    if(prof?.rol==='kind'){
-      if(datum&&_isEetGrooOpDag(p,datum)) return sum;
-      return sum+(typeof portiesKindRatio!=='undefined'?portiesKindRatio:0.5);
-    }
-    return sum+1.0;
-  },0);
-  return Math.round((portiesGezin+(item.extra_eters||0))*10)/10||1;
-}
+
 // Personen die kunnen koken: enkel volwassenen en jeugd, geen kinderen
 function _persKok(){
   return Auth.getProfielen().filter(p=>p.rol!=='kind').map(p=>p.persoonKey);

@@ -57,7 +57,6 @@ const SLOTS  = [
   { key:'avond',   lbl:'Avond',   types:['avond','weekend'] },
 ];
 const SPEC   = { shake:'Shake', uiteten:'Uit eten', afhalen:'Afhalen', restjes:'Restjes' };
-const EMOJIS = { avond:'🍝', lunch:'🥗', weekend:'🍖', ontbijt:'🥐' };
 
 const DRUKTE_MAX = { normaal:2, druk:4 }; // aantal activiteiten: ≤1=rustig, 2-3=normaal, ≥4=druk
 const DRUKTE_BG  = { rustig:'#e1f5ee', normaal:'#faeeda', druk:'#fcebeb' };
