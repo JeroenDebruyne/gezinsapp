@@ -155,7 +155,7 @@ const agent = createAgentChat({
   buildSystemPrompt: _bouwSysteemPrompt,
   execute: agentExecute,
   isDataGeladen: () => _dataGeladen,
-  ids: { berichten:'chat-berichten', input:'chat-input', bevestiging:'bevestiging-panel', bevestigingTekst:'bevestiging-tekst' },
+  ids: { berichten:'chat-berichten', input:'chat-input', bevestiging:'bevestiging-panel', bevestigingTekst:'bevestiging-tekst', storageKey:'agent_chat_history' },
 });
 
 function stuurVoorbeeldVraag(tekst){ agent.stuurVoorbeeldVraag(tekst); }

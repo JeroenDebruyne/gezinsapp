@@ -72,6 +72,9 @@
     if (e.target === document.getElementById('module-overlay'))
       document.getElementById('module-overlay').classList.remove('open');
   };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('module-overlay')?.classList.remove('open');
+  });
 
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

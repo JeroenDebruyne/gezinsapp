@@ -91,7 +91,7 @@
 <script src="data.js"></script>
 <script>
 Auth.initPagina('boodschappen');
-let activeWinkel='Alles';
+let activeWinkel=sessionStorage.getItem('bood_winkel')||'Alles';
 // afgevinkt: volledig vanuit Supabase, localStorage als offline-fallback
 let afgevinkt={};
 
@@ -120,7 +120,7 @@ function renderWinkelTabs(){
   const mobSel=document.getElementById('winkel-sel-mob');
   if(mobSel){mobSel.innerHTML=['Alles',...WINKELS].map(w=>`<option value="${w}"${activeWinkel===w?' selected':''}>${w}</option>`).join('');}
 }
-function switchWinkel(w){activeWinkel=w;renderWinkelTabs();renderBoodschappen();renderExtraItems();}
+function switchWinkel(w){activeWinkel=w;sessionStorage.setItem('bood_winkel',w);renderWinkelTabs();renderBoodschappen();renderExtraItems();}
 
 // Groepeer boodschappenReceptItems per naam voor een winkel
 function _ingVoorWinkel(w){

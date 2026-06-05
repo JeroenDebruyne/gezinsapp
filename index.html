@@ -357,7 +357,7 @@ const homeAgent = createAgentChat({
   tools: AGENT_TOOLS,
   buildSystemPrompt: _hSysteemPrompt,
   execute: agentExecute,
-  ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop' },
+  ids: { berichten:'home-chat-berichten-desktop', input:'home-chat-input-desktop', bevestiging:'home-bevestiging-desktop', bevestigingTekst:'home-bevestiging-tekst-desktop', storageKey:'home_chat_history' },
 });
 
 function stuurVoorbeeldHome(tekst){ homeAgent.stuurVoorbeeldVraag(tekst); }
