@@ -110,8 +110,8 @@ function renderVastRoosterPersoon(persoon,metLocatie){
       </div>
       ${metLocatie?`<div class="rooster-locatie-wrap" style="${d.actief?'':'opacity:.3;'}">
         <select onchange="updateVastRooster('${persoon}','${dag}','locatie',this.value)" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink);">
-          <option value="thuis"${(d.locatie||'thuis')==='thuis'?' selected':''}>🏠 Thuis</option>
-          <option value="kantoor"${d.locatie==='kantoor'?' selected':''}>🏢 Kantoor</option>
+          <option value="thuis"${(d.locatie||'thuis')==='thuis'?' selected':''}>Thuis</option>
+          <option value="kantoor"${d.locatie==='kantoor'?' selected':''}>Kantoor</option>
         </select>
       </div>`:''}
     </div>`;
@@ -130,7 +130,7 @@ function updateVastRooster(persoon,dag,veld,waarde){
   if(!vasteRoosters[persoon][dag])vasteRoosters[persoon][dag]={};
   vasteRoosters[persoon][dag][veld]=waarde;
 }
-function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');setTimeout(()=>toonOpslagStatus('💾 Automatisch opgeslagen'),2000);}
+function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');}
 
 function openApiKeyForm() {
   document.getElementById('api-key-form').style.display = 'block';
@@ -142,12 +142,16 @@ function sluitApiKeyForm() {
   document.getElementById('api-key-wijzig-btn').style.display = '';
   document.getElementById('api-key-input').value = '';
   document.getElementById('api-key-input').type = 'password';
-  document.getElementById('api-key-toon').textContent = '👁';
+  document.getElementById('api-key-toon').innerHTML = '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>';
+  if(window.lucide) lucide.createIcons();
 }
 function toggleApiKeyZicht() {
   const inp = document.getElementById('api-key-input');
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  document.getElementById('api-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
+  document.getElementById('api-key-toon').innerHTML = inp.type === 'password'
+    ? '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>'
+    : '<i data-lucide="eye-off" style="width:14px;height:14px;display:block;"></i>';
+  if(window.lucide) lucide.createIcons();
 }
 async function slaApiKeyOp() {
   const key = document.getElementById('api-key-input').value.trim();
@@ -185,12 +189,16 @@ function sluitMapsKeyForm() {
   document.getElementById('maps-key-wijzig-btn').style.display = '';
   document.getElementById('maps-key-input').value = '';
   document.getElementById('maps-key-input').type = 'password';
-  document.getElementById('maps-key-toon').textContent = '👁';
+  document.getElementById('maps-key-toon').innerHTML = '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>';
+  if(window.lucide) lucide.createIcons();
 }
 function toggleMapsKeyZicht() {
   const inp = document.getElementById('maps-key-input');
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  document.getElementById('maps-key-toon').textContent = inp.type === 'password' ? '👁' : '🙈';
+  document.getElementById('maps-key-toon').innerHTML = inp.type === 'password'
+    ? '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>'
+    : '<i data-lucide="eye-off" style="width:14px;height:14px;display:block;"></i>';
+  if(window.lucide) lucide.createIcons();
 }
 async function slaMapsKeyOp() {
   const key = document.getElementById('maps-key-input').value.trim();
@@ -241,12 +249,12 @@ function renderWerkadressen(){
       <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${escHtml(p.emoji)} ${escHtml(p.naam)}</div>
       <input type="text" id="werkadres-${p.persoonKey}" placeholder="Werkadres" style="${inputStijl}" value="${escHtml(localStorage.getItem('gezinsapp_werkadres_'+p.persoonKey)||'')}"/>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span id="reistijd-lbl-${p.persoonKey}" style="font-size:13px;color:var(--muted);">${geslagenReistijd?'🚗 Pendeltijd: <b>'+escHtml(geslagenReistijd)+' min</b>':'⏳ Pendeltijd wordt automatisch berekend na adresselectie'}</span>
-        <span id="reistijd-spinner-${p.persoonKey}" style="display:none;font-size:12px;color:var(--muted);">⏳ Berekenen…</span>
+        <span id="reistijd-lbl-${p.persoonKey}" style="font-size:13px;color:var(--muted);">${geslagenReistijd?'<i data-lucide="car" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Pendeltijd: <b>'+escHtml(geslagenReistijd)+' min</b>':'Pendeltijd wordt automatisch berekend na adresselectie'}</span>
+        <span id="reistijd-spinner-${p.persoonKey}" style="display:none;font-size:12px;color:var(--muted);"><i data-lucide="loader-2" class="icon-spin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> Berekenen…</span>
       </div>
       <input type="hidden" id="reistijd-${p.persoonKey}" value="${escHtml(geslagenReistijd)}"/>
     </div>`;
-  }).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()">💾 Opslaan</button>`;
+  }).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>`;
   ghProfielen.forEach(p=>{
     const el=document.getElementById('werkadres-'+p.persoonKey);
     if(!el) return;
@@ -262,10 +270,10 @@ function renderWerkadressen(){
       if(lbl) lbl.style.display='';
       if(minuten!==null){
         if(hidden) hidden.value=minuten;
-        if(lbl) lbl.innerHTML=`🚗 Pendeltijd: <b>${minuten} min</b> <span style="font-size:11px;color:var(--muted);">(automatisch berekend)</span>`;
+        if(lbl) lbl.innerHTML=`<i data-lucide="car" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Pendeltijd: <b>${minuten} min</b> <span style="font-size:11px;color:var(--muted);">(automatisch berekend)</span>`;
         localStorage.setItem('gezinsapp_reistijd_'+p.persoonKey, minuten);
       } else {
-        if(lbl) lbl.innerHTML=`⚠️ Kon pendeltijd niet berekenen. Controleer thuisadres en Maps API key.`;
+        if(lbl) lbl.innerHTML=`<i data-lucide="triangle-alert" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Kon pendeltijd niet berekenen. Controleer thuisadres en Maps API key.`;
       }
     });
   });
@@ -379,7 +387,7 @@ async function laadGebruikersLijst() {
     const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };
     const _savedKl = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren')||'{}');
     el.innerHTML = profielen.map(p => {
-      const verjaardag = p.geboortedatum ? '🎂 ' + new Date(p.geboortedatum+'T12:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'}) : '';
+      const verjaardag = p.geboortedatum ? '<i data-lucide="cake" style="width:11px;height:11px;display:inline-block;vertical-align:-0.1em;"></i> ' + new Date(p.geboortedatum+'T12:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'}) : '';
       const persoonKleur = (p.persoon_key && _savedKl[p.persoon_key]) ? _savedKl[p.persoon_key] : null;
       return `
       <div class="card" id="gcard-${escHtml(p.id)}" style="margin-bottom:8px;padding:12px 14px;">
@@ -392,12 +400,12 @@ async function laadGebruikersLijst() {
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:600;">${escHtml(p.naam)}</div>
             <div style="font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;">
-              ${p.is_kind ? '<span>👶 Kind-sessie</span>' : `<span>${escHtml(p.email||'')}</span>`}
+              ${p.is_kind ? '<span><i data-lucide="baby" style="width:11px;height:11px;display:inline-block;vertical-align:-0.1em;"></i> Kind-sessie</span>' : `<span>${escHtml(p.email||'')}</span>`}
               ${verjaardag ? `<span>${verjaardag}</span>` : ''}
             </div>
           </div>
           <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;flex-shrink:0;">${ROLLABEL[p.rol]||p.rol}</span>
-          <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')" style="flex-shrink:0;">✏️ Bewerken</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')" style="flex-shrink:0;"><i data-lucide="pencil" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Bewerken</button>
         </div>
         <!-- Bewerk modus (verborgen) -->
         <div id="gedit-${escHtml(p.id)}" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
@@ -437,7 +445,7 @@ async function laadGebruikersLijst() {
           <div id="gedit-msg-${escHtml(p.id)}" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;margin-top:10px;"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
             <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')">Annuleren</button>
-            <button class="btn btn-primary" onclick="slaGebruikerOp('${escHtml(p.id)}')">💾 Opslaan</button>
+            <button class="btn btn-primary" onclick="slaGebruikerOp('${escHtml(p.id)}')"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>
           </div>
         </div>
       </div>`;
@@ -610,7 +618,7 @@ function renderGezinsDatums() {
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
           <button class="btn btn-primary btn-sm" onclick="slaGezinsDatumOp(${i})" style="white-space:nowrap;">Opslaan</button>
-          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);white-space:nowrap;" onclick="verwijderGezinsDatum(${i})">🗑 Verwijder</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);white-space:nowrap;" onclick="verwijderGezinsDatum(${i})"><i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Verwijder</button>
         </div>
       </div>
     </div>`).join('');
