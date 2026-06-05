@@ -16,7 +16,7 @@
 
 <!-- ── Topbar ─────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="topbar-title">✅ To-do's</div>
+  <div class="topbar-title"><i data-lucide="list-todo" class="icon-inline"></i> To-do's</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" class="dev-badge">🔧 dev</span>
@@ -26,7 +26,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -101,9 +101,9 @@
   <div class="form-row">
     <label>Prioriteit</label>
     <div class="prioriteit-keuze">
-      <button class="prio-btn hoog" onclick="setPrio('hoog',this)">🔴 Hoog</button>
-      <button class="prio-btn middel selected" onclick="setPrio('middel',this)">🟡 Middel</button>
-      <button class="prio-btn laag" onclick="setPrio('laag',this)">🟢 Laag</button>
+      <button class="prio-btn hoog" onclick="setPrio('hoog',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--druk-dot);vertical-align:middle;margin-right:4px;"></span>Hoog</button>
+      <button class="prio-btn middel selected" onclick="setPrio('middel',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--normaal-dot);vertical-align:middle;margin-right:4px;"></span>Middel</button>
+      <button class="prio-btn laag" onclick="setPrio('laag',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rustig-dot);vertical-align:middle;margin-right:4px;"></span>Laag</button>
     </div>
   </div>
 
@@ -114,7 +114,7 @@
 
   <div class="prive-toggle" onclick="togglePrive()">
     <div class="prive-toggle-left">
-      <span class="prive-toggle-label">🔒 Privé</span>
+      <span class="prive-toggle-label"><i data-lucide="lock" class="icon-inline"></i> Privé</span>
       <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
     </div>
     <div class="ios-switch" id="prive-switch"></div>
@@ -227,7 +227,7 @@ function renderTodos() {
   if (!gefilterd.length) {
     const labels = { open:'Geen openstaande to-do\'s', vandaag:'Niets gepland voor vandaag', mijn:'Geen to-do\'s voor jou', gedaan:'Nog niets afgewerkt', alle:'Nog geen to-do\'s' };
     el.innerHTML = `<div class="leeg">
-      <div class="leeg-icon">${actieveFilter==='gedaan'?'🎉':'✅'}</div>
+      <div class="leeg-icon"><i data-lucide="${actieveFilter==='gedaan'?'party-popper':'check-circle'}" class="leeg-icon"></i></div>
       <div class="leeg-titel">${labels[actieveFilter]||'Geen to-do\'s'}</div>
       <div class="leeg-sub">${actieveFilter==='open'?'Tik op + om een to-do toe te voegen':''}</div>
     </div>`;
@@ -240,7 +240,7 @@ function renderTodos() {
       <span class="todo-badge" style="background:${getKleur(w)}22;color:${getKleur(w)};">
         ${PEMOJI[w]||''} ${PLABEL[w]||w}
       </span>`).join('');
-    const duurLabel = t.duur ? `⏱ ${t.duur>=60?Math.round(t.duur/60)+'u':t.duur+'min'}` : '';
+    const duurLabel = t.duur ? `<i data-lucide="timer" class="icon-inline"></i> ${t.duur>=60?Math.round(t.duur/60)+'u':t.duur+'min'}` : '';
     const kanBewerken = Auth.kan('kanTodosBeheren') || (t.wie||[]).includes(mijnKey);
 
     return `
@@ -254,11 +254,11 @@ function renderTodos() {
           ${deadlineBadge}
           ${duurLabel?`<span style="font-size:11px;">${duurLabel}</span>`:''}
           ${wieBadges}
-          ${t.prive?`<span class="prive-badge">🔒 Privé</span>`:''}
+          ${t.prive?`<span class="prive-badge"><i data-lucide="lock" class="icon-inline"></i> Privé</span>`:''}
         </div>
       </div>
       ${kanBewerken?`<div class="todo-acties">
-        <button class="todo-icon-btn" onclick="verwijderTodo('${t.id}')" title="Verwijderen">🗑️</button>
+        <button class="todo-icon-btn" onclick="verwijderTodo('${t.id}')" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
       </div>`:''}
     </div>`;
   }).join('');
@@ -270,10 +270,10 @@ function maakDeadlineBadge(deadline, vandaag, gedaan) {
   const morgenISO = fDateISO(morgen);
   const d = new Date(deadline+'T12:00:00');
   const label = d.toLocaleDateString('nl-BE',{day:'numeric',month:'short'});
-  if (deadline < vandaag) return `<span class="todo-deadline-badge deadline-verlopen">⚠️ Verlopen: ${label}</span>`;
-  if (deadline === vandaag) return `<span class="todo-deadline-badge deadline-vandaag">📅 Vandaag</span>`;
-  if (deadline === morgenISO) return `<span class="todo-deadline-badge deadline-morgen">📅 Morgen</span>`;
-  return `<span class="todo-deadline-badge deadline-ok">📅 ${label}</span>`;
+  if (deadline < vandaag) return `<span class="todo-deadline-badge deadline-verlopen"><i data-lucide="triangle-alert" class="icon-inline"></i> Verlopen: ${label}</span>`;
+  if (deadline === vandaag) return `<span class="todo-deadline-badge deadline-vandaag"><i data-lucide="calendar" class="icon-inline"></i> Vandaag</span>`;
+  if (deadline === morgenISO) return `<span class="todo-deadline-badge deadline-morgen"><i data-lucide="calendar" class="icon-inline"></i> Morgen</span>`;
+  return `<span class="todo-deadline-badge deadline-ok"><i data-lucide="calendar" class="icon-inline"></i> ${label}</span>`;
 }
 
 // ── Toggle gedaan ─────────────────────────────────────────────

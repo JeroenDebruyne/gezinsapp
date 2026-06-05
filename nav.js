@@ -24,7 +24,7 @@
     const html = `<nav class="bottom-nav" id="sidebar">
   ${navItems}
   <div class="sidebar-footer">
-    <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
+    <div class="sidebar-sync" id="sidebar-sync"><i data-lucide="loader-2" class="icon-spin" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> Laden…</div>
     <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
       <span class="nav-icon"><i data-lucide="settings"></i></span><span class="nav-label">Instellingen</span>
     </a>
@@ -34,7 +34,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen">⏏</button>
+      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out" style="width:14px;height:14px;"></i></button>
     </div>
   </div>
 </nav>
@@ -79,26 +79,16 @@
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-  // Lucide Icons — navigatie-iconen
+  // Lucide Icons — automatisch initialiseren bij DOM-wijzigingen
   document.addEventListener('DOMContentLoaded', function () {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js';
-    s.onload = function () { lucide.createIcons(); };
-    document.head.appendChild(s);
-  });
-
-  // Twemoji — consistente kleur-emoji op alle browsers (content, niet nav-iconen)
-  document.addEventListener('DOMContentLoaded', function () {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js';
-    s.crossOrigin = 'anonymous';
     s.onload = function () {
-      const parse = function (n) { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); };
-      parse(document.body);
-      new MutationObserver(function (muts) {
-        muts.forEach(function (m) {
-          m.addedNodes.forEach(function (n) { if (n.nodeType === 1) parse(n); });
-        });
+      lucide.createIcons();
+      var _t = null;
+      new MutationObserver(function () {
+        clearTimeout(_t);
+        _t = setTimeout(function () { lucide.createIcons(); }, 40);
       }).observe(document.body, { childList: true, subtree: true });
     };
     document.head.appendChild(s);

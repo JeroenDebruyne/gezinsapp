@@ -209,7 +209,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -422,9 +422,9 @@
   <div class="modal-handle"></div>
   <h3 id="do-titel">Drukte aanpassen</h3>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--rustig-bg);color:var(--rustig-clr);border:2px solid var(--rustig-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('rustig',this)">🟢<br>Rustig</button>
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--normaal-bg);color:var(--normaal-clr);border:2px solid var(--normaal-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('normaal',this)">🟡<br>Normaal</button>
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);border:2px solid var(--druk-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('druk',this)">🔴<br>Druk</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--rustig-bg);color:var(--rustig-clr);border:2px solid var(--rustig-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('rustig',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--rustig-dot);margin:0 auto 6px;"></span>Rustig</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--normaal-bg);color:var(--normaal-clr);border:2px solid var(--normaal-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('normaal',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--normaal-dot);margin:0 auto 6px;"></span>Normaal</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);border:2px solid var(--druk-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('druk',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--druk-dot);margin:0 auto 6px;"></span>Druk</button>
   </div>
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="closeDOModal()">Annuleren</button>

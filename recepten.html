@@ -58,7 +58,7 @@
 <body>
 
 <header class="topbar">
-  <div class="topbar-title">📖 Recepten</div>
+  <div class="topbar-title"><i data-lucide="book-open" class="icon-inline"></i> Recepten</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -68,7 +68,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -83,24 +83,24 @@
     <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
     <select class="mob-filter-sel" id="recept-type-sel-mob" onchange="filterRType(this.value,null)">
       <option value="alle">Alle</option>
-      <option value="avond">🍝 Avond</option>
-      <option value="lunch">🥗 Lunch</option>
-      <option value="weekend">🍖 Weekend</option>
-      <option value="ontbijt">🥐 Ontbijt</option>
+      <option value="avond">Avond</option>
+      <option value="lunch">Lunch</option>
+      <option value="weekend">Weekend</option>
+      <option value="ontbijt">Ontbijt</option>
     </select>
     <div class="pill-tabs mob-hide-on-mobile" id="recept-type-tabs">
       <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
-      <button class="ptab" onclick="filterRType('avond',this)">🍝 Avond</button>
-      <button class="ptab" onclick="filterRType('lunch',this)">🥗 Lunch</button>
-      <button class="ptab" onclick="filterRType('weekend',this)">🍖 Weekend</button>
-      <button class="ptab" onclick="filterRType('ontbijt',this)">🥐 Ontbijt</button>
+      <button class="ptab" onclick="filterRType('avond',this)"><i data-lucide="utensils" class="icon-inline"></i> Avond</button>
+      <button class="ptab" onclick="filterRType('lunch',this)"><i data-lucide="leaf" class="icon-inline"></i> Lunch</button>
+      <button class="ptab" onclick="filterRType('weekend',this)"><i data-lucide="utensils" class="icon-inline"></i> Weekend</button>
+      <button class="ptab" onclick="filterRType('ontbijt',this)"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</button>
     </div>
     <div class="recept-grid" id="recipes-grid"></div>
   </div>
   <!-- Rechter kolom: fiche (alleen desktop) -->
   <div class="recept-kolom-detail" id="recept-kolom-detail">
     <div class="fiche-placeholder" id="fiche-placeholder">
-      <span style="font-size:48px;">📖</span>
+      <i data-lucide="book-open" style="width:48px;height:48px;display:block;color:var(--muted-2);stroke-width:1.5;"></i>
       <p>Kies een recept uit de lijst</p>
     </div>
     <div id="recept-fiche" style="display:none;"></div>
@@ -120,7 +120,7 @@
 <div class="modal-bg" id="import-modal-bg">
 <div class="modal">
   <div class="modal-handle"></div>
-  <h3>🔗 Recept importeren via link</h3>
+  <h3><i data-lucide="link" class="icon-inline"></i> Recept importeren via link</h3>
   <div class="import-stap actief" id="import-stap-1">
     <div class="form-row">
       <label>Plak de URL van het recept</label>
@@ -137,7 +137,7 @@
     </div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeImportModal()">Annuleren</button>
-      <button class="modal-btn modal-btn-primary" onclick="startImport()">🔍 Importeren</button>
+      <button class="modal-btn modal-btn-primary" onclick="startImport()"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
     </div>
   </div>
   <div class="import-stap" id="import-stap-2">
@@ -149,10 +149,10 @@
   </div>
   <div class="import-stap" id="import-stap-3">
     <div class="import-preview" id="import-preview"></div>
-    <div class="info-box">✏️ Je kan alles nog aanpassen voor je opslaat.</div>
+    <div class="info-box"><i data-lucide="pencil" class="icon-inline"></i> Je kan alles nog aanpassen voor je opslaat.</div>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Andere link</button>
-      <button class="modal-btn modal-btn-primary" onclick="openReceptVanImport()">✏️ Bekijk &amp; sla op</button>
+      <button class="modal-btn modal-btn-primary" onclick="openReceptVanImport()"><i data-lucide="pencil" class="icon-inline"></i> Bekijk &amp; sla op</button>
     </div>
   </div>
   <div class="import-stap" id="import-stap-4">
@@ -175,7 +175,7 @@
   <div style="display:flex;flex-direction:column;gap:10px;">
     <button class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
       onclick="sluitKeuzeModal();openReceptModal()">
-      <span style="font-size:24px;">✏️</span>
+      <i data-lucide="pencil" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
       <div style="text-align:left;">
         <div style="font-weight:700;">Manueel invoeren</div>
         <div style="font-size:12px;font-weight:400;opacity:.8;">Zelf naam, ingrediënten en bereiding invullen</div>
@@ -183,7 +183,7 @@
     </button>
     <button class="btn btn-secondary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
       onclick="sluitKeuzeModal();openLinkModal()">
-      <span style="font-size:24px;">🔗</span>
+      <i data-lucide="link" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
       <div style="text-align:left;">
         <div style="font-weight:700;">Importeren via link</div>
         <div style="font-size:12px;font-weight:400;opacity:.8;">Plak een URL van een receptensite</div>
@@ -210,7 +210,7 @@
   <div id="link-status" style="font-size:13px;color:var(--muted);min-height:20px;margin-top:4px;"></div>
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="sluitLinkModal()">Annuleren</button>
-    <button class="modal-btn modal-btn-primary" id="btn-scrape" onclick="startScrape()">🔍 Importeren</button>
+    <button class="modal-btn modal-btn-primary" id="btn-scrape" onclick="startScrape()"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
   </div>
 </div>
 </div>
@@ -230,10 +230,10 @@
   <div class="form-row">
     <label>Type (meerdere mogelijk)</label>
     <div class="type-ms" id="f-type-ms">
-      <div class="type-chip" data-type="avond" onclick="toggleType(this)">🍝 Avond</div>
-      <div class="type-chip" data-type="lunch" onclick="toggleType(this)">🥗 Lunch</div>
-      <div class="type-chip" data-type="weekend" onclick="toggleType(this)">🍖 Weekend</div>
-      <div class="type-chip" data-type="ontbijt" onclick="toggleType(this)">🥐 Ontbijt</div>
+      <div class="type-chip" data-type="avond" onclick="toggleType(this)"><i data-lucide="utensils" class="icon-inline"></i> Avond</div>
+      <div class="type-chip" data-type="lunch" onclick="toggleType(this)"><i data-lucide="leaf" class="icon-inline"></i> Lunch</div>
+      <div class="type-chip" data-type="weekend" onclick="toggleType(this)"><i data-lucide="utensils" class="icon-inline"></i> Weekend</div>
+      <div class="type-chip" data-type="ontbijt" onclick="toggleType(this)"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</div>
     </div>
   </div>
 
@@ -338,19 +338,19 @@ function renderRecepten(){
     });
   }
   if(search){const q=search.toLowerCase();filtered=filtered.filter(r=>r.naam.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))||(r.ingredienten||[]).some(i=>i.naam.toLowerCase().includes(q)));}
-  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
   document.getElementById('recipes-grid').innerHTML=filtered.map(r=>{
     const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
     const eersteType=types[0]||'avond';
     const isActief=actieveFicheId!=null&&actieveFicheId==r.id;
     return `
     <div class="recept-card${isActief?' actief':''}" data-id="${r.id}" onclick="openFiche(${r.id})">
-      <div class="recept-thumb thumb-${eersteType}">${EMOJIS[eersteType]||'🍽️'}</div>
+      <div class="recept-thumb thumb-${eersteType}"><i data-lucide="utensils" style="width:28px;height:28px;stroke-width:1.75;color:var(--surface);opacity:.7;"></i></div>
       <div class="recept-info">
         <div class="recept-naam">${escHtml(r.naam)}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-          ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
-          ${r.porties?`<span>🍽 ${r.porties}p</span>`:''}
+          ${r.tijd?`<span><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
+          ${r.porties?`<span><i data-lucide="utensils" class="icon-inline"></i> ${r.porties}p</span>`:''}
           ${r.moeilijk?`<span>${escHtml(r.moeilijk)}</span>`:''}
           ${r.score?_sterHtml(r.score):''}
         </div>
@@ -360,7 +360,7 @@ function renderRecepten(){
         </div>
       </div>
     </div>`;
-  }).join('')||`<div class="empty-state"><span class="empty-icon">📖</span><p>Geen recepten gevonden</p></div>`;
+  }).join('')||`<div class="empty-state"><i data-lucide="book-open" class="empty-icon"></i><p>Geen recepten gevonden</p></div>`;
   // Herlaad fiche als actief recept nog bestaat
   if(actieveFicheId){
     const r=recepten.find(r=>r.id==actieveFicheId);
@@ -405,7 +405,7 @@ function _clearFiche(){
 
 function renderFicheHtml(r, metSluitknop){
   const kanBewerken=Auth.kan('kanReceptenBeheren');
-  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
   const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
   const bronDom=r.bron?`<a href="${escHtml(r.bron)}" target="_blank" rel="noopener" style="color:var(--accent);">${escHtml(r.bron.replace(/^https?:\/\//,'').split('/').slice(0,2).join('/'))}</a>`:'';
   return `
@@ -414,20 +414,20 @@ function renderFicheHtml(r, metSluitknop){
     <div class="fiche-acties">
       ${kanBewerken?`
         <button class="btn btn-secondary btn-sm" onclick="openReceptModal(recepten.find(r=>r.id==${r.id}))" title="Bewerken"></button>
-        <button class="btn btn-danger btn-sm" onclick="verwijderRecept(${r.id})" title="Verwijderen">🗑️</button>
+        <button class="btn btn-danger btn-sm" onclick="verwijderRecept(${r.id})" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
       `:''}
       ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitFiche()" title="Sluiten">✕</button>`:''}
     </div>
   </div>
   <div class="fiche-meta">
     ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
-    ${r.tijd?`<span class="fiche-meta-item">⏱ ${r.tijd} min</span>`:''}
-    ${r.porties?`<span class="fiche-meta-item">🍽 ${r.porties} p.</span>`:''}
-    ${r.moeilijk?`<span class="fiche-meta-item">📊 ${escHtml(r.moeilijk)}</span>`:''}
+    ${r.tijd?`<span class="fiche-meta-item"><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
+    ${r.porties?`<span class="fiche-meta-item"><i data-lucide="utensils" class="icon-inline"></i> ${r.porties} p.</span>`:''}
+    ${r.moeilijk?`<span class="fiche-meta-item">${escHtml(r.moeilijk)}</span>`:''}
     ${r.score?`<span class="fiche-meta-item">${_sterHtml(r.score)}</span>`:''}
   </div>
   ${(r.tags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1rem;">${r.tags.map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}</div>`:''}
-  ${bronDom?`<div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;">📎 ${bronDom}</div>`:''}
+  ${bronDom?`<div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;"><i data-lucide="link" class="icon-inline"></i> ${bronDom}</div>`:''}
   ${(r.ingredienten||[]).length?`
     <div class="fiche-sectie-label">Ingrediënten (${r.ingredienten.length})</div>
     <div>
@@ -761,7 +761,7 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
 }
 
 function toonImportPreview(r){
-  const typeLabels={'avond':'🍝 Avond','lunch':'🥗 Lunch','weekend':'🍖 Weekend','ontbijt':'🥐 Ontbijt'};
+  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
   const types=(r.types||[r.type]).filter(Boolean).map(t=>typeLabels[t]||t).join(', ');
   const ingLijst=(r.ingredienten||[]).slice(0,8).map(i=>`<span>${i.hoev?escHtml(i.hoev)+' '+escHtml(i.eenheid)+' ':''}${escHtml(i.naam)}</span>`).join('');
   const meer=(r.ingredienten||[]).length>8?`<span style="color:var(--muted);">+${r.ingredienten.length-8} meer</span>`:'';
@@ -771,15 +771,15 @@ function toonImportPreview(r){
       <span class="import-success-badge">✅ Gevonden</span>
     </div>
     <div class="import-preview-meta">
-      ${r.tijd?`<span>⏱ ${r.tijd} min</span>`:''}
-      ${r.porties?`<span>🍽 ${r.porties} porties</span>`:''}
-      ${types?`<span>📋 ${types}</span>`:''}
-      ${r.moeilijk?`<span>📊 ${r.moeilijk}</span>`:''}
+      ${r.tijd?`<span><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
+      ${r.porties?`<span><i data-lucide="utensils" class="icon-inline"></i> ${r.porties} porties</span>`:''}
+      ${types?`<span><i data-lucide="clipboard-list" class="icon-inline"></i> ${types}</span>`:''}
+      ${r.moeilijk?`<span>${r.moeilijk}</span>`:''}
     </div>
     ${r.bereiding?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;max-height:60px;overflow:hidden;">${r.bereiding.slice(0,200)}${r.bereiding.length>200?'…':''}</div>`:''}
     <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;">INGREDIËNTEN (${(r.ingredienten||[]).length})</div>
     <div style="font-size:12px;">${ingLijst}${meer}</div>
-    ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📎 ${r.bron}</div>`:''}`;
+    ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><i data-lucide="link" class="icon-inline"></i> ${r.bron}</div>`:''}`;
 }
 
 function openReceptVanImport(){
@@ -799,7 +799,7 @@ function openLinkModal(){
   document.getElementById('link-url').value='';
   document.getElementById('link-status').textContent='';
   document.getElementById('btn-scrape').disabled=false;
-  document.getElementById('btn-scrape').textContent='🔍 Importeren';
+  document.getElementById('btn-scrape').innerHTML='<i data-lucide="search" class="icon-inline"></i> Importeren';
   document.getElementById('link-modal-bg').classList.add('open');
   setTimeout(()=>document.getElementById('link-url').focus(),150);
 }
@@ -823,7 +823,7 @@ async function startScrape(){
     setTimeout(()=>openReceptModal(recept,true),100);
   }catch(e){
     if(e.message==='NO_JSON_LD'){
-      statusEl.innerHTML='⚠️ Geen gestructureerde receptdata gevonden op deze site.<br><a href="#" onclick="event.preventDefault();sluitLinkModal();openImportModal()" style="color:var(--accent);font-weight:600;">Probeer via AI-import (vereist API key) →</a>';
+      statusEl.innerHTML='<i data-lucide="triangle-alert" class="icon-inline"></i> Geen gestructureerde receptdata gevonden op deze site.<br><a href="#" onclick="event.preventDefault();sluitLinkModal();openImportModal()" style="color:var(--accent);font-weight:600;">Probeer via AI-import (vereist API key) →</a>';
     } else {
       statusEl.textContent='❌ '+e.message;
     }

@@ -43,7 +43,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">🍽️ Maaltijden</div>
+  <div class="topbar-title"><i data-lucide="utensils" class="icon-inline"></i> Maaltijden</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -53,7 +53,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -68,25 +68,25 @@
       <button class="nav-btn" onclick="changeWeekP(1)">&#8594;</button>
     </div>
     <div class="wp-actie-rij" style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">
-      <button class="btn btn-secondary" onclick="openWpAgent()">🤖 Maaltijdassistent</button>
-      <button class="btn btn-secondary" onclick="voegToeAanBoodschappenlijst()" title="Voeg ingrediënten van dit weekmenu toe aan de boodschappenlijst">🛒 Voeg toe aan lijst</button>
-      <button class="btn btn-primary" onclick="location.href='boodschappen.html'">🛒 Boodschappen</button>
+      <button class="btn btn-secondary" onclick="openWpAgent()"><i data-lucide="bot" class="icon-inline"></i> Maaltijdassistent</button>
+      <button class="btn btn-secondary" onclick="voegToeAanBoodschappenlijst()" title="Voeg ingrediënten van dit weekmenu toe aan de boodschappenlijst"><i data-lucide="shopping-cart" class="icon-inline"></i> Voeg toe aan lijst</button>
+      <button class="btn btn-primary" onclick="location.href='boodschappen.html'"><i data-lucide="shopping-cart" class="icon-inline"></i> Boodschappen</button>
     </div>
   </div>
 
   <!-- Maaltijdassistent panel -->
   <div id="wp-agent-panel" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:1rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:15px;font-weight:700;">🤖 Maaltijdassistent</div>
+      <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;"><i data-lucide="bot" class="icon-inline"></i> Maaltijdassistent</div>
       <button onclick="document.getElementById('wp-agent-panel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;">×</button>
     </div>
 
     <div class="wp-voorbeeld-btns">
-      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Stel een gevarieerd weekmenu voor deze week in, rekening houdend met de drukte per dag en wat we de afgelopen weken gegeten hebben.')">📅 Weekmenu</button>
-      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Wat stond er de laatste 4 weken op het menu? Geef een overzicht.')">📋 Historiek</button>
-      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Welke recepten zijn geschikt voor een drukke avond (max 30 min)?')">⚡ Snelle recepten</button>
-      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Genereer de boodschappenlijst op basis van het huidige weekmenu.')">🛒 Boodschappen</button>
-      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Welke kindvriendelijke recepten hebben we?')">👧 Kindvriendelijk</button>
+      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Stel een gevarieerd weekmenu voor deze week in, rekening houdend met de drukte per dag en wat we de afgelopen weken gegeten hebben.')"><i data-lucide="calendar" class="icon-inline"></i> Weekmenu</button>
+      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Wat stond er de laatste 4 weken op het menu? Geef een overzicht.')"><i data-lucide="clipboard-list" class="icon-inline"></i> Historiek</button>
+      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Welke recepten zijn geschikt voor een drukke avond (max 30 min)?')"><i data-lucide="zap" class="icon-inline"></i> Snelle recepten</button>
+      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Genereer de boodschappenlijst op basis van het huidige weekmenu.')"><i data-lucide="shopping-cart" class="icon-inline"></i> Boodschappen</button>
+      <button class="wp-voorbeeld-btn" onclick="wpStuurVoorbeeldVraag('Welke kindvriendelijke recepten hebben we?')"><i data-lucide="baby" class="icon-inline"></i> Kindvriendelijk</button>
     </div>
 
     <div class="wp-chat-container" id="wp-chat-berichten">
@@ -99,8 +99,8 @@
       <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
       <div id="wp-bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" onclick="wpAgent.bevestig()">✅ Bevestigen</button>
-        <button class="btn btn-secondary" onclick="wpAgent.annuleer()">❌ Annuleren</button>
+        <button class="btn btn-primary" onclick="wpAgent.bevestig()"><i data-lucide="check" class="icon-inline"></i> Bevestigen</button>
+        <button class="btn btn-secondary" onclick="wpAgent.annuleer()"><i data-lucide="x" class="icon-inline"></i> Annuleren</button>
       </div>
     </div>
 
@@ -274,7 +274,7 @@ function renderPlanner(){
         const wieHtml=PERSONEN.map(p=>`<span class="wie-chip${wieLeeg||(item.wie||[]).includes(p)?' sel':''}" onclick="toggleWieItem('${key}','${slot.key}',${idx},'${p}')">${escHtml(PEMOJI[p]||'👤')}</span>`).join('');
         return `<div class="slot-item">
           <div class="slot-item-top">
-            ${isSpec?`<span class="special-badge sb-${item.waarde}">${naam}</span>`:`<span class="slot-item-naam">${escHtml(naam)}${w?' <span class="warn">⚠️</span>':''}</span>`}
+            ${isSpec?`<span class="special-badge sb-${item.waarde}">${naam}</span>`:`<span class="slot-item-naam">${escHtml(naam)}${w?' <span class="warn"><i data-lucide="triangle-alert" style="width:12px;height:12px;"></i></span>':''}</span>`}
             <button class="slot-item-wis" onclick="wisItem('${key}','${slot.key}',${idx})">×</button>
           </div>
           <div class="slot-item-ctrl" onclick="event.stopPropagation()">
@@ -283,10 +283,10 @@ function renderPlanner(){
               <button class="slot-ctrl-btn" onclick="wijzigExtraEters('${key}','${slot.key}',${idx},-1)">−</button>
               <span class="slot-porties-val">+${extraEters} extra</span>
               <button class="slot-ctrl-btn" onclick="wijzigExtraEters('${key}','${slot.key}',${idx},1)">+</button>
-              <span class="slot-porties-val">👥 ${itemPorties}</span>
+              <span class="slot-porties-val"><i data-lucide="users" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${itemPorties}</span>
             </div>`:''}
             <select class="slot-kok-sel" onchange="wijzigKokItem('${key}','${slot.key}',${idx},this.value)">
-              <option value="">👨‍🍳 Kok?</option>
+              <option value="">— Kok? —</option>
               ${persOpts}
             </select>
           </div>
@@ -354,17 +354,17 @@ function openPlanModal(dk,slotKey,dagnaam,dagIndex){
   activeSlot={dagKey:dk,slotKey,dagIndex};
   const drukte=getDagDrukte(dk);
   document.getElementById('plan-titel').textContent=dagnaam+' — '+SLOTS.find(s=>s.key===slotKey).lbl;
-  document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;">${{rustig:'🟢 Rustige dag',normaal:'🟡 Drukke dag',druk:'🔴 Zeer drukke dag'}[drukte]}</div>`;
+  document.getElementById('drukte-info-box').innerHTML=`<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${{rustig:'var(--rustig-dot)',normaal:'var(--normaal-dot)',druk:'var(--druk-dot)'}[drukte]};flex-shrink:0;"></span>${{rustig:'Rustige dag',normaal:'Drukke dag',druk:'Zeer drukke dag'}[drukte]}</div>`;
   const isW=WEEKEND.includes(dagIndex);
   const slot=SLOTS.find(s=>s.key===slotKey);
   const types=isW?['weekend']:slot.types;
 
   // Snelle opties
   let specHtml='';
-  specHtml+=`<button class="spec-btn sb-shake" onclick="kiesPlanK('shake')">🥤 Maaltijdshake</button>`;
-  specHtml+=`<button class="spec-btn sb-uiteten" onclick="kiesPlanK('uiteten')">🍴 Uit eten</button>`;
-  specHtml+=`<button class="spec-btn sb-afhalen" onclick="kiesPlanK('afhalen')">📦 Afhalen</button>`;
-  specHtml+=`<button class="spec-btn sb-restjes" onclick="kiesPlanK('restjes')">♻️ Restjes</button>`;
+  specHtml+=`<button class="spec-btn sb-shake" onclick="kiesPlanK('shake')"><i data-lucide="cup-soda" class="icon-inline"></i> Maaltijdshake</button>`;
+  specHtml+=`<button class="spec-btn sb-uiteten" onclick="kiesPlanK('uiteten')"><i data-lucide="utensils" class="icon-inline"></i> Uit eten</button>`;
+  specHtml+=`<button class="spec-btn sb-afhalen" onclick="kiesPlanK('afhalen')"><i data-lucide="package" class="icon-inline"></i> Afhalen</button>`;
+  specHtml+=`<button class="spec-btn sb-restjes" onclick="kiesPlanK('restjes')"><i data-lucide="refresh-cw" class="icon-inline"></i> Restjes</button>`;
   document.getElementById('spec-opties').innerHTML=specHtml;
 
   // Top 3 meest gebruikt

@@ -12,7 +12,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">👥 Contacten</div>
+  <div class="topbar-title"><i data-lucide="users" class="icon-inline"></i> Contacten</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -22,7 +22,7 @@
         <span class="naam" id="topbar-naam">…</span>
       </div>
       <div class="profiel-menu" id="profiel-menu">
-        <a href="instellingen.html" class="profiel-menu-item">⚙️&nbsp; Instellingen</a>
+        <a href="instellingen.html" class="profiel-menu-item"><i data-lucide="settings" class="icon-inline"></i>&nbsp; Instellingen</a>
       </div>
     </div>
   </div>
@@ -40,7 +40,7 @@
   <!-- Rechter kolom: contactfiche (alleen desktop) -->
   <div class="crm-kolom-detail" id="crm-kolom-detail">
     <div class="fiche-placeholder" id="crm-fiche-placeholder">
-      <span style="font-size:48px;">👥</span>
+      <i data-lucide="users" style="width:48px;height:48px;display:block;color:var(--muted-2);stroke-width:1.5;margin:0 auto 8px;"></i>
       <p>Kies een contact uit de lijst</p>
     </div>
     <div id="crm-fiche" style="display:none;"></div>
@@ -63,7 +63,7 @@
   <h3 id="crm-modal-titel">Contact toevoegen</h3>
 
   <!-- Partner 1 -->
-  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👤 Partner 1</div>
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:5px;"><i data-lucide="user" class="icon-inline"></i> Partner 1</div>
   <div class="form-grid" style="grid-template-columns:1fr 1fr;">
     <div class="form-row"><label>Voornaam</label><input type="text" id="c-p1-voornaam" placeholder="Voornaam"/></div>
     <div class="form-row"><label>Achternaam</label><input type="text" id="c-p1-achternaam" placeholder="Achternaam"/></div>
@@ -71,7 +71,7 @@
   <div class="form-row"><label>Verjaardag</label><input type="date" id="c-p1-verjaardag"/></div>
 
   <!-- Partner 2 -->
-  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">👤 Partner 2 <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;display:flex;align-items:center;gap:5px;"><i data-lucide="user" class="icon-inline"></i> Partner 2 <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
   <div class="form-grid" style="grid-template-columns:1fr 1fr;">
     <div class="form-row"><label>Voornaam</label><input type="text" id="c-p2-voornaam" placeholder="Voornaam"/></div>
     <div class="form-row"><label>Achternaam</label><input type="text" id="c-p2-achternaam" placeholder="Achternaam"/></div>
@@ -79,7 +79,7 @@
   <div class="form-row"><label>Verjaardag</label><input type="date" id="c-p2-verjaardag"/></div>
 
   <!-- Kinderen -->
-  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">👧 Kinderen <span style="font-weight:400;text-transform:none;">(max. 5)</span></div>
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;display:flex;align-items:center;gap:5px;"><i data-lucide="baby" class="icon-inline"></i> Kinderen <span style="font-weight:400;text-transform:none;">(max. 5)</span></div>
   <div id="c-kinderen-rijen"></div>
   <button type="button" onclick="voegKindToe()" id="c-kind-add-btn"
     style="width:100%;padding:10px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:14px;">
@@ -87,7 +87,7 @@
   </button>
 
   <!-- Belangrijke datums -->
-  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;">📅 Belangrijke datums <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
+  <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px;display:flex;align-items:center;gap:5px;"><i data-lucide="calendar" class="icon-inline"></i> Belangrijke datums <span style="font-weight:400;text-transform:none;">(optioneel)</span></div>
   <div id="c-datums-rijen"></div>
   <button type="button" onclick="voegBelangrijkeDatumToe()" id="c-datum-add-btn"
     style="width:100%;padding:10px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:14px;">
@@ -97,20 +97,20 @@
   <!-- Kerstkaart -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;cursor:pointer;" onclick="toggleKerstkaart()">
     <div>
-      <div style="font-size:15px;font-weight:500;color:var(--ink);">🎄 Kerstkaart sturen</div>
+      <div style="font-size:15px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:6px;"><i data-lucide="tree-pine" class="icon-inline"></i> Kerstkaart sturen</div>
     </div>
     <div class="ios-switch" id="c-kerstkaart-switch"></div>
   </div>
 
   <!-- Adres -->
   <div class="form-row">
-    <label>🏠 Adres <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel — voor reistijdberekening)</span></label>
+    <label><i data-lucide="home" class="icon-inline"></i> Adres <span style="font-size:11px;font-weight:400;color:var(--muted);">(optioneel — voor reistijdberekening)</span></label>
     <input type="text" id="c-adres" placeholder="Straat, huisnr, gemeente"/>
   </div>
 
   <!-- Cadeaus -->
-  <div class="form-row"><label>🎊 Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
-  <div class="form-row"><label>🎂 Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
+  <div class="form-row"><label><i data-lucide="party-popper" class="icon-inline"></i> Cadeau nieuwjaar</label><textarea id="c-cadeau-nj" rows="2" placeholder="Ideeën…"></textarea></div>
+  <div class="form-row"><label><i data-lucide="cake" class="icon-inline"></i> Cadeau verjaardag</label><textarea id="c-cadeau-vj" rows="2" placeholder="Ideeën per persoon…"></textarea></div>
 
   <div class="modal-actions">
     <button class="modal-btn modal-btn-cancel" onclick="closeCrmModal()">Annuleren</button>
@@ -292,7 +292,7 @@ function renderVerjaarDagAlerts(){
       const pnm=((p.voornaam||'')+' '+(p.achternaam||'')).trim()||nm;
       const dagen=_dagenTotVolgende(p.verjaardag,true);
       if(dagen!==null&&dagen>=0&&dagen<=VENSTER)
-        items.push({type:'verjaardag',label:`🎂 ${pnm}`,dagen,datum:p.verjaardag,herhalend:true});
+        items.push({type:'verjaardag',label:`<i data-lucide="cake" class="icon-inline"></i> ${pnm}`,dagen,datum:p.verjaardag,herhalend:true});
     });
     // Kinderen
     (_parseObj(c.kinderenData)||[]).forEach(k=>{
@@ -300,14 +300,14 @@ function renderVerjaarDagAlerts(){
       const kn=((k.voornaam||'')+' '+(k.achternaam||'')).trim()||'Kind';
       const dagen=_dagenTotVolgende(k.verjaardag,true);
       if(dagen!==null&&dagen>=0&&dagen<=VENSTER)
-        items.push({type:'verjaardag',label:`🎂 ${kn}`,dagen,datum:k.verjaardag,herhalend:true});
+        items.push({type:'verjaardag',label:`<i data-lucide="cake" class="icon-inline"></i> ${kn}`,dagen,datum:k.verjaardag,herhalend:true});
     });
     // Belangrijke datums
     (c.belangrijkeDatums||[]).forEach(bd=>{
       if(!bd.datum) return;
       const dagen=_dagenTotVolgende(bd.datum,bd.herhalend);
       if(dagen!==null&&(bd.herhalend?dagen>=0&&dagen<=VENSTER:dagen>=0&&dagen<=VENSTER))
-        items.push({type:'datum',label:`📅 ${bd.label||'Datum'} — ${nm}`,dagen,datum:bd.datum,herhalend:bd.herhalend});
+        items.push({type:'datum',label:`<i data-lucide="calendar" class="icon-inline"></i> ${bd.label||'Datum'} — ${nm}`,dagen,datum:bd.datum,herhalend:bd.herhalend});
     });
   });
   items.sort((a,b)=>a.dagen-b.dagen);
@@ -347,8 +347,8 @@ function renderCrm(){
   const el=document.getElementById('crm-lijst');
   if(!filtered.length){
     el.innerHTML=search
-      ?`<div class="empty-state"><span class="empty-icon">🔍</span><p>Geen contacten gevonden voor "${escHtml(search)}"</p></div>`
-      :`<div class="empty-state"><span class="empty-icon">👥</span><p>Nog geen contacten</p></div>`;
+      ?`<div class="empty-state"><i data-lucide="search" class="empty-icon"></i><p>Geen contacten gevonden voor "${escHtml(search)}"</p></div>`
+      :`<div class="empty-state"><i data-lucide="users" class="empty-icon"></i><p>Nog geen contacten</p></div>`;
     return;
   }
   el.innerHTML=filtered.map(c=>{
@@ -361,11 +361,11 @@ function renderCrm(){
     const kindNamen=kids.map(k=>(k.voornaam||k.naam||'').trim()).filter(Boolean).join(', ');
     return `
     <div class="crm-card${isActief?' actief':''}" data-id="${c.id}" onclick="openContactFiche(${c.id})">
-      <div class="crm-naam">👨‍👩‍👧 ${escHtml(nm)}</div>
-      ${partnerLijn?`<div style="font-size:13px;color:var(--muted);margin-top:2px;">👫 ${escHtml(partnerLijn)}</div>`:''}
-      ${kindNamen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">👧 ${escHtml(kindNamen)}</div>`:''}
+      <div class="crm-naam"><i data-lucide="users" style="width:14px;height:14px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(nm)}</div>
+      ${partnerLijn?`<div style="font-size:13px;color:var(--muted);margin-top:2px;"><i data-lucide="heart" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(partnerLijn)}</div>`:''}
+      ${kindNamen?`<div style="font-size:12px;color:var(--muted);margin-top:2px;"><i data-lucide="baby" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(kindNamen)}</div>`:''}
       <div style="margin-top:7px;">
-        <span style="font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 ${kerstmis?'Kerstkaart':'Geen kerstkaart'}</span>
+        <span style="font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};display:inline-flex;align-items:center;gap:3px;"><i data-lucide="tree-pine" style="width:10px;height:10px;"></i> ${kerstmis?'Kerstkaart':'Geen kerstkaart'}</span>
       </div>
     </div>`;
   }).join('');
@@ -412,7 +412,7 @@ function renderContactFicheHtml(c,metSluitknop){
     return `<div style="background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Partner ${i+1}</div>
       ${naam?`<div style="font-size:15px;font-weight:600;color:var(--ink);">${escHtml(naam)}</div>`:''}
-      ${p.verjaardag?`<div style="font-size:12px;color:var(--muted);margin-top:3px;">🎂 ${_formatVerjaardag(p.verjaardag)}</div>`:''}
+      ${p.verjaardag?`<div style="font-size:12px;color:var(--muted);margin-top:3px;"><i data-lucide="cake" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${_formatVerjaardag(p.verjaardag)}</div>`:''}
     </div>`;
   }).join('');
 
@@ -421,9 +421,9 @@ function renderContactFicheHtml(c,metSluitknop){
     ${kids.map(k=>{
       const kn=((k.voornaam||'')+' '+(k.achternaam||'')).trim();
       return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
-        <span style="font-size:16px;">👧</span>
+        <i data-lucide="baby" style="width:16px;height:16px;flex-shrink:0;color:var(--muted-2);"></i>
         <div><div style="font-size:14px;font-weight:500;color:var(--ink);">${escHtml(kn||'Kind')}</div>
-        ${k.verjaardag?`<div style="font-size:12px;color:var(--muted);">🎂 ${_formatVerjaardag(k.verjaardag)}</div>`:''}
+        ${k.verjaardag?`<div style="font-size:12px;color:var(--muted);"><i data-lucide="cake" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${_formatVerjaardag(k.verjaardag)}</div>`:''}
         </div>
       </div>`;
     }).join('')}
@@ -431,11 +431,11 @@ function renderContactFicheHtml(c,metSluitknop){
 
   return `
   <div class="fiche-header">
-    <div class="fiche-naam">👨‍👩‍👧 ${escHtml(nm)}</div>
+    <div class="fiche-naam"><i data-lucide="users" style="width:16px;height:16px;display:inline-block;vertical-align:-0.1em;margin-right:4px;"></i>${escHtml(nm)}</div>
     <div class="fiche-acties">
       ${kanBewerken?`
         <button class="btn btn-secondary btn-sm" onclick="editContact(${c.id})" title="Bewerken"></button>
-        <button class="btn btn-danger btn-sm" onclick="verwijderContact(${c.id})" title="Verwijderen">🗑️</button>
+        <button class="btn btn-danger btn-sm" onclick="verwijderContact(${c.id})" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
       `:''}
       ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitContactFiche()" title="Sluiten">✕</button>`:''}
     </div>
@@ -443,12 +443,12 @@ function renderContactFicheHtml(c,metSluitknop){
   ${personenHtml}
   ${kinderenHtml}
   ${c.adres?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.adres)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-top:10px;text-decoration:none;">
-    <span style="font-size:18px;flex-shrink:0;">📍</span>
+    <i data-lucide="map-pin" style="width:18px;height:18px;flex-shrink:0;color:var(--muted-2);"></i>
     <span style="flex:1;font-size:13px;color:var(--ink);">${escHtml(c.adres)}</span>
     <span style="font-size:12px;color:var(--accent);flex-shrink:0;">Kaart ↗</span>
   </a>`:''}
   <div class="fiche-meta" style="margin-top:10px;">
-    <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};">🎄 Kerstkaart: ${kerstmis?'Ja':'Nee'}</span>
+    <span style="font-size:12px;padding:4px 12px;border-radius:99px;font-weight:600;background:${kerstmis?'var(--rustig-bg)':'var(--bg-2)'};color:${kerstmis?'var(--rustig-clr)':'var(--muted)'};display:inline-flex;align-items:center;gap:4px;"><i data-lucide="tree-pine" style="width:12px;height:12px;"></i> Kerstkaart: ${kerstmis?'Ja':'Nee'}</span>
   </div>
   ${(c.belangrijkeDatums||[]).length?`
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;">Belangrijke datums</div>
@@ -460,7 +460,7 @@ function renderContactFicheHtml(c,metSluitknop){
       const dagen=bd.datum?_dagenTotVolgende(bd.datum,bd.herhalend):null;
       const binnenkort=dagen!==null&&dagen>=0&&dagen<=14;
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;">
-        <span style="font-size:18px;flex-shrink:0;">${bd.herhalend?'🔁':'📅'}</span>
+        ${bd.herhalend?'<i data-lucide="repeat" style="width:18px;height:18px;flex-shrink:0;color:var(--muted-2);"></i>':'<i data-lucide="calendar" style="width:18px;height:18px;flex-shrink:0;color:var(--muted-2);"></i>'}
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:var(--ink);">${escHtml(bd.label||'Datum')}</div>
           <div style="font-size:12px;color:var(--muted);">${dagStr}${bd.herhalend?' · jaarlijks':''}</div>
@@ -470,8 +470,8 @@ function renderContactFicheHtml(c,metSluitknop){
     }).join('')}
   `:''}
   ${c.cadeauNj||c.cadeauVj?`<div class="fiche-sectie-label" style="margin-top:14px;">Cadeaus</div>`:''}
-  ${c.cadeauNj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎊 NIEUWJAAR</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div></div>`:''}
-  ${c.cadeauVj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">🎂 VERJAARDAG</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div></div>`:''}
+  ${c.cadeauNj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><i data-lucide="party-popper" style="width:12px;height:12px;"></i> NIEUWJAAR</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauNj)}</div></div>`:''}
+  ${c.cadeauVj?`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:4px;"><i data-lucide="cake" style="width:12px;height:12px;"></i> VERJAARDAG</div><div style="font-size:14px;color:var(--ink);line-height:1.6;">${escHtml(c.cadeauVj)}</div></div>`:''}
   `;
 }
 
