@@ -50,14 +50,23 @@
 
   <!-- Profiel -->
   <div class="section-label" id="sect-profiel">👤 Mijn profiel</div>
-  <div class="card" id="profiel-kaart" style="display:flex;align-items:center;gap:14px;">
-    <div style="font-size:40px;" id="profiel-emoji">🧑</div>
-    <div>
+  <div class="card" id="profiel-kaart" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div style="position:relative;flex-shrink:0;">
+      <div style="font-size:40px;line-height:1;" id="profiel-emoji">🧑</div>
+      <div id="profiel-kleur-dot" style="width:14px;height:14px;border-radius:50%;background:var(--accent);position:absolute;bottom:-1px;right:-3px;border:2px solid var(--surface);"></div>
+    </div>
+    <div style="flex:1;min-width:0;">
       <div style="font-size:17px;font-weight:700;" id="profiel-naam">Laden…</div>
       <div style="font-size:13px;color:var(--muted);" id="profiel-rol"></div>
       <div style="font-size:12px;color:var(--muted-2);" id="profiel-email"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <input type="color" id="mijn-kleur-input" title="Mijn persoonkleur"
+          style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;padding:2px;flex-shrink:0;"/>
+        <span style="font-size:12px;color:var(--muted);">Mijn kleur</span>
+        <button class="btn btn-secondary btn-sm" onclick="slaaMijnKleurOp()">Opslaan</button>
+      </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="Auth.logout()" style="margin-left:auto;">Uitloggen</button>
+    <button class="btn btn-secondary btn-sm" onclick="Auth.logout()" style="margin-left:auto;align-self:flex-start;">Uitloggen</button>
   </div>
 
   <!-- Vaste roosters -->

@@ -96,6 +96,21 @@
     document.head.appendChild(s);
   });
 
+  // Persoonkleuren dynamisch toepassen vanuit localStorage
+  function _pasPersonKleurenToe() {
+    if (typeof Auth === 'undefined') return;
+    const kleuren = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren') || '{}');
+    Auth.getProfielen().forEach(function(p) {
+      const key = p.persoonKey; if (!key || !kleuren[key]) return;
+      const hex = kleuren[key];
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      document.documentElement.style.setProperty('--c-'+key, 'rgba('+r+','+g+','+b+',0.10)');
+      document.documentElement.style.setProperty('--c-'+key+'-t', hex);
+      document.documentElement.style.setProperty('--c-'+key+'-dot', hex);
+    });
+  }
+  window._pasPersonKleurenToe = _pasPersonKleurenToe;
+
   // Fill sidebar user info after DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof Auth !== 'undefined') {
@@ -108,6 +123,7 @@
         if (nm) nm.textContent = p.naam || '';
         if (rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
       }
+      _pasPersonKleurenToe();
     }
   });
 })();
