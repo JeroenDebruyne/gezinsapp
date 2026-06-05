@@ -406,7 +406,7 @@ function slaLokaalOp() {
 function _gezinId() { return Auth.getGezinId() || localStorage.getItem('gezinsapp_gezin_id') || null; }
 // Voegt gezin_id toe aan een query string: _gezinIdQ('?order=naam') → '?order=naam&gezin_id=eq.xxx'
 function _gezinIdQ(base = '') {
-  const id = _gid();
+  const id = _gezinId();
   if (!id) return base;
   return base ? `${base}&gezin_id=eq.${id}` : `?gezin_id=eq.${id}`;
 }
@@ -454,7 +454,7 @@ async function sbSaveRecept(recept) {
   };
   try {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('recepten','POST',{...data,gezin_id:_gid()}); if(res[0]) recept._sbId=res[0].id; }
+    else { const res=await sbFetch('recepten','POST',{...data,gezin_id:_gezinId()}); if(res[0]) recept._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
     return true;
   } catch(e) { _opslagFout(e,'recept'); return e?.message||String(e); }
@@ -462,7 +462,7 @@ async function sbSaveRecept(recept) {
 async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
 
 async function sbSaveActiviteit(act) {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!act._sbId && !gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return false; }
   const data = {
     naam:act.naam, wie:act.wie, start:act.start||null, eind_uur:act.eindUur||null,
@@ -512,7 +512,7 @@ async function sbSaveTodo(todo) {
     if (todo._sbId) {
       await sbFetch(`todos?id=eq.${todo._sbId}`,'PATCH',data);
     } else {
-      const res = await sbFetch('todos','POST',{...data,gezin_id:_gid()});
+      const res = await sbFetch('todos','POST',{...data,gezin_id:_gezinId()});
       if (res[0]) { todo._sbId = res[0].id; slaLokaalOp(); }
     }
     toonOpslagStatus('✅ Opgeslagen');
@@ -522,7 +522,7 @@ async function sbSaveTodo(todo) {
 async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
     await sbFetch('planning','POST',
@@ -536,7 +536,7 @@ async function sbSaveIngredient(ing) {
   const data = { naam:ing.naam, winkel:ing.winkel, categorie:ing.categorie, product_link:ing.productLink||null };
   try {
     if (ing._sbId) { await sbFetch(`ingredienten?id=eq.${ing._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('ingredienten','POST',{...data,gezin_id:_gid()}); if(res[0]) ing._sbId=res[0].id; }
+    else { const res=await sbFetch('ingredienten','POST',{...data,gezin_id:_gezinId()}); if(res[0]) ing._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'ingredient'); }
 }
@@ -563,21 +563,21 @@ async function sbSaveContact(contact) {
   };
   try {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
-    else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gid()}); if(res&&res[0]) contact._sbId=res[0].id; }
+    else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gezinId()}); if(res&&res[0]) contact._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { _opslagFout(e,'contact'); }
 }
 async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'contact-delete');} }
 
 async function sbSaveExtra(item) {
-  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gid()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
+  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gezinId()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
   catch(e) { _opslagFout(e,'extra'); }
 }
 async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }
 
 async function sbSaveBoodschapReceptItem(item) {
   try {
-    const gid = _gid();
+    const gid = _gezinId();
     const body = {
       naam: item.naam,
       winkel: item.winkel,
@@ -601,25 +601,25 @@ async function sbToggleAfgevinktItem(sbId, val) {
 }
 
 async function sbDeleteAlleReceptItems() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&type=eq.recept`, 'DELETE'); }
   catch(e) { console.warn('[deleteAlleReceptItems]', e); }
 }
 
 async function sbDeleteAfgevinktBoodschappen() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'DELETE'); }
   catch(e) { console.warn('[deleteAfgevinktBoodschappen]', e); }
 }
 
 async function sbResetAfgevinkt() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'PATCH', { afgevinkt: false }); }
   catch(e) { console.warn('[sbResetAfgevinkt]', e); }
 }
 
 async function sbSaveDrukte(datum, drukte) {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
     await sbFetch('drukte_override','POST',
@@ -630,7 +630,7 @@ async function sbSaveDrukte(datum, drukte) {
 }
 
 async function sbSaveInstellingen() {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
     const extra = [
@@ -654,7 +654,7 @@ async function sbSaveInstellingen() {
 }
 
 async function sbSaveGeheugen() {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) return;
   try {
     await sbFetch('instellingen','POST',
@@ -668,34 +668,34 @@ let gezinsDatums = [];
 
 async function laadGezinsDatums() {
   try {
-    const gid = _gid();
+    const gid = _gezinId();
     const f = gid ? `?id=eq.gezinsDatums&gezin_id=eq.${gid}` : `?id=eq.gezinsDatums`;
     const rows = await sbFetch(`instellingen${f}`).catch(() => []);
     if (rows[0]?.waarde) gezinsDatums = rows[0].waarde;
   } catch(_) {}
 }
 async function slaCustomSchoolvakantiesOp() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'customSchoolvakanties',waarde:customSchoolvakanties,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaCustomFeestdagenOp() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'customFeestdagen',waarde:customFeestdagen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaTransportPersonenOp() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'transportPersonen',waarde:transportPersonen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaWinkelsOp() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'winkels',waarde:WINKELS,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaPortiesKindRatioOp() {
-  const gid = _gid(); if (!gid) return;
+  const gid = _gezinId(); if (!gid) return;
   try { await sbFetch('instellingen','POST',{id:'portiesKindRatio',waarde:portiesKindRatio,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
 }
 async function slaGezinsDatumsOp() {
-  const gid = _gid();
+  const gid = _gezinId();
   if (!gid) return;
   try {
     await sbFetch('instellingen','POST',
