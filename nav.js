@@ -1,24 +1,24 @@
 (function () {
   const PAGINAS = [
-    { id: 'index',           href: 'index.html',           icon: '🏠', label: 'Home' },
-    { id: 'agenda',          href: 'agenda.html',           icon: '📅', label: 'Agenda' },
-    { id: 'todos',           href: 'todos.html',            icon: '✅', label: "To-do's" },
-    { id: 'weekplanner',     href: 'weekplanner.html',      icon: '🍽️', label: 'Maaltijden' },
-    { id: 'recepten',        href: 'recepten.html',         icon: '📖', label: 'Recepten' },
-    { id: 'boodschappen',    href: 'boodschappen.html',     icon: '🛒', label: 'Boodschappen' },
-    { id: 'ingredienten',    href: 'ingredienten.html',     icon: '🌿', label: 'Ingrediënten' },
-    { id: 'contacten',       href: 'contacten.html',        icon: '👥', label: 'Contacten' },
-    { id: 'kinderlogistiek', href: 'kinderlogistiek.html',  icon: '👶', label: 'Kinderen' },
-    { id: 'agent',           href: 'agent.html',            icon: '🤖', label: 'Agent' },
+    { id: 'index',           href: 'index.html',           icon: 'home',          label: 'Home' },
+    { id: 'agenda',          href: 'agenda.html',           icon: 'calendar',      label: 'Agenda' },
+    { id: 'todos',           href: 'todos.html',            icon: 'list-todo',     label: "To-do's" },
+    { id: 'weekplanner',     href: 'weekplanner.html',      icon: 'utensils',      label: 'Maaltijden' },
+    { id: 'recepten',        href: 'recepten.html',         icon: 'book-open',     label: 'Recepten' },
+    { id: 'boodschappen',    href: 'boodschappen.html',     icon: 'shopping-cart', label: 'Boodschappen' },
+    { id: 'ingredienten',    href: 'ingredienten.html',     icon: 'leaf',          label: 'Ingrediënten' },
+    { id: 'contacten',       href: 'contacten.html',        icon: 'users',         label: 'Contacten' },
+    { id: 'kinderlogistiek', href: 'kinderlogistiek.html',  icon: 'baby',          label: 'Kinderen' },
+    { id: 'agent',           href: 'agent.html',            icon: 'bot',           label: 'Agent' },
   ];
 
   if (!document.body.dataset.noNav) {
     const navItems = PAGINAS.map(p =>
-      `<a class="bottom-nav-item" data-pagina="${p.id}" href="${p.href}"><span class="nav-icon">${p.icon}</span><span class="nav-label">${p.label}</span></a>`
+      `<a class="bottom-nav-item" data-pagina="${p.id}" href="${p.href}"><span class="nav-icon"><i data-lucide="${p.icon}"></i></span><span class="nav-label">${p.label}</span></a>`
     ).join('\n  ');
 
-    const moduleTiles = [...PAGINAS, { id: 'instellingen', href: 'instellingen.html', icon: '⚙️', label: 'Instellingen' }].map(p =>
-      `<a class="module-tile" href="${p.href}"><span class="module-tile-icon">${p.icon}</span><span class="module-tile-naam">${p.label}</span></a>`
+    const moduleTiles = [...PAGINAS, { id: 'instellingen', href: 'instellingen.html', icon: 'settings', label: 'Instellingen' }].map(p =>
+      `<a class="module-tile" href="${p.href}"><span class="module-tile-icon"><i data-lucide="${p.icon}"></i></span><span class="module-tile-naam">${p.label}</span></a>`
     ).join('\n      ');
 
     const html = `<nav class="bottom-nav" id="sidebar">
@@ -26,7 +26,7 @@
   <div class="sidebar-footer">
     <div class="sidebar-sync" id="sidebar-sync">⏳ Laden…</div>
     <a class="bottom-nav-item" href="instellingen.html" data-pagina="instellingen">
-      <span class="nav-icon">⚙️</span><span class="nav-label">Instellingen</span>
+      <span class="nav-icon"><i data-lucide="settings"></i></span><span class="nav-label">Instellingen</span>
     </a>
     <div class="sidebar-user">
       <span class="sidebar-user-avatar" id="sidebar-avatar">🧑</span>
@@ -40,11 +40,11 @@
 </nav>
 <nav class="bottom-nav-mobile">
   <a class="mobile-nav-item" href="index.html" data-pagina="index">
-    <span class="mobile-nav-icon">🏠</span>
+    <span class="mobile-nav-icon"><i data-lucide="home"></i></span>
     <span class="mobile-nav-label">Home</span>
   </a>
   <button class="mobile-nav-item" onclick="toggleModules()">
-    <span class="mobile-nav-icon">☰</span>
+    <span class="mobile-nav-icon"><i data-lucide="menu"></i></span>
     <span class="mobile-nav-label">Alles</span>
   </button>
 </nav>
@@ -79,7 +79,15 @@
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-  // Twemoji — consistente kleur-emoji op alle browsers
+  // Lucide Icons — navigatie-iconen
+  document.addEventListener('DOMContentLoaded', function () {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js';
+    s.onload = function () { lucide.createIcons(); };
+    document.head.appendChild(s);
+  });
+
+  // Twemoji — consistente kleur-emoji op alle browsers (content, niet nav-iconen)
   document.addEventListener('DOMContentLoaded', function () {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js';
@@ -96,6 +104,21 @@
     document.head.appendChild(s);
   });
 
+  // Persoonkleuren dynamisch toepassen vanuit localStorage
+  function _pasPersonKleurenToe() {
+    if (typeof Auth === 'undefined') return;
+    const kleuren = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren') || '{}');
+    Auth.getProfielen().forEach(function(p) {
+      const key = p.persoonKey; if (!key || !kleuren[key]) return;
+      const hex = kleuren[key];
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      document.documentElement.style.setProperty('--c-'+key, 'rgba('+r+','+g+','+b+',0.10)');
+      document.documentElement.style.setProperty('--c-'+key+'-t', hex);
+      document.documentElement.style.setProperty('--c-'+key+'-dot', hex);
+    });
+  }
+  window._pasPersonKleurenToe = _pasPersonKleurenToe;
+
   // Fill sidebar user info after DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof Auth !== 'undefined') {
@@ -108,6 +131,7 @@
         if (nm) nm.textContent = p.naam || '';
         if (rl) rl.textContent = Auth.ROLLEN[p.rol]?.label || p.rol || '';
       }
+      _pasPersonKleurenToe();
     }
   });
 })();

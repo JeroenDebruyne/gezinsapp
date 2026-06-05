@@ -16,6 +16,12 @@ function renderInstellingen(){
     document.getElementById('profiel-naam').textContent=p.naam;
     document.getElementById('profiel-rol').textContent=Auth.ROLLEN[p.rol]?.label||p.rol;
     document.getElementById('profiel-email').textContent=p.email;
+    const _savedKl=JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren')||'{}');
+    const _mijnHex=_savedKl[p.persoonKey]||getComputedStyle(document.documentElement).getPropertyValue('--c-'+(p.persoonKey||'')+'-dot').trim()||'#7A9E7D';
+    const _mijnInp=document.getElementById('mijn-kleur-input');
+    const _mijnDot=document.getElementById('profiel-kleur-dot');
+    if(_mijnInp) _mijnInp.value=_mijnHex;
+    if(_mijnDot) _mijnDot.style.background=_mijnHex;
   }
   // API keys
   const apiKey=localStorage.getItem('anthropic_api_key');
@@ -55,6 +61,18 @@ function renderInstellingen(){
       if(Auth.kan('kanGebruikersBeheren')) _toonAdminSectie();
     });
   }
+}
+
+function slaaMijnKleurOp() {
+  const p = Auth.profiel(); if (!p?.persoonKey) return;
+  const kleur = document.getElementById('mijn-kleur-input')?.value; if (!kleur) return;
+  const kleuren = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren')||'{}');
+  kleuren[p.persoonKey] = kleur;
+  localStorage.setItem('gezinsapp_persoon_kleuren', JSON.stringify(kleuren));
+  const dot = document.getElementById('profiel-kleur-dot');
+  if (dot) dot.style.background = kleur;
+  if (typeof window._pasPersonKleurenToe === 'function') window._pasPersonKleurenToe();
+  toonOpslagStatus('✅ Kleur opgeslagen');
 }
 
 function renderRoosters(){
@@ -359,13 +377,18 @@ async function laadGebruikersLijst() {
     const ROLKLEUR = { gezinshoofd:'var(--druk-bg)', jeugd:'var(--normaal-bg)', kind:'var(--rustig-bg)' };
     const ROLTXT   = { gezinshoofd:'var(--druk-clr)', jeugd:'var(--normaal-clr)', kind:'var(--rustig-clr)' };
     const ROLLABEL = { gezinshoofd:'Gezinshoofd', jeugd:'Jeugd', kind:'Kind' };
+    const _savedKl = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren')||'{}');
     el.innerHTML = profielen.map(p => {
       const verjaardag = p.geboortedatum ? '🎂 ' + new Date(p.geboortedatum+'T12:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'}) : '';
+      const persoonKleur = (p.persoon_key && _savedKl[p.persoon_key]) ? _savedKl[p.persoon_key] : null;
       return `
       <div class="card" id="gcard-${escHtml(p.id)}" style="margin-bottom:8px;padding:12px 14px;">
         <!-- Weergave modus -->
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="font-size:26px;line-height:1;">${escHtml(p.emoji||'👤')}</div>
+          <div style="position:relative;flex-shrink:0;">
+            <div style="font-size:26px;line-height:1;">${escHtml(p.emoji||'👤')}</div>
+            ${persoonKleur ? `<div style="width:10px;height:10px;border-radius:50%;background:${escHtml(persoonKleur)};position:absolute;bottom:-1px;right:-2px;border:1.5px solid var(--surface);"></div>` : ''}
+          </div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:14px;font-weight:600;">${escHtml(p.naam)}</div>
             <div style="font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;">
@@ -402,6 +425,14 @@ async function laadGebruikersLijst() {
               <label>Verjaardag</label>
               <input type="date" id="gedit-verjaardag-${escHtml(p.id)}" value="${escHtml(p.geboortedatum||'')}"/>
             </div>
+            <div class="form-row">
+              <label>Persoonkleur</label>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color" id="gedit-kleur-${escHtml(p.id)}" value="${escHtml(persoonKleur||'#7A9E7D')}"
+                  style="width:36px;height:36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;padding:2px;flex-shrink:0;"/>
+                <span style="font-size:12px;color:var(--muted);">Kleur voor agenda en overzichten</span>
+              </div>
+            </div>
           </div>
           <div id="gedit-msg-${escHtml(p.id)}" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;margin-top:10px;"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
@@ -425,6 +456,7 @@ async function slaGebruikerOp(id) {
   const emoji      = document.getElementById('gedit-emoji-' + id)?.value.trim() || '👤';
   const rol        = document.getElementById('gedit-rol-' + id)?.value;
   const verjaardag = document.getElementById('gedit-verjaardag-' + id)?.value || null;
+  const kleur      = document.getElementById('gedit-kleur-' + id)?.value || null;
   const msgEl      = document.getElementById('gedit-msg-' + id);
 
   function toonEditMsg(tekst, ok) {
@@ -437,6 +469,15 @@ async function slaGebruikerOp(id) {
   try {
     await sbFetch(`gezin_profielen?id=eq.${id}`, 'PATCH', { naam, emoji, rol, is_kind: rol==='kind', geboortedatum: verjaardag });
     await Auth.laadProfielen();
+    if (kleur) {
+      const profiel = Auth.getProfielen().find(p => p.id === id);
+      if (profiel?.persoonKey) {
+        const kleuren = JSON.parse(localStorage.getItem('gezinsapp_persoon_kleuren')||'{}');
+        kleuren[profiel.persoonKey] = kleur;
+        localStorage.setItem('gezinsapp_persoon_kleuren', JSON.stringify(kleuren));
+        if (typeof window._pasPersonKleurenToe === 'function') window._pasPersonKleurenToe();
+      }
+    }
     laadGebruikersLijst();
     toonOpslagStatus('✅ Opgeslagen');
   } catch(e) { toonEditMsg('❌ ' + e.message, false); }
