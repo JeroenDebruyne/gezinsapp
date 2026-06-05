@@ -21,13 +21,14 @@ const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora
 const KINDEREN = () => Auth.getProfielen().filter(p => p.isKind).map(p => p.persoonKey);
 
 // ── Laden ─────────────────────────────────────────────────────
-laadOp().then(()=>{
-  renderAlles(); icalAutoSync();
-  if (new URLSearchParams(location.search).get('nieuw')==='1') {
-    geselecteerdeDatum=fDateISO(new Date());
-    setTimeout(openActModal, 300);
-  }
-}).catch(()=>{laadLokaal();renderAlles();});
+Promise.race([laadOp(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))])
+  .then(()=>{
+    renderAlles(); icalAutoSync();
+    if (new URLSearchParams(location.search).get('nieuw')==='1') {
+      geselecteerdeDatum=fDateISO(new Date());
+      setTimeout(openActModal, 300);
+    }
+  }).catch(()=>{laadLokaal();renderAlles();});
 
 if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderAlles(); };
@@ -463,7 +464,7 @@ async function wijzigEnkelDit(){
   slaLokaalOp();await sbSaveActiviteit(origAct);toonOpslagStatus('✅ Opgeslagen');
   const kopie={
     ...origAct,
-    id:Date.now(),_sbId:undefined,
+    id:_maakId(),_sbId:undefined,
     freq:'eenmalig',dagen:[],
     beginDatum:_editRecurDatum,eindDatum:'',
     uitgesloten:[],
@@ -568,13 +569,13 @@ function kiesLocatieContact(adres){
 
 async function berekenReistijdAuto(){
   const locatie=document.getElementById('a-locatie').value.trim();
-  if(!locatie){alert('Vul eerst een locatie in.');return;}
-  if(!Maps.getThuisadres()){alert('Stel eerst je thuisadres in via Instellingen → API instellingen.');return;}
+  if(!locatie){toonOpslagStatus('❌ Vul eerst een locatie in.');return;}
+  if(!Maps.getThuisadres()){toonOpslagStatus('❌ Stel eerst je thuisadres in via Instellingen → API instellingen.');return;}
   const btn=document.getElementById('btn-reistijd-auto');
   const orig=btn.textContent; btn.textContent='⏳'; btn.disabled=true;
   const mins=await Maps.reistijd(locatie);
   btn.textContent=orig; btn.disabled=false;
-  if(mins===null){alert('Kon reistijd niet berekenen. Controleer thuisadres en Google Maps key in Instellingen.');return;}
+  if(mins===null){toonOpslagStatus('❌ Kon reistijd niet berekenen. Controleer thuisadres en Maps key in Instellingen.');return;}
   document.getElementById('a-reis-heen').value=mins;
   document.getElementById('a-reis-terug').value=mins;
   toonOpslagStatus('🗺️ Reistijd: '+mins+' min');
@@ -582,8 +583,8 @@ async function berekenReistijdAuto(){
 
 async function saveActiviteit(){
   const naam=document.getElementById('a-naam').value.trim();
-  if(!naam){alert('Geef een naam in.');return;}
-  if(!geselecteerdePersonen.length){alert('Selecteer minstens één persoon.');return;}
+  if(!naam){toonOpslagStatus('❌ Geef een naam in.');return;}
+  if(!geselecteerdePersonen.length){toonOpslagStatus('❌ Selecteer minstens één persoon.');return;}
 
   const heeftKind=KINDEREN().some(k=>geselecteerdePersonen.includes(k));
   const bestaande=actEditId?activiteiten.find(a=>a.id===actEditId):null;
@@ -592,8 +593,8 @@ async function saveActiviteit(){
   if(meerdaagsAan){
     const beginDatum=document.getElementById('a-md-start-datum').value;
     const eindDatum=document.getElementById('a-md-eind-datum').value;
-    if(!beginDatum||!eindDatum){alert('Vul start- en einddatum in.');return;}
-    if(eindDatum<beginDatum){alert('Einddatum moet na begindatum zijn.');return;}
+    if(!beginDatum||!eindDatum){toonOpslagStatus('❌ Vul start- en einddatum in.');return;}
+    if(eindDatum<beginDatum){toonOpslagStatus('❌ Einddatum moet na begindatum zijn.');return;}
     const _maaltijdThuis={
       ontbijt:document.getElementById('a-mt-ontbijt').checked,
       lunch:document.getElementById('a-mt-lunch').checked,
@@ -792,7 +793,7 @@ function icalToonPreview(){
     (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" onclick="icalToggleWie('${p}')">
+    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${p}')">
       ${PEMOJI[p]||''} ${PLABEL[p]||p}
     </div>`).join('');
 
@@ -821,8 +822,7 @@ function icalToonPreview(){
 function icalToggleWie(p){
   _icalWie=_icalWie.includes(p)?_icalWie.filter(x=>x!==p):[..._icalWie,p];
   document.getElementById('ical-wie-ms').querySelectorAll('.persoon-chip').forEach(el=>{
-    const key=el.getAttribute('onclick').match(/'([^']+)'/)?.[1];
-    el.classList.toggle('selected',_icalWie.includes(key));
+    el.classList.toggle('selected',_icalWie.includes(el.dataset.key));
   });
 }
 

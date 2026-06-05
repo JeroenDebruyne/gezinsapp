@@ -79,6 +79,23 @@
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
+  // Twemoji — consistente kleur-emoji op alle browsers
+  document.addEventListener('DOMContentLoaded', function () {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js';
+    s.crossOrigin = 'anonymous';
+    s.onload = function () {
+      const parse = function (n) { twemoji.parse(n, { folder: 'svg', ext: '.svg' }); };
+      parse(document.body);
+      new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          m.addedNodes.forEach(function (n) { if (n.nodeType === 1) parse(n); });
+        });
+      }).observe(document.body, { childList: true, subtree: true });
+    };
+    document.head.appendChild(s);
+  });
+
   // Fill sidebar user info after DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof Auth !== 'undefined') {
