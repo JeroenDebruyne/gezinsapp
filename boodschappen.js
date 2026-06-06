@@ -135,7 +135,28 @@ function _getSbIdVoorKey(key){
   return null;
 }
 
+let _undoTimer = null;
+function _toonUndoToast(bericht, onUndo) {
+  clearTimeout(_undoTimer);
+  let toast = document.getElementById('bood-undo-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'bood-undo-toast';
+    toast.className = 'undo-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span>${escHtml(bericht)}</span><button class="undo-toast-btn">Ongedaan maken</button>`;
+  toast.classList.add('open');
+  toast.querySelector('.undo-toast-btn').addEventListener('click', function() {
+    onUndo();
+    toast.classList.remove('open');
+    clearTimeout(_undoTimer);
+  }, { once: true });
+  _undoTimer = setTimeout(() => toast.classList.remove('open'), 4000);
+}
+
 function toggleAfgevinkt(key){
+  const wasAfgevinkt = !!afgevinkt[key];
   afgevinkt[key]=!afgevinkt[key];
   _slaAfgevinktOp();
   // Sync to Supabase
@@ -149,6 +170,11 @@ function toggleAfgevinkt(key){
     if(item?._sbId) sbToggleAfgevinktItem(item._sbId, !!afgevinkt[key]);
   }
   renderBoodschappen();renderExtraItems();
+  // Undo toast alleen bij afvinken (niet bij terugzetten)
+  if (!wasAfgevinkt) {
+    const naam = key.startsWith('ing_') ? key.slice(4) : (extraItems.find(i=>'extra_'+i.id===key)?.naam||'');
+    if (naam) _toonUndoToast(naam.charAt(0).toUpperCase()+naam.slice(1) + ' afgevinkt', function() { toggleAfgevinkt(key); });
+  }
 }
 
 function resetAfgevinkt(){
@@ -246,7 +272,36 @@ if (_boodCombo) {
   _boodCombo.addEventListener('input', filterBoodCombo);
   _boodCombo.addEventListener('focus', filterBoodCombo);
   _boodCombo.addEventListener('blur', () => setTimeout(sluitBoodCombo, 150));
-  _boodCombo.addEventListener('keydown', e => { if(e.key==='Enter') voegExtraToe(); });
+  _boodCombo.addEventListener('keydown', function(e) {
+    const dd = document.getElementById('bood-combo-dd');
+    if (e.key === 'Escape') { sluitBoodCombo(); return; }
+    if (dd && dd.classList.contains('open')) {
+      const items = [...dd.querySelectorAll('[data-action="kies-bood-ing"],[data-action="kies-bood-nieuw"]')];
+      const current = dd.querySelector('.combo-focus');
+      let idx = current ? items.indexOf(current) : -1;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (current) current.classList.remove('combo-focus');
+        idx = (idx + 1) % items.length;
+        items[idx].classList.add('combo-focus');
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (current) current.classList.remove('combo-focus');
+        idx = (idx - 1 + items.length) % items.length;
+        items[idx].classList.add('combo-focus');
+        return;
+      }
+      if (e.key === 'Enter' && current) {
+        e.preventDefault();
+        if (current.dataset.action === 'kies-bood-ing') kiesBoodIng(current.dataset.naam, current.dataset.winkel);
+        else kiesBoodNieuw(current.dataset.naam);
+        return;
+      }
+    }
+    if (e.key === 'Enter') voegExtraToe();
+  });
 }
 document.getElementById('winkel-sel-mob')?.addEventListener('change', e => switchWinkel(e.target.value));
 
