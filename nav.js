@@ -173,6 +173,46 @@
     document.head.appendChild(s);
   });
 
+  // ── _bevestig: vervangt native confirm() met een bottom-sheet ──
+  window._bevestig = function(bericht, onJa, opties) {
+    opties = opties || {};
+    var bevestigLabel = opties.bevestigLabel || 'Verwijderen';
+    var cancelLabel   = opties.cancelLabel   || 'Annuleren';
+    var danger        = opties.danger !== false;
+    var sub           = opties.sub || '';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'bevestig-overlay';
+
+    var subHtml = sub ? '<p class="bevestig-sub">' + sub + '</p>' : '';
+    overlay.innerHTML =
+      '<div class="bevestig-sheet">' +
+        '<div class="bevestig-sheet-handle"></div>' +
+        '<p class="bevestig-bericht">' + bericht + '</p>' +
+        subHtml +
+        '<div class="bevestig-knoppen">' +
+          '<button class="bevestig-ja' + (danger ? ' danger' : '') + '">' + bevestigLabel + '</button>' +
+          '<button class="bevestig-nee">' + cancelLabel + '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('open'); });
+
+    function sluit() {
+      overlay.classList.remove('open');
+      setTimeout(function() { overlay.remove(); }, 280);
+    }
+
+    overlay.querySelector('.bevestig-ja').addEventListener('click', function() { sluit(); onJa(); });
+    overlay.querySelector('.bevestig-nee').addEventListener('click', sluit);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) sluit(); });
+
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { sluit(); document.removeEventListener('keydown', esc); }
+    });
+  };
+
   // Persoonkleuren dynamisch toepassen vanuit localStorage
   function _pasPersonKleurenToe() {
     if (typeof Auth === 'undefined') return;

@@ -220,7 +220,16 @@ function updatePriveSwitch() {
 
 function saveTodo() {
   const titel = document.getElementById('t-titel').value.trim();
-  if (!titel) { alert('Geef een beschrijving in.'); return; }
+  if (!titel) {
+    const inp = document.getElementById('t-titel');
+    inp.style.borderColor = 'var(--accent)';
+    inp.focus();
+    let err = document.getElementById('t-titel-err');
+    if (!err) { err = document.createElement('p'); err.id = 't-titel-err'; err.style.cssText = 'color:var(--accent);font-size:12px;margin-top:4px;'; inp.parentNode.insertBefore(err, inp.nextSibling); }
+    err.textContent = 'Geef een beschrijving in.';
+    inp.addEventListener('input', function() { inp.style.borderColor = ''; if (err) err.textContent = ''; }, { once: true });
+    return;
+  }
 
   const bestaande = todoEditId ? todos.find(t=>t.id==todoEditId) : null;
   const todo = {
@@ -250,14 +259,15 @@ function saveTodo() {
 }
 
 function verwijderTodo(id) {
-  if (!confirm('To-do verwijderen?')) return;
-  const t = todos.find(x=>x.id==id);
-  todos = todos.filter(x=>x.id!=id);
-  closeModal();
-  slaLokaalOp();
-  if (t?._sbId) sbDeleteTodo(t._sbId);
-  toonOpslagStatus('✅ Verwijderd');
-  renderTodos();
+  _bevestig('To-do verwijderen?', function() {
+    const t = todos.find(x=>x.id==id);
+    todos = todos.filter(x=>x.id!=id);
+    closeModal();
+    slaLokaalOp();
+    if (t?._sbId) sbDeleteTodo(t._sbId);
+    toonOpslagStatus('✅ Verwijderd');
+    renderTodos();
+  });
 }
 
 // sbSaveTodo en sbDeleteTodo zijn gedefinieerd in data.js (inclusief gezin_id)

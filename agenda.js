@@ -663,8 +663,7 @@ function verwijderActiviteit(id,datumISO){
     const el=document.getElementById('verwijder-modal-bg');
     el.classList.add('open');el.querySelector('.modal').scrollTop=0;
   } else {
-    if(!confirm('Activiteit verwijderen?'))return;
-    _doVerwijderVolledig(id);
+    _bevestig('Activiteit verwijderen?', function(){ _doVerwijderVolledig(id); });
   }
 }
 async function verwijderEnkelHerhaling(){
@@ -676,8 +675,7 @@ async function verwijderEnkelHerhaling(){
 function verwijderVolleActiviteit(){
   closeVerwijderModal();
   setTimeout(()=>{
-    if(!confirm('Volledige activiteit definitief verwijderen?'))return;
-    _doVerwijderVolledig(_verwijderActId);
+    _bevestig('Activiteit definitief verwijderen?', function(){ _doVerwijderVolledig(_verwijderActId); }, {bevestigLabel:'Definitief verwijderen'});
   },200);
 }
 function _doVerwijderVolledig(id){
@@ -766,7 +764,13 @@ function openIcalModal(){
 
 async function icalLaadUrl(){
   let url=document.getElementById('ical-url').value.trim();
-  if(!url){ alert('Vul een URL in.'); return; }
+  if(!url){
+    const inp=document.getElementById('ical-url');
+    inp.style.borderColor='var(--accent)';inp.focus();
+    document.getElementById('ical-status').textContent='Vul een URL in.';
+    inp.addEventListener('input',function(){inp.style.borderColor='';document.getElementById('ical-status').textContent='';},{once:true});
+    return;
+  }
   document.getElementById('ical-status').textContent='⏳ Laden…';
   try {
     const text=await icalFetchUrl(url);
@@ -885,10 +889,11 @@ async function icalSyncEnkel(i){
 }
 
 async function icalVerwijderAbo(i){
-  if(!confirm('Abonnement verwijderen? De al geïmporteerde activiteiten blijven staan.')) return;
-  icalAbonnementen.splice(i,1);
-  await slaIcalAbonnementenOp();
-  icalToonAbonnementen();
+  _bevestig('Abonnement verwijderen?', async function(){
+    icalAbonnementen.splice(i,1);
+    await slaIcalAbonnementenOp();
+    icalToonAbonnementen();
+  }, {sub:'De al geïmporteerde activiteiten blijven staan.'});
 }
 
 function closeIcalModal(){

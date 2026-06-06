@@ -359,12 +359,13 @@ function saveRecept() {
 }
 
 function verwijderRecept(id) {
-  if (!confirm('Recept verwijderen?')) return;
-  const r = recepten.find(r => r.id === id || r.id == id);
-  recepten = recepten.filter(r => r.id !== id && r.id != id);
-  if (actieveFicheId == id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
-  renderRecepten(); slaLokaalOp(); if (r?._sbId) sbDeleteRecept(r._sbId);
-  toonOpslagStatus('✅ Verwijderd');
+  _bevestig('Recept verwijderen?', function() {
+    const r = recepten.find(r => r.id === id || r.id == id);
+    recepten = recepten.filter(r => r.id !== id && r.id != id);
+    if (actieveFicheId == id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
+    renderRecepten(); slaLokaalOp(); if (r?._sbId) sbDeleteRecept(r._sbId);
+    toonOpslagStatus('✅ Verwijderd');
+  });
 }
 
 function openImportModal() {

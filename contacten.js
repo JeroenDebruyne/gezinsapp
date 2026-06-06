@@ -433,11 +433,12 @@ function saveContact(){
 
 function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
 function verwijderContact(id){
-  if(!confirm('Contact verwijderen?'))return;
-  const c=contacten.find(c=>c.id===id||c.id==id);
-  contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
-  if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
-  renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
+  _bevestig('Contact verwijderen?', function(){
+    const c=contacten.find(c=>c.id===id||c.id==id);
+    contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
+    if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
+    renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
+  });
 }
 document.getElementById('crm-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('crm-modal-bg'))closeCrmModal();});
 

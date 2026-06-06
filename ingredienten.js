@@ -64,7 +64,7 @@ function saveIngredient() {
   const winkel = document.getElementById('i-winkel').value;
   const productLink = document.getElementById('i-link').value.trim() || null;
   if (standaardIngredienten.some(i => i.naam.toLowerCase() === naam.toLowerCase() && i.id != editId)) {
-    alert(`"${naam}" bestaat al in de ingrediëntenlijst.`);
+    toonOpslagStatus('❌ "' + naam + '" bestaat al in de ingrediëntenlijst.');
     return;
   }
   if (editId) {
@@ -86,12 +86,13 @@ function wijzigWinkel(id, winkel) {
 }
 
 function verwijderIngredient(id) {
-  if (!confirm('Ingrediënt verwijderen?')) return;
-  const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
-  standaardIngredienten = standaardIngredienten.filter(i => i.id !== id && i.id != id);
-  slaLokaalOp();
-  if (ing?._sbId) sbDeleteIngredient(ing._sbId);
-  renderIngredienten();
+  _bevestig('Ingrediënt verwijderen?', function() {
+    const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
+    standaardIngredienten = standaardIngredienten.filter(i => i.id !== id && i.id != id);
+    slaLokaalOp();
+    if (ing?._sbId) sbDeleteIngredient(ing._sbId);
+    renderIngredienten();
+  });
 }
 
 // ── Event delegation: clicks ──────────────────────────────────
