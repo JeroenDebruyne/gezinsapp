@@ -137,6 +137,8 @@ const Auth = (() => {
     }
     fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:headers()}).catch(()=>{});
     _clearSession();
+    Object.keys(localStorage).filter(k=>k.startsWith('gezinsapp')).forEach(k=>localStorage.removeItem(k));
+    sessionStorage.removeItem('perspectief');
     window.location.replace('login.html');
   }
 

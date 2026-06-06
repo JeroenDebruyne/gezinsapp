@@ -47,8 +47,8 @@ function renderLegenda(){
     {key:'alle',label:'Alle',dot:''},
     ...PERSONEN.map(p=>({key:p,label:PLABEL[p],dot:DOT_KLEUR[p]}))
   ].map(item=>`
-    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" onclick="setFilter('${item.key}')">
-      ${item.dot?`<div class="legenda-dot ${item.dot}"></div>`:''}${item.label}
+    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" onclick="setFilter('${escHtml(item.key)}')">
+      ${item.dot?`<div class="legenda-dot ${item.dot}"></div>`:''}${escHtml(item.label)}
     </div>`).join('');
 }
 function setFilter(key){actievePersoonFilter=key;renderLegenda();renderMaand();renderDagDetail(geselecteerdeDatum);}
@@ -191,11 +191,11 @@ function renderDagDetail(datumISO){
           onclick="openDOModal('${datumISO}','${dagLabel}')"><span style="width:7px;height:7px;border-radius:50%;background:${dc.dot};flex-shrink:0;"></span>${dc.lbl}</span>
       </div>
     </div>
-    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${getVakantieNaam(datumISO)}</div>`:''}
-    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${getFeestdagNaam(datumISO)}</div>`:''}
+    ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${escHtml(getVakantieNaam(datumISO))}</div>`:''}
+    ${(typeof isFeestdag!=='undefined'&&isFeestdag(datumISO))?`<div style="padding:6px 12px;background:var(--rustig-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--rustig-clr);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="party-popper" class="icon-inline"></i> ${escHtml(getFeestdagNaam(datumISO))}</div>`:''}
     ${getVerjaardagsOpDatum(datumISO).map(v=>`
       <div class="verjaardag-kaart">
-        <span style="font-size:20px;">${escHtml(v.emoji||'🎂')}</span>
+        ${v.icon?`<i data-lucide="${escHtml(v.icon)}" style="width:20px;height:20px;flex-shrink:0;"></i>`:`<span style="font-size:20px;">${escHtml(v.emoji||'')}</span>`}
         <div style="flex:1;">
           <div class="verjaardag-naam">${escHtml(v.naam)}</div>
           ${v.type==='contactdatum'
@@ -322,7 +322,7 @@ function getVerjaardagsOpDatum(datumISO){
       const [by,bm,bd]=parts;
       if(bm===mm&&bd===dd){
         const leeftijd=by&&by!=='0000'?jaar-parseInt(by):null;
-        result.push({naam,emoji:'🎂',leeftijd,type:'contact'});
+        result.push({naam,icon:'cake',leeftijd,type:'contact'});
       }
     };
     const p1=c.partner1&&typeof c.partner1==='object'?c.partner1:(c.partner1?_tryParse(c.partner1):null);
@@ -336,9 +336,9 @@ function getVerjaardagsOpDatum(datumISO){
       if(!bd.datum) return;
       const [bdy,bdm,bdd]=bd.datum.split('-');
       if(bd.herhalend){
-        if(bdm===mm&&bdd===dd) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+        if(bdm===mm&&bdd===dd) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,icon:'calendar',type:'contactdatum'});
       } else {
-        if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,emoji:'📅',type:'contactdatum'});
+        if(bd.datum===datumISO) result.push({naam:bd.label||'Belangrijke datum',sub:contactNaam,icon:'calendar',type:'contactdatum'});
       }
     });
   });
@@ -485,8 +485,8 @@ function closeActModal(){
 
 function renderPersonenMS(){
   document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${p}')">
-      ${PEMOJI[p]} ${PLABEL[p]}
+    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${escHtml(p)}')">
+      ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 }
 function togglePersoon(p){
@@ -578,7 +578,7 @@ async function berekenReistijdAuto(){
   if(mins===null){toonOpslagStatus('❌ Kon reistijd niet berekenen. Controleer thuisadres en Maps key in Instellingen.');return;}
   document.getElementById('a-reis-heen').value=mins;
   document.getElementById('a-reis-terug').value=mins;
-  toonOpslagStatus('🗺️ Reistijd: '+mins+' min');
+  toonOpslagStatus('Reistijd: '+mins+' min');
 }
 
 async function saveActiviteit(){
@@ -793,8 +793,8 @@ function icalToonPreview(){
     (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${p}')">
-      ${PEMOJI[p]||''} ${PLABEL[p]||p}
+    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${escHtml(p)}')">
+      ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 
   const isAbo=_icalSrcUrl&&!icalAbonnementen.find(a=>a.url===_icalSrcUrl);

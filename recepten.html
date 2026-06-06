@@ -53,6 +53,8 @@
 .ster-input span.vol{opacity:1;}
 .ster-input span:hover,.ster-input span:hover~span{opacity:.65;}
 .ster-display{color:var(--accent);letter-spacing:1px;font-size:13px;}
+.add-ing-btn{width:100%;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px;font-family:inherit;transition:all .15s;}
+.add-ing-btn:hover{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
+      <div class="topbar-user" id="topbar-user" data-action="nav-instellingen">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -73,15 +75,15 @@
     </div>
   </div>
 </header>
-<button class="fab" onclick="openKeuzeModal()" title="Recept toevoegen">＋</button>
+<button class="fab" data-action="open-keuze-modal" title="Recept toevoegen">＋</button>
 
 <script src="nav.js"></script>
 <main class="main-content">
 <div class="recept-layout">
   <!-- Linker kolom: lijst + zoek + filter -->
   <div class="recept-kolom-lijst">
-    <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" oninput="renderRecepten()" id="recept-search"/>
-    <select class="mob-filter-sel" id="recept-type-sel-mob" onchange="filterRType(this.value,null)">
+    <input style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;margin-bottom:1rem;background:var(--surface);color:var(--ink);outline:none;font-family:inherit;" type="text" placeholder="🔍 Zoeken…" id="recept-search"/>
+    <select class="mob-filter-sel" id="recept-type-sel-mob">
       <option value="alle">Alle</option>
       <option value="avond">Avond</option>
       <option value="lunch">Lunch</option>
@@ -89,11 +91,11 @@
       <option value="ontbijt">Ontbijt</option>
     </select>
     <div class="pill-tabs mob-hide-on-mobile" id="recept-type-tabs">
-      <button class="ptab active" onclick="filterRType('alle',this)">Alle</button>
-      <button class="ptab" onclick="filterRType('avond',this)"><i data-lucide="utensils" class="icon-inline"></i> Avond</button>
-      <button class="ptab" onclick="filterRType('lunch',this)"><i data-lucide="leaf" class="icon-inline"></i> Lunch</button>
-      <button class="ptab" onclick="filterRType('weekend',this)"><i data-lucide="utensils" class="icon-inline"></i> Weekend</button>
-      <button class="ptab" onclick="filterRType('ontbijt',this)"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</button>
+      <button class="ptab active" data-action="filter-rtype" data-type="alle">Alle</button>
+      <button class="ptab" data-action="filter-rtype" data-type="avond"><i data-lucide="utensils" class="icon-inline"></i> Avond</button>
+      <button class="ptab" data-action="filter-rtype" data-type="lunch"><i data-lucide="leaf" class="icon-inline"></i> Lunch</button>
+      <button class="ptab" data-action="filter-rtype" data-type="weekend"><i data-lucide="utensils" class="icon-inline"></i> Weekend</button>
+      <button class="ptab" data-action="filter-rtype" data-type="ontbijt"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</button>
     </div>
     <div class="recept-grid" id="recipes-grid"></div>
   </div>
@@ -109,8 +111,8 @@
 </main>
 
 <!-- Mobile fiche overlay -->
-<div class="recept-fiche-overlay" id="recept-fiche-overlay" onclick="sluitFiche(event)">
-  <div class="recept-fiche-sheet" onclick="event.stopPropagation()">
+<div class="recept-fiche-overlay" id="recept-fiche-overlay">
+  <div class="recept-fiche-sheet">
     <div class="modal-handle"></div>
     <div id="recept-fiche-mobiel"></div>
   </div>
@@ -124,7 +126,7 @@
   <div class="import-stap actief" id="import-stap-1">
     <div class="form-row">
       <label>Plak de URL van het recept</label>
-      <input class="import-url-input" type="url" id="import-url" placeholder="https://www.dagelijksekost.be/recepten/…" onkeydown="if(event.key==='Enter')startImport()"/>
+      <input class="import-url-input" type="url" id="import-url" placeholder="https://www.dagelijksekost.be/recepten/…"/>
     </div>
     <div class="info-box" style="margin-bottom:14px;">
       <div style="font-weight:600;margin-bottom:6px;">Werkt met de meeste receptensites:</div>
@@ -136,8 +138,8 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeImportModal()">Annuleren</button>
-      <button class="modal-btn modal-btn-primary" onclick="startImport()"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
+      <button class="modal-btn modal-btn-cancel" data-action="close-import-modal">Annuleren</button>
+      <button class="modal-btn modal-btn-primary" data-action="start-import"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
     </div>
   </div>
   <div class="import-stap" id="import-stap-2">
@@ -151,16 +153,16 @@
     <div class="import-preview" id="import-preview"></div>
     <div class="info-box"><i data-lucide="pencil" class="icon-inline"></i> Je kan alles nog aanpassen voor je opslaat.</div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Andere link</button>
-      <button class="modal-btn modal-btn-primary" onclick="openReceptVanImport()"><i data-lucide="pencil" class="icon-inline"></i> Bekijk &amp; sla op</button>
+      <button class="modal-btn modal-btn-cancel" data-action="naar-stap-1">← Andere link</button>
+      <button class="modal-btn modal-btn-primary" data-action="recept-van-import"><i data-lucide="pencil" class="icon-inline"></i> Bekijk &amp; sla op</button>
     </div>
   </div>
   <div class="import-stap" id="import-stap-4">
     <div class="import-error" id="import-error-tekst"></div>
     <div class="info-box">Tip: zorg dat de URL direct naar een receptpagina verwijst.</div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="naarStap(1)">← Probeer opnieuw</button>
-      <button class="modal-btn modal-btn-primary" onclick="openReceptModal();closeImportModal()">Manueel invoeren</button>
+      <button class="modal-btn modal-btn-cancel" data-action="naar-stap-1">← Probeer opnieuw</button>
+      <button class="modal-btn modal-btn-primary" data-action="manueel-invoeren">Manueel invoeren</button>
     </div>
   </div>
 </div>
@@ -173,16 +175,14 @@
   <h3>Recept toevoegen</h3>
   <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Hoe wil je het recept toevoegen?</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <button class="btn btn-primary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
-      onclick="sluitKeuzeModal();openReceptModal()">
+    <button class="btn btn-primary" data-action="keuze-manueel" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
       <i data-lucide="pencil" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
       <div style="text-align:left;">
         <div style="font-weight:700;">Manueel invoeren</div>
         <div style="font-size:12px;font-weight:400;opacity:.8;">Zelf naam, ingrediënten en bereiding invullen</div>
       </div>
     </button>
-    <button class="btn btn-secondary" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;"
-      onclick="sluitKeuzeModal();openLinkModal()">
+    <button class="btn btn-secondary" data-action="keuze-link" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
       <i data-lucide="link" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
       <div style="text-align:left;">
         <div style="font-weight:700;">Importeren via link</div>
@@ -191,7 +191,7 @@
     </button>
   </div>
   <div class="modal-actions" style="margin-top:16px;">
-    <button class="modal-btn modal-btn-cancel" onclick="sluitKeuzeModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-cancel" data-action="sluit-keuze-modal">Annuleren</button>
   </div>
 </div>
 </div>
@@ -204,13 +204,12 @@
   <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Werkt met de meeste receptensites (Njam, AH, 15gram, Colruyt…) die Schema.org markup gebruiken.</p>
   <div class="form-row">
     <label>Recept URL</label>
-    <input type="url" id="link-url" placeholder="https://www.njam.tv/recepten/…"
-      onkeydown="if(event.key==='Enter')startScrape()"/>
+    <input type="url" id="link-url" placeholder="https://www.njam.tv/recepten/…"/>
   </div>
   <div id="link-status" style="font-size:13px;color:var(--muted);min-height:20px;margin-top:4px;"></div>
   <div class="modal-actions">
-    <button class="modal-btn modal-btn-cancel" onclick="sluitLinkModal()">Annuleren</button>
-    <button class="modal-btn modal-btn-primary" id="btn-scrape" onclick="startScrape()"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
+    <button class="modal-btn modal-btn-cancel" data-action="sluit-link-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" id="btn-scrape" data-action="start-scrape"><i data-lucide="search" class="icon-inline"></i> Importeren</button>
   </div>
 </div>
 </div>
@@ -230,10 +229,10 @@
   <div class="form-row">
     <label>Type (meerdere mogelijk)</label>
     <div class="type-ms" id="f-type-ms">
-      <div class="type-chip" data-type="avond" onclick="toggleType(this)"><i data-lucide="utensils" class="icon-inline"></i> Avond</div>
-      <div class="type-chip" data-type="lunch" onclick="toggleType(this)"><i data-lucide="leaf" class="icon-inline"></i> Lunch</div>
-      <div class="type-chip" data-type="weekend" onclick="toggleType(this)"><i data-lucide="utensils" class="icon-inline"></i> Weekend</div>
-      <div class="type-chip" data-type="ontbijt" onclick="toggleType(this)"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</div>
+      <div class="type-chip" data-type="avond" data-action="toggle-type"><i data-lucide="utensils" class="icon-inline"></i> Avond</div>
+      <div class="type-chip" data-type="lunch" data-action="toggle-type"><i data-lucide="leaf" class="icon-inline"></i> Lunch</div>
+      <div class="type-chip" data-type="weekend" data-action="toggle-type"><i data-lucide="utensils" class="icon-inline"></i> Weekend</div>
+      <div class="type-chip" data-type="ontbijt" data-action="toggle-type"><i data-lucide="coffee" class="icon-inline"></i> Ontbijt</div>
     </div>
   </div>
 
@@ -255,11 +254,11 @@
   <div class="form-row">
     <label>Beoordeling (optioneel)</label>
     <div class="ster-input" id="ster-input">
-      <span data-v="1" onclick="setSter(1)">★</span>
-      <span data-v="2" onclick="setSter(2)">★</span>
-      <span data-v="3" onclick="setSter(3)">★</span>
-      <span data-v="4" onclick="setSter(4)">★</span>
-      <span data-v="5" onclick="setSter(5)">★</span>
+      <span data-v="1" data-action="set-ster">★</span>
+      <span data-v="2" data-action="set-ster">★</span>
+      <span data-v="3" data-action="set-ster">★</span>
+      <span data-v="4" data-action="set-ster">★</span>
+      <span data-v="5" data-action="set-ster">★</span>
     </div>
     <input type="hidden" id="f-score"/>
   </div>
@@ -287,11 +286,11 @@
     <span></span>
   </div>
   <div id="ingredients-container"></div>
-  <button onclick="addIngredient()" style="width:100%;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px;font-family:inherit;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-2)';this.style.color='var(--muted)'">+ Ingrediënt toevoegen</button>
+  <button class="add-ing-btn" data-action="add-ingredient">+ Ingrediënt toevoegen</button>
 
   <div class="modal-actions">
-    <button class="modal-btn modal-btn-cancel" onclick="closeReceptModal()">Annuleren</button>
-    <button class="modal-btn modal-btn-primary" onclick="saveRecept()">Opslaan</button>
+    <button class="modal-btn modal-btn-cancel" data-action="close-recept-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" data-action="save-recept">Opslaan</button>
   </div>
 </div>
 </div>
@@ -299,628 +298,6 @@
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
-<script>
-Auth.initPagina('recepten');
-
-let activeRType='alle';
-let geimporteerdRecept=null;
-let geselecteerdeTypes=[];
-let actieveFicheId=null;
-
-laadOp().then(()=>{
-  renderRecepten();
-  const params=new URLSearchParams(location.search);
-  const bewerkId=params.get('bewerk');
-  if(bewerkId){
-    const r=recepten.find(r=>String(r.id)===bewerkId);
-    if(r){ actieveFicheId=r.id; setTimeout(()=>{openReceptModal(r);openFiche(r.id);},300); }
-  }
-}).catch(()=>{laadLokaal();renderRecepten();});
-
-// ── Recepten weergave ─────────────────────────────────────────
-function filterRType(type,el){
-  activeRType=type;
-  document.querySelectorAll('#recept-type-tabs .ptab').forEach(t=>t.classList.remove('active'));
-  if(el) el.classList.add('active');
-  else document.querySelector(`#recept-type-tabs .ptab[onclick*="${type}"]`)?.classList.add('active');
-  const sel=document.getElementById('recept-type-sel-mob');
-  if(sel) sel.value=type;
-  renderRecepten();
-}
-
-function renderRecepten(){
-  const search=(document.getElementById('recept-search')||{}).value||'';
-  let filtered=recepten;
-  if(activeRType!=='alle'){
-    filtered=filtered.filter(r=>{
-      const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
-      return types.includes(activeRType);
-    });
-  }
-  if(search){const q=search.toLowerCase();filtered=filtered.filter(r=>r.naam.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))||(r.ingredienten||[]).some(i=>i.naam.toLowerCase().includes(q)));}
-  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
-  document.getElementById('recipes-grid').innerHTML=filtered.map(r=>{
-    const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
-    const eersteType=types[0]||'avond';
-    const isActief=actieveFicheId!=null&&actieveFicheId==r.id;
-    return `
-    <div class="recept-card${isActief?' actief':''}" data-id="${r.id}" onclick="openFiche(${r.id})">
-      <div class="recept-thumb thumb-${eersteType}"><i data-lucide="utensils" style="width:28px;height:28px;stroke-width:1.75;color:var(--surface);opacity:.7;"></i></div>
-      <div class="recept-info">
-        <div class="recept-naam">${escHtml(r.naam)}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-          ${r.tijd?`<span><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
-          ${r.porties?`<span><i data-lucide="utensils" class="icon-inline"></i> ${r.porties}p</span>`:''}
-          ${r.moeilijk?`<span>${escHtml(r.moeilijk)}</span>`:''}
-          ${r.score?_sterHtml(r.score):''}
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">
-          ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
-          ${(r.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}
-        </div>
-      </div>
-    </div>`;
-  }).join('')||`<div class="empty-state"><i data-lucide="book-open" class="empty-icon"></i><p>Geen recepten gevonden</p></div>`;
-  // Herlaad fiche als actief recept nog bestaat
-  if(actieveFicheId){
-    const r=recepten.find(r=>r.id==actieveFicheId);
-    if(r) _renderFicheInDesktop(r);
-    else { actieveFicheId=null; _clearFiche(); }
-  }
-}
-
-// ── Recept fiche ─────────────────────────────────────────────
-function openFiche(id){
-  actieveFicheId=id;
-  const r=recepten.find(r=>r.id==id);
-  if(!r) return;
-  // Desktop fiche
-  _renderFicheInDesktop(r);
-  // Mobile overlay (alleen als viewport klein)
-  if(window.innerWidth<768){
-    document.getElementById('recept-fiche-mobiel').innerHTML=renderFicheHtml(r,true);
-    document.getElementById('recept-fiche-overlay').classList.add('open');
-  }
-  // Highlight actieve kaart
-  document.querySelectorAll('.recept-card').forEach(c=>{
-    c.classList.toggle('actief',c.dataset.id==id);
-  });
-}
-
-function _renderFicheInDesktop(r){
-  const el=document.getElementById('recept-fiche');
-  const ph=document.getElementById('fiche-placeholder');
-  if(!el) return;
-  el.innerHTML=renderFicheHtml(r,false);
-  el.style.display='block';
-  if(ph) ph.style.display='none';
-}
-
-function _clearFiche(){
-  const el=document.getElementById('recept-fiche');
-  const ph=document.getElementById('fiche-placeholder');
-  if(el){el.innerHTML='';el.style.display='none';}
-  if(ph) ph.style.display='flex';
-}
-
-function renderFicheHtml(r, metSluitknop){
-  const kanBewerken=Auth.kan('kanReceptenBeheren');
-  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
-  const types=r.types&&r.types.length?r.types:[r.type].filter(Boolean);
-  const bronDom=r.bron?`<a href="${escHtml(r.bron)}" target="_blank" rel="noopener" style="color:var(--accent);">${escHtml(r.bron.replace(/^https?:\/\//,'').split('/').slice(0,2).join('/'))}</a>`:'';
-  return `
-  <div class="fiche-header">
-    <div class="fiche-naam">${escHtml(r.naam)}</div>
-    <div class="fiche-acties">
-      ${kanBewerken?`
-        <button class="btn btn-secondary btn-sm" onclick="openReceptModal(recepten.find(r=>r.id==${r.id}))" title="Bewerken"></button>
-        <button class="btn btn-danger btn-sm" onclick="verwijderRecept(${r.id})" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
-      `:''}
-      ${metSluitknop?`<button class="btn btn-secondary btn-sm" onclick="sluitFiche()" title="Sluiten">✕</button>`:''}
-    </div>
-  </div>
-  <div class="fiche-meta">
-    ${types.map(t=>`<span class="tag-pill">${typeLabels[t]||t}</span>`).join('')}
-    ${r.tijd?`<span class="fiche-meta-item"><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
-    ${r.porties?`<span class="fiche-meta-item"><i data-lucide="utensils" class="icon-inline"></i> ${r.porties} p.</span>`:''}
-    ${r.moeilijk?`<span class="fiche-meta-item">${escHtml(r.moeilijk)}</span>`:''}
-    ${r.score?`<span class="fiche-meta-item">${_sterHtml(r.score)}</span>`:''}
-  </div>
-  ${(r.tags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1rem;">${r.tags.map(t=>`<span class="tag-pill">${escHtml(t)}</span>`).join('')}</div>`:''}
-  ${bronDom?`<div style="font-size:12px;color:var(--muted);margin-bottom:1.2rem;"><i data-lucide="link" class="icon-inline"></i> ${bronDom}</div>`:''}
-  ${(r.ingredienten||[]).length?`
-    <div class="fiche-sectie-label">Ingrediënten (${r.ingredienten.length})</div>
-    <div>
-      ${r.ingredienten.map(i=>`
-        <div class="fiche-ing-rij">
-          <span class="fiche-ing-naam">${escHtml(i.naam)}</span>
-          ${i.hoev||i.eenheid?`<span class="fiche-ing-hoev">${i.hoev?escHtml(i.hoev):''}${i.eenheid?' '+escHtml(i.eenheid):''}</span>`:''}
-        </div>`).join('')}
-    </div>
-  `:''}
-  ${r.bereiding?`
-    <div class="fiche-sectie-label">Bereiding</div>
-    <div class="fiche-bereiding">${escHtml(r.bereiding)}</div>
-  `:''}`;
-}
-
-function sluitFiche(event){
-  if(event&&event.target!==document.getElementById('recept-fiche-overlay')&&event.type==='click') return;
-  document.getElementById('recept-fiche-overlay').classList.remove('open');
-}
-
-// ── Type multiselect ──────────────────────────────────────────
-function setSter(v){
-  const cur=parseInt(document.getElementById('f-score').value)||0;
-  const nieuw=cur===v?0:v;
-  document.getElementById('f-score').value=nieuw||'';
-  document.querySelectorAll('#ster-input span').forEach(s=>{
-    s.classList.toggle('vol',parseInt(s.dataset.v)<=nieuw);
-  });
-}
-function _laadSter(score){
-  document.getElementById('f-score').value=score||'';
-  document.querySelectorAll('#ster-input span').forEach(s=>{
-    s.classList.toggle('vol',parseInt(s.dataset.v)<=(score||0));
-  });
-}
-function _sterHtml(score){
-  if(!score)return'';
-  return`<span class="ster-display">${'★'.repeat(score)}${'☆'.repeat(5-score)}</span>`;
-}
-
-function toggleType(el){
-  el.classList.toggle('selected');
-  geselecteerdeTypes=getGeselecteerdeTypes();
-}
-function getGeselecteerdeTypes(){
-  return [...document.querySelectorAll('#f-type-ms .type-chip.selected')].map(el=>el.dataset.type);
-}
-function setTypes(types){
-  document.querySelectorAll('#f-type-ms .type-chip').forEach(chip=>{
-    chip.classList.toggle('selected',(types||[]).includes(chip.dataset.type));
-  });
-  geselecteerdeTypes=types||[];
-}
-
-// ── Ingrediënten combo-input ──────────────────────────────────
-function ingRow(naam='',hoev='',eenheid='',winkel='',isNieuw=false){
-  const w=winkel||zoekStandaardWinkel(naam);
-  const bestaatAl=naam?standaardIngredienten.some(i=>i.naam.toLowerCase()===naam.toLowerCase()):false;
-  const rowId='ing-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
-  const baseI='padding:8px 5px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;box-sizing:border-box;width:100%;background:var(--surface);color:var(--ink);font-family:inherit;min-width:0;';
-  return `<div id="${rowId}" style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;align-items:center;margin-bottom:8px;">
-    <div class="ing-combo-wrap" style="min-width:0;position:relative;">
-      <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${naam}"
-        oninput="filterIngCombo(this,'${rowId}')"
-        onfocus="filterIngCombo(this,'${rowId}')"
-        onblur="setTimeout(()=>sluitIngCombo('${rowId}'),150)"
-        autocomplete="off"/>
-      ${isNieuw?`<span class="ing-nieuw-badge">Nieuw</span>`:''}
-      <div class="ing-combo-dropdown" id="dd-${rowId}"></div>
-    </div>
-    <input style="${baseI}text-align:center;" type="text" placeholder="…" value="${hoev}"/>
-    <input style="${baseI}" type="text" placeholder="gram" value="${eenheid}"/>
-    <select class="winkel-sel" style="${baseI}${bestaatAl?'opacity:.6;':''}" ${bestaatAl?'disabled title="Wijzig winkel via Ingrediënten"':''}>
-      ${WINKELS.map(ww=>`<option${ww===w?' selected':''}>${ww}</option>`).join('')}
-    </select>
-    <button style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted-2);padding:0;" onclick="this.closest('div[id]').remove()">×</button>
-  </div>`;
-}
-
-function filterIngCombo(input, rowId){
-  const zoek=input.value.toLowerCase().trim();
-  const dd=document.getElementById('dd-'+rowId);
-  const matches=standaardIngredienten.filter(i=>i.naam.toLowerCase().includes(zoek)).slice(0,8);
-  let html=matches.map(i=>`
-    <div class="ing-combo-option" onmousedown="kiesIng('${rowId}','${escHtml(i.naam).replace(/'/g,"\\'")}','${escHtml(i.winkel)}')">
-      <span>${escHtml(i.naam)}</span>
-      <span class="winkel-hint">🏪 ${escHtml(i.winkel)}</span>
-    </div>`).join('');
-  // "Nieuw aanmaken" optie als naam niet exact bestaat
-  const bestaatExact=standaardIngredienten.some(i=>i.naam.toLowerCase()===zoek);
-  if(zoek&&!bestaatExact){
-    html+=`<div class="ing-combo-nieuw" onmousedown="maakNieuwIng('${rowId}','${escHtml(input.value).replace(/'/g,"\\'")}')">
-      ✨ Nieuw ingrediënt: <strong>${escHtml(input.value)}</strong>
-    </div>`;
-  }
-  dd.innerHTML=html;
-  dd.classList.toggle('open', html.length>0);
-}
-
-function kiesIng(rowId, naam, winkel){
-  const row=document.getElementById(rowId);
-  row.querySelector('.ing-combo-input').value=naam;
-  const sel=row.querySelector('.winkel-sel');
-  if(sel&&winkel){for(let o of sel.options){if(o.value===winkel){sel.value=winkel;break;}}}
-  if(sel){sel.disabled=true;sel.style.opacity='.6';}
-  sluitIngCombo(rowId);
-}
-
-function maakNieuwIng(rowId, naam){
-  const row=document.getElementById(rowId);
-  const input=row.querySelector('.ing-combo-input');
-  input.value=naam;
-  row.dataset.nieuw='1';
-  row.dataset.nieuwNaam=naam;
-  const sel=row.querySelector('.winkel-sel');
-  if(sel){sel.disabled=false;sel.style.opacity='1';}
-  let badge=row.querySelector('.ing-nieuw-badge');
-  if(!badge){
-    badge=document.createElement('span');
-    badge.className='ing-nieuw-badge';
-    badge.textContent='Nieuw';
-    badge.style.cssText='position:absolute;top:-6px;right:4px;font-size:9px;background:var(--rustig-bg);color:var(--rustig-clr);padding:1px 5px;border-radius:99px;font-weight:700;';
-    row.querySelector('.ing-combo-wrap').style.position='relative';
-    row.querySelector('.ing-combo-wrap').appendChild(badge);
-  }
-  sluitIngCombo(rowId);
-}
-
-function sluitIngCombo(rowId){
-  const dd=document.getElementById('dd-'+rowId);
-  if(dd) dd.classList.remove('open');
-}
-
-function addIngredient(){
-  document.getElementById('ingredients-container').insertAdjacentHTML('beforeend',ingRow());
-}
-
-function zoekStandaardWinkel(naam){
-  if(!naam)return'';
-  const m=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase().trim());
-  return m?m.winkel:'';
-}
-
-// ── Recept modal ──────────────────────────────────────────────
-function openReceptModal(recept, vanImport=false){
-  const titel=vanImport?'Geïmporteerd recept — nakijken & opslaan':recept?'Recept bewerken':'Nieuw recept';
-  document.getElementById('recept-modal-titel').textContent=titel;
-
-  // Types instellen
-  const types=recept?(recept.types&&recept.types.length?recept.types:[recept.type].filter(Boolean)):[];
-  setTypes(types);
-
-  // Tags
-  document.getElementById('tag-selector').innerHTML=ALLE_TAGS.map(t=>{
-    const sel=recept&&(recept.tags||[]).includes(t);
-    return `<span onclick="this.dataset.sel=this.dataset.sel==='1'?'0':'1';this.style.background=this.dataset.sel==='1'?'var(--accent)':'var(--surface)';this.style.color=this.dataset.sel==='1'?'#fff':'var(--muted)';this.style.borderColor=this.dataset.sel==='1'?'var(--accent)':'var(--border-2)';"
-      style="padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;border:1.5px solid ${sel?'var(--accent)':'var(--border-2)'};background:${sel?'var(--accent)':'var(--surface)'};color:${sel?'#fff':'var(--muted)'};font-weight:500;"
-      data-sel="${sel?'1':'0'}">${t}</span>`;
-  }).join('');
-
-  if(recept){
-    document.getElementById('f-naam').value=recept.naam||'';
-    document.getElementById('f-tijd').value=recept.tijd||'';
-    document.getElementById('f-porties').value=recept.porties||4;
-    document.getElementById('f-moeilijk').value=recept.moeilijk||'Normaal';
-    document.getElementById('f-bron').value=recept.bron||'';
-    document.getElementById('f-bereiding').value=recept.bereiding||'';
-    _laadSter(recept.score||0);
-    document.getElementById('ingredients-container').innerHTML=(recept.ingredienten||[]).map(i=>ingRow(i.naam,i.hoev,i.eenheid,i.winkel)).join('');
-    document.getElementById('recept-modal-bg').dataset.editId=vanImport?'':(recept.id||'');
-  } else {
-    ['f-naam','f-bron','f-bereiding'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-tijd').value='';
-    document.getElementById('f-porties').value='4';
-    _laadSter(0);
-    document.getElementById('ingredients-container').innerHTML=ingRow();
-    document.getElementById('recept-modal-bg').dataset.editId='';
-  }
-  document.getElementById('recept-modal-bg').classList.add('open');
-  setTimeout(()=>document.getElementById('f-naam').focus(),150);
-}
-
-function closeReceptModal(){ document.getElementById('recept-modal-bg').classList.remove('open'); }
-
-function saveRecept(){
-  const naam=document.getElementById('f-naam').value.trim();
-  if(!naam){ toonOpslagStatus('❌ Geef een naam in.'); return; }
-  const types=getGeselecteerdeTypes();
-  if(!types.length){ toonOpslagStatus('❌ Selecteer minstens één type.'); return; }
-
-  const editId=document.getElementById('recept-modal-bg').dataset.editId;
-  const tags=[...document.querySelectorAll('#tag-selector span[data-sel="1"]')].map(el=>el.textContent);
-
-  // Ingrediënten ophalen
-  const nieuweIngs=[];
-  const ings=[...document.querySelectorAll('#ingredients-container > div[id]')].map(row=>{
-    const input=row.querySelector('.ing-combo-input');
-    const inputs=row.querySelectorAll('input');
-    const winkelSel=row.querySelector('.winkel-sel');
-    const ingNaam=input?input.value.trim():'';
-    const hoev=inputs[1]?inputs[1].value:'';
-    const eenheid=inputs[2]?inputs[2].value:'';
-    const winkel=winkelSel?winkelSel.value:'Colruyt';
-    if(!ingNaam)return null;
-    return{naam:ingNaam,hoev,eenheid,winkel};
-  }).filter(Boolean);
-
-  // Alle onbekende ingrediënten automatisch opslaan in standaardIngredienten
-  ings.forEach(ing=>{
-    const bestaatAl=standaardIngredienten.some(i=>i.naam.toLowerCase()===ing.naam.toLowerCase());
-    if(!bestaatAl){
-      const nieuwIng={id:_maakId(),naam:ing.naam,winkel:ing.winkel||'Colruyt',categorie:''};
-      standaardIngredienten.push(nieuwIng);
-      sbSaveIngredient(nieuwIng);
-      nieuweIngs.push(nieuwIng);
-    }
-  });
-
-  const bestaande=editId?recepten.find(r=>r.id==editId):null;
-  const recept={
-    id:editId?parseInt(editId)||editId:_maakId(),
-    _sbId:bestaande?._sbId,
-    naam,
-    types,
-    type:types[0]||'avond',   // backwards compat
-    tijd:parseInt(document.getElementById('f-tijd').value)||30,
-    porties:parseInt(document.getElementById('f-porties').value)||4,
-    moeilijk:document.getElementById('f-moeilijk').value,
-    score:parseInt(document.getElementById('f-score').value)||null,
-    wie:[...PERSONEN],
-    bron:document.getElementById('f-bron').value,
-    bereiding:document.getElementById('f-bereiding').value,
-    tags,
-    ingredienten:ings
-  };
-
-  if(editId) recepten=recepten.map(r=>r.id==editId?recept:r);
-  else recepten.push(recept);
-
-  closeReceptModal();
-  renderRecepten();
-  slaLokaalOp();
-  sbSaveRecept(recept);
-  geimporteerdRecept=null;
-
-  if(nieuweIngs.length){
-    toonOpslagStatus(`✅ Opgeslagen + ${nieuweIngs.length} nieuw ingrediënt${nieuweIngs.length>1?'en':''} toegevoegd`);
-  } else {
-    toonOpslagStatus('✅ Opgeslagen');
-  }
-}
-
-function verwijderRecept(id){
-  if(!confirm('Recept verwijderen?'))return;
-  const r=recepten.find(r=>r.id===id||r.id==id);
-  recepten=recepten.filter(r=>r.id!==id&&r.id!=id);
-  if(actieveFicheId==id){ actieveFicheId=null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
-  renderRecepten();slaLokaalOp();if(r?._sbId)sbDeleteRecept(r._sbId);
-  toonOpslagStatus('✅ Verwijderd');
-}
-
-// ── Import via link ───────────────────────────────────────────
-function openImportModal(){
-  document.getElementById('import-url').value='';
-  naarStap(1);
-  document.getElementById('import-modal-bg').classList.add('open');
-  setTimeout(()=>document.getElementById('import-url').focus(),200);
-}
-function closeImportModal(){ document.getElementById('import-modal-bg').classList.remove('open'); }
-function naarStap(n){
-  document.querySelectorAll('.import-stap').forEach(el=>el.classList.remove('actief'));
-  document.getElementById('import-stap-'+n).classList.add('actief');
-}
-
-async function startImport(){
-  const url=document.getElementById('import-url').value.trim();
-  if(!url||!url.startsWith('http')){ toonOpslagStatus('❌ Plak een geldige URL.'); return; }
-  const apiKey=localStorage.getItem('anthropic_api_key')||''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
-  if(!apiKey){
-    document.getElementById('import-error-tekst').innerHTML='<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
-    naarStap(4); return;
-  }
-  naarStap(2);
-  document.getElementById('import-loader-tekst').textContent='Recept ophalen van '+url.replace(/^https?:\/\//,'').split('/')[0]+'…';
-  try{
-    const systeemprompt=`Je bent een recept-extractie assistent. Haal het recept op van de opgegeven URL en geef UITSLUITEND geldige JSON terug zonder markdown backticks.
-Formaat:
-{
-  "naam": "string",
-  "types": ["avond|lunch|weekend|ontbijt"],
-  "tijd": 30,
-  "porties": 4,
-  "moeilijk": "Snel|Normaal|Uitgebreid",
-  "bereiding": "string",
-  "ingredienten": [{"naam":"string","hoev":"500","eenheid":"gram"}],
-  "tags": [],
-  "bron": "url"
-}
-types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
-tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
-    let berichten=[{role:'user',content:`Haal het recept op van: ${url}`}];
-    let data=await agentFetch(apiKey,{model:AGENT_MODEL,max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten});
-    let max=5;
-    while(data.stop_reason==='tool_use'&&max-->0){
-      document.getElementById('import-loader-tekst').textContent='Pagina wordt gelezen…';
-      const toolResults=[];
-      for(const block of data.content){
-        if(block.type==='tool_use') toolResults.push({type:'tool_result',tool_use_id:block.id,content:'Extraheer het recept van: '+url});
-      }
-      berichten.push({role:'assistant',content:data.content});
-      berichten.push({role:'user',content:toolResults});
-      data=await agentFetch(apiKey,{model:AGENT_MODEL,max_tokens:2000,system:systeemprompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:berichten});
-    }
-    const tekst=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
-    const jsonStr=tekst.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-    let recept;
-    try{ recept=JSON.parse(jsonStr); }
-    catch(e){ const m=jsonStr.match(/\{[\s\S]*\}/); if(!m) throw new Error('Geen recept gevonden op deze pagina.'); recept=JSON.parse(m[0]); }
-    if(!recept.naam) throw new Error('Geen receptnaam gevonden. Is dit een receptpagina?');
-    // Normaliseer ingrediënten
-    recept.ingredienten=(recept.ingredienten||[]).map(i=>({naam:i.naam||'',hoev:String(i.hoev||''),eenheid:i.eenheid||'',winkel:zoekStandaardWinkel(i.naam)||'Colruyt'}));
-    recept.bron=recept.bron||url;
-    geimporteerdRecept=recept;
-    toonImportPreview(recept);
-    naarStap(3);
-  }catch(e){
-    document.getElementById('import-error-tekst').innerHTML=`<strong>❌ Import mislukt</strong><br><br>${escHtml(e.message)}`;
-    naarStap(4);
-  }
-}
-
-function toonImportPreview(r){
-  const typeLabels={'avond':'<i data-lucide="utensils" class="icon-inline"></i> Avond','lunch':'<i data-lucide="leaf" class="icon-inline"></i> Lunch','weekend':'<i data-lucide="utensils" class="icon-inline"></i> Weekend','ontbijt':'<i data-lucide="coffee" class="icon-inline"></i> Ontbijt'};
-  const types=(r.types||[r.type]).filter(Boolean).map(t=>typeLabels[t]||t).join(', ');
-  const ingLijst=(r.ingredienten||[]).slice(0,8).map(i=>`<span>${i.hoev?escHtml(i.hoev)+' '+escHtml(i.eenheid)+' ':''}${escHtml(i.naam)}</span>`).join('');
-  const meer=(r.ingredienten||[]).length>8?`<span style="color:var(--muted);">+${r.ingredienten.length-8} meer</span>`:'';
-  document.getElementById('import-preview').innerHTML=`
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
-      <div class="import-preview-naam">${escHtml(r.naam)}</div>
-      <span class="import-success-badge">✅ Gevonden</span>
-    </div>
-    <div class="import-preview-meta">
-      ${r.tijd?`<span><i data-lucide="timer" class="icon-inline"></i> ${r.tijd} min</span>`:''}
-      ${r.porties?`<span><i data-lucide="utensils" class="icon-inline"></i> ${r.porties} porties</span>`:''}
-      ${types?`<span><i data-lucide="clipboard-list" class="icon-inline"></i> ${types}</span>`:''}
-      ${r.moeilijk?`<span>${r.moeilijk}</span>`:''}
-    </div>
-    ${r.bereiding?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;max-height:60px;overflow:hidden;">${r.bereiding.slice(0,200)}${r.bereiding.length>200?'…':''}</div>`:''}
-    <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;">INGREDIËNTEN (${(r.ingredienten||[]).length})</div>
-    <div style="font-size:12px;">${ingLijst}${meer}</div>
-    ${r.bron?`<div style="font-size:11px;color:var(--muted-2);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><i data-lucide="link" class="icon-inline"></i> ${r.bron}</div>`:''}`;
-}
-
-function openReceptVanImport(){
-  if(!geimporteerdRecept)return;
-  closeImportModal();
-  setTimeout(()=>openReceptModal(geimporteerdRecept,true),100);
-}
-
-// ── Keuze modal ───────────────────────────────────────────────
-function openKeuzeModal(){
-  document.getElementById('keuze-modal-bg').classList.add('open');
-}
-function sluitKeuzeModal(){ document.getElementById('keuze-modal-bg').classList.remove('open'); }
-
-// ── Link/scrape modal ─────────────────────────────────────────
-function openLinkModal(){
-  document.getElementById('link-url').value='';
-  document.getElementById('link-status').textContent='';
-  document.getElementById('btn-scrape').disabled=false;
-  document.getElementById('btn-scrape').innerHTML='<i data-lucide="search" class="icon-inline"></i> Importeren';
-  document.getElementById('link-modal-bg').classList.add('open');
-  setTimeout(()=>document.getElementById('link-url').focus(),150);
-}
-function sluitLinkModal(){ document.getElementById('link-modal-bg').classList.remove('open'); }
-
-async function startScrape(){
-  const url=document.getElementById('link-url').value.trim();
-  if(!url||!url.startsWith('http')){ toonOpslagStatus('❌ Plak een geldige URL (begin met https://).'); return; }
-  const statusEl=document.getElementById('link-status');
-  const btn=document.getElementById('btn-scrape');
-  btn.disabled=true; btn.textContent='⏳ Bezig…';
-  statusEl.textContent='Pagina ophalen via corsproxy…';
-  try{
-    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(url);
-    const res=await fetch(proxyUrl);
-    if(!res.ok) throw new Error('Kon pagina niet laden ('+res.status+')');
-    const html=await res.text();
-    const recept=parseJsonLd(html,url);
-    if(!recept) throw new Error('NO_JSON_LD');
-    sluitLinkModal();
-    setTimeout(()=>openReceptModal(recept,true),100);
-  }catch(e){
-    if(e.message==='NO_JSON_LD'){
-      statusEl.innerHTML='<i data-lucide="triangle-alert" class="icon-inline"></i> Geen gestructureerde receptdata gevonden op deze site.<br><a href="#" onclick="event.preventDefault();sluitLinkModal();openImportModal()" style="color:var(--accent);font-weight:600;">Probeer via AI-import (vereist API key) →</a>';
-    } else {
-      statusEl.textContent='❌ '+e.message;
-    }
-    btn.disabled=false; btn.textContent='🔍 Importeren';
-  }
-}
-
-function parseJsonLd(html,url){
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(html,'text/html');
-  const scripts=[...doc.querySelectorAll('script[type="application/ld+json"]')];
-  for(const s of scripts){
-    try{
-      const data=JSON.parse(s.textContent);
-      const recipe=vindRecipe(data);
-      if(recipe) return maakReceptVanJsonLd(recipe,url);
-    }catch(e){}
-  }
-  return null;
-}
-
-function vindRecipe(data){
-  if(!data) return null;
-  const t=data['@type'];
-  if(t==='Recipe'||( Array.isArray(t)&&t.includes('Recipe'))) return data;
-  if(data['@graph']){ for(const i of data['@graph']){ const r=vindRecipe(i); if(r) return r; } }
-  if(Array.isArray(data)){ for(const i of data){ const r=vindRecipe(i); if(r) return r; } }
-  return null;
-}
-
-function parseerDuur(iso){
-  if(!iso) return null;
-  const m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
-  return m?(parseInt(m[1]||0)*60+parseInt(m[2]||0)):null;
-}
-
-function parseerIngredienten(lijst){
-  return(lijst||[]).map(ing=>{
-    const s=String(ing).trim();
-    const m=s.match(/^([\d.,½¼¾]+)?\s*(g|kg|ml|l|el|tl|tsp|tbsp|cup|dl|oz|stuks?|blik|pak|snuf)?\s*(.+)/i);
-    const naam=m?m[3].trim():s;
-    return{ naam, hoev:m?m[1]?.replace(',','.')||'':'', eenheid:m?m[2]?.toLowerCase()||'':'', winkel:zoekStandaardWinkel(naam)||'' };
-  });
-}
-
-function maakReceptVanJsonLd(data,url){
-  const tijd=parseerDuur(data.cookTime)||parseerDuur(data.totalTime)||parseerDuur(data.prepTime)||30;
-  const porties=parseInt(String(data.recipeYield||'4').match(/\d+/)?.[0])||4;
-  const inst=Array.isArray(data.recipeInstructions)
-    ?data.recipeInstructions.map(i=>typeof i==='string'?i:(i.text||'')).join('\n\n')
-    :String(data.recipeInstructions||'');
-  return{
-    naam:data.name||'',
-    types:[], type:'avond',
-    tijd, porties,
-    moeilijk:'Normaal',
-    bron:url,
-    bereiding:inst.slice(0,3000),
-    ingredienten:parseerIngredienten(data.recipeIngredient||[]),
-    tags:[], wie:[...PERSONEN], prive:false,
-  };
-}
-
-// Sluit modals bij klik op achtergrond
-['recept-modal-bg','import-modal-bg','keuze-modal-bg','link-modal-bg'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) el.addEventListener('click',e=>{
-    if(e.target===el){ closeReceptModal();closeImportModal();sluitKeuzeModal();sluitLinkModal(); }
-  });
-});
-</script>
-<script>
-// ── Sidebar (desktop) ────────────────────────────────────────
-// ── Profiel dropdown ─────────────────────────────────────────
-function toggleProfielMenu(e){
-  e && e.stopPropagation();
-  document.getElementById('profiel-menu')?.classList.toggle('open');
-}
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
-});
-document.addEventListener('DOMContentLoaded', function(){
-  // ── Sluitknop injecteren in alle modals ──────────────────────
-  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
-    if(modal.querySelector('.modal-sluit-btn')) return;
-    const bg = modal.closest('.modal-bg');
-    const btn = document.createElement('button');
-    btn.className = 'modal-sluit-btn';
-    btn.setAttribute('aria-label', 'Sluiten');
-    btn.textContent = '✕';
-    btn.onclick = function(e){
-      e.stopPropagation();
-      if(bg) bg.classList.remove('open');
-    };
-    modal.insertBefore(btn, modal.firstChild);
-  });
-});
-</script>
+<script src="recepten.js"></script>
 </body>
 </html>

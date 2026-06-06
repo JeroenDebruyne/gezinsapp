@@ -12,7 +12,7 @@
 </head>
 <body>
 <header class="topbar">
-  <div class="topbar-title">⚙️ Instellingen</div>
+  <div class="topbar-title"><i data-lucide="settings" class="icon-inline"></i> Instellingen</div>
   <div class="topbar-actions">
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
@@ -34,14 +34,14 @@
 <!-- Linker nav (alleen desktop) -->
 <nav class="inst-nav" id="inst-nav">
   <div class="inst-nav-label">Instellingen</div>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-profiel')">👤 Mijn profiel</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')">📋 Vaste roosters</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-kalenders')">📆 Kalenders</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-data')">🗄️ Data beheer</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')">🏠 Adressen</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-transport')">🚗 Transport</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-api')">🔑 API sleutels</button>
-  <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')">👥 Gebruikers</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-profiel')"><i data-lucide="user" class="icon-inline"></i> Mijn profiel</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')"><i data-lucide="clipboard-list" class="icon-inline"></i> Vaste roosters</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-kalenders')"><i data-lucide="calendar" class="icon-inline"></i> Kalenders</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-data')"><i data-lucide="database" class="icon-inline"></i> Data beheer</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')"><i data-lucide="home" class="icon-inline"></i> Adressen</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-transport')"><i data-lucide="car" class="icon-inline"></i> Transport</button>
+  <button class="inst-nav-item" onclick="scrollNaar('sect-api')"><i data-lucide="key" class="icon-inline"></i> API sleutels</button>
+  <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')"><i data-lucide="users" class="icon-inline"></i> Gebruikers</button>
 </nav>
 
 <!-- Rechter inhoud -->
@@ -49,7 +49,7 @@
 <div class="page-content">
 
   <!-- Profiel -->
-  <div class="section-label" id="sect-profiel">👤 Mijn profiel</div>
+  <div class="section-label" id="sect-profiel"><i data-lucide="user" class="icon-inline"></i> Mijn profiel</div>
   <div class="card" id="profiel-kaart" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
     <div style="position:relative;flex-shrink:0;">
       <div style="font-size:40px;line-height:1;" id="profiel-emoji">🧑</div>
@@ -70,13 +70,13 @@
   </div>
 
   <!-- Vaste roosters -->
-  <div class="section-label" id="sect-roosters">📅 Vaste roosters</div>
+  <div class="section-label" id="sect-roosters"><i data-lucide="clipboard-list" class="icon-inline"></i> Vaste roosters</div>
   <div class="info-box">Stel hier de vaste werkuren in. Aanpassingen of uitzonderingen voeg je toe als activiteit in de Agenda.</div>
   <div id="roosters-container"></div>
-  <button class="btn btn-primary" onclick="slaVastRoosterOp()" style="margin-top:4px;">💾 Roosters opslaan</button>
+  <button class="btn btn-primary" onclick="slaVastRoosterOp()" style="margin-top:4px;"><i data-lucide="save" class="icon-inline"></i> Roosters opslaan</button>
 
   <!-- Kalenders -->
-  <div class="section-label" id="sect-kalenders" style="margin-top:1.5rem;">📆 Kalenders</div>
+  <div class="section-label" id="sect-kalenders" style="margin-top:1.5rem;"><i data-lucide="calendar-range" class="icon-inline"></i> Kalenders</div>
 
   <!-- Systeemkalenders -->
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Systeemkalenders</div>
@@ -84,7 +84,7 @@
   <!-- Schoolvakanties kaart -->
   <div class="card" style="margin-bottom:8px;">
     <div style="display:flex;align-items:flex-start;gap:12px;">
-      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">☀️</div>
+      <div style="flex-shrink:0;color:var(--accent);"><i data-lucide="sun" style="width:26px;height:26px;display:block;"></i></div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Schoolvakanties Vlaanderen</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde vakanties kunnen worden gedupliceerd en aangepast. Eigen vakanties worden opgeslagen.</div>
@@ -97,7 +97,7 @@
   <!-- Feestdagen kaart -->
   <div class="card" style="margin-bottom:16px;" id="feestdagen-kaart">
     <div style="display:flex;align-items:flex-start;gap:12px;">
-      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">🎉</div>
+      <div style="flex-shrink:0;color:var(--accent);"><i data-lucide="party-popper" style="width:26px;height:26px;display:block;"></i></div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
           <div style="font-size:14px;font-weight:600;">Belgische feestdagen</div>
@@ -112,7 +112,7 @@
         </div>
         <div id="feestdagen-acties" style="display:none;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-secondary btn-sm" onclick="syncFeestdagen()">↻ Sync nu</button>
-          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="ontkoppelFeestdagen()">🗑 Verwijderen</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="ontkoppelFeestdagen()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
         </div>
       </div>
     </div>
@@ -121,7 +121,7 @@
   <!-- Feestdagen beheer -->
   <div class="card" style="margin-bottom:16px;">
     <div style="display:flex;align-items:flex-start;gap:12px;">
-      <div style="font-size:26px;line-height:1.2;flex-shrink:0;">🎉</div>
+      <div style="flex-shrink:0;color:var(--accent);"><i data-lucide="party-popper" style="width:26px;height:26px;display:block;"></i></div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Feestdagen beheer</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde feestdagen kunnen worden gedupliceerd en aangepast. Gegroepeerd per kalenderjaar.</div>
@@ -139,7 +139,7 @@
 
   <!-- Persoonlijke abonnementen -->
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Persoonlijke abonnementen</div>
-  <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd. Voeg toe via 📥 in de Agenda.</div>
+  <div class="info-box">Abonnementen worden automatisch gesynchroniseerd telkens je de Agenda opent. Je kan een abonnement opschorten — alle bijhorende activiteiten worden dan uit je agenda verwijderd. Voeg toe via <i data-lucide="download" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> in de Agenda.</div>
   <div id="ical-abo-lijst-wrap">
     <div class="card" id="ical-abo-leeg" style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">
       Nog geen persoonlijke abonnementen.
@@ -148,7 +148,7 @@
   </div>
 
   <!-- Transport personen -->
-  <div class="section-label" id="sect-transport" style="margin-top:1.5rem;">🚗 Transport</div>
+  <div class="section-label" id="sect-transport" style="margin-top:1.5rem;"><i data-lucide="car" class="icon-inline"></i> Transport</div>
   <div class="info-box">Stel in wie kinderen kan brengen en halen. Deze personen verschijnen als keuze in het kinderlogistiek-rooster.</div>
   <div class="card" style="margin-bottom:16px;">
     <div id="transportpersonen-lijst"></div>
@@ -161,7 +161,7 @@
   </div>
 
   <!-- Maaltijden -->
-  <div class="section-label" id="sect-maaltijden" style="margin-top:1.5rem;">🍽️ Maaltijden</div>
+  <div class="section-label" id="sect-maaltijden" style="margin-top:1.5rem;"><i data-lucide="utensils" class="icon-inline"></i> Maaltijden</div>
   <div class="card" style="margin-bottom:16px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Portie per kind</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Hoeveel van een volwassen portie eet een kind? (0.5 = halve portie)</div>
@@ -173,7 +173,7 @@
   </div>
 
   <!-- Winkels -->
-  <div class="section-label" id="sect-winkels" style="margin-top:1.5rem;">🛒 Winkels</div>
+  <div class="section-label" id="sect-winkels" style="margin-top:1.5rem;"><i data-lucide="shopping-cart" class="icon-inline"></i> Winkels</div>
   <div class="info-box">Stel in welke winkels beschikbaar zijn voor boodschappen en recepten.</div>
   <div class="card" style="margin-bottom:16px;">
     <div id="winkels-lijst"></div>
@@ -186,48 +186,48 @@
   </div>
 
   <!-- Data beheer -->
-  <div class="section-label" id="sect-data" style="margin-top:1.5rem;">💾 Data beheer</div>
+  <div class="section-label" id="sect-data" style="margin-top:1.5rem;"><i data-lucide="database" class="icon-inline"></i> Data beheer</div>
   <div class="card">
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:14px;font-weight:600;">Exporteer backup</div><div style="font-size:12px;color:var(--muted);">Download alle data als JSON</div><div style="font-size:11px;color:var(--muted-2);margin-top:3px;">🔑 API-sleutels worden <em>niet</em> geëxporteerd en moeten na een herstel opnieuw worden ingesteld.</div></div>
-        <button class="btn btn-secondary btn-sm" onclick="exporteerData()">⬇️ Exporteer</button>
+        <div><div style="font-size:14px;font-weight:600;">Exporteer backup</div><div style="font-size:12px;color:var(--muted);">Download alle data als JSON</div><div style="font-size:11px;color:var(--muted-2);margin-top:3px;"><i data-lucide="key" style="width:11px;height:11px;display:inline-block;vertical-align:-0.1em;"></i> API-sleutels worden <em>niet</em> geëxporteerd en moeten na een herstel opnieuw worden ingesteld.</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="exporteerData()"><i data-lucide="download" class="icon-inline"></i> Exporteer</button>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:600;">Importeer backup</div><div style="font-size:12px;color:var(--muted);">Laad data vanuit JSON</div></div>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer;">⬆️ Importeer<input type="file" accept=".json" onchange="importeerData(event)" style="display:none;"/></label>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;"><i data-lucide="upload" class="icon-inline"></i> Importeer<input type="file" accept=".json" onchange="importeerData(event)" style="display:none;"/></label>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:600;">Herladen van Supabase</div><div style="font-size:12px;color:var(--muted);">Haal alle data opnieuw op</div></div>
-        <button class="btn btn-secondary btn-sm" onclick="laadOp().then(()=>alert('✅ Herladen!'))">🔄 Herladen</button>
+        <button class="btn btn-secondary btn-sm" onclick="laadOp().then(()=>alert('✅ Herladen!'))"><i data-lucide="refresh-cw" class="icon-inline"></i> Herladen</button>
       </div>
     </div>
   </div>
 
   <!-- Adressen -->
-  <div class="section-label" id="sect-adressen" style="margin-top:1.5rem;">🏠 Adressen</div>
+  <div class="section-label" id="sect-adressen" style="margin-top:1.5rem;"><i data-lucide="home" class="icon-inline"></i> Adressen</div>
   <div class="card">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🏠 Thuisadres</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;"><i data-lucide="home" class="icon-inline"></i> Thuisadres</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt voor reistijdberekening in de Agenda. Typ "thuis" in een locatieveld om dit adres automatisch in te vullen.</div>
     <input type="text" id="inst-thuisadres" placeholder="Straat, huisnummer, gemeente"
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
     <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
   </div>
   <div class="card" style="margin-top:8px;">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">🌧️ Buienradar link</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;"><i data-lucide="cloud-rain" class="icon-inline"></i> Buienradar link</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Plak hier de URL van jouw locatie op Buienradar (bijv. <code style="font-size:11px;">https://www.buienradar.be/weer/ardooie/BE/2800000</code>). Deze link wordt gebruikt in het weerwidget op de homepage.</div>
     <input type="url" id="inst-buienradar-url" placeholder="https://www.buienradar.be/weer/..."
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
     <button class="btn btn-primary btn-sm" onclick="slaaBuienradarUrlOp()">Opslaan</button>
   </div>
   <div class="card" style="margin-top:8px;" id="werkadres-sectie">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">💼 Werkadressen</div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;"><i data-lucide="briefcase" class="icon-inline"></i> Werkadressen</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt door de maaltijdassistent om de verwachte thuiskomst te berekenen.</div>
     <div id="werkadres-container"></div>
   </div>
 
   <!-- API sleutels -->
-  <div class="section-label" id="sect-api" style="margin-top:1.5rem;">🔑 API sleutels</div>
+  <div class="section-label" id="sect-api" style="margin-top:1.5rem;"><i data-lucide="key" class="icon-inline"></i> API sleutels</div>
   <div class="card" style="margin-bottom:8px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Anthropic API key</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="api-key-status">Laden…</div>
@@ -235,15 +235,15 @@
       <div style="display:flex;gap:6px;margin-bottom:8px;">
         <input type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off"
           style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleApiKeyZicht()" id="api-key-toon" title="Toon/verberg">👁</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleApiKeyZicht()" id="api-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="slaApiKeyOp()">Opslaan</button>
         <button class="btn btn-secondary btn-sm" onclick="sluitApiKeyForm()">Annuleren</button>
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderApiKey()">🗑 Verwijderen</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderApiKey()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" onclick="openApiKeyForm()">🔑 Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" onclick="openApiKeyForm()"><i data-lucide="key" class="icon-inline"></i> Wijzigen</button>
   </div>
   <div class="card" style="margin-top:8px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Google Maps API key</div>
@@ -252,27 +252,27 @@
       <div style="display:flex;gap:6px;margin-bottom:8px;">
         <input type="password" id="maps-key-input" placeholder="AIza…" autocomplete="off"
           style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMapsKeyZicht()" id="maps-key-toon" title="Toon/verberg">👁</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMapsKeyZicht()" id="maps-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="slaMapsKeyOp()">Opslaan</button>
         <button class="btn btn-secondary btn-sm" onclick="sluitMapsKeyForm()">Annuleren</button>
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderMapsKey()">🗑 Verwijderen</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderMapsKey()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" id="maps-key-wijzig-btn" onclick="openMapsKeyForm()">🗺️ Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="maps-key-wijzig-btn" onclick="openMapsKeyForm()"><i data-lucide="map" class="icon-inline"></i> Wijzigen</button>
   </div>
 
   <!-- Admin: gebruikersbeheer (alleen gezinshoofd) -->
   <div id="admin-sectie" style="display:none;">
     <div class="section-label" id="sect-gebruikers" style="margin-top:1.5rem;">
-      👥 Gebruikersbeheer
+      <i data-lucide="users" class="icon-inline"></i> Gebruikersbeheer
       <span style="font-size:10px;background:var(--druk-bg);color:var(--druk-clr);padding:1px 7px;border-radius:99px;font-weight:600;margin-left:6px;text-transform:none;letter-spacing:0;">Alleen gezinshoofd</span>
     </div>
     <div class="info-box">Volwassenen krijgen een loginaccount (e-mail + wachtwoord). Kinderen loggen in met een tik op hun avatar — geen account nodig.</div>
     <div id="gebruikers-lijst" style="margin-bottom:10px;"></div>
     <div class="card">
-      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">➕ Nieuw gezinslid</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;"><i data-lucide="user-plus" class="icon-inline"></i> Nieuw gezinslid</div>
       <div class="form-grid">
         <div class="form-row">
           <label>Naam</label>
