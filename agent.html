@@ -27,7 +27,7 @@
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
+      <div class="topbar-user" id="topbar-user" data-action="nav-instellingen">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -40,18 +40,18 @@
   <div class="info-box">De gezinsassistent heeft volledige toegang tot jullie agenda, recepten, planning, to-do's, contacten en kinderlogistiek. Hij vraagt altijd bevestiging voor hij iets aanpast.</div>
 
   <div class="voorbeeld-btns">
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Wat staat er vandaag op de planning? Activiteiten, maaltijd en transport.')">📋 Vandaag</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Maak een gevarieerd weekmenu voor volgende week op basis van ons rooster, drukte en wat we de laatste 8 weken al gegeten hebben.')">📅 Weekmenu</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Wie brengt en haalt de kinderen deze week? Geef een overzicht per dag.')">👶 Transport week</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Welke to-dos zijn dringend of hebben een deadline deze week?')">✅ Dringende to-do\'s</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Zijn er binnenkort verjaardagen? Geef een overzicht van de komende 8 weken.')">🎂 Verjaardagen</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Genereer de boodschappenlijst per winkel op basis van het huidige weekmenu.')">🛒 Boodschappen</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Zijn er conflicten in de planning deze week? Overlappen er activiteiten voor dezelfde persoon?')">⚠️ Conflicten</button>
-    <button class="voorbeeld-btn" onclick="stuurVoorbeeldVraag('Geef een volledig weekoverzicht: drukte, maaltijden en activiteiten per dag.')">📊 Weekoverzicht</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Wat staat er vandaag op de planning? Activiteiten, maaltijd en transport.">📋 Vandaag</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Maak een gevarieerd weekmenu voor volgende week op basis van ons rooster, drukte en wat we de laatste 8 weken al gegeten hebben.">📅 Weekmenu</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Wie brengt en haalt de kinderen deze week? Geef een overzicht per dag.">👶 Transport week</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Welke to-dos zijn dringend of hebben een deadline deze week?">✅ Dringende to-do's</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Zijn er binnenkort verjaardagen? Geef een overzicht van de komende 8 weken.">🎂 Verjaardagen</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Genereer de boodschappenlijst per winkel op basis van het huidige weekmenu.">🛒 Boodschappen</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Zijn er conflicten in de planning deze week? Overlappen er activiteiten voor dezelfde persoon?">⚠️ Conflicten</button>
+    <button class="voorbeeld-btn" data-action="stuur-voorbeeld" data-tekst="Geef een volledig weekoverzicht: drukte, maaltijden en activiteiten per dag.">📊 Weekoverzicht</button>
   </div>
 
   <div class="chat-wis-wrap" style="display:flex;justify-content:flex-end;">
-    <button class="btn btn-secondary btn-sm" onclick="clearChat()" title="Wis de chatgeschiedenis">🗑️ Wis chat</button>
+    <button class="btn btn-secondary btn-sm" data-action="clear-chat" title="Wis de chatgeschiedenis">🗑️ Wis chat</button>
   </div>
   <div class="chat-container" id="chat-berichten">
     <div style="align-self:flex-start;">
@@ -63,16 +63,15 @@
     <div style="font-size:14px;font-weight:600;margin-bottom:8px;">✋ Bevestiging vereist</div>
     <div id="bevestiging-tekst" style="font-size:13px;color:var(--ink-2);margin-bottom:12px;"></div>
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" onclick="agent.bevestig()">✅ Bevestigen</button>
-      <button class="btn btn-secondary" onclick="agent.annuleer()">❌ Annuleren</button>
+      <button class="btn btn-primary" data-action="agent-bevestig">✅ Bevestigen</button>
+      <button class="btn btn-secondary" data-action="agent-annuleer">❌ Annuleren</button>
     </div>
   </div>
 
   <div class="chat-input-wrap">
     <input type="text" id="chat-input" placeholder="Stel een vraag of geef een opdracht…"
-      style="flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"
-      onkeydown="if(event.key==='Enter')agent.stuurBericht(this.value)"/>
-    <button class="btn btn-primary" onclick="agent.stuurBericht(document.getElementById('chat-input').value)" style="border-radius:99px;padding:12px 22px;flex-shrink:0;">Stuur</button>
+      style="flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:99px;font-size:15px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none;"/>
+    <button class="btn btn-primary" data-action="agent-stuur" style="border-radius:99px;padding:12px 22px;flex-shrink:0;">Stuur</button>
   </div>
 </div>
 </main>
@@ -82,98 +81,6 @@
 <script src="data.js"></script>
 <script src="agent.js"></script>
 <script src="agent-tools.js"></script>
-<script>
-Auth.initPagina('agent');
-let _dataGeladen = false;
-let _vandaagISO = null, _dagNaamNL = null;
-
-laadOp().catch(() => laadLokaal()).finally(() => { _dataGeladen = true; });
-Promise.all([_laadDatum(), _laadWeer()]);
-if (typeof BroadcastChannel !== 'undefined')
-  new BroadcastChannel('gezinsapp_data').onmessage = () => { laadLokaal(); };
-
-
-// ── Systeemprompt ────────────────────────────────────────────────
-function _bouwSysteemPrompt() {
-  const vandaagISO = _atNuISO();
-  const dagNaamNL = _dagNaamNL || DLANG_GD[new Date(vandaagISO + 'T12:00:00').getDay()];
-  let planCtx = '';
-  try {
-    const dates = _atGetWeekDates(0);
-    planCtx = '\n\nHUIDIGE WEEK (' + wLabel(dates) + '):\n' + dates.map((d, i) => {
-      const key = fDateISO(d);
-      const dag = planning[key] || {};
-      const acts = activiteiten.filter(a => isActiefOpDatum(a, key)).map(a => a.naam + (a.start ? ' ' + a.start : '')).join(', ');
-      return '  ' + DKORT[i] + ' ' + key + (key === vandaagISO ? ' ←VANDAAG' : '') +
-        ': O=' + _atGetNaam(dag.ontbijt) + ' L=' + _atGetNaam(dag.lunch) + ' A=' + _atGetNaam(dag.avond) +
-        (acts ? ' [' + acts + ']' : '');
-    }).join('\n');
-  } catch(e) {}
-  return `Je bent de gezinsassistent.
-Vandaag: ${dagNaamNL} ${vandaagISO}.
-${bouwGezinsContext()}
-Week loopt ma→zo. Op schooldagen (ma-vr) eten kinderen 's middags op school.${planCtx}
-
-REGELS:
-- Vraag ALTIJD bevestiging vóór elke schrijfactie (bevestiging_vereist:true).
-- Roep get_eethistoriek(8) aan VÓÓR je een weekmenu plant. Vermijd recepten die de afgelopen 8 weken al voorkwamen.
-- Bij stel_weekmenu_in: gebruik NUMERIEK recept-id uit get_recepten, nooit de naam.
-- Antwoord altijd in het Nederlands. Wees bondig en concreet.${geheugen.length ? '\n\nGEHEUGEN (onthouden voorkeuren en feiten):\n' + geheugen.map((g, i) => `${i+1}. ${g.tekst}`).join('\n') : ''}`;
-}
-
-// ── Datum laden (agent-specifiek: toont in chat-bubble) ──────────
-async function _laadDatum() {
-  const opgeslagen = localStorage.getItem('gezinsapp_vandaag');
-  if (opgeslagen && /^\d{4}-\d{2}-\d{2}$/.test(opgeslagen)) {
-    _vandaagISO = opgeslagen; _dagNaamNL = DLANG_GD[new Date(opgeslagen + 'T12:00:00').getDay()];
-    _toonDatumInChat(); return;
-  }
-  try {
-    const fmt = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'});
-    const iso = fmt.format(new Date());
-    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-      _vandaagISO = iso; _dagNaamNL = DLANG_GD[new Date(iso + 'T12:00:00').getDay()];
-      _toonDatumInChat(); return;
-    }
-  } catch(e) {}
-  const nu = new Date();
-  _vandaagISO = fDateISO(nu); _dagNaamNL = DLANG_GD[nu.getDay()];
-  _toonDatumInChat();
-}
-
-function _toonDatumInChat() {
-  if (!_vandaagISO || !_dagNaamNL) return;
-  const versieEl = document.getElementById('agent-versie');
-  if (versieEl) versieEl.textContent = 'v2026-05-21c · ' + _vandaagISO;
-  const el = document.querySelector('#chat-berichten .chat-bubble-bot');
-  if (el) el.innerHTML = `Hallo! 👋 Ik ben jullie gezinsassistent. Vandaag is het <strong>${_dagNaamNL} ${_vandaagISO}</strong>.<br>Ik heb volledige toegang tot jullie agenda, recepten, weekplanning, to-do's, contacten en kinderlogistiek. Ik vraag altijd bevestiging voor ik iets aanpas. Hoe kan ik helpen?`;
-}
-
-// ── Agent instantie ─────────────────────────────────────────────
-const agent = createAgentChat({
-  tools: AGENT_TOOLS,
-  buildSystemPrompt: _bouwSysteemPrompt,
-  execute: agentExecute,
-  isDataGeladen: () => _dataGeladen,
-  ids: { berichten:'chat-berichten', input:'chat-input', bevestiging:'bevestiging-panel', bevestigingTekst:'bevestiging-tekst', storageKey:'agent_chat_history' },
-});
-
-function stuurVoorbeeldVraag(tekst){ agent.stuurVoorbeeldVraag(tekst); }
-function clearChat(){ agent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Hoe kan ik helpen? 👋</div></div>'); }
-
-</script>
-<script>
-// ── Sidebar & navigatie ──────────────────────────────────────────
-function toggleProfielMenu(e){e&&e.stopPropagation();document.getElementById('profiel-menu')?.classList.toggle('open');}
-document.addEventListener('click',function(){document.getElementById('profiel-menu')?.classList.remove('open');});
-
-// iOS keyboard fix: --vvh volgt de visual viewport zodat de chat-layout
-// krimpt zodra het toetsenbord verschijnt (fallback voor iOS < 15.4 zonder dvh)
-if (window.visualViewport) {
-  const _setVVH = () => document.documentElement.style.setProperty('--vvh', window.visualViewport.height + 'px');
-  window.visualViewport.addEventListener('resize', _setVVH);
-  _setVVH();
-}
-</script>
+<script src="agent-page.js"></script>
 </body>
 </html>

@@ -17,7 +17,7 @@
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
+      <div class="topbar-user" id="topbar-user" data-action="toggle-profiel-menu">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -33,15 +33,18 @@
 
 <!-- Linker nav (alleen desktop) -->
 <nav class="inst-nav" id="inst-nav">
-  <div class="inst-nav-label">Instellingen</div>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-profiel')"><i data-lucide="user" class="icon-inline"></i> Mijn profiel</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-roosters')"><i data-lucide="clipboard-list" class="icon-inline"></i> Vaste roosters</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-kalenders')"><i data-lucide="calendar" class="icon-inline"></i> Kalenders</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-data')"><i data-lucide="database" class="icon-inline"></i> Data beheer</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-adressen')"><i data-lucide="home" class="icon-inline"></i> Adressen</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-transport')"><i data-lucide="car" class="icon-inline"></i> Transport</button>
-  <button class="inst-nav-item" onclick="scrollNaar('sect-api')"><i data-lucide="key" class="icon-inline"></i> API sleutels</button>
-  <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" onclick="scrollNaar('sect-gebruikers')"><i data-lucide="users" class="icon-inline"></i> Gebruikers</button>
+  <div class="inst-nav-label">Persoon</div>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-profiel"><i data-lucide="user" class="icon-inline"></i> Mijn profiel</button>
+  <div class="inst-nav-label">Planning</div>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-roosters"><i data-lucide="clipboard-list" class="icon-inline"></i> Vaste roosters</button>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-kalenders"><i data-lucide="calendar" class="icon-inline"></i> Kalenders</button>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-data"><i data-lucide="database" class="icon-inline"></i> Data beheer</button>
+  <div class="inst-nav-label">Locatie &amp; Vervoer</div>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-adressen"><i data-lucide="home" class="icon-inline"></i> Adressen</button>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-transport"><i data-lucide="car" class="icon-inline"></i> Transport</button>
+  <div class="inst-nav-label">Geavanceerd</div>
+  <button class="inst-nav-item" data-action="scroll-naar" data-sect="sect-api"><i data-lucide="key" class="icon-inline"></i> API sleutels</button>
+  <button class="inst-nav-item" id="nav-gebruikers" style="display:none;" data-action="scroll-naar" data-sect="sect-gebruikers"><i data-lucide="users" class="icon-inline"></i> Gebruikers</button>
 </nav>
 
 <!-- Rechter inhoud -->
@@ -63,17 +66,17 @@
         <input type="color" id="mijn-kleur-input" title="Mijn persoonkleur"
           style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;padding:2px;flex-shrink:0;"/>
         <span style="font-size:12px;color:var(--muted);">Mijn kleur</span>
-        <button class="btn btn-secondary btn-sm" onclick="slaaMijnKleurOp()">Opslaan</button>
+        <button class="btn btn-secondary btn-sm" data-action="sla-mijn-kleur">Opslaan</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="Auth.logout()" style="margin-left:auto;align-self:flex-start;">Uitloggen</button>
+    <button class="btn btn-secondary btn-sm" data-action="logout" style="margin-left:auto;align-self:flex-start;">Uitloggen</button>
   </div>
 
   <!-- Vaste roosters -->
   <div class="section-label" id="sect-roosters"><i data-lucide="clipboard-list" class="icon-inline"></i> Vaste roosters</div>
   <div class="info-box">Stel hier de vaste werkuren in. Aanpassingen of uitzonderingen voeg je toe als activiteit in de Agenda.</div>
   <div id="roosters-container"></div>
-  <button class="btn btn-primary" onclick="slaVastRoosterOp()" style="margin-top:4px;"><i data-lucide="save" class="icon-inline"></i> Roosters opslaan</button>
+  <button class="btn btn-primary" data-action="sla-vast-rooster" style="margin-top:4px;"><i data-lucide="save" class="icon-inline"></i> Roosters opslaan</button>
 
   <!-- Kalenders -->
   <div class="section-label" id="sect-kalenders" style="margin-top:1.5rem;"><i data-lucide="calendar-range" class="icon-inline"></i> Kalenders</div>
@@ -89,7 +92,7 @@
         <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Schoolvakanties Vlaanderen</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde vakanties kunnen worden gedupliceerd en aangepast. Eigen vakanties worden opgeslagen.</div>
         <div id="schoolvakanties-lijst"></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="voegCustomVakantieTO()">+ Vakantie toevoegen</button>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" data-action="voeg-custom-vakantie">+ Vakantie toevoegen</button>
       </div>
     </div>
   </div>
@@ -108,11 +111,11 @@
         <div id="feestdagen-invoer-rij" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="url" id="feestdagen-url" placeholder="webcal:// of https://…"
             style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-          <button class="btn btn-primary btn-sm" onclick="koppelFeestdagen()">Activeren</button>
+          <button class="btn btn-primary btn-sm" data-action="koppel-feestdagen">Activeren</button>
         </div>
         <div id="feestdagen-acties" style="display:none;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="syncFeestdagen()">↻ Sync nu</button>
-          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="ontkoppelFeestdagen()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
+          <button class="btn btn-secondary btn-sm" data-action="sync-feestdagen">↻ Sync nu</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" data-action="ontkoppel-feestdagen"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
         </div>
       </div>
     </div>
@@ -126,7 +129,7 @@
         <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Feestdagen beheer</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Ingebouwde feestdagen kunnen worden gedupliceerd en aangepast. Gegroepeerd per kalenderjaar.</div>
         <div id="feestdagen-lijst"></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="voegCustomFeestdagTO()">+ Feestdag toevoegen</button>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px;" data-action="voeg-custom-feestdag">+ Feestdag toevoegen</button>
       </div>
     </div>
   </div>
@@ -135,7 +138,7 @@
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Speciale gezinsdatums</div>
   <div class="info-box">Voeg speciale datums toe die gezinsbreed worden getoond in de agenda als informatieve kaart. Zowel éénmalig als jaarlijks herhalend, en meerdaags mogelijk.</div>
   <div id="gezinsdatums-lijst"></div>
-  <button class="btn btn-secondary btn-sm" style="margin-bottom:16px;" onclick="voegGezinsDatumToe()">+ Datum toevoegen</button>
+  <button class="btn btn-secondary btn-sm" style="margin-bottom:16px;" data-action="voeg-gezinsdatum">+ Datum toevoegen</button>
 
   <!-- Persoonlijke abonnementen -->
   <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 2px;">Persoonlijke abonnementen</div>
@@ -155,8 +158,8 @@
     <div style="display:flex;gap:8px;margin-top:10px;">
       <input type="text" id="nieuw-transport-naam" placeholder="Naam (bijv. Geert &amp; Nadine)"
         style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"
-        onkeydown="if(event.key==='Enter')voegTransportPersoonToe()"/>
-      <button class="btn btn-primary btn-sm" onclick="voegTransportPersoonToe()">+ Toevoegen</button>
+        data-enter-action="voeg-transport-persoon"/>
+      <button class="btn btn-primary btn-sm" data-action="voeg-transport-persoon">+ Toevoegen</button>
     </div>
   </div>
 
@@ -168,7 +171,7 @@
     <div style="display:flex;gap:8px;align-items:center;">
       <input type="number" id="inst-porties-kind" min="0.1" max="1.5" step="0.05" value="0.5"
         style="width:80px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-      <button class="btn btn-primary btn-sm" onclick="slaPortiesKindOp()">Opslaan</button>
+      <button class="btn btn-primary btn-sm" data-action="sla-porties-kind">Opslaan</button>
     </div>
   </div>
 
@@ -180,8 +183,8 @@
     <div style="display:flex;gap:8px;margin-top:10px;">
       <input type="text" id="nieuw-winkel-naam" placeholder="Naam (bijv. Aldi)"
         style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"
-        onkeydown="if(event.key==='Enter')voegWinkelToe()"/>
-      <button class="btn btn-primary btn-sm" onclick="voegWinkelToe()">+ Toevoegen</button>
+        data-enter-action="voeg-winkel"/>
+      <button class="btn btn-primary btn-sm" data-action="voeg-winkel">+ Toevoegen</button>
     </div>
   </div>
 
@@ -191,15 +194,15 @@
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:600;">Exporteer backup</div><div style="font-size:12px;color:var(--muted);">Download alle data als JSON</div><div style="font-size:11px;color:var(--muted-2);margin-top:3px;"><i data-lucide="key" style="width:11px;height:11px;display:inline-block;vertical-align:-0.1em;"></i> API-sleutels worden <em>niet</em> geëxporteerd en moeten na een herstel opnieuw worden ingesteld.</div></div>
-        <button class="btn btn-secondary btn-sm" onclick="exporteerData()"><i data-lucide="download" class="icon-inline"></i> Exporteer</button>
+        <button class="btn btn-secondary btn-sm" data-action="exporteer-data"><i data-lucide="download" class="icon-inline"></i> Exporteer</button>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:600;">Importeer backup</div><div style="font-size:12px;color:var(--muted);">Laad data vanuit JSON</div></div>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer;"><i data-lucide="upload" class="icon-inline"></i> Importeer<input type="file" accept=".json" onchange="importeerData(event)" style="display:none;"/></label>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;"><i data-lucide="upload" class="icon-inline"></i> Importeer<input type="file" accept=".json" data-action="importeer-data" style="display:none;"/></label>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between;">
         <div><div style="font-size:14px;font-weight:600;">Herladen van Supabase</div><div style="font-size:12px;color:var(--muted);">Haal alle data opnieuw op</div></div>
-        <button class="btn btn-secondary btn-sm" onclick="laadOp().then(()=>alert('✅ Herladen!'))"><i data-lucide="refresh-cw" class="icon-inline"></i> Herladen</button>
+        <button class="btn btn-secondary btn-sm" data-action="herlaad-data"><i data-lucide="refresh-cw" class="icon-inline"></i> Herladen</button>
       </div>
     </div>
   </div>
@@ -211,14 +214,14 @@
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Wordt gebruikt voor reistijdberekening in de Agenda. Typ "thuis" in een locatieveld om dit adres automatisch in te vullen.</div>
     <input type="text" id="inst-thuisadres" placeholder="Straat, huisnummer, gemeente"
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
-    <button class="btn btn-primary btn-sm" onclick="slaaThuisadresOp()">Opslaan</button>
+    <button class="btn btn-primary btn-sm" data-action="sla-thuisadres">Opslaan</button>
   </div>
   <div class="card" style="margin-top:8px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;"><i data-lucide="cloud-rain" class="icon-inline"></i> Buienradar link</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Plak hier de URL van jouw locatie op Buienradar (bijv. <code style="font-size:11px;">https://www.buienradar.be/weer/ardooie/BE/2800000</code>). Deze link wordt gebruikt in het weerwidget op de homepage.</div>
     <input type="url" id="inst-buienradar-url" placeholder="https://www.buienradar.be/weer/..."
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;"/>
-    <button class="btn btn-primary btn-sm" onclick="slaaBuienradarUrlOp()">Opslaan</button>
+    <button class="btn btn-primary btn-sm" data-action="sla-buienradar">Opslaan</button>
   </div>
   <div class="card" style="margin-top:8px;" id="werkadres-sectie">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;"><i data-lucide="briefcase" class="icon-inline"></i> Werkadressen</div>
@@ -235,15 +238,15 @@
       <div style="display:flex;gap:6px;margin-bottom:8px;">
         <input type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off"
           style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleApiKeyZicht()" id="api-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-apikey-zicht" id="api-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="slaApiKeyOp()">Opslaan</button>
-        <button class="btn btn-secondary btn-sm" onclick="sluitApiKeyForm()">Annuleren</button>
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderApiKey()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
+        <button class="btn btn-primary btn-sm" data-action="sla-apikey">Opslaan</button>
+        <button class="btn btn-secondary btn-sm" data-action="sluit-apikey-form">Annuleren</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" data-action="verwijder-apikey"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" onclick="openApiKeyForm()"><i data-lucide="key" class="icon-inline"></i> Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" data-action="open-apikey-form"><i data-lucide="key" class="icon-inline"></i> Wijzigen</button>
   </div>
   <div class="card" style="margin-top:8px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Google Maps API key</div>
@@ -252,15 +255,15 @@
       <div style="display:flex;gap:6px;margin-bottom:8px;">
         <input type="password" id="maps-key-input" placeholder="AIza…" autocomplete="off"
           style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMapsKeyZicht()" id="maps-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-mapskey-zicht" id="maps-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="slaMapsKeyOp()">Opslaan</button>
-        <button class="btn btn-secondary btn-sm" onclick="sluitMapsKeyForm()">Annuleren</button>
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" onclick="verwijderMapsKey()"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
+        <button class="btn btn-primary btn-sm" data-action="sla-mapskey">Opslaan</button>
+        <button class="btn btn-secondary btn-sm" data-action="sluit-mapskey-form">Annuleren</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" data-action="verwijder-mapskey"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" id="maps-key-wijzig-btn" onclick="openMapsKeyForm()"><i data-lucide="map" class="icon-inline"></i> Wijzigen</button>
+    <button class="btn btn-secondary btn-sm" id="maps-key-wijzig-btn" data-action="open-mapskey-form"><i data-lucide="map" class="icon-inline"></i> Wijzigen</button>
   </div>
 
   <!-- Admin: gebruikersbeheer (alleen gezinshoofd) -->
@@ -276,26 +279,26 @@
       <div class="form-grid">
         <div class="form-row">
           <label>Naam</label>
-          <input type="text" id="nu-naam" oninput="suggestKey()" placeholder="bijv. Thomas"/>
+          <input type="text" id="nu-naam" data-action="suggest-key" placeholder="bijv. Thomas"/>
         </div>
         <div class="form-row">
           <label>Emoji</label>
           <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;">
             <span style="font-size:11px;color:var(--muted);align-self:center;">Kies:</span>
-            <button type="button" onclick="kiesEmoji('🧑')" class="btn btn-secondary btn-sm">🧑</button>
-            <button type="button" onclick="kiesEmoji('👩')" class="btn btn-secondary btn-sm">👩</button>
-            <button type="button" onclick="kiesEmoji('👧')" class="btn btn-secondary btn-sm">👧</button>
-            <button type="button" onclick="kiesEmoji('👦')" class="btn btn-secondary btn-sm">👦</button>
-            <button type="button" onclick="kiesEmoji('🧒')" class="btn btn-secondary btn-sm">🧒</button>
-            <button type="button" onclick="kiesEmoji('👶')" class="btn btn-secondary btn-sm">👶</button>
-            <button type="button" onclick="kiesEmoji('👨')" class="btn btn-secondary btn-sm">👨</button>
-            <button type="button" onclick="kiesEmoji('👵')" class="btn btn-secondary btn-sm">👵</button>
+            <button type="button" data-action="kies-emoji" data-emoji="🧑" class="btn btn-secondary btn-sm">🧑</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👩" class="btn btn-secondary btn-sm">👩</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👧" class="btn btn-secondary btn-sm">👧</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👦" class="btn btn-secondary btn-sm">👦</button>
+            <button type="button" data-action="kies-emoji" data-emoji="🧒" class="btn btn-secondary btn-sm">🧒</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👶" class="btn btn-secondary btn-sm">👶</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👨" class="btn btn-secondary btn-sm">👨</button>
+            <button type="button" data-action="kies-emoji" data-emoji="👵" class="btn btn-secondary btn-sm">👵</button>
           </div>
           <input type="text" id="nu-emoji" value="👤" placeholder="of typ zelf" style="max-width:90px;font-size:18px;text-align:center;"/>
         </div>
         <div class="form-row">
           <label>Rol</label>
-          <select id="nu-rol" onchange="toggleKindVelden()">
+          <select id="nu-rol" data-action="toggle-kind-velden">
             <option value="gezinshoofd">Gezinshoofd</option>
             <option value="jeugd">Jeugd</option>
             <option value="kind">Kind (logt in zonder account)</option>
@@ -316,7 +319,7 @@
       </div>
       <div id="nu-msg" style="display:none;padding:10px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px;"></div>
       <div style="display:flex;justify-content:flex-end;">
-        <button class="btn btn-primary" id="nu-btn" onclick="maakNieuwAccount()">Aanmaken</button>
+        <button class="btn btn-primary" id="nu-btn" data-action="maak-nieuw-account">Aanmaken</button>
       </div>
     </div>
   </div>
@@ -332,8 +335,5 @@
 <script src="data-ical.js"></script>
 <script src="maps.js"></script>
 <script src="instellingen.js"></script>
-<script>
-void 0; // instellingen.js bevat alle logica
-</script>
 </body>
 </html>

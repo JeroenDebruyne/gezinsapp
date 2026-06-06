@@ -34,7 +34,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out" style="width:14px;height:14px;"></i></button>
+      <button class="sidebar-logout" id="sidebar-logout-btn" title="Uitloggen"><i data-lucide="log-out" style="width:14px;height:14px;"></i></button>
     </div>
   </div>
 </nav>
@@ -43,13 +43,21 @@
     <span class="mobile-nav-icon"><i data-lucide="home"></i></span>
     <span class="mobile-nav-label">Home</span>
   </a>
-  <button class="mobile-nav-item" onclick="toggleModules()">
+  <a class="mobile-nav-item" href="agenda.html" data-pagina="agenda">
+    <span class="mobile-nav-icon"><i data-lucide="calendar"></i></span>
+    <span class="mobile-nav-label">Agenda</span>
+  </a>
+  <a class="mobile-nav-item" href="todos.html" data-pagina="todos">
+    <span class="mobile-nav-icon"><i data-lucide="list-todo"></i></span>
+    <span class="mobile-nav-label">To-do's</span>
+  </a>
+  <button class="mobile-nav-item" id="mobile-nav-alles-btn">
     <span class="mobile-nav-icon"><i data-lucide="menu"></i></span>
     <span class="mobile-nav-label">Alles</span>
   </button>
 </nav>
-<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
-  <div class="module-sheet" onclick="event.stopPropagation()">
+<div class="module-overlay" id="module-overlay">
+  <div class="module-sheet" id="module-sheet">
     <div class="module-sheet-handle"></div>
     <div class="module-tiles">
       ${moduleTiles}
@@ -68,21 +76,61 @@
 
   // Module overlay controls
   window.toggleModules = function () { document.getElementById('module-overlay')?.classList.toggle('open'); };
-  window.sluitModules = function (e) {
-    if (e.target === document.getElementById('module-overlay'))
-      document.getElementById('module-overlay').classList.remove('open');
-  };
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') document.getElementById('module-overlay')?.classList.remove('open');
+  window.sluitModules = function () { document.getElementById('module-overlay')?.classList.remove('open'); };
+
+  // Escape: sluit module-overlay, recept-fiche of de bovenste open modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    document.getElementById('module-overlay')?.classList.remove('open');
+    var openFiche = document.querySelector('.recept-fiche-overlay.open');
+    if (openFiche) { openFiche.classList.remove('open'); return; }
+    var openBg = document.querySelector('.modal-bg.open');
+    if (openBg) {
+      var sluitBtn = openBg.querySelector('.modal .modal-sluit-btn');
+      if (sluitBtn) sluitBtn.click();
+      else openBg.classList.remove('open');
+    }
+  });
+
+  // Tab focus trap: houdt toetsenbordfocus binnen een open modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Tab') return;
+    var openBg = document.querySelector('.modal-bg.open');
+    if (!openBg) return;
+    var modal = openBg.querySelector('.modal');
+    if (!modal) return;
+    var all = modal.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+    var focusable = Array.prototype.filter.call(all, function(el) { return el.offsetParent !== null; });
+    if (!focusable.length) return;
+    var first = focusable[0], last = focusable[focusable.length - 1];
+    var inside = modal.contains(document.activeElement);
+    if (e.shiftKey) {
+      if (!inside || document.activeElement === first) { last.focus(); e.preventDefault(); }
+    } else {
+      if (!inside || document.activeElement === last) { first.focus(); e.preventDefault(); }
+    }
+  });
+
+  // Event delegation voor nav-knoppen (geen inline onclick= nodig)
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#sidebar-logout-btn')) {
+      if (typeof Auth !== 'undefined') Auth.logout();
+    } else if (e.target.closest('#mobile-nav-alles-btn')) {
+      document.getElementById('module-overlay')?.classList.toggle('open');
+    } else if (e.target === document.getElementById('module-overlay')) {
+      document.getElementById('module-overlay')?.classList.remove('open');
+    } else if (e.target.closest('#module-sheet') && !e.target.closest('#module-overlay > *')) {
+      // click inside sheet — do nothing (already handled)
+    }
   });
 
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-  // Lucide Icons — automatisch initialiseren bij DOM-wijzigingen
+  // Lucide Icons — lokale bundel, automatisch bij DOM-wijzigingen
   document.addEventListener('DOMContentLoaded', function () {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js';
+    s.src = 'lucide.min.js';
     s.onload = function () {
       lucide.createIcons();
       var _t = null;
@@ -90,9 +138,80 @@
         clearTimeout(_t);
         _t = setTimeout(function () { lucide.createIcons(); }, 40);
       }).observe(document.body, { childList: true, subtree: true });
+
+      // Auto-focus eerste interactief element wanneer modal opent
+      new MutationObserver(function(mutations) {
+        for (var i = 0; i < mutations.length; i++) {
+          var m = mutations[i];
+          if (m.type === 'attributes' && m.attributeName === 'class' &&
+              m.target.classList && m.target.classList.contains('modal-bg') &&
+              m.target.classList.contains('open')) {
+            (function(bg) {
+              setTimeout(function() {
+                var modal = bg.querySelector('.modal');
+                if (!modal || modal.contains(document.activeElement)) return;
+                var first = modal.querySelector(
+                  'input:not([type="hidden"]):not([disabled]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]):not(.modal-sluit-btn)'
+                );
+                if (first) first.focus();
+              }, 70);
+            })(m.target);
+          }
+        }
+      }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+      // Filter-tabs: wikkel in .filter-tabs-wrap voor overflow-fade
+      document.querySelectorAll('.filter-tabs').forEach(function(tabs) {
+        if (tabs.parentElement && !tabs.parentElement.classList.contains('filter-tabs-wrap')) {
+          var wrap = document.createElement('div');
+          wrap.className = 'filter-tabs-wrap';
+          tabs.parentNode.insertBefore(wrap, tabs);
+          wrap.appendChild(tabs);
+        }
+      });
     };
     document.head.appendChild(s);
   });
+
+  // ── _bevestig: vervangt native confirm() met een bottom-sheet ──
+  window._bevestig = function(bericht, onJa, opties) {
+    opties = opties || {};
+    var bevestigLabel = opties.bevestigLabel || 'Verwijderen';
+    var cancelLabel   = opties.cancelLabel   || 'Annuleren';
+    var danger        = opties.danger !== false;
+    var sub           = opties.sub || '';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'bevestig-overlay';
+
+    var subHtml = sub ? '<p class="bevestig-sub">' + sub + '</p>' : '';
+    overlay.innerHTML =
+      '<div class="bevestig-sheet">' +
+        '<div class="bevestig-sheet-handle"></div>' +
+        '<p class="bevestig-bericht">' + bericht + '</p>' +
+        subHtml +
+        '<div class="bevestig-knoppen">' +
+          '<button class="bevestig-ja' + (danger ? ' danger' : '') + '">' + bevestigLabel + '</button>' +
+          '<button class="bevestig-nee">' + cancelLabel + '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() { overlay.classList.add('open'); });
+
+    function sluit() {
+      overlay.classList.remove('open');
+      setTimeout(function() { overlay.remove(); }, 280);
+    }
+
+    overlay.querySelector('.bevestig-ja').addEventListener('click', function() { sluit(); onJa(); });
+    overlay.querySelector('.bevestig-nee').addEventListener('click', sluit);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) sluit(); });
+
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { sluit(); document.removeEventListener('keydown', esc); }
+    });
+  };
 
   // Persoonkleuren dynamisch toepassen vanuit localStorage
   function _pasPersonKleurenToe() {

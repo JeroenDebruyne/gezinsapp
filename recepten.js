@@ -39,13 +39,14 @@ function renderRecepten() {
     filtered = filtered.filter(r => r.naam.toLowerCase().includes(q) || (r.tags || []).some(t => t.toLowerCase().includes(q)) || (r.ingredienten || []).some(i => i.naam.toLowerCase().includes(q)));
   }
   const typeLabels = { avond: '<i data-lucide="utensils" class="icon-inline"></i> Avond', lunch: '<i data-lucide="leaf" class="icon-inline"></i> Lunch', weekend: '<i data-lucide="utensils" class="icon-inline"></i> Weekend', ontbijt: '<i data-lucide="coffee" class="icon-inline"></i> Ontbijt' };
+  const _thumbIcon = { avond: 'utensils', lunch: 'leaf', weekend: 'star', ontbijt: 'coffee' };
   document.getElementById('recipes-grid').innerHTML = filtered.map(r => {
     const types = r.types && r.types.length ? r.types : [r.type].filter(Boolean);
     const eersteType = types[0] || 'avond';
     const isActief = actieveFicheId != null && actieveFicheId == r.id;
     return `
     <div class="recept-card${isActief ? ' actief' : ''}" data-id="${r.id}" data-action="open-fiche" data-fiche-id="${r.id}">
-      <div class="recept-thumb thumb-${eersteType}"><i data-lucide="utensils" style="width:28px;height:28px;stroke-width:1.75;color:var(--surface);opacity:.7;"></i></div>
+      <div class="recept-thumb thumb-${eersteType}"><i data-lucide="${_thumbIcon[eersteType]||'utensils'}" style="width:28px;height:28px;stroke-width:1.75;color:var(--surface);opacity:.8;"></i></div>
       <div class="recept-info">
         <div class="recept-naam">${escHtml(r.naam)}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -358,12 +359,13 @@ function saveRecept() {
 }
 
 function verwijderRecept(id) {
-  if (!confirm('Recept verwijderen?')) return;
-  const r = recepten.find(r => r.id === id || r.id == id);
-  recepten = recepten.filter(r => r.id !== id && r.id != id);
-  if (actieveFicheId == id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
-  renderRecepten(); slaLokaalOp(); if (r?._sbId) sbDeleteRecept(r._sbId);
-  toonOpslagStatus('✅ Verwijderd');
+  _bevestig('Recept verwijderen?', function() {
+    const r = recepten.find(r => r.id === id || r.id == id);
+    recepten = recepten.filter(r => r.id !== id && r.id != id);
+    if (actieveFicheId == id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
+    renderRecepten(); slaLokaalOp(); if (r?._sbId) sbDeleteRecept(r._sbId);
+    toonOpslagStatus('✅ Verwijderd');
+  });
 }
 
 function openImportModal() {
@@ -560,8 +562,9 @@ function maakReceptVanJsonLd(data, url) {
 }
 
 // ── Event listeners ───────────────────────────────────────────
-document.addEventListener('click', function () {
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 const _modalCloses = {
@@ -624,7 +627,7 @@ document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   switch (el.dataset.action) {
-    case 'nav-instellingen': location.href = 'instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'open-keuze-modal': openKeuzeModal(); break;
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
     case 'open-fiche': openFiche(parseFloat(el.dataset.ficheId) || el.dataset.ficheId); break;

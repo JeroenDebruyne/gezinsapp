@@ -308,7 +308,7 @@ function renderContactFicheHtml(c,metSluitknop){
     <div class="fiche-naam"><i data-lucide="users" style="width:16px;height:16px;display:inline-block;vertical-align:-0.1em;margin-right:4px;"></i>${escHtml(nm)}</div>
     <div class="fiche-acties">
       ${kanBewerken?`
-        <button class="btn btn-secondary btn-sm" data-action="edit-contact" data-id="${c.id}" title="Bewerken"></button>
+        <button class="btn btn-secondary btn-sm" data-action="edit-contact" data-id="${c.id}" title="Bewerken"><i data-lucide="pencil" class="icon-inline"></i></button>
         <button class="btn btn-danger btn-sm" data-action="verwijder-contact" data-id="${c.id}" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
       `:''}
       ${metSluitknop?`<button class="btn btn-secondary btn-sm" data-action="sluit-contact-fiche" title="Sluiten">✕</button>`:''}
@@ -433,11 +433,12 @@ function saveContact(){
 
 function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
 function verwijderContact(id){
-  if(!confirm('Contact verwijderen?'))return;
-  const c=contacten.find(c=>c.id===id||c.id==id);
-  contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
-  if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
-  renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
+  _bevestig('Contact verwijderen?', function(){
+    const c=contacten.find(c=>c.id===id||c.id==id);
+    contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
+    if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
+    renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
+  });
 }
 document.getElementById('crm-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('crm-modal-bg'))closeCrmModal();});
 
@@ -449,8 +450,9 @@ document.getElementById('crm-fiche-overlay')?.addEventListener('click', function
 });
 
 // ── Profiel dropdown ──────────────────────────────────────────
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function(e){
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 // ── Sluitknop injecteren in modals ────────────────────────────
@@ -499,8 +501,8 @@ document.addEventListener('click', function(e) {
       e.stopPropagation();
       verwijderDatum(Number(el.dataset.index));
       break;
-    case 'nav-instellingen':
-      location.href = 'instellingen.html';
+    case 'toggle-profiel-menu':
+      document.getElementById('profiel-menu')?.classList.toggle('open');
       break;
     case 'open-crm-modal':
       openCrmModal();

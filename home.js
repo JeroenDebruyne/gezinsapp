@@ -146,7 +146,7 @@ function renderVandaag(datumISO, p) {
     if (perspectief) return !a.wie || a.wie.includes(perspectief) || a.wie.includes('familie');
     return true;
   }).sort((a, b) => tijdMinuten(a.start) - tijdMinuten(b.start));
-  if (!dagActs.length) { el.innerHTML = '<div class="empty-state"><i data-lucide="leaf" class="empty-icon"></i><p>Geen activiteiten vandaag</p></div>'; return; }
+  if (!dagActs.length) { el.innerHTML = '<div class="empty-state"><i data-lucide="sun" class="empty-icon"></i><p>Geen activiteiten vandaag</p><a href="agenda.html" class="btn btn-secondary btn-sm" style="margin-top:10px;display:inline-flex;">Plan activiteit →</a></div>'; return; }
   el.innerHTML = dagActs.map(a => `
     <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" data-action="open-act-detail" data-id="${Number(a.id)}">
       <div style="font-size:22px;display:flex;align-items:center;">${a.wie?.length === 1 ? (PEMOJI[a.wie[0]] ? `<span>${escHtml(PEMOJI[a.wie[0]])}</span>` : '<i data-lucide="calendar-range" style="width:20px;height:20px;"></i>') : '<i data-lucide="users" style="width:20px;height:20px;"></i>'}</div>
@@ -257,8 +257,9 @@ function weerIcon(code) {
 laadWeer();
 
 // ── Event listeners ───────────────────────────────────────────
-document.addEventListener('click', function () {
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 document.getElementById('act-detail-bg')?.addEventListener('click', function (e) {
@@ -283,7 +284,7 @@ document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   switch (el.dataset.action) {
-    case 'nav-instellingen': location.href = 'instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'stuur-voorbeeld-home': stuurVoorbeeldHome(el.dataset.tekst); break;
     case 'home-wis-chat': homeWisChat(); break;
     case 'home-bevestig': homeAgent.bevestig(); break;

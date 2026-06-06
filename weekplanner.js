@@ -232,11 +232,12 @@ function voegItemToe() {
 }
 
 function wisItem(dagKey, slotKey, idx) {
-  if (!confirm('Maaltijd verwijderen?')) return;
-  const items = getSlotItems(planning[dagKey] || {}, slotKey);
-  items.splice(idx, 1);
-  _saveItems(dagKey, slotKey, items);
-  renderPlanner();
+  _bevestig('Maaltijd verwijderen?', function() {
+    const items = getSlotItems(planning[dagKey] || {}, slotKey);
+    items.splice(idx, 1);
+    _saveItems(dagKey, slotKey, items);
+    renderPlanner();
+  });
 }
 function wijzigExtraEters(dagKey, slotKey, idx, delta) {
   const items = getSlotItems(planning[dagKey] || {}, slotKey);
@@ -279,12 +280,7 @@ function _getWeekKey(offset) {
   return d.getFullYear() + '-W' + String(week).padStart(2, '0');
 }
 
-async function voegToeAanBoodschappenlijst() {
-  const weekKey = _getWeekKey(weekOffsetP);
-  const opgeslagenWeek = localStorage.getItem('gezinsapp_boodschappen_week');
-  if (opgeslagenWeek === weekKey) {
-    if (!confirm('Je hebt al boodschappen toegevoegd voor deze week. Ben je zeker dat je de lijst wil overschrijven?')) return;
-  }
+async function _voegToeIntern(weekKey) {
   const dates = getWeekDates(weekOffsetP);
   const perIng = {};
   dates.forEach(date => {
@@ -312,7 +308,7 @@ async function voegToeAanBoodschappenlijst() {
     });
   });
   const snapshot = Object.values(perIng);
-  if (!snapshot.length) { alert('Er zijn geen ingrediënten gevonden in het weekmenu.'); return; }
+  if (!snapshot.length) { toonOpslagStatus('❌ Geen ingrediënten gevonden in het weekmenu.'); return; }
   await sbDeleteAlleReceptItems();
   boodschappenReceptItems = snapshot;
   slaLokaalOp();
@@ -320,7 +316,17 @@ async function voegToeAanBoodschappenlijst() {
   for (const item of snapshot) { await sbSaveBoodschapReceptItem(item); }
   slaLokaalOp();
   toonOpslagStatus('✅ ' + snapshot.length + ' ingrediënten opgeslagen');
-  if (confirm(snapshot.length + ' ingrediënten toegevoegd aan de boodschappenlijst.\nGa nu naar boodschappen?')) location.href = 'boodschappen.html';
+  _bevestig(snapshot.length + ' ingrediënten toegevoegd. Ga nu naar boodschappen?', function(){ location.href = 'boodschappen.html'; }, {bevestigLabel:'Naar boodschappen', cancelLabel:'Blijf hier', danger:false});
+}
+
+async function voegToeAanBoodschappenlijst() {
+  const weekKey = _getWeekKey(weekOffsetP);
+  const opgeslagenWeek = localStorage.getItem('gezinsapp_boodschappen_week');
+  if (opgeslagenWeek === weekKey) {
+    _bevestig('Boodschappenlijst overschrijven?', function(){ _voegToeIntern(weekKey); }, {sub:'Je hebt al boodschappen toegevoegd voor deze week.', bevestigLabel:'Overschrijven', danger:false});
+    return;
+  }
+  _voegToeIntern(weekKey);
 }
 
 document.getElementById('plan-modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('plan-modal-bg')) closePlanModal(); });
@@ -427,8 +433,9 @@ function wpStuurVoorbeeldVraag(tekst) {
 }
 
 // ── Event listeners ───────────────────────────────────────────
-document.addEventListener('click', function () {
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 const _wpInp = document.getElementById('wp-chat-input');
@@ -448,7 +455,7 @@ document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   switch (el.dataset.action) {
-    case 'nav-instellingen': location.href = 'instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'change-week-p': changeWeekP(parseInt(el.dataset.dir)); break;
     case 'open-wp-agent': openWpAgent(); break;
     case 'voeg-toe-boodschappen': voegToeAanBoodschappenlijst(); break;

@@ -47,7 +47,7 @@ function renderLegenda(){
     {key:'alle',label:'Alle',dot:''},
     ...PERSONEN.map(p=>({key:p,label:PLABEL[p],dot:DOT_KLEUR[p]}))
   ].map(item=>`
-    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" onclick="setFilter('${escHtml(item.key)}')">
+    <div class="legenda-item${actievePersoonFilter===item.key?' actief':''}" data-action="set-filter" data-key="${escHtml(item.key)}">
       ${item.dot?`<div class="legenda-dot ${item.dot}"></div>`:''}${escHtml(item.label)}
     </div>`).join('');
 }
@@ -102,7 +102,7 @@ function renderMaand(){
     const meerdaagsActs=getMeerdaagsOpDatum(cel.datum);
     const vakantie=isSchoolvakantie(cel.datum)&&!cel.andereMaand;
     return `<div class="dag-cel${cel.andereMaand?' andere-maand':''}${isGeselecteerd?' geselecteerd':''}"
-        onclick="selecteerDag('${cel.datum}')" ondblclick="event.stopPropagation();openActModalVoorDatum('${cel.datum}')">
+        data-action="selecteer-dag" data-datum="${cel.datum}">
       <div class="dag-num${isVandaag?' vandaag':''}${isWeekend&&!isVandaag?' weekend':''}">${cel.dagNr}</div>
       ${meerdaagsActs.slice(0,2).map(a=>{
         const kleur=KLEUR_BALK[(a.wie||[])[0]]||'var(--accent)';
@@ -188,7 +188,7 @@ function renderDagDetail(datumISO){
       <div class="dag-detail-titel">${dagLabel}</div>
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="dag-detail-drukte" style="background:${dc.bg};color:${dc.clr};display:inline-flex;align-items:center;gap:5px;"
-          onclick="openDOModal('${datumISO}','${dagLabel}')"><span style="width:7px;height:7px;border-radius:50%;background:${dc.dot};flex-shrink:0;"></span>${dc.lbl}</span>
+          data-action="open-do-modal" data-datum="${datumISO}" data-label="${escHtml(dagLabel)}"><span style="width:7px;height:7px;border-radius:50%;background:${dc.dot};flex-shrink:0;"></span>${dc.lbl}</span>
       </div>
     </div>
     ${vakantie?`<div style="padding:6px 12px;background:var(--normaal-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--normaal-clr);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;"><i data-lucide="umbrella" class="icon-inline"></i> ${escHtml(getVakantieNaam(datumISO))}</div>`:''}
@@ -220,7 +220,7 @@ function renderDagDetail(datumISO){
               </span>`).join('');
           const transportHtml=renderTransportDetail(a,datumISO);
           return `
-          <div class="act-rij${a.informatief?' informatief-rij':''}${conflictIds.has(a.id)?' conflict-rij':''}" onclick="${kanBewerken?`editActiviteit(${a.id})`:'void(0)'}">
+          <div class="act-rij${a.informatief?' informatief-rij':''}${conflictIds.has(a.id)?' conflict-rij':''}"${kanBewerken?` data-action="edit-act" data-id="${a.id}"`:''}>
             <div class="act-kleur-balk" style="background:${conflictIds.has(a.id)?'var(--druk-dot)':(a.informatief?'var(--muted-2)':balk)};${a.meerdaags?'border-radius:2px;':''}${a.informatief?'opacity:0.5;':''}" ></div>
             <div class="act-rij-body">
               <div class="act-rij-naam${a.prive?' prive':''}">
@@ -236,7 +236,7 @@ function renderDagDetail(datumISO){
               ${transportHtml}
             </div>
             ${kanBewerken?`<div class="act-rij-acties">
-              <button class="act-icon-btn" onclick="event.stopPropagation();verwijderActiviteit(${a.id},'${datumISO}')"><i data-lucide="trash-2" class="icon-inline"></i></button>
+              <button class="act-icon-btn" data-action="verwijder-act" data-id="${a.id}" data-datum="${datumISO}"><i data-lucide="trash-2" class="icon-inline"></i></button>
             </div>`:''}
           </div>`;
         }).join('')
@@ -485,7 +485,7 @@ function closeActModal(){
 
 function renderPersonenMS(){
   document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" onclick="togglePersoon('${escHtml(p)}')">
+    `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" data-action="toggle-persoon" data-persoon="${escHtml(p)}">
       ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 }
@@ -556,7 +556,7 @@ function renderContactKeuze(){
   if(!wrap) return;
   const metAdres=contacten.filter(c=>c.adres);
   if(!metAdres.length){wrap.innerHTML='';return;}
-  wrap.innerHTML=`<select onchange="kiesLocatieContact(this.value)"
+  wrap.innerHTML=`<select data-action="kies-locatie-contact"
     style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-family:inherit;max-width:100%;">
     <option value="">Adres van contact kiezen…</option>
     ${metAdres.map(c=>`<option value="${escHtml(c.adres)}">${escHtml(c.naam)}</option>`).join('')}
@@ -663,8 +663,7 @@ function verwijderActiviteit(id,datumISO){
     const el=document.getElementById('verwijder-modal-bg');
     el.classList.add('open');el.querySelector('.modal').scrollTop=0;
   } else {
-    if(!confirm('Activiteit verwijderen?'))return;
-    _doVerwijderVolledig(id);
+    _bevestig('Activiteit verwijderen?', function(){ _doVerwijderVolledig(id); });
   }
 }
 async function verwijderEnkelHerhaling(){
@@ -676,8 +675,7 @@ async function verwijderEnkelHerhaling(){
 function verwijderVolleActiviteit(){
   closeVerwijderModal();
   setTimeout(()=>{
-    if(!confirm('Volledige activiteit definitief verwijderen?'))return;
-    _doVerwijderVolledig(_verwijderActId);
+    _bevestig('Activiteit definitief verwijderen?', function(){ _doVerwijderVolledig(_verwijderActId); }, {bevestigLabel:'Definitief verwijderen'});
   },200);
 }
 function _doVerwijderVolledig(id){
@@ -712,7 +710,16 @@ function closeDOModal(){
 }
 
 document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg){closeActModal();_teugNaarHome();closeDOModal();closeIcalModal();}});
+  bg.addEventListener('click',e=>{
+    if(e.target!==bg) return;
+    switch(bg.id){
+      case 'act-modal-bg': closeActModal(); break; // closeActModal regelt zelf _teugNaarHome
+      case 'drukte-modal-bg': closeDOModal(); break;
+      case 'ical-modal-bg': closeIcalModal(); break;
+      case 'verwijder-modal-bg': closeVerwijderModal(); break;
+      case 'edit-recur-modal-bg': closeEditRecurModal(); break;
+    }
+  });
 });
 
 // ── iCal import & sync ────────────────────────────────────────
@@ -757,7 +764,13 @@ function openIcalModal(){
 
 async function icalLaadUrl(){
   let url=document.getElementById('ical-url').value.trim();
-  if(!url){ alert('Vul een URL in.'); return; }
+  if(!url){
+    const inp=document.getElementById('ical-url');
+    inp.style.borderColor='var(--accent)';inp.focus();
+    document.getElementById('ical-status').textContent='Vul een URL in.';
+    inp.addEventListener('input',function(){inp.style.borderColor='';document.getElementById('ical-status').textContent='';},{once:true});
+    return;
+  }
   document.getElementById('ical-status').textContent='⏳ Laden…';
   try {
     const text=await icalFetchUrl(url);
@@ -793,7 +806,7 @@ function icalToonPreview(){
     (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
   document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
-    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" onclick="icalToggleWie('${escHtml(p)}')">
+    `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" data-action="ical-toggle-wie" data-persoon="${escHtml(p)}">
       ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
 
@@ -854,8 +867,8 @@ function icalToonAbonnementen(){
       icalAbonnementen.map((a,i)=>`
         <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px;">
           <span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${escHtml(a.naam||a.url)}</span>
-          <button onclick="icalSyncEnkel(${i})" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--accent);">↻ Sync</button>
-          <button onclick="icalVerwijderAbo(${i})" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--druk-clr);">✕</button>
+          <button data-action="ical-sync-enkel" data-index="${i}" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--accent);">↻ Sync</button>
+          <button data-action="ical-verwijder-abo" data-index="${i}" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:99px;background:none;cursor:pointer;color:var(--druk-clr);">✕</button>
         </div>`).join('');
   });
 }
@@ -876,23 +889,93 @@ async function icalSyncEnkel(i){
 }
 
 async function icalVerwijderAbo(i){
-  if(!confirm('Abonnement verwijderen? De al geïmporteerde activiteiten blijven staan.')) return;
-  icalAbonnementen.splice(i,1);
-  await slaIcalAbonnementenOp();
-  icalToonAbonnementen();
+  _bevestig('Abonnement verwijderen?', async function(){
+    icalAbonnementen.splice(i,1);
+    await slaIcalAbonnementenOp();
+    icalToonAbonnementen();
+  }, {sub:'De al geïmporteerde activiteiten blijven staan.'});
 }
 
 function closeIcalModal(){
   document.getElementById('ical-modal-bg').classList.remove('open');
 }
 
-// ── Profiel dropdown ──────────────────────────────────────────
-function toggleProfielMenu(e){
-  e && e.stopPropagation();
-  document.getElementById('profiel-menu')?.classList.toggle('open');
-}
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
+// ── Centrale event delegation (clicks) ───────────────────────
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+
+  // Profiel dropdown sluiten bij klik buiten menu
+  if (!el || el.dataset.action !== 'toggle-profiel-menu') {
+    if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+      document.getElementById('profiel-menu')?.classList.remove('open');
+  }
+
+  if (!el) return;
+  const id = el.dataset.id, datum = el.dataset.datum;
+  switch (el.dataset.action) {
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
+    case 'set-filter': setFilter(el.dataset.key); break;
+    case 'selecteer-dag': selecteerDag(datum); break;
+    case 'open-do-modal': openDOModal(datum, el.dataset.label); break;
+    case 'edit-act': editActiviteit(parseFloat(id) || id); break;
+    case 'verwijder-act': e.stopPropagation(); verwijderActiviteit(parseFloat(id) || id, datum); break;
+    case 'toggle-persoon': togglePersoon(el.dataset.persoon); break;
+    case 'ical-toggle-wie': icalToggleWie(el.dataset.persoon); break;
+    case 'ical-sync-enkel': icalSyncEnkel(parseInt(el.dataset.index, 10)); break;
+    case 'ical-verwijder-abo': icalVerwijderAbo(parseInt(el.dataset.index, 10)); break;
+    case 'naar-vandaag': naarVandaag(); break;
+    case 'change-month': changeMonth(parseInt(el.dataset.dir, 10)); break;
+    case 'open-ical-modal': openIcalModal(); break;
+    case 'open-act-modal': openActModal(); break;
+    case 'toggle-meerdaags': toggleMeerdaags(); break;
+    case 'bereken-reistijd-auto': berekenReistijdAuto(); break;
+    case 'toggle-prive': togglePrive(); break;
+    case 'toggle-informatief': toggleInformatief(); break;
+    case 'close-act-modal': closeActModal(); break;
+    case 'save-activiteit': saveActiviteit(); break;
+    case 'select-override': selectOverride(el.dataset.niveau, el); break;
+    case 'close-do-modal': closeDOModal(); break;
+    case 'save-do-modal': saveDOModal(); break;
+    case 'ical-laad-url': icalLaadUrl(); break;
+    case 'close-ical-modal': closeIcalModal(); break;
+    case 'ical-importeer': icalImporteer(); break;
+    case 'verwijder-enkel-herhaling': verwijderEnkelHerhaling(); break;
+    case 'verwijder-volle-activiteit': verwijderVolleActiviteit(); break;
+    case 'close-verwijder-modal': closeVerwijderModal(); break;
+    case 'wijzig-enkel-dit': wijzigEnkelDit(); break;
+    case 'wijzig-alle-herhalingen': wijzigAlleHerhalingen(); break;
+    case 'close-edit-recur-modal': closeEditRecurModal(); break;
+  }
+});
+
+// ── Dubbelklik: dag-cel opent nieuwe activiteit ───────────────
+document.addEventListener('dblclick', function(e){
+  const el = e.target.closest('[data-action="selecteer-dag"]');
+  if (el) { e.stopPropagation(); openActModalVoorDatum(el.dataset.datum); }
+});
+
+// ── Change/input delegation ───────────────────────────────────
+document.addEventListener('change', function(e){
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  switch (el.dataset.action) {
+    case 'check-nachtspan': checkNachtspan(); break;
+    case 'kies-locatie-contact': kiesLocatieContact(el.value); break;
+    case 'ical-abo-check-toggle':
+      document.getElementById('ical-abo-naam-rij').style.display = el.checked ? 'block' : 'none';
+      break;
+  }
+});
+document.addEventListener('input', function(e){
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  if (el.dataset.action === 'check-nachtspan') checkNachtspan();
+  else if (el.dataset.action === 'locatie-input') { renderContactKeuze(); locatieCheckThuis(el); }
+});
+
+// ── Keydown: Enter in iCal-url laadt de agenda ────────────────
+document.getElementById('ical-url')?.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') icalLaadUrl();
 });
 document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('.modal-bg .modal').forEach(modal => {

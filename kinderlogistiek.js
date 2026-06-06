@@ -421,8 +421,8 @@ document.addEventListener('click', function(e) {
   const action = btn.dataset.action;
 
   switch (action) {
-    case 'nav-instellingen':
-      location.href = 'instellingen.html';
+    case 'toggle-profiel-menu':
+      document.getElementById('profiel-menu')?.classList.toggle('open');
       break;
 
     case 'change-week': {
@@ -501,4 +501,7 @@ document.getElementById('kl-act-modal')?.addEventListener('click', function(e) {
 });
 
 // ── Profiel dropdown ──────────────────────────────────────────
-document.addEventListener('click',function(){ document.getElementById('profiel-menu')?.classList.remove('open'); });
+document.addEventListener('click', function(e){
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
+});

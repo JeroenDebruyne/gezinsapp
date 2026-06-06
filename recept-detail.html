@@ -4,11 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recepten</title>
-<script>
-  const p = new URLSearchParams(location.search);
-  const id = p.get('id');
-  location.replace('recepten.html' + (id ? '?id=' + encodeURIComponent(id) : ''));
-</script>
 </head>
-<body></body>
+<body>
+<script src="recept-detail.js"></script>
+</body>
 </html>
