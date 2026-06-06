@@ -34,7 +34,7 @@
         <span class="sidebar-user-naam" id="sidebar-naam">…</span>
         <span class="sidebar-user-sub" id="sidebar-rol">…</span>
       </div>
-      <button class="sidebar-logout" onclick="Auth.logout()" title="Uitloggen"><i data-lucide="log-out" style="width:14px;height:14px;"></i></button>
+      <button class="sidebar-logout" id="sidebar-logout-btn" title="Uitloggen"><i data-lucide="log-out" style="width:14px;height:14px;"></i></button>
     </div>
   </div>
 </nav>
@@ -43,13 +43,13 @@
     <span class="mobile-nav-icon"><i data-lucide="home"></i></span>
     <span class="mobile-nav-label">Home</span>
   </a>
-  <button class="mobile-nav-item" onclick="toggleModules()">
+  <button class="mobile-nav-item" id="mobile-nav-alles-btn">
     <span class="mobile-nav-icon"><i data-lucide="menu"></i></span>
     <span class="mobile-nav-label">Alles</span>
   </button>
 </nav>
-<div class="module-overlay" id="module-overlay" onclick="sluitModules(event)">
-  <div class="module-sheet" onclick="event.stopPropagation()">
+<div class="module-overlay" id="module-overlay">
+  <div class="module-sheet" id="module-sheet">
     <div class="module-sheet-handle"></div>
     <div class="module-tiles">
       ${moduleTiles}
@@ -68,21 +68,31 @@
 
   // Module overlay controls
   window.toggleModules = function () { document.getElementById('module-overlay')?.classList.toggle('open'); };
-  window.sluitModules = function (e) {
-    if (e.target === document.getElementById('module-overlay'))
-      document.getElementById('module-overlay').classList.remove('open');
-  };
+  window.sluitModules = function () { document.getElementById('module-overlay')?.classList.remove('open'); };
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.getElementById('module-overlay')?.classList.remove('open');
+  });
+
+  // Event delegation voor nav-knoppen (geen inline onclick= nodig)
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#sidebar-logout-btn')) {
+      if (typeof Auth !== 'undefined') Auth.logout();
+    } else if (e.target.closest('#mobile-nav-alles-btn')) {
+      document.getElementById('module-overlay')?.classList.toggle('open');
+    } else if (e.target === document.getElementById('module-overlay')) {
+      document.getElementById('module-overlay')?.classList.remove('open');
+    } else if (e.target.closest('#module-sheet') && !e.target.closest('#module-overlay > *')) {
+      // click inside sheet — do nothing (already handled)
+    }
   });
 
   // Service worker registratie
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-  // Lucide Icons — automatisch initialiseren bij DOM-wijzigingen
+  // Lucide Icons — lokale bundel, automatisch bij DOM-wijzigingen
   document.addEventListener('DOMContentLoaded', function () {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js';
+    s.src = 'lucide.min.js';
     s.onload = function () {
       lucide.createIcons();
       var _t = null;

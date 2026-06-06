@@ -251,8 +251,9 @@ if (_boodCombo) {
 document.getElementById('winkel-sel-mob')?.addEventListener('change', e => switchWinkel(e.target.value));
 
 // ── Profiel dropdown ──────────────────────────────────────────
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function(e){
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 // ── Sluitknop injecteren in modals ────────────────────────────
@@ -284,7 +285,7 @@ document.addEventListener('click', function(e) {
     case 'reset-afgevinkt': resetAfgevinkt(); break;
     case 'voeg-extra-toe': voegExtraToe(); break;
     case 'switch-winkel': switchWinkel(el.dataset.winkel); break;
-    case 'ga-naar-instellingen': location.href='instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
   }
 });
 

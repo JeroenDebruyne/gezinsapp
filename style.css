@@ -907,3 +907,5 @@ svg.empty-icon,.empty-state svg.lucide{width:44px;height:44px;display:block;marg
   .dag-overzicht-compact{flex-wrap:wrap;}
   .dag-overzicht-compact .dag-compact-rechts{width:100%;justify-content:flex-start;margin-top:6px;}
 }
+
+.emoji-opt:hover{background:var(--bg-2);}

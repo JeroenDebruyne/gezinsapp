@@ -281,8 +281,9 @@ if (new URLSearchParams(location.search).get('nieuw')==='1') {
 document.getElementById('filter-sel-mob')?.addEventListener('change', e => setFilter(e.target.value, null));
 
 // ── Profiel dropdown ──────────────────────────────────────────
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function(e){
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 // ── Sluitknop injecteren in modals ────────────────────────────
@@ -339,8 +340,8 @@ document.addEventListener('click', function(e) {
     case 'filter-tab':
       setFilter(el.dataset.filter, el);
       break;
-    case 'ga-instellingen':
-      location.href = 'instellingen.html';
+    case 'toggle-profiel-menu':
+      document.getElementById('profiel-menu')?.classList.toggle('open');
       break;
   }
 });

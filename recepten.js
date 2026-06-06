@@ -560,8 +560,9 @@ function maakReceptVanJsonLd(data, url) {
 }
 
 // ── Event listeners ───────────────────────────────────────────
-document.addEventListener('click', function () {
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 const _modalCloses = {
@@ -624,7 +625,7 @@ document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   switch (el.dataset.action) {
-    case 'nav-instellingen': location.href = 'instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'open-keuze-modal': openKeuzeModal(); break;
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
     case 'open-fiche': openFiche(parseFloat(el.dataset.ficheId) || el.dataset.ficheId); break;

@@ -100,16 +100,16 @@ function renderVastRoosterPersoon(persoon,metLocatie){
     return `
     <div class="rooster-dag-rij" style="display:grid;grid-template-columns:130px 1fr${metLocatie?' 120px':''};gap:8px;align-items:center;">
       <label class="rooster-dag-label-wrap" style="font-size:13px;cursor:pointer;${d.actief?'font-weight:600;':'color:var(--muted-2);'}">
-        <input type="checkbox" ${d.actief?'checked':''} onchange="toggleVastDag('${persoon}','${dag}',this.checked)" style="width:auto;accent-color:var(--accent);flex-shrink:0;"/>
+        <input type="checkbox" ${d.actief?'checked':''} data-action="toggle-vast-dag" data-persoon="${persoon}" data-dag="${dag}" style="width:auto;accent-color:var(--accent);flex-shrink:0;"/>
         ${WERKDAGEN_LABELS[i]}
       </label>
       <div class="rooster-tijden-wrap" style="display:flex;gap:6px;align-items:center;${d.actief?'':'opacity:.3;pointer-events:none;'}">
-        <input type="time" value="${d.van||'08:00'}" onchange="updateVastRooster('${persoon}','${dag}','van',this.value)" style="flex:1;${inputStijl}"/>
+        <input type="time" value="${d.van||'08:00'}" data-action="update-vast-rooster" data-persoon="${persoon}" data-dag="${dag}" data-veld="van" style="flex:1;${inputStijl}"/>
         <span style="font-size:12px;color:var(--muted);flex-shrink:0;">→</span>
-        <input type="time" value="${d.tot||'17:00'}" onchange="updateVastRooster('${persoon}','${dag}','tot',this.value)" style="flex:1;${inputStijl}"/>
+        <input type="time" value="${d.tot||'17:00'}" data-action="update-vast-rooster" data-persoon="${persoon}" data-dag="${dag}" data-veld="tot" style="flex:1;${inputStijl}"/>
       </div>
       ${metLocatie?`<div class="rooster-locatie-wrap" style="${d.actief?'':'opacity:.3;'}">
-        <select onchange="updateVastRooster('${persoon}','${dag}','locatie',this.value)" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink);">
+        <select data-action="update-vast-rooster" data-persoon="${persoon}" data-dag="${dag}" data-veld="locatie" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink);">
           <option value="thuis"${(d.locatie||'thuis')==='thuis'?' selected':''}>Thuis</option>
           <option value="kantoor"${d.locatie==='kantoor'?' selected':''}>Kantoor</option>
         </select>
@@ -254,7 +254,7 @@ function renderWerkadressen(){
       </div>
       <input type="hidden" id="reistijd-${p.persoonKey}" value="${escHtml(geslagenReistijd)}"/>
     </div>`;
-  }).join('')+`<button class="btn btn-primary btn-sm" onclick="slaaWerkadressen()"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>`;
+  }).join('')+`<button class="btn btn-primary btn-sm" data-action="sla-werkadressen"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>`;
   ghProfielen.forEach(p=>{
     const el=document.getElementById('werkadres-'+p.persoonKey);
     if(!el) return;
@@ -405,7 +405,7 @@ async function laadGebruikersLijst() {
             </div>
           </div>
           <span style="font-size:11px;padding:3px 9px;border-radius:99px;background:${ROLKLEUR[p.rol]||'var(--bg-2)'};color:${ROLTXT[p.rol]||'var(--muted)'};font-weight:600;flex-shrink:0;">${escHtml(ROLLABEL[p.rol]||p.rol)}</span>
-          <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')" style="flex-shrink:0;"><i data-lucide="pencil" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Bewerken</button>
+          <button class="btn btn-secondary btn-sm" data-action="toggle-gebruiker-edit" data-id="${escHtml(p.id)}" style="flex-shrink:0;"><i data-lucide="pencil" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Bewerken</button>
         </div>
         <!-- Bewerk modus (verborgen) -->
         <div id="gedit-${escHtml(p.id)}" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
@@ -417,7 +417,7 @@ async function laadGebruikersLijst() {
             <div class="form-row">
               <label>Emoji</label>
               <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;">
-                ${['🧑','👩','👧','👦','🧒','👶','👨','👵'].map(e=>`<button type="button" onclick="document.getElementById('gedit-emoji-${escHtml(p.id)}').value='${e}'" class="btn btn-secondary btn-sm">${e}</button>`).join('')}
+                ${['🧑','👩','👧','👦','🧒','👶','👨','👵'].map(e=>`<button type="button" data-action="set-gedit-emoji" data-id="${escHtml(p.id)}" data-emoji="${e}" class="btn btn-secondary btn-sm">${e}</button>`).join('')}
               </div>
               <input type="text" id="gedit-emoji-${escHtml(p.id)}" value="${escHtml(p.emoji||'👤')}" style="max-width:70px;font-size:18px;text-align:center;"/>
             </div>
@@ -444,8 +444,8 @@ async function laadGebruikersLijst() {
           </div>
           <div id="gedit-msg-${escHtml(p.id)}" style="display:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:13px;margin-top:10px;"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
-            <button class="btn btn-secondary btn-sm" onclick="toggleGebruikerEdit('${escHtml(p.id)}')">Annuleren</button>
-            <button class="btn btn-primary" onclick="slaGebruikerOp('${escHtml(p.id)}')"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>
+            <button class="btn btn-secondary btn-sm" data-action="toggle-gebruiker-edit" data-id="${escHtml(p.id)}">Annuleren</button>
+            <button class="btn btn-primary" data-action="sla-gebruiker" data-id="${escHtml(p.id)}"><i data-lucide="save" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Opslaan</button>
           </div>
         </div>
       </div>`;
@@ -587,38 +587,38 @@ function renderGezinsDatums() {
     <div class="card" style="margin-bottom:8px;">
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <div style="position:relative;">
-          <button onclick="_kiesEmoji(event,${i})" style="font-size:22px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1.2;" title="Emoji kiezen">${d.emoji||'📅'}</button>
+          <button data-action="kies-gd-emoji" data-index="${i}" style="font-size:22px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1.2;" title="Emoji kiezen">${d.emoji||'📅'}</button>
           <div id="emoji-picker-${i}" style="display:none;position:absolute;top:34px;left:0;z-index:200;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px;display:none;flex-wrap:wrap;width:160px;gap:4px;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
-            ${EMOJI_OPTIES.map(e=>`<span onclick="_setEmoji(${i},'${e}')" style="font-size:20px;cursor:pointer;padding:2px 4px;border-radius:4px;" onmouseover="this.style.background='var(--bg-2)'" onmouseout="this.style.background=''">${e}</span>`).join('')}
+            ${EMOJI_OPTIES.map(e=>`<span class="emoji-opt" data-action="set-gd-emoji" data-index="${i}" data-emoji="${e}" style="font-size:20px;cursor:pointer;padding:2px 4px;border-radius:4px;">${e}</span>`).join('')}
           </div>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
           <input type="text" value="${escHtml(d.label||'')}" placeholder="Naam (bijv. Huwelijksverjaardag)"
-            oninput="gezinsDatums[${i}].label=this.value"
+            data-action="gd-label" data-index="${i}"
             style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <div style="display:flex;flex-direction:column;gap:2px;">
               <label style="font-size:10px;color:var(--muted);font-weight:600;">Startdatum</label>
-              <input type="date" value="${d.startDatum||''}" oninput="gezinsDatums[${i}].startDatum=this.value"
+              <input type="date" value="${d.startDatum||''}" data-action="gd-start" data-index="${i}"
                 style="padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
             </div>
             <div style="display:flex;flex-direction:column;gap:2px;">
               <label style="font-size:10px;color:var(--muted);font-weight:600;">Einddatum <span style="font-weight:400;">(opt.)</span></label>
-              <input type="date" value="${d.eindDatum||''}" oninput="gezinsDatums[${i}].eindDatum=this.value||null"
+              <input type="date" value="${d.eindDatum||''}" data-action="gd-eind" data-index="${i}"
                 style="padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
             </div>
             <div style="display:flex;flex-direction:column;gap:2px;">
               <label style="font-size:10px;color:var(--muted);font-weight:600;">&nbsp;</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:6px 0;">
-                <input type="checkbox" ${d.herhalend?'checked':''} onchange="gezinsDatums[${i}].herhalend=this.checked" style="width:14px;height:14px;cursor:pointer;"/>
+                <input type="checkbox" ${d.herhalend?'checked':''} data-action="gd-herhalend" data-index="${i}" style="width:14px;height:14px;cursor:pointer;"/>
                 Jaarlijks herhalen
               </label>
             </div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-          <button class="btn btn-primary btn-sm" onclick="slaGezinsDatumOp(${i})" style="white-space:nowrap;">Opslaan</button>
-          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);white-space:nowrap;" onclick="verwijderGezinsDatum(${i})"><i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Verwijder</button>
+          <button class="btn btn-primary btn-sm" data-action="sla-gezinsdatum" data-index="${i}" style="white-space:nowrap;">Opslaan</button>
+          <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);white-space:nowrap;" data-action="verwijder-gezinsdatum" data-index="${i}"><i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> Verwijder</button>
         </div>
       </div>
     </div>`).join('');
@@ -677,22 +677,22 @@ function _svItemHtml(v, isIngebouwd, idx) {
         <div style="font-size:13px;font-weight:600;">${escHtml(v.naam)}</div>
         <div style="font-size:11px;color:var(--muted);">${v.van===v.tot?v.van:v.van+' → '+v.tot}</div>
       </div>
-      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="dupliceerVakantie(${idx})">Dupliceer</button>
+      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" data-action="dupliceer-vakantie" data-index="${idx}">Dupliceer</button>
     </div>`;
   }
   return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-    <input type="color" value="${escHtml(v.kleur||'#e1f5ee')}" oninput="customSchoolvakanties[${idx}].kleur=this.value"
+    <input type="color" value="${escHtml(v.kleur||'#e1f5ee')}" data-action="cv-kleur" data-index="${idx}"
       style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;flex-shrink:0;"/>
     <input type="text" value="${escHtml(v.naam||'')}" placeholder="Naam"
-      oninput="customSchoolvakanties[${idx}].naam=this.value"
+      data-action="cv-naam" data-index="${idx}"
       style="flex:1;min-width:100px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-    <input type="date" value="${v.van||''}" oninput="customSchoolvakanties[${idx}].van=this.value"
+    <input type="date" value="${v.van||''}" data-action="cv-van" data-index="${idx}"
       style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
     <span style="font-size:11px;color:var(--muted);">→</span>
-    <input type="date" value="${v.tot||''}" oninput="customSchoolvakanties[${idx}].tot=this.value"
+    <input type="date" value="${v.tot||''}" data-action="cv-tot" data-index="${idx}"
       style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-    <button class="btn btn-primary btn-sm" onclick="slaCustomVakantieOp(${idx})">✓</button>
-    <button onclick="verwijderCustomVakantie(${idx})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+    <button class="btn btn-primary btn-sm" data-action="sla-custom-vakantie" data-index="${idx}">✓</button>
+    <button data-action="verwijder-custom-vakantie" data-index="${idx}" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
   </div>`;
 }
 
@@ -755,19 +755,19 @@ function _fdItemHtml(v, isIngebouwd, idx) {
         <div style="font-size:13px;font-weight:600;">${escHtml(v.naam)}</div>
         <div style="font-size:11px;color:var(--muted);">${v.van}</div>
       </div>
-      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" onclick="dupliceerFeestdag(${idx})">Dupliceer</button>
+      <button class="btn btn-secondary btn-sm" style="white-space:nowrap;" data-action="dupliceer-feestdag" data-index="${idx}">Dupliceer</button>
     </div>`;
   }
   return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-    <input type="color" value="${escHtml(v.kleur||'#fbeaf0')}" oninput="customFeestdagen[${idx}].kleur=this.value"
+    <input type="color" value="${escHtml(v.kleur||'#fbeaf0')}" data-action="cf-kleur" data-index="${idx}"
       style="width:28px;height:28px;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:1px;flex-shrink:0;"/>
     <input type="text" value="${escHtml(v.naam||'')}" placeholder="Naam"
-      oninput="customFeestdagen[${idx}].naam=this.value"
+      data-action="cf-naam" data-index="${idx}"
       style="flex:1;min-width:100px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-    <input type="date" value="${v.van||''}" oninput="customFeestdagen[${idx}].van=this.value;customFeestdagen[${idx}].tot=this.value"
+    <input type="date" value="${v.van||''}" data-action="cf-van" data-index="${idx}"
       style="padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-    <button class="btn btn-primary btn-sm" onclick="slaCustomFeestdagOp(${idx})">✓</button>
-    <button onclick="verwijderCustomFeestdag(${idx})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+    <button class="btn btn-primary btn-sm" data-action="sla-custom-feestdag" data-index="${idx}">✓</button>
+    <button data-action="verwijder-custom-feestdag" data-index="${idx}" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
   </div>`;
 }
 
@@ -831,10 +831,10 @@ function renderTransportPersonen() {
     const naam = typeof p === 'object' ? (p.naam || '') : p;
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
       <input type="text" value="${escHtml(naam)}"
-        oninput="transportPersonen[${i}] = typeof transportPersonen[${i}]==='object' ? {...transportPersonen[${i}],naam:this.value} : {naam:this.value}"
+        data-action="tp-naam" data-index="${i}"
         style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-      <button class="btn btn-primary btn-sm" onclick="slaTransportPersoonNaamOp(${i},this.previousElementSibling.value)">✓</button>
-      <button onclick="verwijderTransportPersoon(${i})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+      <button class="btn btn-primary btn-sm" data-action="sla-transport-naam" data-index="${i}">✓</button>
+      <button data-action="verwijder-transport-persoon" data-index="${i}" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
     </div>`;
   }).join('');
 }
@@ -889,10 +889,10 @@ function renderWinkels() {
   }
   el.innerHTML = WINKELS.map((w, i) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
     <input type="text" value="${escHtml(w)}"
-      oninput="WINKELS[${i}]=this.value"
+      data-action="winkel-naam" data-index="${i}"
       style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);"/>
-    <button class="btn btn-primary btn-sm" onclick="slaWinkelNaamOp(${i},this.previousElementSibling.value)">✓</button>
-    <button onclick="verwijderWinkel(${i})" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
+    <button class="btn btn-primary btn-sm" data-action="sla-winkel-naam" data-index="${i}">✓</button>
+    <button data-action="verwijder-winkel" data-index="${i}" style="background:none;border:none;cursor:pointer;color:var(--druk-clr);font-size:18px;line-height:1;padding:0 2px;">×</button>
   </div>`).join('');
 }
 
@@ -1032,11 +1032,11 @@ async function renderIcalAbonnementen(){
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
         ${opgeschort
-          ? `<button class="btn btn-primary btn-sm" onclick="aboHervatten(${i})">▶ Hervatten</button>`
-          : `<button class="btn btn-secondary btn-sm" onclick="aboOpschorten(${i})">⏸ Opschorten</button>
-             <button class="btn btn-secondary btn-sm" onclick="aboSyncNu(${i})">↻ Sync nu</button>`
+          ? `<button class="btn btn-primary btn-sm" data-action="abo-hervatten" data-index="${i}">▶ Hervatten</button>`
+          : `<button class="btn btn-secondary btn-sm" data-action="abo-opschorten" data-index="${i}">⏸ Opschorten</button>
+             <button class="btn btn-secondary btn-sm" data-action="abo-sync" data-index="${i}">↻ Sync nu</button>`
         }
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" onclick="aboVerwijderen(${i})">🗑 Verwijderen</button>
+        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);" data-action="abo-verwijderen" data-index="${i}">🗑 Verwijderen</button>
       </div>
     </div>`;
   }).join('');
@@ -1098,14 +1098,118 @@ async function aboVerwijderen(i){
   renderIcalAbonnementen();
 }
 
-// ── Sidebar (desktop) ────────────────────────────────────────
-// ── Profiel dropdown ─────────────────────────────────────────
-function toggleProfielMenu(e){
-  e && e.stopPropagation();
-  document.getElementById('profiel-menu')?.classList.toggle('open');
-}
-document.addEventListener('click', function(){
-  document.getElementById('profiel-menu')?.classList.remove('open');
+// ── Centrale event delegation (clicks) ───────────────────────
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+
+  // Profiel dropdown sluiten bij klik buiten menu
+  if (!el || el.dataset.action !== 'toggle-profiel-menu') {
+    if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+      document.getElementById('profiel-menu')?.classList.remove('open');
+  }
+
+  if (!el) return;
+  const i = parseInt(el.dataset.index, 10);
+  const id = el.dataset.id;
+  switch (el.dataset.action) {
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
+    case 'scroll-naar': scrollNaar(el.dataset.sect); break;
+    case 'sla-mijn-kleur': slaaMijnKleurOp(); break;
+    case 'logout': Auth.logout(); break;
+    case 'sla-vast-rooster': slaVastRoosterOp(); break;
+    case 'voeg-custom-vakantie': voegCustomVakantieTO(); break;
+    case 'koppel-feestdagen': koppelFeestdagen(); break;
+    case 'sync-feestdagen': syncFeestdagen(); break;
+    case 'ontkoppel-feestdagen': ontkoppelFeestdagen(); break;
+    case 'voeg-custom-feestdag': voegCustomFeestdagTO(); break;
+    case 'voeg-gezinsdatum': voegGezinsDatumToe(); break;
+    case 'voeg-transport-persoon': voegTransportPersoonToe(); break;
+    case 'sla-porties-kind': slaPortiesKindOp(); break;
+    case 'voeg-winkel': voegWinkelToe(); break;
+    case 'exporteer-data': exporteerData(); break;
+    case 'herlaad-data': laadOp().then(()=>alert('✅ Herladen!')); break;
+    case 'sla-thuisadres': slaaThuisadresOp(); break;
+    case 'sla-buienradar': slaaBuienradarUrlOp(); break;
+    case 'toggle-apikey-zicht': toggleApiKeyZicht(); break;
+    case 'sla-apikey': slaApiKeyOp(); break;
+    case 'sluit-apikey-form': sluitApiKeyForm(); break;
+    case 'verwijder-apikey': verwijderApiKey(); break;
+    case 'open-apikey-form': openApiKeyForm(); break;
+    case 'toggle-mapskey-zicht': toggleMapsKeyZicht(); break;
+    case 'sla-mapskey': slaMapsKeyOp(); break;
+    case 'sluit-mapskey-form': sluitMapsKeyForm(); break;
+    case 'verwijder-mapskey': verwijderMapsKey(); break;
+    case 'open-mapskey-form': openMapsKeyForm(); break;
+    case 'kies-emoji': kiesEmoji(el.dataset.emoji); break;
+    case 'maak-nieuw-account': maakNieuwAccount(); break;
+    case 'sla-werkadressen': slaaWerkadressen(); break;
+    case 'toggle-gebruiker-edit': toggleGebruikerEdit(id); break;
+    case 'set-gedit-emoji': { const inp = document.getElementById('gedit-emoji-' + id); if (inp) inp.value = el.dataset.emoji; break; }
+    case 'sla-gebruiker': slaGebruikerOp(id); break;
+    case 'kies-gd-emoji': _kiesEmoji(e, i); break;
+    case 'set-gd-emoji': _setEmoji(i, el.dataset.emoji); break;
+    case 'sla-gezinsdatum': slaGezinsDatumOp(i); break;
+    case 'verwijder-gezinsdatum': verwijderGezinsDatum(i); break;
+    case 'dupliceer-vakantie': dupliceerVakantie(i); break;
+    case 'sla-custom-vakantie': slaCustomVakantieOp(i); break;
+    case 'verwijder-custom-vakantie': verwijderCustomVakantie(i); break;
+    case 'dupliceer-feestdag': dupliceerFeestdag(i); break;
+    case 'sla-custom-feestdag': slaCustomFeestdagOp(i); break;
+    case 'verwijder-custom-feestdag': verwijderCustomFeestdag(i); break;
+    case 'sla-transport-naam': slaTransportPersoonNaamOp(i, el.previousElementSibling.value); break;
+    case 'verwijder-transport-persoon': verwijderTransportPersoon(i); break;
+    case 'sla-winkel-naam': slaWinkelNaamOp(i, el.previousElementSibling.value); break;
+    case 'verwijder-winkel': verwijderWinkel(i); break;
+    case 'abo-hervatten': aboHervatten(i); break;
+    case 'abo-opschorten': aboOpschorten(i); break;
+    case 'abo-sync': aboSyncNu(i); break;
+    case 'abo-verwijderen': aboVerwijderen(i); break;
+  }
+});
+
+// ── Change delegation ─────────────────────────────────────────
+document.addEventListener('change', function(e){
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const i = parseInt(el.dataset.index, 10);
+  switch (el.dataset.action) {
+    case 'importeer-data': importeerData(e); break;
+    case 'toggle-kind-velden': toggleKindVelden(); break;
+    case 'toggle-vast-dag': toggleVastDag(el.dataset.persoon, el.dataset.dag, el.checked); break;
+    case 'update-vast-rooster': updateVastRooster(el.dataset.persoon, el.dataset.dag, el.dataset.veld, el.value); break;
+    case 'gd-herhalend': gezinsDatums[i].herhalend = el.checked; break;
+  }
+});
+
+// ── Input delegation ──────────────────────────────────────────
+document.addEventListener('input', function(e){
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const i = parseInt(el.dataset.index, 10);
+  switch (el.dataset.action) {
+    case 'suggest-key': suggestKey(); break;
+    case 'gd-label': gezinsDatums[i].label = el.value; break;
+    case 'gd-start': gezinsDatums[i].startDatum = el.value; break;
+    case 'gd-eind': gezinsDatums[i].eindDatum = el.value || null; break;
+    case 'cv-kleur': customSchoolvakanties[i].kleur = el.value; break;
+    case 'cv-naam': customSchoolvakanties[i].naam = el.value; break;
+    case 'cv-van': customSchoolvakanties[i].van = el.value; break;
+    case 'cv-tot': customSchoolvakanties[i].tot = el.value; break;
+    case 'cf-kleur': customFeestdagen[i].kleur = el.value; break;
+    case 'cf-naam': customFeestdagen[i].naam = el.value; break;
+    case 'cf-van': customFeestdagen[i].van = el.value; customFeestdagen[i].tot = el.value; break;
+    case 'tp-naam': transportPersonen[i] = (typeof transportPersonen[i] === 'object') ? { ...transportPersonen[i], naam: el.value } : { naam: el.value }; break;
+    case 'winkel-naam': WINKELS[i] = el.value; break;
+  }
+});
+
+// ── Keydown delegation (Enter in toevoeg-velden) ──────────────
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter') return;
+  const el = e.target.closest('[data-enter-action]');
+  if (!el) return;
+  if (el.dataset.enterAction === 'voeg-transport-persoon') voegTransportPersoonToe();
+  else if (el.dataset.enterAction === 'voeg-winkel') voegWinkelToe();
 });
 document.addEventListener('DOMContentLoaded', function(){
   // ── Sluitknop injecteren in alle modals ──────────────────────

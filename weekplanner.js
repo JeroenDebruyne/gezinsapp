@@ -427,8 +427,9 @@ function wpStuurVoorbeeldVraag(tekst) {
 }
 
 // ── Event listeners ───────────────────────────────────────────
-document.addEventListener('click', function () {
-  document.getElementById('profiel-menu')?.classList.remove('open');
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('#topbar-user') && !e.target.closest('#profiel-menu'))
+    document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
 const _wpInp = document.getElementById('wp-chat-input');
@@ -448,7 +449,7 @@ document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   switch (el.dataset.action) {
-    case 'nav-instellingen': location.href = 'instellingen.html'; break;
+    case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'change-week-p': changeWeekP(parseInt(el.dataset.dir)); break;
     case 'open-wp-agent': openWpAgent(); break;
     case 'voeg-toe-boodschappen': voegToeAanBoodschappenlijst(); break;

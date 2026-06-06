@@ -204,7 +204,7 @@
     <span class="opslag-status" id="opslag-status"></span>
     <span id="dev-badge" style="display:none;font-size:10px;background:var(--c-odiel);color:var(--c-odiel-t);padding:2px 8px;border-radius:99px;font-weight:600;">🔧 dev</span>
     <div class="topbar-user-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="location.href='instellingen.html'">
+      <div class="topbar-user" id="topbar-user" data-action="toggle-profiel-menu">
         <span class="avatar" id="topbar-emoji">🧑</span>
         <span class="naam" id="topbar-naam">…</span>
       </div>
@@ -222,7 +222,7 @@
     <div class="agenda-split-left">
       <!-- Maand titel -->
       <div class="agenda-maand-titel" id="agenda-maand-titel"></div>
-      <div class="agenda-jaar" id="agenda-jaar" onclick="naarVandaag()">← Terug naar vandaag</div>
+      <div class="agenda-jaar" id="agenda-jaar" data-action="naar-vandaag">← Terug naar vandaag</div>
 
       <!-- Persoon legenda -->
       <div class="persoon-legenda" id="persoon-legenda"></div>
@@ -230,11 +230,11 @@
       <!-- Maand navigatie -->
       <div class="maand-nav">
         <div style="display:flex;align-items:center;gap:2px;">
-          <button class="maand-nav-btn" onclick="changeMonth(-1)">‹</button>
+          <button class="maand-nav-btn" data-action="change-month" data-dir="-1">‹</button>
           <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
-          <button class="maand-nav-btn" onclick="changeMonth(1)">›</button>
+          <button class="maand-nav-btn" data-action="change-month" data-dir="1">›</button>
         </div>
-        <button class="maand-nav-btn" onclick="openIcalModal()" title="iCal importeren" style="font-size:16px;"><i data-lucide="download" style="width:16px;height:16px;"></i></button>
+        <button class="maand-nav-btn" data-action="open-ical-modal" title="iCal importeren" style="font-size:16px;"><i data-lucide="download" style="width:16px;height:16px;"></i></button>
       </div>
 
       <!-- Weekdagen header: Ma t/m Zo -->
@@ -260,7 +260,7 @@
 </main>
 
 <!-- FAB -->
-<button class="fab" onclick="openActModal()" title="Activiteit toevoegen">＋</button>
+<button class="fab" data-action="open-act-modal" title="Activiteit toevoegen">＋</button>
 
 <!-- ══ MODAL: Activiteit ══ -->
 <div class="modal-bg" id="act-modal-bg">
@@ -279,7 +279,7 @@
   </div>
 
   <!-- Meerdaagse toggle -->
-  <div class="meerdaags-toggle-rij" onclick="toggleMeerdaags()">
+  <div class="meerdaags-toggle-rij" data-action="toggle-meerdaags">
     <div>
       <div style="font-size:15px;font-weight:500;color:var(--ink);"><i data-lucide="calendar-range" class="icon-inline"></i> Meerdaagse activiteit</div>
       <div style="font-size:12px;color:var(--muted);">Bijv. vakantie, schoolkamp, …</div>
@@ -290,14 +290,14 @@
   <!-- Eendaagse velden -->
   <div id="eendaags-velden">
     <div class="form-grid">
-      <div class="form-row"><label>Startuur</label><input type="time" id="a-start" oninput="checkNachtspan()"/></div>
-      <div class="form-row"><label>Einduur <span id="nachtspan-hint" style="display:none;font-size:11px;font-weight:400;color:var(--muted);">(volgende dag)</span></label><input type="time" id="a-eind-uur" oninput="checkNachtspan()"/></div>
+      <div class="form-row"><label>Startuur</label><input type="time" id="a-start" data-action="check-nachtspan"/></div>
+      <div class="form-row"><label>Einduur <span id="nachtspan-hint" style="display:none;font-size:11px;font-weight:400;color:var(--muted);">(volgende dag)</span></label><input type="time" id="a-eind-uur" data-action="check-nachtspan"/></div>
       <div class="form-row"><label>Reistijd heen (min)</label><input type="number" id="a-reis-heen" placeholder="0" min="0"/></div>
       <div class="form-row"><label>Reistijd terug (min)</label><input type="number" id="a-reis-terug" placeholder="0" min="0"/></div>
     </div>
     <div class="form-row">
       <label>Frequentie</label>
-      <select id="a-freq" onchange="checkNachtspan()">
+      <select id="a-freq" data-action="check-nachtspan">
         <option value="wekelijks">Wekelijks</option>
         <option value="tweewekelijks">Tweewekelijks</option>
         <option value="maandelijks">Maandelijks</option>
@@ -306,7 +306,7 @@
       </select>
     </div>
     <div class="form-grid">
-      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" oninput="checkNachtspan()"/></div>
+      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" data-action="check-nachtspan"/></div>
       <div class="form-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
     </div>
     <div class="form-row">
@@ -328,8 +328,8 @@
   <div class="form-row">
     <label>Locatie</label>
     <div style="display:flex;gap:6px;">
-      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" oninput="renderContactKeuze();locatieCheckThuis(this)"/>
-      <button type="button" id="btn-reistijd-auto" onclick="berekenReistijdAuto()" title="Reistijd berekenen via Google Maps"
+      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" data-action="locatie-input"/>
+      <button type="button" id="btn-reistijd-auto" data-action="bereken-reistijd-auto" title="Reistijd berekenen via Google Maps"
         style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;"><i data-lucide="map" style="width:16px;height:16px;"></i></button>
     </div>
     <div id="locatie-contact-wrap" style="margin-top:6px;"></div>
@@ -351,7 +351,7 @@
   </div>
 
   <!-- Privé toggle -->
-  <div class="prive-toggle" onclick="togglePrive()">
+  <div class="prive-toggle" data-action="toggle-prive">
     <div class="prive-toggle-left">
       <span class="prive-toggle-label"><i data-lucide="lock" class="icon-inline"></i> Privé activiteit</span>
       <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
@@ -360,7 +360,7 @@
   </div>
 
   <!-- Informatief toggle -->
-  <div class="prive-toggle" onclick="toggleInformatief()">
+  <div class="prive-toggle" data-action="toggle-informatief">
     <div class="prive-toggle-left">
       <span class="prive-toggle-label"><i data-lucide="pin" class="icon-inline"></i> Informatieve activiteit</span>
       <span class="prive-toggle-sub">Geen impact op drukte (schoolreis, herinnering, …)</span>
@@ -410,8 +410,8 @@
   </div>
 
   <div class="modal-actions">
-    <button class="modal-btn modal-btn-cancel" onclick="closeActModal()">Annuleren</button>
-    <button class="modal-btn modal-btn-primary" onclick="saveActiviteit()">Opslaan</button>
+    <button class="modal-btn modal-btn-cancel" data-action="close-act-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" data-action="save-activiteit">Opslaan</button>
   </div>
 </div>
 </div>
@@ -422,13 +422,13 @@
   <div class="modal-handle"></div>
   <h3 id="do-titel">Drukte aanpassen</h3>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--rustig-bg);color:var(--rustig-clr);border:2px solid var(--rustig-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('rustig',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--rustig-dot);margin:0 auto 6px;"></span>Rustig</button>
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--normaal-bg);color:var(--normaal-clr);border:2px solid var(--normaal-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('normaal',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--normaal-dot);margin:0 auto 6px;"></span>Normaal</button>
-    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);border:2px solid var(--druk-dot);cursor:pointer;font-size:13px;font-weight:700;" onclick="selectOverride('druk',this)"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--druk-dot);margin:0 auto 6px;"></span>Druk</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--rustig-bg);color:var(--rustig-clr);border:2px solid var(--rustig-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="rustig"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--rustig-dot);margin:0 auto 6px;"></span>Rustig</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--normaal-bg);color:var(--normaal-clr);border:2px solid var(--normaal-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="normaal"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--normaal-dot);margin:0 auto 6px;"></span>Normaal</button>
+    <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);border:2px solid var(--druk-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="druk"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--druk-dot);margin:0 auto 6px;"></span>Druk</button>
   </div>
   <div class="modal-actions">
-    <button class="modal-btn modal-btn-cancel" onclick="closeDOModal()">Annuleren</button>
-    <button class="modal-btn modal-btn-primary" onclick="saveDOModal()">Opslaan</button>
+    <button class="modal-btn modal-btn-cancel" data-action="close-do-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" data-action="save-do-modal">Opslaan</button>
   </div>
 </div>
 </div>
@@ -443,9 +443,9 @@
   <div class="form-row">
     <label>iCal-link (webcal:// of https://)</label>
     <input type="url" id="ical-url" placeholder="webcal://calendar.google.com/…"
-      style="font-size:13px;" onkeydown="if(event.key==='Enter')icalLaadUrl()"/>
+      style="font-size:13px;"/>
   </div>
-  <button class="btn btn-primary btn-sm" onclick="icalLaadUrl()" style="margin-bottom:6px;">Laden</button>
+  <button class="btn btn-primary btn-sm" data-action="ical-laad-url" style="margin-bottom:6px;">Laden</button>
   <p style="font-size:11px;color:var(--muted);margin:4px 0 8px;">
     Google Agenda: Instellingen → jouw agenda → "Geheime adres in iCal-indeling"<br>
     Outlook: Instellingen → Kalender → Gedeelde kalenders → Publiceren
@@ -470,7 +470,7 @@
     <!-- Abonnement bewaren (alleen bij URL-import) -->
     <div id="ical-abo-rij" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1.5px solid var(--border);">
       <input type="checkbox" id="ical-abo-check" style="width:auto;accent-color:var(--accent);"
-        onchange="document.getElementById('ical-abo-naam-rij').style.display=this.checked?'block':'none'"/>
+        data-action="ical-abo-check-toggle"/>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:5px;"><i data-lucide="refresh-cw" class="icon-inline"></i> Bewaar als abonnement</div>
         <div style="font-size:11px;color:var(--muted);">Wijzigingen worden automatisch bijgehouden</div>
@@ -486,9 +486,9 @@
   </div>
 
   <div class="modal-actions" style="margin-top:16px;">
-    <button class="modal-btn modal-btn-cancel" onclick="closeIcalModal()">Annuleren</button>
+    <button class="modal-btn modal-btn-cancel" data-action="close-ical-modal">Annuleren</button>
     <button class="modal-btn modal-btn-primary" id="ical-import-btn"
-      style="display:none;" onclick="icalImporteer()">Importeren</button>
+      style="display:none;" data-action="ical-importeer">Importeren</button>
   </div>
 </div>
 </div>
@@ -503,15 +503,15 @@
     Wat wil je verwijderen?
   </p>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <button onclick="verwijderEnkelHerhaling()" class="herhaling-btn-enkel">
+    <button data-action="verwijder-enkel-herhaling" class="herhaling-btn-enkel">
       <i data-lucide="calendar-days" class="icon-inline"></i> Alleen deze dag<br>
       <span class="herhaling-btn-sub">Verwijder enkel deze ene herhaling</span>
     </button>
-    <button onclick="verwijderVolleActiviteit()" style="padding:14px;border:2px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+    <button data-action="verwijder-volle-activiteit" style="padding:14px;border:2px solid var(--druk-dot);border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
       <i data-lucide="trash-2" class="icon-inline"></i> Volledige activiteit<br>
       <span style="font-size:12px;font-weight:400;">Verwijder alle herhalingen definitief</span>
     </button>
-    <button onclick="closeVerwijderModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
+    <button data-action="close-verwijder-modal" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
   </div>
 </div>
 </div>
@@ -526,15 +526,15 @@
     Wat wil je bewerken?
   </p>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <button onclick="wijzigEnkelDit()" class="herhaling-btn-enkel">
+    <button data-action="wijzig-enkel-dit" class="herhaling-btn-enkel">
       <i data-lucide="calendar-days" class="icon-inline"></i> Alleen deze dag<br>
       <span class="herhaling-btn-sub">Wijzig enkel deze ene herhaling</span>
     </button>
-    <button onclick="wijzigAlleHerhalingen()" style="padding:14px;border:2px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
+    <button data-action="wijzig-alle-herhalingen" style="padding:14px;border:2px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;text-align:left;">
       <i data-lucide="repeat" class="icon-inline"></i> Alle herhalingen<br>
       <span style="font-size:12px;font-weight:400;">Wijzig de activiteit voor alle data</span>
     </button>
-    <button onclick="closeEditRecurModal()" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
+    <button data-action="close-edit-recur-modal" style="padding:12px;border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:14px;cursor:pointer;">Annuleren</button>
   </div>
 </div>
 </div>
@@ -545,8 +545,5 @@
 <script src="data-ical.js"></script>
 <script src="maps.js"></script>
 <script src="agenda.js"></script>
-<script>
-void 0; // agenda.js bevat alle logica
-</script>
 </body>
 </html>
