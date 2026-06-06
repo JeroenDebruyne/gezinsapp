@@ -476,7 +476,7 @@ document.addEventListener('click', function (e) {
       break;
     case 'kies-plan-k': {
       const k = el.dataset.k;
-      kiesPlanK(isNaN(k) ? k : parseInt(k));
+      kiesPlanK(isNaN(k) ? k : parseFloat(k));
       break;
     }
     case 'toggle-wie-stap':

@@ -328,7 +328,7 @@ function saveRecept() {
   });
   const bestaande = editId ? recepten.find(r => r.id == editId) : null;
   const recept = {
-    id: editId ? parseInt(editId) || editId : _maakId(),
+    id: editId ? parseFloat(editId) || editId : _maakId(),
     _sbId: bestaande?._sbId,
     naam,
     types,
@@ -564,11 +564,15 @@ document.addEventListener('click', function () {
   document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
-['recept-modal-bg', 'import-modal-bg', 'keuze-modal-bg', 'link-modal-bg'].forEach(id => {
+const _modalCloses = {
+  'recept-modal-bg': closeReceptModal,
+  'import-modal-bg': closeImportModal,
+  'keuze-modal-bg': sluitKeuzeModal,
+  'link-modal-bg': sluitLinkModal,
+};
+Object.entries(_modalCloses).forEach(([id, closeFn]) => {
   const el = document.getElementById(id);
-  if (el) el.addEventListener('click', e => {
-    if (e.target === el) { closeReceptModal(); closeImportModal(); sluitKeuzeModal(); sluitLinkModal(); }
-  });
+  if (el) el.addEventListener('click', e => { if (e.target === el) closeFn(); });
 });
 
 document.getElementById('recept-fiche-overlay')?.addEventListener('click', function (e) {
@@ -623,10 +627,10 @@ document.addEventListener('click', function (e) {
     case 'nav-instellingen': location.href = 'instellingen.html'; break;
     case 'open-keuze-modal': openKeuzeModal(); break;
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
-    case 'open-fiche': openFiche(parseInt(el.dataset.ficheId) || el.dataset.ficheId); break;
+    case 'open-fiche': openFiche(parseFloat(el.dataset.ficheId) || el.dataset.ficheId); break;
     case 'sluit-fiche': sluitFiche(); break;
     case 'bewerk-recept': openReceptModal(recepten.find(r => r.id == el.dataset.id)); break;
-    case 'verwijder-recept': verwijderRecept(parseInt(el.dataset.id) || el.dataset.id); break;
+    case 'verwijder-recept': verwijderRecept(parseFloat(el.dataset.id) || el.dataset.id); break;
     case 'close-import-modal': closeImportModal(); break;
     case 'start-import': startImport(); break;
     case 'naar-stap-1': naarStap(1); break;

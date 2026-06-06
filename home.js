@@ -292,8 +292,8 @@ document.addEventListener('click', function (e) {
     case 'navigeer': location.href = el.dataset.href; break;
     case 'sluit-act-detail': sluitActDetail(); break;
     case 'wissel-persoon': wisselPersoon(el.dataset.key); break;
-    case 'open-act-detail': openActDetail(parseInt(el.dataset.id) || el.dataset.id); break;
-    case 'toggle-todo-preview': toggleTodo(parseInt(el.dataset.id) || el.dataset.id); break;
+    case 'open-act-detail': openActDetail(parseFloat(el.dataset.id) || el.dataset.id); break;
+    case 'toggle-todo-preview': toggleTodo(parseFloat(el.dataset.id) || el.dataset.id); break;
     case 'ga-todos': location.href = 'todos.html'; break;
   }
 });
