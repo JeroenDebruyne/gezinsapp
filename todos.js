@@ -1,7 +1,7 @@
 // ── Init ──────────────────────────────────────────────────────
 Auth.initPagina('todos');
 
-let actieveFilter = 'open';
+let actieveFilter = 'mijn';
 let todoEditId    = null;
 let priveAan      = false;
 let geselecteerdePersonen = [];
@@ -48,20 +48,14 @@ function renderTodos() {
   // Filter toepassen
   let gefilterd;
   switch (actieveFilter) {
-    case 'open':
-      gefilterd = zichtbaar.filter(t=>!t.gedaan);
+    case 'mijn':
+      gefilterd = zichtbaar.filter(t=>!t.gedaan && (t.wie||[]).includes(mijnKey));
       break;
     case 'vandaag':
       gefilterd = zichtbaar.filter(t=>!t.gedaan && t.deadline===vandaagISO);
       break;
-    case 'mijn':
-      gefilterd = zichtbaar.filter(t=>!t.gedaan && (t.wie||[]).includes(mijnKey));
-      break;
-    case 'gedaan':
-      gefilterd = zichtbaar.filter(t=>t.gedaan);
-      break;
     default:
-      gefilterd = zichtbaar;
+      gefilterd = todos.slice(); // alle to-do's van iedereen, ook afgewerkt
   }
 
   // Sorteren: verlopen eerst, dan prioriteit, dan deadline
@@ -79,24 +73,28 @@ function renderTodos() {
     return 0;
   });
 
-  // Stats
-  const totaalOpen = zichtbaar.filter(t=>!t.gedaan).length;
-  const verlopen   = zichtbaar.filter(t=>!t.gedaan&&t.deadline&&t.deadline<vandaagISO).length;
-  const vandaag    = zichtbaar.filter(t=>!t.gedaan&&t.deadline===vandaagISO).length;
-  document.getElementById('stats-balk').innerHTML = `
-    <div class="stat-chip"><span class="stat-num">${totaalOpen}</span> open</div>
-    ${vandaag?`<div class="stat-chip"><span class="stat-num" style="color:var(--normaal-dot);">${vandaag}</span> vandaag</div>`:''}
-    ${verlopen?`<div class="stat-chip"><span class="stat-num" style="color:var(--druk-dot);">${verlopen}</span> verlopen</div>`:''}
-  `;
+  // Badge counts
+  const cntMijn    = zichtbaar.filter(t=>!t.gedaan&&(t.wie||[]).includes(mijnKey)).length;
+  const cntVandaag = zichtbaar.filter(t=>!t.gedaan&&t.deadline===vandaagISO).length;
+  const cntAlle    = todos.length;
+  function _setBadge(id, n) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = n > 0 ? n : '';
+    el.style.display = n > 0 ? '' : 'none';
+  }
+  _setBadge('badge-mijn',    cntMijn);
+  _setBadge('badge-vandaag', cntVandaag);
+  _setBadge('badge-alle',    cntAlle);
 
   // Lijst
   const el = document.getElementById('todo-lijst');
   if (!gefilterd.length) {
-    const labels = { open:'Geen openstaande to-do\'s', vandaag:'Niets gepland voor vandaag', mijn:'Geen to-do\'s voor jou', gedaan:'Nog niets afgewerkt', alle:'Nog geen to-do\'s' };
+    const labels = { mijn:'Geen openstaande to-do\'s voor jou', vandaag:'Niets gepland voor vandaag', alle:'Nog geen to-do\'s' };
     el.innerHTML = `<div class="leeg">
-      <div class="leeg-icon"><i data-lucide="${actieveFilter==='gedaan'?'party-popper':'check-circle'}" class="leeg-icon"></i></div>
+      <div class="leeg-icon"><i data-lucide="check-circle" class="leeg-icon"></i></div>
       <div class="leeg-titel">${labels[actieveFilter]||'Geen to-do\'s'}</div>
-      <div class="leeg-sub">${actieveFilter==='open'?'Tik op + om een to-do toe te voegen':''}</div>
+      <div class="leeg-sub">${actieveFilter==='mijn'?'Tik op + om een to-do toe te voegen':''}</div>
     </div>`;
     return;
   }
@@ -288,7 +286,9 @@ if (new URLSearchParams(location.search).get('nieuw')==='1') {
 }
 
 // ── Mobile filter select ──────────────────────────────────────
-document.getElementById('filter-sel-mob')?.addEventListener('change', e => setFilter(e.target.value, null));
+document.getElementById('filter-sel-mob')?.addEventListener('change', e => {
+  setFilter(e.target.value, null);
+});
 
 // ── Profiel dropdown ──────────────────────────────────────────
 document.addEventListener('click', function(e){

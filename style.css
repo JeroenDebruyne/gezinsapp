@@ -313,8 +313,10 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 
 /* Filter tabs */
 .filter-tabs{display:flex;gap:6px;padding:10px 1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);}
-.filter-tab{padding:7px 16px;border-radius:99px;font-size:13px;border:1.5px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit;font-weight:500;}
+.filter-tab{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:99px;font-size:13px;border:1.5px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit;font-weight:500;}
 .filter-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(252,108,133,0.25);}
+.filter-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(0,0,0,0.15);color:inherit;line-height:1;}
+.filter-tab.active .filter-tab-badge{background:rgba(255,255,255,0.3);color:#fff;}
 
 /* Badges */
 .badge{padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
@@ -891,12 +893,11 @@ svg.empty-icon,.empty-state svg.lucide{width:44px;height:44px;display:block;marg
   .herhaling-btn-enkel{background:#2a1e00;border-color:#806800;color:#d4a820;}
 }
 
-/* Mobile filter select: hidden on desktop, shown as styled dropdown on mobile */
-.mob-filter-sel{display:none;}
+/* Mobile filter select: no longer used, tabs shown on all screen sizes */
+.mob-filter-sel{display:none!important;}
 @media(max-width:767px){
   .topbar-actions .opslag-status{display:none;}
   .topbar-user .naam{display:none;}
-  .mob-filter-sel{display:block;width:100%;padding:9px 14px;border:2px solid var(--accent);border-radius:var(--radius);font-size:14px;font-family:inherit;font-weight:600;background:var(--surface);color:var(--accent);margin-bottom:10px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FC6C85' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
   .mob-hide-on-mobile{display:none!important;}
   /* Weekplanner action buttons: 3 naast elkaar, tekst mag wrappen */
   .wp-actie-rij{display:flex!important;flex-direction:row!important;gap:6px!important;width:100%;}

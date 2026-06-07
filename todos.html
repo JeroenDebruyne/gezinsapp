@@ -37,22 +37,15 @@
 
   <!-- Filter tabs -->
   <select class="mob-filter-sel" id="filter-sel-mob">
-    <option value="open">Openstaand</option>
-    <option value="vandaag">Vandaag</option>
     <option value="mijn">Mijn to-do's</option>
-    <option value="gedaan">Afgewerkt</option>
-    <option value="alle">Alle</option>
+    <option value="vandaag">Vandaag</option>
+    <option value="alle">Alle to-do's</option>
   </select>
-  <div class="filter-tabs mob-hide-on-mobile" id="filter-tabs">
-    <button class="filter-tab active" data-filter="open" data-action="filter-tab">Openstaand</button>
-    <button class="filter-tab" data-filter="vandaag" data-action="filter-tab">Vandaag</button>
-    <button class="filter-tab" data-filter="mijn" data-action="filter-tab">Mijn to-do's</button>
-    <button class="filter-tab" data-filter="gedaan" data-action="filter-tab">Afgewerkt</button>
-    <button class="filter-tab" data-filter="alle" data-action="filter-tab">Alle</button>
+  <div class="filter-tabs" id="filter-tabs">
+    <button class="filter-tab active" data-filter="mijn" data-action="filter-tab">Mijn to-do's <span class="filter-tab-badge" id="badge-mijn"></span></button>
+    <button class="filter-tab" data-filter="vandaag" data-action="filter-tab">Vandaag <span class="filter-tab-badge" id="badge-vandaag"></span></button>
+    <button class="filter-tab" data-filter="alle" data-action="filter-tab">Alle to-do's <span class="filter-tab-badge" id="badge-alle"></span></button>
   </div>
-
-  <!-- Stats -->
-  <div class="stats-balk" id="stats-balk"></div>
 
   <!-- Lijst -->
   <div class="todo-lijst" id="todo-lijst"></div>
