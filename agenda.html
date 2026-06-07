@@ -43,7 +43,7 @@
   transition:background .15s;
 }
 .maand-nav-btn:hover{background:var(--accent-l);}
-.maand-nav-label{font-size:13px;color:var(--muted);font-weight:500;}
+.maand-nav-label{flex:1;text-align:center;font-size:13px;color:var(--muted);font-weight:500;}
 
 /* Maand grid */
 .maand-grid{
@@ -185,11 +185,11 @@
   border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;
 }
 
-/* Desktop 2-kolom layout */
+/* Desktop 2-kolom layout: details links, maand rechts */
 @media(min-width:768px){
   .agenda-split{display:flex;align-items:flex-start;gap:0;}
-  .agenda-split-left{flex:0 0 420px;max-width:420px;}
-  .agenda-split-right{flex:1 1 0;min-width:0;border-left:2px solid var(--border);min-height:400px;}
+  .agenda-split-left{order:2;flex:0 0 clamp(280px,38%,400px);border-left:2px solid var(--border);}
+  .agenda-split-right{order:1;flex:1 1 0;min-width:0;min-height:400px;}
   .dag-detail{border-top:none;min-height:400px;}
   .week-header{position:static;}
 }
@@ -229,12 +229,12 @@
 
       <!-- Maand navigatie -->
       <div class="maand-nav">
+        <button class="maand-nav-btn" data-action="change-month" data-dir="-1">‹</button>
+        <span class="maand-nav-label" id="maand-nav-label"></span>
         <div style="display:flex;align-items:center;gap:2px;">
-          <button class="maand-nav-btn" data-action="change-month" data-dir="-1">‹</button>
-          <span class="maand-nav-label" id="maand-nav-label" style="padding:0 8px;"></span>
           <button class="maand-nav-btn" data-action="change-month" data-dir="1">›</button>
+          <button class="maand-nav-btn" data-action="open-ical-modal" title="iCal importeren" style="font-size:16px;"><i data-lucide="download" style="width:16px;height:16px;"></i></button>
         </div>
-        <button class="maand-nav-btn" data-action="open-ical-modal" title="iCal importeren" style="font-size:16px;"><i data-lucide="download" style="width:16px;height:16px;"></i></button>
       </div>
 
       <!-- Weekdagen header: Ma t/m Zo -->
