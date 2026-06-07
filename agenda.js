@@ -260,9 +260,10 @@ function renderTransportDetail(act,datumISO){
   const uitzondering=(transportUitzonderingen||{})[datumISO];
 
   let html='';
+  const isEenmalig=!act.freq||act.freq==='eenmalig';
   ['nora','odiel'].forEach(kind=>{
     if(!(act.wie||[]).includes(kind)) return;
-    const std=stdTransport[kind]?.[dagKey]||{};
+    const std=isEenmalig?{}:stdTransport[kind]?.[dagKey]||{};
     const uitz=uitzondering?.[kind]||{};
     const brengt=act[`brengt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.brengt||std.brengt||'';
     const haalt=act[`haalt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.haalt||std.haalt||'';
