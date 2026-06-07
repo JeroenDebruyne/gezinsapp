@@ -228,6 +228,84 @@
   }
   window._pasPersonKleurenToe = _pasPersonKleurenToe;
 
+  // ── Modal: body scroll lock + swipe-to-dismiss ───────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    // Body scroll lock wanneer een modal open/sluit (voorkomt iOS rubber-band)
+    new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.type !== 'attributes' || m.attributeName !== 'class') return;
+        var bg = m.target;
+        if (!bg.classList || !bg.classList.contains('modal-bg')) return;
+        var isOpen = bg.classList.contains('open');
+        if (isOpen) {
+          var sy = window.scrollY;
+          document.body.style.position = 'fixed';
+          document.body.style.top = '-' + sy + 'px';
+          document.body.style.width = '100%';
+          document.body.dataset.scrollY = sy;
+        } else {
+          if (!document.querySelector('.modal-bg.open')) {
+            var savedY = parseInt(document.body.dataset.scrollY || '0');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo(0, savedY);
+          }
+        }
+      });
+    }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+    // Swipe-to-dismiss: sleep de modal naar beneden om te sluiten
+    var activeDrag = null;
+
+    document.addEventListener('touchmove', function(e) {
+      if (!activeDrag) return;
+      var dy = e.touches[0].clientY - activeDrag.startY;
+      if (dy <= 0) return;
+      activeDrag.currentY = dy;
+      activeDrag.modal.style.transform = 'translateY(' + dy + 'px)';
+    }, { passive: true });
+
+    document.addEventListener('touchend', function() {
+      if (!activeDrag) return;
+      var drag = activeDrag;
+      activeDrag = null;
+      var dt = Date.now() - drag.startT || 1;
+      var velocity = drag.currentY / dt;
+      var modal = drag.modal;
+      var bg = modal.closest('.modal-bg');
+      if (drag.currentY > 120 || velocity > 0.5) {
+        modal.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1)';
+        modal.style.transform = 'translateY(110%)';
+        setTimeout(function() {
+          modal.style.transform = '';
+          modal.style.transition = '';
+          var btn = modal.querySelector('.modal-sluit-btn');
+          if (btn) btn.click();
+          else if (bg) bg.classList.remove('open');
+        }, 280);
+      } else {
+        modal.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1)';
+        modal.style.transform = '';
+        setTimeout(function() { modal.style.transition = ''; }, 280);
+      }
+    });
+
+    document.querySelectorAll('.modal-bg').forEach(function(bg) {
+      var modal = bg.querySelector('.modal');
+      if (!modal) return;
+      modal.addEventListener('touchstart', function(e) {
+        if (window.innerWidth >= 601) return;
+        if (!bg.classList.contains('open')) return;
+        var rect = modal.getBoundingClientRect();
+        var relY = e.touches[0].clientY - rect.top;
+        if (relY > 52) return; // alleen bovenste 52px (handle-zone)
+        activeDrag = { modal: modal, startY: e.touches[0].clientY, startT: Date.now(), currentY: 0 };
+        modal.style.transition = 'none';
+      }, { passive: true });
+    });
+  });
+
   // Fill sidebar user info after DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     if (typeof Auth !== 'undefined') {

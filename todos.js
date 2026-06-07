@@ -4,6 +4,7 @@ Auth.initPagina('todos');
 let actieveFilter = 'mijn';
 let todoEditId    = null;
 let priveAan      = false;
+let _skipDraft    = false;
 let geselecteerdePersonen = [];
 let geselecteerdePrio = 'middel';
 
@@ -165,6 +166,20 @@ function openModal(todo) {
   document.getElementById('t-deadline').value = todo?.deadline||'';
   document.getElementById('t-duur').value     = todo?.duur||'';
 
+  // Herstel concept bij nieuwe to-do
+  if (!todo) {
+    const draft = JSON.parse(localStorage.getItem('gezinsapp_draft_todo') || 'null');
+    if (draft) {
+      document.getElementById('t-titel').value    = draft.titel    || '';
+      document.getElementById('t-notitie').value  = draft.notitie  || '';
+      document.getElementById('t-deadline').value = draft.deadline || '';
+      document.getElementById('t-duur').value     = draft.duur     || '';
+      geselecteerdePersonen = draft.wie          || geselecteerdePersonen;
+      geselecteerdePrio     = draft.prioriteit   || geselecteerdePrio;
+      priveAan              = draft.prive        || false;
+    }
+  }
+
   updatePriveSwitch();
   renderPersonenMS();
   updatePrioBtns();
@@ -184,10 +199,31 @@ function openModal(todo) {
 function editTodo(id) { openModal(todos.find(t=>t.id==id)); }
 function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 function closeModal() {
-  const el=document.getElementById('todo-modal-bg');
-  const wasOpen=el.classList.contains('open');
+  const el = document.getElementById('todo-modal-bg');
+  const wasOpen = el.classList.contains('open');
+
+  // Sla concept op bij sluiten zonder opslaan (alleen voor nieuwe to-do's)
+  if (wasOpen && !todoEditId && !_skipDraft) {
+    const titel    = document.getElementById('t-titel').value.trim();
+    const notitie  = document.getElementById('t-notitie').value.trim();
+    const deadline = document.getElementById('t-deadline').value;
+    if (titel || notitie || deadline) {
+      localStorage.setItem('gezinsapp_draft_todo', JSON.stringify({
+        titel,
+        notitie,
+        deadline,
+        duur:      document.getElementById('t-duur').value,
+        prioriteit: geselecteerdePrio,
+        wie:        geselecteerdePersonen,
+        prive:      priveAan,
+      }));
+    } else {
+      localStorage.removeItem('gezinsapp_draft_todo');
+    }
+  }
+
   el.classList.remove('open');
-  if(wasOpen) _teugNaarHome();
+  if (wasOpen) _teugNaarHome();
 }
 
 function renderPersonenMS() {
@@ -252,7 +288,10 @@ function saveTodo() {
   slaLokaalOp();
   sbSaveTodo(todo);
   toonOpslagStatus('✅ Opgeslagen');
+  _skipDraft = true;
+  localStorage.removeItem('gezinsapp_draft_todo');
   closeModal();
+  _skipDraft = false;
   renderTodos();
 }
 
