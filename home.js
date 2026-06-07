@@ -129,7 +129,12 @@ function renderVerjaardagHome() {
 
 function renderPersoonStrip(p) {
   const huidig = sessionStorage.getItem('perspectief') || p?.persoonKey;
-  document.getElementById('persoon-strip').innerHTML = Auth.PROFIELEN.map(pr => `
+  const profielen = Auth.PROFIELEN;
+  const n = profielen.length;
+  const cols = (n % 3 === 0) ? 3 : (n % 2 === 0) ? 2 : 3;
+  const strip = document.getElementById('persoon-strip');
+  strip.style.setProperty('--avatar-cols', cols);
+  strip.innerHTML = profielen.map(pr => `
     <div class="avatar-chip${pr.persoonKey === huidig ? ' active' : ''}" data-action="wissel-persoon" data-key="${escHtml(pr.persoonKey)}">
       <span>${escHtml(pr.emoji)}</span><span>${escHtml(pr.naam)}</span>
     </div>`).join('');
