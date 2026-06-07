@@ -114,7 +114,7 @@ body{
 .module-tile{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:16px 14px;
-  display:flex;flex-direction:column;gap:6px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
   text-decoration:none;color:var(--ink);
   transition:all .18s;-webkit-tap-highlight-color:transparent;
   box-shadow:var(--shadow-sm);
@@ -122,7 +122,7 @@ body{
 .module-tile:hover,.module-tile:active{ background:var(--accent-l);border-color:var(--accent);box-shadow:var(--shadow); }
 .module-tile-icon{ font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center; }
 .module-tile-icon svg{ width:26px;height:26px;stroke-width:1.75; }
-.module-tile-naam{ font-size:14px;font-weight:600; }
+.module-tile-naam{ font-size:14px;font-weight:600;text-align:center; }
 
 .sidebar-toggle{display:none;}
 
