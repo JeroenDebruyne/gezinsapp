@@ -338,7 +338,7 @@
   <!-- Maaltijd thuis -->
   <div class="form-row">
     <label>Maaltijd niet thuis <span style="font-size:11px;font-weight:400;color:var(--muted);">(auto-berekend op basis van tijdstip)</span></label>
-    <div style="display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:6px;">
+    <div class="form-grid-3" style="margin-top:6px;">
       <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> <i data-lucide="coffee" class="icon-inline"></i> Ontbijt</label>
       <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> <i data-lucide="leaf" class="icon-inline"></i> Lunch</label>
       <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> <i data-lucide="utensils" class="icon-inline"></i> Avond</label>
@@ -421,7 +421,7 @@
 <div class="modal" style="max-width:340px;">
   <div class="modal-handle"></div>
   <h3 id="do-titel">Drukte aanpassen</h3>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+  <div class="form-grid-3" style="margin-bottom:16px;">
     <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--rustig-bg);color:var(--rustig-clr);border:2px solid var(--rustig-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="rustig"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--rustig-dot);margin:0 auto 6px;"></span>Rustig</button>
     <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--normaal-bg);color:var(--normaal-clr);border:2px solid var(--normaal-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="normaal"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--normaal-dot);margin:0 auto 6px;"></span>Normaal</button>
     <button class="do-btn" style="padding:14px 8px;border-radius:var(--radius-sm);background:var(--druk-bg);color:var(--druk-clr);border:2px solid var(--druk-dot);cursor:pointer;font-size:13px;font-weight:700;" data-action="select-override" data-niveau="druk"><span style="display:block;width:12px;height:12px;border-radius:50%;background:var(--druk-dot);margin:0 auto 6px;"></span>Druk</button>
