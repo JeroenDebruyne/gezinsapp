@@ -338,9 +338,14 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .form-row input:not([type="checkbox"]):not([type="radio"]):focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(252,108,133,0.12);}
 @media(max-width:767px){.form-row input:not([type="checkbox"]):not([type="radio"]),.form-row select,.form-row textarea{font-size:16px;}}
 /* form-grid: 2 of 3 kolommen — volgt de deelbaar-door-2/3-regel */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
 .form-grid > *,.form-grid-3 > *{min-width:0;}
+/* form-rows in een grid: geen margin-bottom — de grid-gap verzorgt de rijspatie */
+.form-grid > .form-row,.form-grid-3 > .form-row{margin-bottom:0;}
+/* inputs/selects in een grid mogen krimpen tot hun kolombreedte (ook native date/time) */
+.form-grid input:not([type="checkbox"]):not([type="radio"]),.form-grid select,
+.form-grid-3 input:not([type="checkbox"]):not([type="radio"]),.form-grid-3 select{min-width:0;}
 
 /* Multiselect */
 .persoon-ms{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:6px;}
