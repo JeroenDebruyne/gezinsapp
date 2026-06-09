@@ -1,6 +1,6 @@
 // agenda.js — Agendapagina logica
 Auth.initPagina('agenda');
-if (!Auth.kan('kanActiviteitenBeheren')) { const b=document.querySelector('.fab'); if(b) b.style.display='none'; }
+// Permissiecheck na data-laden: profielen zijn dan beschikbaar via Auth
 
 // ── State ─────────────────────────────────────────────────────
 let huidigJaar   = new Date().getFullYear();
@@ -21,14 +21,22 @@ const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora
 const KINDEREN = () => Auth.getProfielen().filter(p => p.isKind).map(p => p.persoonKey);
 
 // ── Laden ─────────────────────────────────────────────────────
+function _checkFabPermissie() {
+  if (!Auth.kan('kanActiviteitenBeheren')) {
+    const b = document.querySelector('.fab');
+    if (b) b.style.display = 'none';
+  }
+}
+
 Promise.race([laadOp(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))])
   .then(()=>{
+    _checkFabPermissie();
     renderAlles(); icalAutoSync();
     if (new URLSearchParams(location.search).get('nieuw')==='1') {
       geselecteerdeDatum=fDateISO(new Date());
       setTimeout(openActModal, 300);
     }
-  }).catch(()=>{laadLokaal();renderAlles();});
+  }).catch(()=>{_checkFabPermissie();laadLokaal();renderAlles();});
 
 if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderAlles(); };
@@ -385,6 +393,7 @@ function _vulTransportOpties(){
 
 // ── Modal: Activiteit ─────────────────────────────────────────
 function openActModal(act){
+  if (!act && !Auth.kan('kanActiviteitenBeheren')) return;
   actEditId=act?.id||null;
   priveAan=act?.prive||false;
   meerdaagsAan=act?.meerdaags||false;
