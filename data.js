@@ -274,6 +274,8 @@ async function laadOp() {
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
       transport: x.transport || {},
       uitgesloten: (x.transport||{}).uitgesloten || [],
+      brengtNora: (x.transport||{}).brengtNora||null, haaltNora: (x.transport||{}).haaltNora||null, eetGrooNora: (x.transport||{}).eetGrooNora||false,
+      brengtOdiel: (x.transport||{}).brengtOdiel||null, haaltOdiel: (x.transport||{}).haaltOdiel||null, eetGrooOdiel: (x.transport||{}).eetGrooOdiel||false,
       icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
       maaltijdThuis: x.maaltijd_thuis || null,
     }));
@@ -469,7 +471,12 @@ async function sbSaveActiviteit(act) {
     locatie:act.locatie, freq:act.freq, begin_datum:act.beginDatum||null,
     eind_datum:act.eindDatum||null, prep: act.prep || null, dagen:act.dagen,
     meerdaags:act.meerdaags||false, prive:act.prive||false, informatief:act.informatief||false,
-    transport: { ...(act.transport||{}), uitgesloten: act.uitgesloten||[] },
+    transport: {
+      ...(act.transport||{}),
+      uitgesloten: act.uitgesloten||[],
+      brengtNora: act.brengtNora||null, haaltNora: act.haaltNora||null, eetGrooNora: act.eetGrooNora||false,
+      brengtOdiel: act.brengtOdiel||null, haaltOdiel: act.haaltOdiel||null, eetGrooOdiel: act.eetGrooOdiel||false,
+    },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
     maaltijd_thuis: act.maaltijdThuis||null,
   };
