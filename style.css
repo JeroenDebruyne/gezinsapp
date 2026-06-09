@@ -334,12 +334,13 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 /* Formulieren */
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;}
-.form-row input,.form-row select,.form-row textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;}
-.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(252,108,133,0.12);}
-@media(max-width:767px){.form-row input,.form-row select,.form-row textarea{font-size:16px;}}
+.form-row input:not([type="checkbox"]):not([type="radio"]),.form-row select,.form-row textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;}
+.form-row input:not([type="checkbox"]):not([type="radio"]):focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(252,108,133,0.12);}
+@media(max-width:767px){.form-row input:not([type="checkbox"]):not([type="radio"]),.form-row select,.form-row textarea{font-size:16px;}}
 /* form-grid: 2 of 3 kolommen — volgt de deelbaar-door-2/3-regel */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.form-grid > *,.form-grid-3 > *{min-width:0;}
 
 /* Multiselect */
 .persoon-ms{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
