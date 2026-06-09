@@ -343,8 +343,8 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .form-grid > *,.form-grid-3 > *{min-width:0;}
 
 /* Multiselect */
-.persoon-ms{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
-.persoon-chip{padding:7px 14px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);font-size:13px;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:5px;transition:all .15s;font-weight:500;}
+.persoon-ms{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:6px;}
+.persoon-chip{padding:7px 14px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);font-size:13px;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;font-weight:500;}
 .persoon-chip.selected{border-color:var(--accent);background:var(--accent);color:#fff;}
 .persoon-chip:hover:not(.selected){background:var(--bg-2);}
 

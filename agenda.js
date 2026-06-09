@@ -502,7 +502,10 @@ function closeActModal(){
 }
 
 function renderPersonenMS(){
-  document.getElementById('a-wie-ms').innerHTML=PERSONEN.map(p=>
+  const ms=document.getElementById('a-wie-ms');
+  const cols=PERSONEN.length%3===0?3:2;
+  ms.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  ms.innerHTML=PERSONEN.map(p=>
     `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" data-action="toggle-persoon" data-persoon="${escHtml(p)}">
       ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');
@@ -823,7 +826,9 @@ function icalToonPreview(){
     `${n} activiteit${n!==1?'en':''} gevonden`+
     (bestaandAantal?` · ${bestaandAantal} al aanwezig (worden bijgewerkt), ${nieuwAantal} nieuw`:'');
 
-  document.getElementById('ical-wie-ms').innerHTML=PERSONEN.map(p=>
+  const _icalMs=document.getElementById('ical-wie-ms');
+  _icalMs.style.gridTemplateColumns=`repeat(${PERSONEN.length%3===0?3:2},1fr)`;
+  _icalMs.innerHTML=PERSONEN.map(p=>
     `<div class="persoon-chip${_icalWie.includes(p)?' selected':''}" data-key="${escHtml(p)}" data-action="ical-toggle-wie" data-persoon="${escHtml(p)}">
       ${escHtml(PEMOJI[p]||'')} ${escHtml(PLABEL[p]||p)}
     </div>`).join('');

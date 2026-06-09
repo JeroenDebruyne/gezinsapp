@@ -227,7 +227,9 @@ function closeModal() {
 }
 
 function renderPersonenMS() {
-  document.getElementById('t-wie-ms').innerHTML = PERSONEN.map(p=>
+  const ms = document.getElementById('t-wie-ms');
+  ms.style.gridTemplateColumns = `repeat(${PERSONEN.length%3===0?3:2},1fr)`;
+  ms.innerHTML = PERSONEN.map(p=>
     `<div class="persoon-chip${geselecteerdePersonen.includes(p)?' selected':''}" data-action="toggle-persoon" data-persoon="${p}">
       ${PEMOJI[p]} ${PLABEL[p]}
     </div>`).join('');
