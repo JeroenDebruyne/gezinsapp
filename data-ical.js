@@ -47,18 +47,36 @@ async function icalMerge(parsedEvents, wie, sourceUrl, opties = {}) {
   for (const ev of parsedEvents) {
     ev.wie = ev.wie?.length ? ev.wie : (wie.length ? [...wie] : [Auth.profiel()?.persoonKey].filter(Boolean));
     if (opties.informatief) ev.informatief = true;
+
+    // Synthetische UID voor events zonder UID — voorkomt herduplicatie bij meerdere devices of hersyncs
+    if (!ev.icalUid && sourceUrl) {
+      ev.icalUid = `synth:${sourceUrl}|${ev.naam}|${ev.beginDatum}|${ev.start||''}`;
+    }
+
     if (!ev.icalUid) {
-      // Geen UID: altijd toevoegen (eenmalige import zonder deduplicatie)
+      // Geen UID en geen source: eenmalig toevoegen, geen dedup mogelijk
       activiteiten.push(ev); await sbSaveActiviteit(ev); nieuw++; continue;
     }
-    const bestaande = activiteiten.find(a => a.icalUid === ev.icalUid && a.icalSource === sourceUrl);
+
+    // Zoek bestaande via UID óf via content-fallback voor legacy null-UID activiteiten
+    const bestaande = activiteiten.find(a =>
+      (a.icalSource === sourceUrl && a.icalUid === ev.icalUid) ||
+      (a.icalSource === sourceUrl && !a.icalUid && a.naam === ev.naam && a.beginDatum === ev.beginDatum && (a.start||'') === (ev.start||''))
+    );
+
     if (bestaande) {
-      const changed = bestaande.naam !== ev.naam || bestaande.beginDatum !== ev.beginDatum ||
+      const needsUidUpdate = !bestaande.icalUid && ev.icalUid;
+      const changed = needsUidUpdate ||
+        bestaande.naam !== ev.naam || bestaande.beginDatum !== ev.beginDatum ||
         bestaande.eindDatum !== ev.eindDatum || bestaande.start !== ev.start ||
         bestaande.locatie !== ev.locatie;
       if (changed) {
-        Object.assign(bestaande, { naam:ev.naam, beginDatum:ev.beginDatum, eindDatum:ev.eindDatum,
-          locatie:ev.locatie, start:ev.start, eindUur:ev.eindUur, meerdaags:ev.meerdaags, dagen:ev.dagen, freq:ev.freq });
+        Object.assign(bestaande, {
+          naam: ev.naam, beginDatum: ev.beginDatum, eindDatum: ev.eindDatum,
+          locatie: ev.locatie, start: ev.start, eindUur: ev.eindUur,
+          meerdaags: ev.meerdaags, dagen: ev.dagen, freq: ev.freq,
+          ...(needsUidUpdate ? { icalUid: ev.icalUid } : {}),
+        });
         await sbSaveActiviteit(bestaande); geupdate++;
       }
     } else {

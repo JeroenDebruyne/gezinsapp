@@ -13,6 +13,7 @@ let informatiefAan = false;
 let geselecteerdePersonen = [];
 let doKey=null, tempOverride=null;
 let actievePersoonFilter = 'alle';
+let _savingAct = false;
 
 const MAANDEN = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 const DAGKORT  = DKORT;  // alias voor agenda-intern gebruik
@@ -603,9 +604,11 @@ async function berekenReistijdAuto(){
 }
 
 async function saveActiviteit(){
+  if (_savingAct) return;
+  _savingAct = true;
   const naam=document.getElementById('a-naam').value.trim();
-  if(!naam){toonOpslagStatus('❌ Geef een naam in.');return;}
-  if(!geselecteerdePersonen.length){toonOpslagStatus('❌ Selecteer minstens één persoon.');return;}
+  if(!naam){toonOpslagStatus('❌ Geef een naam in.');_savingAct=false;return;}
+  if(!geselecteerdePersonen.length){toonOpslagStatus('❌ Selecteer minstens één persoon.');_savingAct=false;return;}
 
   const heeftKind=KINDEREN().some(k=>geselecteerdePersonen.includes(k));
   const bestaande=actEditId?activiteiten.find(a=>a.id===actEditId):null;
@@ -614,8 +617,8 @@ async function saveActiviteit(){
   if(meerdaagsAan){
     const beginDatum=document.getElementById('a-md-start-datum').value;
     const eindDatum=document.getElementById('a-md-eind-datum').value;
-    if(!beginDatum||!eindDatum){toonOpslagStatus('❌ Vul start- en einddatum in.');return;}
-    if(eindDatum<beginDatum){toonOpslagStatus('❌ Einddatum moet na begindatum zijn.');return;}
+    if(!beginDatum||!eindDatum){toonOpslagStatus('❌ Vul start- en einddatum in.');_savingAct=false;return;}
+    if(eindDatum<beginDatum){toonOpslagStatus('❌ Einddatum moet na begindatum zijn.');_savingAct=false;return;}
     const _maaltijdThuis={
       ontbijt:document.getElementById('a-mt-ontbijt').checked,
       lunch:document.getElementById('a-mt-lunch').checked,
@@ -670,7 +673,9 @@ async function saveActiviteit(){
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);
   else activiteiten.push(act);
-  slaLokaalOp();renderAlles();await sbSaveActiviteit(act);toonOpslagStatus('✅ Opgeslagen');closeActModal();
+  slaLokaalOp();renderAlles();await sbSaveActiviteit(act);toonOpslagStatus('✅ Opgeslagen');
+  _savingAct = false;
+  closeActModal();
 }
 
 let _verwijderActId=null,_verwijderDatum=null;
@@ -748,26 +753,31 @@ let _icalEvents = [];
 let _icalWie    = [];
 let _icalSrcUrl = null;
 
-const _ICAL_SYNC_KEY = 'gezinsapp-ical-last-sync';
 async function icalAutoSync(){
   await laadIcalAbonnementen();
-  if(!icalAbonnementen.filter(a=>!a.paused).length) return;
-  const lastSync=parseInt(localStorage.getItem(_ICAL_SYNC_KEY)||'0');
-  if(Date.now()-lastSync < 23*60*60*1000) return;
-  let totaalNieuw=0, totaalUpdate=0;
-  for(const abo of icalAbonnementen){
-    if(abo.paused) continue;
+  const actieveAbos = icalAbonnementen.filter(a => !a.paused);
+  if (!actieveAbos.length) return;
+  let totaalNieuw = 0, totaalUpdate = 0, aangestuurd = false;
+  for (let i = 0; i < icalAbonnementen.length; i++) {
+    const abo = icalAbonnementen[i];
+    if (abo.paused) continue;
+    // Gebruik per-abo lastSync uit Supabase — gedeeld over alle toestellen van het gezin
+    if (abo.lastSync && Date.now() - new Date(abo.lastSync).getTime() < 23*60*60*1000) continue;
+    aangestuurd = true;
     try {
-      const text=await icalFetchUrl(abo.url);
-      const events=parseIcal(text,abo.url);
-      const {nieuw,geupdate}=await icalMerge(events,abo.wie||[],abo.url,{informatief:!!abo.informatief});
-      totaalNieuw+=nieuw; totaalUpdate+=geupdate;
-    } catch(e){ console.warn('[iCal sync]',abo.url,e.message); }
+      const text = await icalFetchUrl(abo.url);
+      const events = parseIcal(text, abo.url);
+      const {nieuw, geupdate} = await icalMerge(events, abo.wie||[], abo.url, {informatief:!!abo.informatief});
+      icalAbonnementen[i].lastSync = new Date().toISOString();
+      totaalNieuw += nieuw; totaalUpdate += geupdate;
+    } catch(e) { console.warn('[iCal sync]', abo.url, e.message); }
   }
-  localStorage.setItem(_ICAL_SYNC_KEY, Date.now().toString());
-  if(totaalNieuw||totaalUpdate){
-    slaLokaalOp(); renderAlles();
-    toonOpslagStatus(`🔄 iCal: ${totaalNieuw} nieuw, ${totaalUpdate} bijgewerkt`);
+  if (aangestuurd) {
+    await slaIcalAbonnementenOp();
+    if (totaalNieuw || totaalUpdate) {
+      slaLokaalOp(); renderAlles();
+      toonOpslagStatus(`🔄 iCal: ${totaalNieuw} nieuw, ${totaalUpdate} bijgewerkt`);
+    }
   }
 }
 

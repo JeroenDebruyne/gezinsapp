@@ -279,6 +279,19 @@ async function laadOp() {
       icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
       maaltijdThuis: x.maaltijd_thuis || null,
     }));
+    // Verwijder iCal-duplicaten in Supabase (zelfde icalUid+icalSource → bewaar eerste, delete rest)
+    if (activiteiten.length > 1) {
+      const icalKeys = new Set();
+      const teVerwijderen = [];
+      activiteiten = activiteiten.filter(act => {
+        if (!act.icalUid || !act.icalSource) return true;
+        const key = `${act.icalSource}|${act.icalUid}`;
+        if (icalKeys.has(key)) { if (act._sbId) teVerwijderen.push(act._sbId); return false; }
+        icalKeys.add(key); return true;
+      });
+      teVerwijderen.forEach(sbId => sbDeleteActiviteit(sbId));
+      if (teVerwijderen.length) slaLokaalOp();
+    }
     if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
     if (b.length) {
       extraItems = b.filter(x => (x.type||'extra') === 'extra');
