@@ -339,6 +339,8 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 @media(max-width:767px){.form-row input,.form-row select,.form-row textarea{font-size:16px;}}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+/* Modals: altijd single-column op alle mobiele schermen */
+@media(max-width:767px){.modal .form-grid{grid-template-columns:1fr;}}
 
 /* Multiselect */
 .persoon-ms{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
@@ -366,7 +368,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 /* Modals */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(30,15,20,0.45);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
 .modal-bg.open{display:flex;}
-.modal{background:var(--surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;max-width:560px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:94vh;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 -8px 40px rgba(252,108,133,0.12),0 -2px 8px rgba(0,0,0,0.08);will-change:transform;}
+.modal{background:var(--surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;max-width:560px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:94vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;box-shadow:0 -8px 40px rgba(252,108,133,0.12),0 -2px 8px rgba(0,0,0,0.08);will-change:transform;}
 .modal-handle{width:36px;height:4px;background:var(--border-2);border-radius:2px;margin:0 auto 20px;touch-action:none;cursor:grab;}
 .modal h3{font-size:19px;font-weight:700;color:var(--ink);margin-bottom:20px;letter-spacing:-0.4px;padding-bottom:14px;border-bottom:1px solid var(--border);}
 .modal-actions{display:flex;gap:8px;margin-top:20px;}

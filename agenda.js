@@ -437,6 +437,14 @@ function openActModal(act){
     document.getElementById(`a-eet-groo-${kind}`).checked=act?.[`eetGroo${cap}`]||false;
   });
 
+  // Verwijder-knop tonen bij bewerken
+  document.querySelector('#act-modal-bg .modal-actions').innerHTML = act
+    ? `<button class="modal-btn modal-btn-danger" data-action="verwijder-act-modal">Verwijderen</button>
+       <button class="modal-btn modal-btn-cancel" data-action="close-act-modal">Annuleren</button>
+       <button class="modal-btn modal-btn-primary" data-action="save-activiteit">Opslaan</button>`
+    : `<button class="modal-btn modal-btn-cancel" data-action="close-act-modal">Annuleren</button>
+       <button class="modal-btn modal-btn-primary" data-action="save-activiteit">Opslaan</button>`;
+
   const _actModalEl=document.getElementById('act-modal-bg');
   _actModalEl.classList.add('open');
   _actModalEl.querySelector('.modal').scrollTop=0;
@@ -933,6 +941,11 @@ document.addEventListener('click', function(e){
     case 'toggle-prive': togglePrive(); break;
     case 'toggle-informatief': toggleInformatief(); break;
     case 'close-act-modal': closeActModal(); break;
+    case 'verwijder-act-modal': {
+      const _id = actEditId, _datum = geselecteerdeDatum;
+      if (_id) { closeActModal(); verwijderActiviteit(_id, _datum); }
+      break;
+    }
     case 'save-activiteit': saveActiviteit(); break;
     case 'select-override': selectOverride(el.dataset.niveau, el); break;
     case 'close-do-modal': closeDOModal(); break;
