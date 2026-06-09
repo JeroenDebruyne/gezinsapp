@@ -448,9 +448,9 @@ svg.icon-inline{width:1em;height:1em;vertical-align:-0.15em;stroke-width:2;}
 .icon-spin{animation:lucide-spin 1s linear infinite;}
 
 /* Lege staat & spinner */
-.empty-state,.leeg{text-align:center;padding:3rem 2rem;color:var(--muted);}
-.empty-state .empty-icon,.leeg-icon{font-size:44px;margin-bottom:12px;display:block;}
-svg.empty-icon,.empty-state svg.lucide{width:44px;height:44px;display:block;margin:0 auto 12px;color:var(--muted-2);stroke-width:1.5;}
+.empty-state,.leeg{display:flex;flex-direction:column;align-items:center;text-align:center;padding:3rem 2rem;color:var(--muted);}
+.empty-state .empty-icon,.leeg-icon{width:48px;height:48px;margin-bottom:12px;display:block;color:var(--muted-2);stroke-width:1.5;flex-shrink:0;}
+svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;color:var(--muted-2);stroke-width:1.5;}
 .leeg-titel{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px;}
 .leeg-sub{font-size:14px;}
 .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:2.5rem auto;display:block;}
@@ -846,11 +846,6 @@ svg.empty-icon,.empty-state svg.lucide{width:44px;height:44px;display:block;marg
 .deadline-ok      { background: var(--rustig-bg);  color: var(--rustig-clr); }
 .deadline-verlopen{ background: var(--druk-bg);    color: var(--druk-clr); font-weight: 700; }
 
-/* Leeg staat voor to-do's */
-.leeg { text-align: center; padding: 4rem 2rem; color: var(--muted); }
-.leeg-icon { font-size: 48px; margin-bottom: 12px; display: block; }
-.leeg-titel { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-.leeg-sub { font-size: 14px; }
 
 /* ── Dark mode ────────────────────────────────────────────────
    Overschrijft alle CSS-variabelen; hardcoded rgba-waarden worden
