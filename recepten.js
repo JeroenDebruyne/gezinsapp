@@ -385,11 +385,6 @@ function naarStap(n) {
 async function startImport() {
   const url = document.getElementById('import-url').value.trim();
   if (!url || !url.startsWith('http')) { toonOpslagStatus('❌ Plak een geldige URL.'); return; }
-  const apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]: client-side app, geen backend
-  if (!apiKey) {
-    document.getElementById('import-error-tekst').innerHTML = '<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
-    naarStap(4); return;
-  }
   naarStap(2);
   document.getElementById('import-loader-tekst').textContent = 'Recept ophalen van ' + url.replace(/^https?:\/\//, '').split('/')[0] + '…';
   try {
@@ -409,7 +404,7 @@ Formaat:
 types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
 tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
     let berichten = [{ role: 'user', content: `Haal het recept op van: ${url}` }];
-    let data = await agentFetch(apiKey, { model: AGENT_MODEL, max_tokens: 2000, system: systeemprompt, tools: [{ type: 'web_search_20250305', name: 'web_search' }], messages: berichten });
+    let data = await agentFetch({ model: AGENT_MODEL, max_tokens: 2000, system: systeemprompt, tools: [{ type: 'web_search_20250305', name: 'web_search' }], messages: berichten });
     let max = 5;
     while (data.stop_reason === 'tool_use' && max-- > 0) {
       document.getElementById('import-loader-tekst').textContent = 'Pagina wordt gelezen…';
@@ -419,7 +414,7 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
       }
       berichten.push({ role: 'assistant', content: data.content });
       berichten.push({ role: 'user', content: toolResults });
-      data = await agentFetch(apiKey, { model: AGENT_MODEL, max_tokens: 2000, system: systeemprompt, tools: [{ type: 'web_search_20250305', name: 'web_search' }], messages: berichten });
+      data = await agentFetch({ model: AGENT_MODEL, max_tokens: 2000, system: systeemprompt, tools: [{ type: 'web_search_20250305', name: 'web_search' }], messages: berichten });
     }
     const tekst = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     const jsonStr = tekst.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -523,11 +518,6 @@ function _verwerkFotoBestand(file) {
 
 async function startFotoScan() {
   if (!_fotoBase64) return;
-  const apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-  if (!apiKey) {
-    document.getElementById('foto-error-tekst').innerHTML = '<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
-    _naarFotoStap(4); return;
-  }
   _naarFotoStap(2);
   try {
     const systeemprompt = `Je bent een recept-extractie assistent. De gebruiker stuurt een foto van een recept (uit een kookboek, tijdschrift of handgeschreven). Analyseer de afbeelding en geef UITSLUITEND geldige JSON terug zonder markdown backticks of uitleg.
@@ -545,7 +535,7 @@ Formaat:
 }
 types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
 tijd en porties zijn getallen. hoev is altijd een string. Geef ENKEL de JSON terug, niets anders.`;
-    const data = await agentFetch(apiKey, {
+    const data = await agentFetch({
       model: AGENT_MODEL,
       max_tokens: 2000,
       system: systeemprompt,

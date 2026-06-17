@@ -22,9 +22,9 @@ function renderInstellingen(){
     if(_mijnInp) _mijnInp.value=_mijnHex;
     if(_mijnDot) _mijnDot.style.background=_mijnHex;
   }
-  // API keys
-  const apiKey=localStorage.getItem('anthropic_api_key');
-  document.getElementById('api-key-status').textContent=apiKey?'✅ Ingesteld (sk-ant-…'+apiKey.slice(-6)+')'  :'❌ Nog niet ingesteld';
+  // AI-assistent: sleutel staat nu op de server (Supabase Edge Function)
+  const apiKeyStatusEl = document.getElementById('api-key-status');
+  if (apiKeyStatusEl) apiKeyStatusEl.textContent = '✅ Beheerd via server (geen lokale sleutel nodig)';
   const mapsKey=Maps.getKey();
   document.getElementById('maps-key-status').textContent=mapsKey?'✅ Ingesteld':'❌ Nog niet ingesteld';
   document.getElementById('inst-thuisadres').value=Maps.getThuisadres();
@@ -131,52 +131,6 @@ function updateVastRooster(persoon,dag,veld,waarde){
 }
 function slaVastRoosterOp(){slaLokaalOp();sbSaveInstellingen();toonOpslagStatus('✅ Roosters opgeslagen');}
 
-function openApiKeyForm() {
-  document.getElementById('api-key-form').style.display = 'block';
-  document.getElementById('api-key-wijzig-btn').style.display = 'none';
-  document.getElementById('api-key-input').focus();
-}
-function sluitApiKeyForm() {
-  document.getElementById('api-key-form').style.display = 'none';
-  document.getElementById('api-key-wijzig-btn').style.display = '';
-  document.getElementById('api-key-input').value = '';
-  document.getElementById('api-key-input').type = 'password';
-  document.getElementById('api-key-toon').innerHTML = '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>';
-  if(window.lucide) lucide.createIcons();
-}
-function toggleApiKeyZicht() {
-  const inp = document.getElementById('api-key-input');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-  document.getElementById('api-key-toon').innerHTML = inp.type === 'password'
-    ? '<i data-lucide="eye" style="width:14px;height:14px;display:block;"></i>'
-    : '<i data-lucide="eye-off" style="width:14px;height:14px;display:block;"></i>';
-  if(window.lucide) lucide.createIcons();
-}
-async function slaApiKeyOp() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key) { toonOpslagStatus('❌ Vul een API key in.'); return; }
-  toonOpslagStatus('⏳ API key valideren…');
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/models', {
-      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }
-    });
-    if (r.status === 401) { toonOpslagStatus('❌ Ongeldige API-sleutel.'); return; }
-    if (!r.ok) { toonOpslagStatus('❌ API key validatie mislukt (HTTP ' + r.status + ').'); return; }
-  } catch(e) { toonOpslagStatus('❌ Kan Anthropic API niet bereiken.'); return; }
-  localStorage.setItem('anthropic_api_key', key); // CodeQL[js/clear-text-storage-of-sensitive-information]
-  sbSaveInstellingen();
-  sluitApiKeyForm();
-  renderInstellingen();
-  toonOpslagStatus('✅ API key opgeslagen');
-}
-function verwijderApiKey() {
-  if (!confirm('Anthropic API key verwijderen?')) return;
-  localStorage.removeItem('anthropic_api_key');
-  sbSaveInstellingen();
-  sluitApiKeyForm();
-  renderInstellingen();
-  toonOpslagStatus('✅ API key verwijderd');
-}
 
 function openMapsKeyForm() {
   document.getElementById('maps-key-form').style.display = 'block';
@@ -1129,11 +1083,6 @@ document.addEventListener('click', function(e){
     case 'herlaad-data': laadOp().then(()=>alert('✅ Herladen!')); break;
     case 'sla-thuisadres': slaaThuisadresOp(); break;
     case 'sla-buienradar': slaaBuienradarUrlOp(); break;
-    case 'toggle-apikey-zicht': toggleApiKeyZicht(); break;
-    case 'sla-apikey': slaApiKeyOp(); break;
-    case 'sluit-apikey-form': sluitApiKeyForm(); break;
-    case 'verwijder-apikey': verwijderApiKey(); break;
-    case 'open-apikey-form': openApiKeyForm(); break;
     case 'toggle-mapskey-zicht': toggleMapsKeyZicht(); break;
     case 'sla-mapskey': slaMapsKeyOp(); break;
     case 'sluit-mapskey-form': sluitMapsKeyForm(); break;

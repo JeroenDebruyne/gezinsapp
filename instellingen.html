@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://ceeplmghvcaqvlpicwyi.supabase.co https://api.anthropic.com https://corsproxy.io https://nominatim.openstreetmap.org https://maps.googleapis.com; img-src 'self' data: https://maps.gstatic.com https://maps.googleapis.com; frame-src 'none'; object-src 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://ceeplmghvcaqvlpicwyi.supabase.co https://corsproxy.io https://nominatim.openstreetmap.org https://maps.googleapis.com; img-src 'self' data: https://maps.gstatic.com https://maps.googleapis.com; frame-src 'none'; object-src 'none';">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -233,21 +233,8 @@
   <!-- API sleutels -->
   <div class="section-label" id="sect-api" style="margin-top:1.5rem;"><i data-lucide="key" class="icon-inline"></i> API sleutels</div>
   <div class="card" style="margin-bottom:8px;">
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Anthropic API key</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="api-key-status">Laden…</div>
-    <div id="api-key-form" style="display:none;margin-bottom:8px;">
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <input type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off"
-          style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:monospace;background:var(--bg);color:var(--ink);"/>
-        <button type="button" class="btn btn-secondary btn-sm" data-action="toggle-apikey-zicht" id="api-key-toon" title="Toon/verberg"><i data-lucide="eye" style="width:14px;height:14px;display:block;"></i></button>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" data-action="sla-apikey">Opslaan</button>
-        <button class="btn btn-secondary btn-sm" data-action="sluit-apikey-form">Annuleren</button>
-        <button class="btn btn-sm" style="color:var(--druk-clr);border-color:var(--druk-clr);margin-left:auto;" data-action="verwijder-apikey"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
-      </div>
-    </div>
-    <button class="btn btn-secondary btn-sm" id="api-key-wijzig-btn" data-action="open-apikey-form"><i data-lucide="key" class="icon-inline"></i> Wijzigen</button>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Gezinsassistent (AI)</div>
+    <div style="font-size:12px;color:var(--muted);" id="api-key-status">Laden…</div>
   </div>
   <div class="card" style="margin-top:8px;">
     <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Google Maps API key</div>
