@@ -3,6 +3,24 @@
 
 const AGENT_MODEL = 'claude-sonnet-4-6';
 
+// ── Rate limiter: max 10 requests per 60 seconden ─────────────
+const _rateLimiter = (() => {
+  const MAX = 10;
+  const VENSTER_MS = 60_000;
+  const tijden = [];
+  return {
+    check() {
+      const nu = Date.now();
+      while (tijden.length && tijden[0] < nu - VENSTER_MS) tijden.shift();
+      if (tijden.length >= MAX) {
+        const wacht = Math.ceil((tijden[0] + VENSTER_MS - nu) / 1000);
+        throw new Error(`Te veel berichten. Wacht nog ${wacht} seconden.`);
+      }
+      tijden.push(nu);
+    },
+  };
+})();
+
 async function agentFetch(apiKey, body) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -198,6 +216,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   async function stuurBericht(tekst) {
     tekst = (tekst || '').trim();
     if (!tekst) return;
+    try { _rateLimiter.check(); } catch (e) { voegBerichtToe('assistant', '⏱️ ' + e.message); return; }
     // Wacht tot data geladen is (optioneel)
     if (isDataGeladen && !isDataGeladen()) {
       const typWait = voegBerichtToe('assistant', '⏳ Even wachten, data wordt nog geladen…', true);
