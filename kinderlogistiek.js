@@ -11,6 +11,9 @@ let kindFilter = 'alle';
 
 laadOp().then(()=>{ renderKindFilterTabs(); renderStandaardRooster(); renderKL(); }).catch(()=>{ laadLokaal(); renderKindFilterTabs(); renderStandaardRooster(); renderKL(); });
 onGezinsappUpdate(()=>{ renderKindFilterTabs(); renderStandaardRooster(); renderKL(); });
+AppState.subscribe('activiteiten', renderKL);
+AppState.subscribe('transportUitzonderingen', renderKL);
+AppState.subscribe('standaardTransport', ()=>{ renderStandaardRooster(); renderKL(); });
 
 function renderKindFilterTabs(){
   const kinderen = Auth.getProfielen().filter(p=>p.isKind);

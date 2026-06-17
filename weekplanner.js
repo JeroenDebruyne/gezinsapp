@@ -31,6 +31,8 @@ if (typeof BroadcastChannel !== 'undefined') {
   new BroadcastChannel('gezinsapp_data').onmessage = () => { laadLokaal(); renderPlanner(); };
 }
 onGezinsappUpdate(renderPlanner);
+AppState.subscribe('planning', renderPlanner);
+AppState.subscribe('recepten', renderPlanner);
 
 function changeWeekP(dir) { weekOffsetP += dir; sessionStorage.setItem('weekplanner_offset', weekOffsetP); _openDagen.clear(); renderPlanner(); }
 

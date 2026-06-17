@@ -20,6 +20,8 @@ laadOp().then(()=>{
   laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();
 });
 onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderBoodschappen(); renderExtraItems(); });
+AppState.subscribe('extraItems', ()=>{ renderBoodschappen(); renderExtraItems(); });
+AppState.subscribe('boodschappenReceptItems', renderBoodschappen);
 
 function renderWinkelTabs(){
   document.getElementById('winkel-tabs').innerHTML=['Alles',...WINKELS].map(w=>

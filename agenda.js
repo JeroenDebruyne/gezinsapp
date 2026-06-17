@@ -43,6 +43,7 @@ if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderAlles(); };
 }
 onGezinsappUpdate(renderAlles);
+AppState.subscribe('activiteiten', renderAlles);
 
 function renderAlles(){
   renderLegenda();

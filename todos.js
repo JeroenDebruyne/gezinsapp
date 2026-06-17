@@ -22,6 +22,7 @@ if(typeof BroadcastChannel!=='undefined'){
   new BroadcastChannel('gezinsapp_data').onmessage=()=>{ laadLokaal(); renderTodos(); };
 }
 onGezinsappUpdate(renderTodos);
+AppState.subscribe('todos', renderTodos);
 
 // ── Filter ────────────────────────────────────────────────────
 function setFilter(filter, el) {
