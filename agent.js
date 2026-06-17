@@ -271,7 +271,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       }
     } catch (e) {
       if (streamWrap) streamWrap.remove();
-      if (e.message.includes('401')) {
+      if (e.message?.includes('401')) {
         voegBerichtToe('assistant', '❌ API-sleutel ongeldig of verlopen. Stel een nieuwe in via Instellingen.');
       } else {
         voegBerichtToe('assistant', '❌ Fout: ' + e.message);

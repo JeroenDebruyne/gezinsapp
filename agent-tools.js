@@ -29,7 +29,7 @@ function _atTransportVoorDag(datum) {
   const dagKey = DAGMAP[new Date(datum + 'T12:00:00').getDay()];
   const result = {};
   const kinderen = Auth.getProfielen().filter(p => p.rol === 'kind').map(p => p.persoonKey);
-  (kinderen.length ? kinderen : ['nora', 'odiel']).forEach(kind => {
+  kinderen.forEach(kind => {
     const std = (standaardTransport || {})[kind]?.[dagKey] || {};
     const uit = (transportUitzonderingen || {})[datum]?.[kind] || {};
     result[kind] = {...std, ...uit};

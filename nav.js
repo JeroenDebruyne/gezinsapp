@@ -184,33 +184,49 @@
     var overlay = document.createElement('div');
     overlay.className = 'bevestig-overlay';
 
-    var subHtml = sub ? '<p class="bevestig-sub">' + sub + '</p>' : '';
-    overlay.innerHTML =
-      '<div class="bevestig-sheet">' +
-        '<div class="bevestig-sheet-handle"></div>' +
-        '<p class="bevestig-bericht">' + bericht + '</p>' +
-        subHtml +
-        '<div class="bevestig-knoppen">' +
-          '<button class="bevestig-ja' + (danger ? ' danger' : '') + '">' + bevestigLabel + '</button>' +
-          '<button class="bevestig-nee">' + cancelLabel + '</button>' +
-        '</div>' +
-      '</div>';
+    var sheet = document.createElement('div');
+    sheet.className = 'bevestig-sheet';
+    var handle = document.createElement('div');
+    handle.className = 'bevestig-sheet-handle';
+    var berichtEl = document.createElement('p');
+    berichtEl.className = 'bevestig-bericht';
+    berichtEl.textContent = bericht;
+    var knoppen = document.createElement('div');
+    knoppen.className = 'bevestig-knoppen';
+    var jaBtn = document.createElement('button');
+    jaBtn.className = 'bevestig-ja' + (danger ? ' danger' : '');
+    jaBtn.textContent = bevestigLabel;
+    var neeBtn = document.createElement('button');
+    neeBtn.className = 'bevestig-nee';
+    neeBtn.textContent = cancelLabel;
+    knoppen.appendChild(jaBtn);
+    knoppen.appendChild(neeBtn);
+    sheet.appendChild(handle);
+    sheet.appendChild(berichtEl);
+    if (sub) {
+      var subEl = document.createElement('p');
+      subEl.className = 'bevestig-sub';
+      subEl.textContent = sub;
+      sheet.appendChild(subEl);
+    }
+    sheet.appendChild(knoppen);
+    overlay.appendChild(sheet);
 
     document.body.appendChild(overlay);
     requestAnimationFrame(function() { overlay.classList.add('open'); });
 
+    function esc(e) { if (e.key === 'Escape') sluit(); }
+    document.addEventListener('keydown', esc);
+
     function sluit() {
+      document.removeEventListener('keydown', esc);
       overlay.classList.remove('open');
       setTimeout(function() { overlay.remove(); }, 280);
     }
 
-    overlay.querySelector('.bevestig-ja').addEventListener('click', function() { sluit(); onJa(); });
-    overlay.querySelector('.bevestig-nee').addEventListener('click', sluit);
+    jaBtn.addEventListener('click', function() { sluit(); onJa(); });
+    neeBtn.addEventListener('click', sluit);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) sluit(); });
-
-    document.addEventListener('keydown', function esc(e) {
-      if (e.key === 'Escape') { sluit(); document.removeEventListener('keydown', esc); }
-    });
   };
 
   // Persoonkleuren dynamisch toepassen vanuit localStorage
@@ -303,6 +319,20 @@
         activeDrag = { modal: modal, startY: e.touches[0].clientY, startT: Date.now(), currentY: 0 };
         modal.style.transition = 'none';
       }, { passive: true });
+    });
+  });
+
+  // Injecteer sluitknop in alle modals die er nog geen hebben
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.modal-bg .modal').forEach(function(modal) {
+      if (modal.querySelector('.modal-sluit-btn')) return;
+      var bg = modal.closest('.modal-bg');
+      var btn = document.createElement('button');
+      btn.className = 'modal-sluit-btn';
+      btn.setAttribute('aria-label', 'Sluiten');
+      btn.textContent = '✕';
+      btn.onclick = function(e) { e.stopPropagation(); if (bg) bg.classList.remove('open'); };
+      modal.insertBefore(btn, modal.firstChild);
     });
   });
 

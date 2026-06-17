@@ -198,7 +198,7 @@ function openModal(todo) {
   setTimeout(()=>document.getElementById('t-titel').focus(), 100);
 }
 function editTodo(id) { openModal(todos.find(t=>t.id==id)); }
-function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
+function _terugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 function closeModal() {
   const el = document.getElementById('todo-modal-bg');
   const wasOpen = el.classList.contains('open');
@@ -224,7 +224,7 @@ function closeModal() {
   }
 
   el.classList.remove('open');
-  if (wasOpen) _teugNaarHome();
+  if (wasOpen) _terugNaarHome();
 }
 
 function renderPersonenMS() {
@@ -314,7 +314,7 @@ function verwijderTodo(id) {
 
 // Sluit modal bij klik op achtergrond
 document.getElementById('todo-modal-bg').addEventListener('click', e=>{
-  if (e.target===document.getElementById('todo-modal-bg')) { closeModal(); _teugNaarHome(); }
+  if (e.target===document.getElementById('todo-modal-bg')) { closeModal(); _terugNaarHome(); }
 });
 
 // Enter = opslaan
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.addEventListener('click', function(e){
       e.stopPropagation();
       if(bg) bg.classList.remove('open');
-      _teugNaarHome();
+      _terugNaarHome();
     });
     modal.insertBefore(btn, modal.firstChild);
   });

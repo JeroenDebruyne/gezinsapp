@@ -17,8 +17,8 @@ let _savingAct = false;
 
 const MAANDEN = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
 const DAGKORT  = DKORT;  // alias voor agenda-intern gebruik
-const DOT_KLEUR  = {jeroen:'dot-jeroen',kelly:'dot-kelly',nora:'dot-nora',odiel:'dot-odiel'};
-const KLEUR_BALK = {jeroen:'var(--c-jeroen-dot)',kelly:'var(--c-kelly-dot)',nora:'var(--c-nora-dot)',odiel:'var(--c-odiel-dot)'};
+const DOT_KLEUR  = new Proxy({}, { get: (_, p) => typeof p === 'string' ? 'dot-' + p : undefined });
+const KLEUR_BALK = new Proxy({}, { get: (_, p) => typeof p === 'string' ? 'var(--c-' + p + '-dot)' : undefined });
 const KINDEREN = () => Auth.getProfielen().filter(p => p.isKind).map(p => p.persoonKey);
 
 // ── Laden ─────────────────────────────────────────────────────
@@ -273,7 +273,7 @@ function renderTransportDetail(act,datumISO){
 
   let html='';
   const isEenmalig=!act.freq||act.freq==='eenmalig';
-  ['nora','odiel'].forEach(kind=>{
+  KINDEREN().forEach(kind=>{
     if(!(act.wie||[]).includes(kind)) return;
     const std=isEenmalig?{}:stdTransport[kind]?.[dagKey]||{};
     const uitz=uitzondering?.[kind]||{};
@@ -386,12 +386,14 @@ function _tryParse(s){try{return JSON.parse(s);}catch{return null;}}
 
 function _vulTransportOpties(){
   const opties=(transportPersonen||[]).map(p=>`<option>${escHtml(typeof p==='object'?p.naam:p)}</option>`).join('');
-  ['a-brengt-nora','a-haalt-nora','a-brengt-odiel','a-haalt-odiel'].forEach(id=>{
-    const sel=document.getElementById(id);
-    if(!sel)return;
-    const huidig=sel.value;
-    sel.innerHTML='<option value="">— Standaard —</option>'+opties;
-    if(huidig)sel.value=huidig;
+  KINDEREN().forEach(kind=>{
+    ['a-brengt-','a-haalt-'].forEach(prefix=>{
+      const sel=document.getElementById(prefix+kind);
+      if(!sel)return;
+      const huidig=sel.value;
+      sel.innerHTML='<option value="">— Standaard —</option>'+opties;
+      if(huidig)sel.value=huidig;
+    });
   });
 }
 
@@ -443,7 +445,7 @@ function openActModal(act){
 
   checkKindjeSection();
   _vulTransportOpties();
-  ['nora','odiel'].forEach(kind=>{
+  KINDEREN().forEach(kind=>{
     const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
     document.getElementById(`a-brengt-${kind}`).value=act?.[`brengt${cap}`]||'';
     document.getElementById(`a-haalt-${kind}`).value=act?.[`haalt${cap}`]||'';
@@ -497,12 +499,12 @@ function wijzigAlleHerhalingen(){
   closeEditRecurModal();
   openActModal(activiteiten.find(a=>a.id===_editRecurActId));
 }
-function _teugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
+function _terugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 function closeActModal(){
   const el=document.getElementById('act-modal-bg');
   const wasOpen=el.classList.contains('open');
   el.classList.remove('open');
-  if(wasOpen) _teugNaarHome();
+  if(wasOpen) _terugNaarHome();
 }
 
 function renderPersonenMS(){
@@ -520,13 +522,15 @@ function togglePersoon(p){
   renderPersonenMS();checkKindjeSection();
 }
 function checkKindjeSection(){
-  const heeftNora=geselecteerdePersonen.includes('nora');
-  const heeftOdiel=geselecteerdePersonen.includes('odiel');
+  const kinderen=KINDEREN();
+  const heeftKind=kinderen.some(k=>geselecteerdePersonen.includes(k));
   const heeftGezinshoofd=geselecteerdePersonen.some(p=>{const pr=Auth.getProfielen().find(pr=>pr.persoonKey===p);return pr&&!pr.isKind;});
-  const toonKindje=(heeftNora||heeftOdiel)&&!heeftGezinshoofd;
+  const toonKindje=heeftKind&&!heeftGezinshoofd;
   document.getElementById('kindje-sectie').style.display=toonKindje?'block':'none';
-  document.getElementById('transport-nora').style.display=heeftNora?'block':'none';
-  document.getElementById('transport-odiel').style.display=heeftOdiel?'block':'none';
+  kinderen.forEach(kind=>{
+    const el=document.getElementById('transport-'+kind);
+    if(el) el.style.display=geselecteerdePersonen.includes(kind)?'block':'none';
+  });
 }
 function togglePrive(){priveAan=!priveAan;updatePriveSwitch();}
 function updatePriveSwitch(){document.getElementById('prive-switch').className='ios-switch'+(priveAan?' on':'');}
@@ -665,7 +669,7 @@ async function saveActiviteit(){
       uitgesloten: bestaande?.uitgesloten||[],
       maaltijdThuis:_mt,
     };
-    ['nora','odiel'].forEach(kind=>{
+    KINDEREN().forEach(kind=>{
       if(!heeftKind) return;
       const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
       act[`brengt${cap}`]=document.getElementById(`a-brengt-${kind}`).value;
@@ -742,7 +746,7 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{
     if(e.target!==bg) return;
     switch(bg.id){
-      case 'act-modal-bg': closeActModal(); break; // closeActModal regelt zelf _teugNaarHome
+      case 'act-modal-bg': closeActModal(); break; // closeActModal regelt zelf _terugNaarHome
       case 'drukte-modal-bg': closeDOModal(); break;
       case 'ical-modal-bg': closeIcalModal(); break;
       case 'verwijder-modal-bg': closeVerwijderModal(); break;
@@ -1029,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btn.onclick = function(e){
       e.stopPropagation();
       if(bg) bg.classList.remove('open');
-      if(bg && bg.id==='act-modal-bg') _teugNaarHome();
+      if(bg && bg.id==='act-modal-bg') _terugNaarHome();
     };
     modal.insertBefore(btn, modal.firstChild);
   });
