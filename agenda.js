@@ -44,6 +44,8 @@ if(typeof BroadcastChannel!=='undefined'){
 }
 onGezinsappUpdate(renderAlles);
 AppState.subscribe('activiteiten', renderAlles);
+AppState.subscribe('planning', renderAlles);
+AppState.subscribe('drukteOverride', renderAlles);
 
 function renderAlles(){
   renderLegenda();

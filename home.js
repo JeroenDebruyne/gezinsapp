@@ -8,6 +8,7 @@ if (typeof Maps !== 'undefined' && !Maps.getCoords() && Maps.getThuisadres())
 onGezinsappUpdate(renderHomepage);
 AppState.subscribe('activiteiten', renderHomepage);
 AppState.subscribe('todos', renderHomepage);
+AppState.subscribe('contacten', renderHomepage);
 
 (function () {
   const welkom = document.getElementById('home-chat-welkom');
