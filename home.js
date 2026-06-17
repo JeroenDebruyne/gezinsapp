@@ -20,7 +20,7 @@ AppState.subscribe('contacten', renderHomepage);
 })();
 
 function openActDetail(id) {
-  const a = activiteiten.find(x => x.id == id);
+  const a = activiteiten.find(x => x.id === id);
   if (!a) return;
   const emoji = a.wie?.length === 1 ? (PEMOJI[a.wie[0]] || null) : null;
   const emojiFallback = emoji ? escHtml(emoji) : '<i data-lucide="users" style="width:22px;height:22px;"></i>';
@@ -156,7 +156,7 @@ function renderVandaag(datumISO, p) {
   }).sort((a, b) => tijdMinuten(a.start) - tijdMinuten(b.start));
   if (!dagActs.length) { el.innerHTML = '<div class="empty-state"><i data-lucide="sun" class="empty-icon"></i><p>Geen activiteiten vandaag</p><a href="agenda.html" class="btn btn-secondary btn-sm" style="margin-top:10px;display:inline-flex;">Plan activiteit →</a></div>'; return; }
   el.innerHTML = dagActs.map(a => `
-    <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" data-action="open-act-detail" data-id="${Number(a.id)}">
+    <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;" data-action="open-act-detail" data-id="${a.id}">
       <div style="font-size:22px;display:flex;align-items:center;">${a.wie?.length === 1 ? (PEMOJI[a.wie[0]] ? `<span>${escHtml(PEMOJI[a.wie[0]])}</span>` : '<i data-lucide="calendar-range" style="width:20px;height:20px;"></i>') : '<i data-lucide="users" style="width:20px;height:20px;"></i>'}</div>
       <div style="flex:1;">
         <div class="card-title">${a.informatief ? '<i data-lucide="pin" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ' : ''}${escHtml(a.naam)}${a.prive ? ' <i data-lucide="lock" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i>' : ''}</div>
@@ -178,7 +178,7 @@ function renderTodosPreview(p) {
   if (!open.length) { el.innerHTML = '<div class="leeg"><div class="leeg-icon"><i data-lucide="check-circle" style="width:32px;height:32px;color:var(--muted-2);"></i></div><div class="leeg-titel">Geen openstaande to-do\'s</div><div class="leeg-sub">Tik op + om een taak toe te voegen</div></div>'; return; }
   el.innerHTML = open.map(t => `
     <div class="todo-item${t.gedaan ? ' gedaan' : ''}">
-      <button class="todo-cirkel${t.gedaan ? ' gedaan' : ''}${!t.gedaan && t.prioriteit ? ' ' + t.prioriteit : ''}" data-action="toggle-todo-preview" data-id="${Number(t.id)}"></button>
+      <button class="todo-cirkel${t.gedaan ? ' gedaan' : ''}${!t.gedaan && t.prioriteit ? ' ' + t.prioriteit : ''}" data-action="toggle-todo-preview" data-id="${t.id}"></button>
       <div class="todo-body" style="cursor:pointer;" data-action="ga-todos">
         <div class="todo-titel${t.gedaan ? ' gedaan' : ''}">${escHtml(t.titel)}</div>
         <div class="todo-meta">
@@ -192,7 +192,7 @@ function renderTodosPreview(p) {
 }
 
 function toggleTodo(id) {
-  const t = todos.find(x => x.id == id);
+  const t = todos.find(x => x.id === id);
   if (!t) return;
   t.gedaan = !t.gedaan; t.gedaanOp = t.gedaan ? fDateISO(new Date()) : null;
   slaLokaalOp(); sbSaveTodo(t);
@@ -301,8 +301,8 @@ document.addEventListener('click', function (e) {
     case 'navigeer': location.href = el.dataset.href; break;
     case 'sluit-act-detail': sluitActDetail(); break;
     case 'wissel-persoon': wisselPersoon(el.dataset.key); break;
-    case 'open-act-detail': openActDetail(parseFloat(el.dataset.id) || el.dataset.id); break;
-    case 'toggle-todo-preview': toggleTodo(parseFloat(el.dataset.id) || el.dataset.id); break;
+    case 'open-act-detail': openActDetail(el.dataset.id); break;
+    case 'toggle-todo-preview': toggleTodo(el.dataset.id); break;
     case 'ga-todos': location.href = 'todos.html'; break;
   }
 });

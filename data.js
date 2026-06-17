@@ -13,7 +13,11 @@ function escHtml(s){
 // ── Constanten ────────────────────────────────────────────────
 // SUPABASE_URL en SUPABASE_KEY komen uit config.js
 
-function _maakId() { return Date.now() + Math.random(); }
+function _maakId() {
+  return (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10));
+}
 
 // WINKELS — default via AppState (state.js), overschrijfbaar via instellingen
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
@@ -245,10 +249,10 @@ async function laadOp() {
       sbFetch(`drukte_override${_gezinIdQ('')}`),
       sbFetch(`todos${_gezinIdQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
-    if (r.length) recepten = r.map(x=>({...x, _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
-    if (i.length) standaardIngredienten = i.map(x => ({...x, _sbId: x.id, productLink: x.product_link || null}));
+    if (r.length) recepten = r.map(x=>({...x, id:String(x.id), _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
+    if (i.length) standaardIngredienten = i.map(x => ({...x, id:String(x.id), _sbId: x.id, productLink: x.product_link || null}));
     if (a.length) activiteiten = a.map(x=>({
-      ...x, _sbId:x.id,
+      ...x, id:String(x.id), _sbId:x.id,
       dagen:x.dagen||[], wie:Array.isArray(x.wie)?x.wie:[x.wie].filter(Boolean),
       reisHeen:x.reis_heen, reisTerug:x.reis_terug, eindUur:x.eind_uur,
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
@@ -274,9 +278,9 @@ async function laadOp() {
     }
     if (p.length) { p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; }); AppState.notify('planning'); }
     if (b.length) {
-      extraItems = b.filter(x => (x.type||'extra') === 'extra');
+      extraItems = b.filter(x => (x.type||'extra') === 'extra').map(x => ({...x, id:String(x.id), _sbId:x.id}));
       boodschappenReceptItems = b.filter(x => x.type === 'recept').map(x => ({
-        ...x, _sbId: x.id,
+        ...x, id:String(x.id), _sbId: x.id,
         afgevinkt: x.afgevinkt || false,
         weekKey: x.week_key || null,
         eenheid: x.eenheid || null,
@@ -289,7 +293,7 @@ async function laadOp() {
       const partnerData=_p(x.partner); // {p1:{...}, p2:{...}} of oud formaat
       const isNieuwFormaat=partnerData&&(partnerData.p1||partnerData.p2);
       return {
-        ...x, _sbId:x.id,
+        ...x, id:String(x.id), _sbId:x.id,
         partner1: isNieuwFormaat ? (partnerData.p1||null) : (partnerData||null),
         partner2: isNieuwFormaat ? (partnerData.p2||null) : null,
         kinderenData: _p(x.kinderen_namen)||[],
@@ -300,7 +304,7 @@ async function laadOp() {
       };
     });
     if (d.length) { d.forEach(x=>drukteOverride[x.datum]=x.drukte); AppState.notify('drukteOverride'); }
-    if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
+    if (t.length) todos = t.map(x=>({...x, id:String(x.id), _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
     const inst = await sbFetch(`instellingen${_gezinIdQ('')}`).catch(()=>[]);
     inst.forEach(r=>{
@@ -344,20 +348,27 @@ async function laadOp() {
   }
 }
 
+// Normaliseert legacy float-IDs (van de oude _maakId) naar strings
+function _normaliseerIds(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map(x => (x && typeof x.id !== 'undefined' && typeof x.id !== 'string')
+    ? { ...x, id: String(x.id) } : x);
+}
+
 function laadLokaal() {
   try {
     const raw = localStorage.getItem('gezinsapp_data');
     if (!raw) return;
     const data = JSON.parse(raw);
-    if (data.activiteiten) activiteiten = data.activiteiten;
-    if (data.recepten)     recepten     = data.recepten;
+    if (data.activiteiten) activiteiten = _normaliseerIds(data.activiteiten);
+    if (data.recepten)     recepten     = _normaliseerIds(data.recepten);
     if (data.planning)     planning     = data.planning;
-    if (data.extraItems)   extraItems   = data.extraItems;
-    if (data.boodschappenReceptItems) boodschappenReceptItems = data.boodschappenReceptItems;
+    if (data.extraItems)   extraItems   = _normaliseerIds(data.extraItems);
+    if (data.boodschappenReceptItems) boodschappenReceptItems = _normaliseerIds(data.boodschappenReceptItems);
     if (data.drukteOverride) drukteOverride = data.drukteOverride;
-    if (data.standaardIngredienten) standaardIngredienten = data.standaardIngredienten;
-    if (data.contacten)    contacten    = data.contacten;
-    if (data.todos)        todos        = data.todos;
+    if (data.standaardIngredienten) standaardIngredienten = _normaliseerIds(data.standaardIngredienten);
+    if (data.contacten)    contacten    = _normaliseerIds(data.contacten);
+    if (data.todos)        todos        = _normaliseerIds(data.todos);
     if (data.geheugen)     geheugen     = data.geheugen;
     if (data.uitzonderingen) uitzonderingen = data.uitzonderingen;
     if (data.vasteRoosters) vasteRoosters = {...vasteRoosters,...data.vasteRoosters};

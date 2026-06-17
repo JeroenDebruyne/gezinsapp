@@ -957,8 +957,8 @@ document.addEventListener('click', function(e){
     case 'set-filter': setFilter(el.dataset.key); break;
     case 'selecteer-dag': selecteerDag(datum); break;
     case 'open-do-modal': openDOModal(datum, el.dataset.label); break;
-    case 'edit-act': editActiviteit(parseFloat(id) || id); break;
-    case 'verwijder-act': e.stopPropagation(); verwijderActiviteit(parseFloat(id) || id, datum); break;
+    case 'edit-act': editActiviteit(id); break;
+    case 'verwijder-act': e.stopPropagation(); verwijderActiviteit(id, datum); break;
     case 'toggle-persoon': togglePersoon(el.dataset.persoon); break;
     case 'ical-toggle-wie': icalToggleWie(el.dataset.persoon); break;
     case 'ical-sync-enkel': icalSyncEnkel(parseInt(el.dataset.index, 10)); break;

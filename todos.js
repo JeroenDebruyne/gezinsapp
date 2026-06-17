@@ -113,8 +113,8 @@ function renderTodos() {
     return `
     <div class="todo-item${t.gedaan?' gedaan':''}">
       <button class="todo-cirkel${t.gedaan?' gedaan':''}${!t.gedaan?' '+t.prioriteit:''}"
-        data-action="toggle-todo" data-id="${Number(t.id)}"></button>
-      <div class="todo-body${kanBewerken?' todo-body-bewerkbaar':''}" ${kanBewerken?`data-action="edit-todo" data-id="${Number(t.id)}"`:'style="cursor:default"'}>
+        data-action="toggle-todo" data-id="${t.id}"></button>
+      <div class="todo-body${kanBewerken?' todo-body-bewerkbaar':''}" ${kanBewerken?`data-action="edit-todo" data-id="${t.id}"`:'style="cursor:default"'}>
         <div class="todo-titel${t.gedaan?' gedaan':''}">${escHtml(t.titel)}</div>
         ${t.notitie?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${escHtml(t.notitie)}</div>`:''}
         <div class="todo-meta" style="margin-top:5px;">
@@ -145,7 +145,7 @@ function maakDeadlineBadge(deadline, vandaag, gedaan) {
 
 // ── Toggle gedaan ─────────────────────────────────────────────
 function toggleTodo(id) {
-  const t = todos.find(x=>x.id==id);
+  const t = todos.find(x=>x.id===id);
   if (!t) return;
   t.gedaan = !t.gedaan;
   t.gedaanOp = t.gedaan ? fDateISO(new Date()) : null;
@@ -197,7 +197,7 @@ function openModal(todo) {
   document.getElementById('todo-modal-bg').classList.add('open');
   setTimeout(()=>document.getElementById('t-titel').focus(), 100);
 }
-function editTodo(id) { openModal(todos.find(t=>t.id==id)); }
+function editTodo(id) { openModal(todos.find(t=>t.id===id)); }
 function _terugNaarHome(){ if (new URLSearchParams(location.search).get('van')==='home') location.href='index.html'; }
 function closeModal() {
   const el = document.getElementById('todo-modal-bg');
@@ -268,7 +268,7 @@ function saveTodo() {
     return;
   }
 
-  const bestaande = todoEditId ? todos.find(t=>t.id==todoEditId) : null;
+  const bestaande = todoEditId ? todos.find(t=>t.id===todoEditId) : null;
   const todo = {
     id:       todoEditId || String(_maakId()),
     _sbId:    bestaande?._sbId,
@@ -285,7 +285,7 @@ function saveTodo() {
     aangemaaktOp:   bestaande?.aangemaaktOp || fDateISO(new Date()),
   };
 
-  if (todoEditId) todos = todos.map(t=>t.id==todoEditId?todo:t);
+  if (todoEditId) todos = todos.map(t=>t.id===todoEditId?todo:t);
   else todos.push(todo);
 
   slaLokaalOp();
@@ -300,7 +300,7 @@ function saveTodo() {
 
 function verwijderTodo(id) {
   _bevestig('To-do verwijderen?', function() {
-    const t = todos.find(x=>x.id==id);
+    const t = todos.find(x=>x.id===id);
     todos = todos.filter(x=>x.id!=id);
     closeModal();
     slaLokaalOp();
@@ -363,10 +363,10 @@ document.addEventListener('click', function(e) {
   const action = el.dataset.action;
   switch (action) {
     case 'toggle-todo':
-      toggleTodo(Number(el.dataset.id));
+      toggleTodo(el.dataset.id);
       break;
     case 'edit-todo':
-      editTodo(Number(el.dataset.id));
+      editTodo(el.dataset.id);
       break;
     case 'verwijder-todo':
       verwijderTodo(el.dataset.id);
