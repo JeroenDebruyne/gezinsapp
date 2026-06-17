@@ -15,6 +15,8 @@ laadOp().then(() => {
   }
 }).catch(() => { laadLokaal(); renderRecepten(); });
 
+AppState.subscribe('recepten', renderRecepten);
+
 function filterRType(type, el) {
   activeRType = type;
   document.querySelectorAll('#recept-type-tabs .ptab').forEach(t => t.classList.remove('active'));

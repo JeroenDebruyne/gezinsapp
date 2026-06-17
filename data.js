@@ -459,7 +459,7 @@ async function sbSaveRecept(recept) {
     return true;
   } catch(e) { _opslagFout(e,'recept'); return e?.message||String(e); }
 }
-async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'recept-delete');} }
+async function sbDeleteRecept(sbId) { try{await sbFetch(`recepten?id=eq.${sbId}`,'DELETE'); AppState.notify('recepten');}catch(e){_opslagFout(e,'recept-delete');} }
 
 async function sbSaveActiviteit(act) {
   const gid = _gezinId();
@@ -506,7 +506,7 @@ async function sbSaveActiviteit(act) {
     _opslagFout(e,'activiteit'); return false;
   }
 }
-async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'activiteit-delete');} }
+async function sbDeleteActiviteit(sbId) { try{await sbFetch(`activiteiten?id=eq.${sbId}`,'DELETE'); AppState.notify('activiteiten');}catch(e){_opslagFout(e,'activiteit-delete');} }
 
 async function sbSaveTodo(todo) {
   const data = {
@@ -527,7 +527,7 @@ async function sbSaveTodo(todo) {
     return true;
   } catch(e) { _opslagFout(e,'todo'); return false; }
 }
-async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'todo-delete');} }
+async function sbDeleteTodo(sbId) { try{await sbFetch(`todos?id=eq.${sbId}`,'DELETE'); AppState.notify('todos');}catch(e){_opslagFout(e,'todo-delete');} }
 
 async function sbSavePlanning(datum, slot, waarde, porties) {
   const gid = _gezinId();
@@ -547,9 +547,10 @@ async function sbSaveIngredient(ing) {
     if (ing._sbId) { await sbFetch(`ingredienten?id=eq.${ing._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('ingredienten','POST',{...data,gezin_id:_gezinId()}); if(res[0]) ing._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('standaardIngredienten');
   } catch(e) { _opslagFout(e,'ingredient'); }
 }
-async function sbDeleteIngredient(sbId) { try{await sbFetch(`ingredienten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'ingredient-delete');} }
+async function sbDeleteIngredient(sbId) { try{await sbFetch(`ingredienten?id=eq.${sbId}`,'DELETE'); AppState.notify('standaardIngredienten');}catch(e){_opslagFout(e,'ingredient-delete');} }
 
 async function sbSaveContact(contact) {
   // Serialiseer nieuwe structuur naar bestaande kolommen
@@ -577,13 +578,13 @@ async function sbSaveContact(contact) {
     AppState.notify('contacten');
   } catch(e) { _opslagFout(e,'contact'); }
 }
-async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'contact-delete');} }
+async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE'); AppState.notify('contacten');}catch(e){_opslagFout(e,'contact-delete');} }
 
 async function sbSaveExtra(item) {
   try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gezinId()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); AppState.notify('extraItems'); }
   catch(e) { _opslagFout(e,'extra'); }
 }
-async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }
+async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE'); AppState.notify('extraItems');}catch(e){_opslagFout(e,'extra-delete');} }
 
 async function sbSaveBoodschapReceptItem(item) {
   try {
@@ -601,12 +602,13 @@ async function sbSaveBoodschapReceptItem(item) {
     };
     const res = await sbFetch('boodschappen_extra', 'POST', body);
     if (res[0]) item._sbId = res[0].id;
+    AppState.notify('boodschappenReceptItems');
   } catch(e) { console.warn('[boodschapReceptItem save]', e); }
 }
 
 async function sbToggleAfgevinktItem(sbId, val) {
   if (!sbId) return;
-  try { await sbFetch(`boodschappen_extra?id=eq.${sbId}`, 'PATCH', { afgevinkt: val }); }
+  try { await sbFetch(`boodschappen_extra?id=eq.${sbId}`, 'PATCH', { afgevinkt: val }); AppState.notify('boodschappenReceptItems'); }
   catch(e) { console.warn('[toggleAfgevinktItem]', e); }
 }
 
@@ -636,6 +638,7 @@ async function sbSaveDrukte(datum, drukte) {
       {datum,drukte,gezin_id:gid},
       '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('drukteOverride');
   } catch(e) { _opslagFout(e,'drukte'); }
 }
 

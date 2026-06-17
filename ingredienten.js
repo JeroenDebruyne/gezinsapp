@@ -1,5 +1,6 @@
 Auth.initPagina('ingredienten');
 laadOp().then(renderIngredienten).catch(()=>{laadLokaal();renderIngredienten();});
+AppState.subscribe('standaardIngredienten', renderIngredienten);
 
 let activeIngWinkelFilter = 'alle';
 

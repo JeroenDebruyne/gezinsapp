@@ -582,7 +582,7 @@ async function agentExecute(naam, input) {
       const idx = activiteiten.findIndex(a => a.naam.toLowerCase().includes(input.naam.toLowerCase()));
       if (idx < 0) return `Activiteit met "${input.naam}" niet gevonden.`;
       const [removed] = activiteiten.splice(idx, 1);
-      slaLokaalOp(); if (removed._sbId) sbDeleteActiviteit(removed._sbId);
+      slaLokaalOp(); AppState.notify('activiteiten'); if (removed._sbId) sbDeleteActiviteit(removed._sbId);
       return `✅ Activiteit "${removed.naam}" verwijderd.`;
     }
 
@@ -618,7 +618,7 @@ async function agentExecute(naam, input) {
       const idx = todos.findIndex(t => t.id === input.id);
       if (idx < 0) return 'To-do niet gevonden.';
       const [removed] = todos.splice(idx, 1);
-      slaLokaalOp(); if (removed._sbId) sbDeleteTodo(removed._sbId);
+      slaLokaalOp(); AppState.notify('todos'); if (removed._sbId) sbDeleteTodo(removed._sbId);
       return `✅ To-do "${removed.titel}" verwijderd.`;
     }
 
@@ -629,7 +629,7 @@ async function agentExecute(naam, input) {
       if (input.brengt !== undefined) t.brengt = input.brengt;
       if (input.haalt !== undefined) t.haalt = input.haalt;
       if (input.eet_groo !== undefined) t.eetGroo = input.eet_groo;
-      slaLokaalOp(); sbSaveInstellingen();
+      slaLokaalOp(); AppState.notify('transportUitzonderingen'); sbSaveInstellingen();
       if (typeof maakTransportActiviteit === 'function') maakTransportActiviteit(input.datum, input.kind, t.brengt, t.haalt);
       return `✅ Transport voor ${input.kind} op ${input.datum} ingesteld.`;
     }
@@ -641,13 +641,13 @@ async function agentExecute(naam, input) {
       if (input.brengt !== undefined) t.brengt = input.brengt;
       if (input.haalt !== undefined) t.haalt = input.haalt;
       if (input.eet_groo !== undefined) t.eetGroo = input.eet_groo;
-      slaLokaalOp(); sbSaveInstellingen();
+      slaLokaalOp(); AppState.notify('standaardTransport'); sbSaveInstellingen();
       return `✅ Standaard transport voor ${input.kind} op ${input.dag} permanent gewijzigd.`;
     }
 
     case 'overschrijf_drukte': {
       drukteOverride[input.datum] = input.drukte;
-      slaLokaalOp(); sbSaveDrukte(input.datum, input.drukte);
+      slaLokaalOp(); AppState.notify('drukteOverride'); sbSaveDrukte(input.datum, input.drukte);
       return `✅ Drukte op ${input.datum} ingesteld op "${input.drukte}".`;
     }
 
