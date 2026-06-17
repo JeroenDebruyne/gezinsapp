@@ -15,7 +15,7 @@ function escHtml(s){
 
 function _maakId() { return Date.now() + Math.random(); }
 
-let WINKELS        = ['Colruyt','Delhaize','Lidl','Albert Heijn','Beenhouwerij','Markt','Andere'];
+// WINKELS — default via AppState (state.js), overschrijfbaar via instellingen
 const ALLE_TAGS    = ['Kindvriendelijk','Feest','Restjes-proof','Meal prep','Eenpansgerecht','Oven'];
 
 // Personen — leeg bij opstart, herbouwd via herbouwPersonenData() na laadProfielen()
@@ -101,24 +101,9 @@ const FEESTDAGEN = [
 ];
 
 // ── App state ─────────────────────────────────────────────────
-let activiteiten = [];
-let recepten = [];
-let planning = {};
-let extraItems = [];
-let boodschappenReceptItems = [];
-let drukteOverride = {};
-let standaardIngredienten = [];
-let contacten = [];
-let todos = [];
-let geheugen = [];
-let uitzonderingen = [];
-let transportUitzonderingen = {};   // { 'YYYY-MM-DD': { nora:{brengt,haalt,eetGroo}, odiel:{...} } }
-let standaardTransport = {};
-let vasteRoosters = {};
-let customSchoolvakanties = [];     // Aangepaste/extra schoolvakanties (opgeslagen in Supabase)
-let customFeestdagen = [];          // Aangepaste/extra feestdagen (opgeslagen in Supabase)
-let transportPersonen = [];         // Configureerbare transportpersonen [{naam:'Kelly'}, ...]
-let portiesKindRatio  = 0.5;       // Portie-gewicht per kind (default 0.5 = halve portie)
+// Alle state-variabelen worden beheerd via AppState (state.js).
+// Window-proxies zorgen dat bestaande code (activiteiten.push, activiteiten = [...])
+// blijft werken zonder aanpassingen.
 
 // ── Hulpfuncties datum ────────────────────────────────────────
 function getWeekDatesFrom(isoDate, offset) {
@@ -683,7 +668,7 @@ async function sbSaveGeheugen() {
 }
 
 // ── Gezinsdatums ─────────────────────────────────────────────
-let gezinsDatums = [];
+// gezinsDatums wordt beheerd via AppState (state.js)
 
 async function laadGezinsDatums() {
   try {
