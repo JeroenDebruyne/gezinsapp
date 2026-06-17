@@ -9,7 +9,7 @@ async function laadIcalAbonnementen() {
     const f = gid ? `?id=eq.icalAbonnementen&gezin_id=eq.${gid}` : `?id=eq.icalAbonnementen`;
     const rows = await sbFetch(`instellingen${f}`).catch(() => []);
     if (rows[0]?.waarde) icalAbonnementen = rows[0].waarde;
-  } catch(_) {}
+  } catch(e) { console.warn('[laadIcalAbonnementen]', e); }
 }
 async function slaIcalAbonnementenOp() {
   const gid = _gezinId();
@@ -18,7 +18,7 @@ async function slaIcalAbonnementenOp() {
     await sbFetch('instellingen','POST',
       {id:'icalAbonnementen',waarde:icalAbonnementen,updated_at:new Date().toISOString(),gezin_id:gid},
       '','resolution=merge-duplicates');
-  } catch(_) {}
+  } catch(e) { console.warn('[slaIcalAbonnementenOp]', e); }
 }
 
 async function sbVerwijderIcalActiviteiten(sourceUrl) {

@@ -603,31 +603,31 @@ async function sbSaveBoodschapReceptItem(item) {
     const res = await sbFetch('boodschappen_extra', 'POST', body);
     if (res[0]) item._sbId = res[0].id;
     AppState.notify('boodschappenReceptItems');
-  } catch(e) { console.warn('[boodschapReceptItem save]', e); }
+  } catch(e) { _opslagFout(e, 'boodschap-recept-item'); }
 }
 
 async function sbToggleAfgevinktItem(sbId, val) {
   if (!sbId) return;
   try { await sbFetch(`boodschappen_extra?id=eq.${sbId}`, 'PATCH', { afgevinkt: val }); AppState.notify('boodschappenReceptItems'); }
-  catch(e) { console.warn('[toggleAfgevinktItem]', e); }
+  catch(e) { _opslagFout(e, 'toggle-afgevinkt'); }
 }
 
 async function sbDeleteAlleReceptItems() {
   const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&type=eq.recept`, 'DELETE'); }
-  catch(e) { console.warn('[deleteAlleReceptItems]', e); }
+  catch(e) { _opslagFout(e, 'delete-recept-items'); }
 }
 
 async function sbDeleteAfgevinktBoodschappen() {
   const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'DELETE'); }
-  catch(e) { console.warn('[deleteAfgevinktBoodschappen]', e); }
+  catch(e) { _opslagFout(e, 'delete-afgevinkt'); }
 }
 
 async function sbResetAfgevinkt() {
   const gid = _gezinId(); if (!gid) return;
   try { await sbFetch(`boodschappen_extra?gezin_id=eq.${gid}&afgevinkt=eq.true`, 'PATCH', { afgevinkt: false }); }
-  catch(e) { console.warn('[sbResetAfgevinkt]', e); }
+  catch(e) { _opslagFout(e, 'reset-afgevinkt'); }
 }
 
 async function sbSaveDrukte(datum, drukte) {
@@ -685,27 +685,32 @@ async function laadGezinsDatums() {
     const f = gid ? `?id=eq.gezinsDatums&gezin_id=eq.${gid}` : `?id=eq.gezinsDatums`;
     const rows = await sbFetch(`instellingen${f}`).catch(() => []);
     if (rows[0]?.waarde) gezinsDatums = rows[0].waarde;
-  } catch(_) {}
+  } catch(e) { console.warn('[laadGezinsDatums]', e); }
 }
 async function slaCustomSchoolvakantiesOp() {
   const gid = _gezinId(); if (!gid) return;
-  try { await sbFetch('instellingen','POST',{id:'customSchoolvakanties',waarde:customSchoolvakanties,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+  try { await sbFetch('instellingen','POST',{id:'customSchoolvakanties',waarde:customSchoolvakanties,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); }
+  catch(e) { _opslagFout(e, 'customSchoolvakanties'); }
 }
 async function slaCustomFeestdagenOp() {
   const gid = _gezinId(); if (!gid) return;
-  try { await sbFetch('instellingen','POST',{id:'customFeestdagen',waarde:customFeestdagen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+  try { await sbFetch('instellingen','POST',{id:'customFeestdagen',waarde:customFeestdagen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); }
+  catch(e) { _opslagFout(e, 'customFeestdagen'); }
 }
 async function slaTransportPersonenOp() {
   const gid = _gezinId(); if (!gid) return;
-  try { await sbFetch('instellingen','POST',{id:'transportPersonen',waarde:transportPersonen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+  try { await sbFetch('instellingen','POST',{id:'transportPersonen',waarde:transportPersonen,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); }
+  catch(e) { _opslagFout(e, 'transportPersonen'); }
 }
 async function slaWinkelsOp() {
   const gid = _gezinId(); if (!gid) return;
-  try { await sbFetch('instellingen','POST',{id:'winkels',waarde:WINKELS,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+  try { await sbFetch('instellingen','POST',{id:'winkels',waarde:WINKELS,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); }
+  catch(e) { _opslagFout(e, 'winkels'); }
 }
 async function slaPortiesKindRatioOp() {
   const gid = _gezinId(); if (!gid) return;
-  try { await sbFetch('instellingen','POST',{id:'portiesKindRatio',waarde:portiesKindRatio,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); } catch(_) {}
+  try { await sbFetch('instellingen','POST',{id:'portiesKindRatio',waarde:portiesKindRatio,updated_at:new Date().toISOString(),gezin_id:gid},'','resolution=merge-duplicates'); }
+  catch(e) { _opslagFout(e, 'portiesKindRatio'); }
 }
 async function slaGezinsDatumsOp() {
   const gid = _gezinId();
@@ -714,7 +719,7 @@ async function slaGezinsDatumsOp() {
     await sbFetch('instellingen','POST',
       {id:'gezinsDatums',waarde:gezinsDatums,updated_at:new Date().toISOString(),gezin_id:gid},
       '','resolution=merge-duplicates');
-  } catch(_) {}
+  } catch(e) { _opslagFout(e, 'gezinsDatums'); }
 }
 
 // ── iCal: zie data-ical.js ────────────────────────────────────
