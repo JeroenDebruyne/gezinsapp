@@ -7,6 +7,7 @@ let _aantalDatums=0;
 
 laadOp().then(()=>{renderCrm();renderVerjaarDagAlerts();}).catch(()=>{laadLokaal();renderCrm();renderVerjaarDagAlerts();});
 onGezinsappUpdate(()=>{ renderCrm(); renderVerjaarDagAlerts(); });
+AppState.subscribe('contacten', ()=>{ renderCrm(); renderVerjaarDagAlerts(); });
 
 // ── Helpers ───────────────────────────────────────────────────
 function _parseObj(v){ if(!v) return null; if(typeof v==='object') return v; try{return JSON.parse(v);}catch{return null;} }

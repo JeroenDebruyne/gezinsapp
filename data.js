@@ -277,7 +277,7 @@ async function laadOp() {
       teVerwijderen.forEach(sbId => sbDeleteActiviteit(sbId));
       if (teVerwijderen.length) slaLokaalOp();
     }
-    if (p.length) p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; });
+    if (p.length) { p.forEach(x=>{ planning[x.datum]={ontbijt:x.ontbijt,lunch:x.lunch,avond:x.avond,porties:x.porties||{}}; }); AppState.notify('planning'); }
     if (b.length) {
       extraItems = b.filter(x => (x.type||'extra') === 'extra');
       boodschappenReceptItems = b.filter(x => x.type === 'recept').map(x => ({
@@ -304,7 +304,7 @@ async function laadOp() {
         belangrijkeDatums: isNieuwFormaat ? (partnerData.bd||[]) : [],
       };
     });
-    if (d.length) d.forEach(x=>drukteOverride[x.datum]=x.drukte);
+    if (d.length) { d.forEach(x=>drukteOverride[x.datum]=x.drukte); AppState.notify('drukteOverride'); }
     if (t.length) todos = t.map(x=>({...x, _sbId:x.id, wie:x.wie||[], gedaanOp:x.gedaan_op, aangemaaktDoor:x.aangemaakt_door, aangemaaktOp:x.aangemaakt_op}));
     // Laad instellingen
     const inst = await sbFetch(`instellingen${_gezinIdQ('')}`).catch(()=>[]);
@@ -455,6 +455,7 @@ async function sbSaveRecept(recept) {
     if (recept._sbId) { await sbFetch(`recepten?id=eq.${recept._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('recepten','POST',{...data,gezin_id:_gezinId()}); if(res[0]) recept._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('recepten');
     return true;
   } catch(e) { _opslagFout(e,'recept'); return e?.message||String(e); }
 }
@@ -489,6 +490,7 @@ async function sbSaveActiviteit(act) {
   try {
     await _doSave(data);
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('activiteiten');
     return true;
   } catch(e) {
     // Kolom 'informatief' bestaat nog niet → retry zonder die kolom
@@ -497,6 +499,7 @@ async function sbSaveActiviteit(act) {
         const { informatief: _drop, ...dataZonderInfo } = data;
         await _doSave(dataZonderInfo);
         toonOpslagStatus('✅ Opgeslagen');
+        AppState.notify('activiteiten');
         return true;
       } catch(e2) { _opslagFout(e2,'activiteit'); return false; }
     }
@@ -520,6 +523,7 @@ async function sbSaveTodo(todo) {
       if (res[0]) { todo._sbId = res[0].id; slaLokaalOp(); }
     }
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('todos');
     return true;
   } catch(e) { _opslagFout(e,'todo'); return false; }
 }
@@ -533,6 +537,7 @@ async function sbSavePlanning(datum, slot, waarde, porties) {
       {datum,[slot]:waarde,porties:porties||{},gezin_id:gid},
       '','resolution=merge-duplicates');
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('planning');
   } catch(e) { _opslagFout(e,'planning'); }
 }
 
@@ -569,12 +574,13 @@ async function sbSaveContact(contact) {
     if (contact._sbId) { await sbFetch(`contacten?id=eq.${contact._sbId}`,'PATCH',data); }
     else { const res=await sbFetch('contacten','POST',{...data,gezin_id:_gezinId()}); if(res&&res[0]) contact._sbId=res[0].id; }
     toonOpslagStatus('✅ Opgeslagen');
+    AppState.notify('contacten');
   } catch(e) { _opslagFout(e,'contact'); }
 }
 async function sbDeleteContact(sbId) { try{await sbFetch(`contacten?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'contact-delete');} }
 
 async function sbSaveExtra(item) {
-  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gezinId()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); }
+  try { const res=await sbFetch('boodschappen_extra','POST',{naam:item.naam,winkel:item.winkel,gezin_id:_gezinId()}); if(res[0]) item._sbId=res[0].id; toonOpslagStatus('✅ Opgeslagen'); AppState.notify('extraItems'); }
   catch(e) { _opslagFout(e,'extra'); }
 }
 async function sbDeleteExtra(sbId) { try{await sbFetch(`boodschappen_extra?id=eq.${sbId}`,'DELETE');}catch(e){_opslagFout(e,'extra-delete');} }

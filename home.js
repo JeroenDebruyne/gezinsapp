@@ -6,6 +6,8 @@ if (typeof Maps !== 'undefined' && !Maps.getCoords() && Maps.getThuisadres())
   Maps.geocodeerAdres(Maps.getThuisadres()).catch(() => {});
 
 onGezinsappUpdate(renderHomepage);
+AppState.subscribe('activiteiten', renderHomepage);
+AppState.subscribe('todos', renderHomepage);
 
 (function () {
   const welkom = document.getElementById('home-chat-welkom');
