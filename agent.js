@@ -216,7 +216,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
   async function stuurBericht(tekst) {
     tekst = (tekst || '').trim();
     if (!tekst) return;
-    try { _rateLimiter.check(); } catch (e) { voegBerichtToe('assistant', '⏱️ ' + e.message); return; }
+    try { _rateLimiter.check(); } catch (e) { voegBerichtToe('assistant', '⏱️ ' + (e?.message || e)); return; }
     // Wacht tot data geladen is (optioneel)
     if (isDataGeladen && !isDataGeladen()) {
       const typWait = voegBerichtToe('assistant', '⏳ Even wachten, data wordt nog geladen…', true);
@@ -274,7 +274,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       if (e.message?.includes('401')) {
         voegBerichtToe('assistant', '❌ API-sleutel ongeldig of verlopen. Stel een nieuwe in via Instellingen.');
       } else {
-        voegBerichtToe('assistant', '❌ Fout: ' + e.message);
+        voegBerichtToe('assistant', '❌ Fout: ' + (e?.message || e));
       }
     }
   }
@@ -303,7 +303,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       _slaGeschiedenisOp();
     } catch (e) {
       typingEl?.remove();
-      voegBerichtToe('assistant', '❌ Fout: ' + e.message);
+      voegBerichtToe('assistant', '❌ Fout: ' + (e?.message || e));
     }
   }
 
