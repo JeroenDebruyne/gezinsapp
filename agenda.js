@@ -1022,19 +1022,8 @@ document.addEventListener('input', function(e){
 document.getElementById('ical-url')?.addEventListener('keydown', function(e){
   if (e.key === 'Enter') icalLaadUrl();
 });
+// nav.js injecteert generieke sluitknoppen — overschrijf alleen act-modal-bg met closeActModal zodat _terugNaarHome correct vuurt
 document.addEventListener('DOMContentLoaded', function(){
-  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
-    if(modal.querySelector('.modal-sluit-btn')) return;
-    const bg = modal.closest('.modal-bg');
-    const btn = document.createElement('button');
-    btn.className = 'modal-sluit-btn';
-    btn.setAttribute('aria-label', 'Sluiten');
-    btn.textContent = '✕';
-    btn.onclick = function(e){
-      e.stopPropagation();
-      if(bg) bg.classList.remove('open');
-      if(bg && bg.id==='act-modal-bg') _terugNaarHome();
-    };
-    modal.insertBefore(btn, modal.firstChild);
-  });
+  const actSluit = document.querySelector('#act-modal-bg .modal-sluit-btn');
+  if(actSluit) actSluit.onclick = function(e){ e.stopPropagation(); closeActModal(); };
 });
