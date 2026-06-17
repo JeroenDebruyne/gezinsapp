@@ -3,8 +3,7 @@ Auth.initPagina('instellingen');
 
 const WERKDAGEN_KEYS=DAGKEYS.slice(0,5);
 const WERKDAGEN_LABELS=DLANG.slice(0,5);
-const SB_ANON_KEY='sb_publishable_pJgY7XEt_wZrxVQcd-bP4A_dSVcsgYa';
-const SB_AUTH_URL='https://ceeplmghvcaqvlpicwyi.supabase.co/auth/v1';
+const SB_AUTH_URL=`${SUPABASE_URL}/auth/v1`;
 
 laadOp().then(async ()=>{ await Auth.laadProfielen(); renderInstellingen(); renderIcalAbonnementen(); renderGezinsDatums(); initMobileAccordion(); }).catch(async ()=>{ laadLokaal(); await Auth.laadProfielen().catch(()=>{}); renderInstellingen(); renderGezinsDatums(); initMobileAccordion(); });
 
@@ -344,7 +343,7 @@ async function maakNieuwAccount() {
     if (!isKind) {
       const res = await fetch(`${SB_AUTH_URL}/signup`, {
         method: 'POST',
-        headers: { 'apikey': SB_ANON_KEY, 'Content-Type': 'application/json' },
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pw, data: { naam, rol } })
       });
       const data = await res.json();
