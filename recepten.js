@@ -438,12 +438,12 @@ tijd en porties zijn getallen. Geef ENKEL de JSON terug.`;
   }
 }
 
-function toonImportPreview(r) {
+function toonImportPreview(r, containerId = 'import-preview') {
   const typeLabels = { avond: '<i data-lucide="utensils" class="icon-inline"></i> Avond', lunch: '<i data-lucide="leaf" class="icon-inline"></i> Lunch', weekend: '<i data-lucide="utensils" class="icon-inline"></i> Weekend', ontbijt: '<i data-lucide="coffee" class="icon-inline"></i> Ontbijt' };
   const types = (r.types || [r.type]).filter(Boolean).map(t => typeLabels[t] || t).join(', ');
   const ingLijst = (r.ingredienten || []).slice(0, 8).map(i => `<span>${i.hoev ? escHtml(i.hoev) + ' ' + escHtml(i.eenheid) + ' ' : ''}${escHtml(i.naam)}</span>`).join('');
   const meer = (r.ingredienten || []).length > 8 ? `<span style="color:var(--muted);">+${r.ingredienten.length - 8} meer</span>` : '';
-  document.getElementById('import-preview').innerHTML = `
+  document.getElementById(containerId).innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
       <div class="import-preview-naam">${escHtml(r.naam)}</div>
       <span class="import-success-badge">✅ Gevonden</span>
@@ -468,6 +468,119 @@ function openReceptVanImport() {
 
 function openKeuzeModal() { document.getElementById('keuze-modal-bg').classList.add('open'); }
 function sluitKeuzeModal() { document.getElementById('keuze-modal-bg').classList.remove('open'); }
+
+// ── Foto-scan ────────────────────────────────────────────────
+let _fotoBase64 = null;
+let _fotoMimeType = 'image/jpeg';
+let _geimporteerdFotoRecept = null;
+
+function _naarFotoStap(n) {
+  document.querySelectorAll('#foto-modal-bg .import-stap').forEach(el => el.classList.remove('actief'));
+  document.getElementById('foto-stap-' + n).classList.add('actief');
+}
+
+function openFotoModal() {
+  _fotoBase64 = null;
+  _geimporteerdFotoRecept = null;
+  document.getElementById('foto-preview-wrap').style.display = 'none';
+  document.getElementById('foto-drop-zone').style.display = 'block';
+  document.getElementById('foto-scan-btn').disabled = true;
+  document.getElementById('foto-scan-input').value = '';
+  _naarFotoStap(1);
+  document.getElementById('foto-modal-bg').classList.add('open');
+}
+function sluitFotoModal() { document.getElementById('foto-modal-bg').classList.remove('open'); }
+
+function _verwerkFotoBestand(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  _fotoMimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Verklein naar max 1280px en max ~800KB voor efficiëntie
+      const MAX = 1280;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL(_fotoMimeType, 0.82);
+      _fotoBase64 = dataUrl.split(',')[1];
+      // Toon preview
+      document.getElementById('foto-preview-img').src = dataUrl;
+      document.getElementById('foto-preview-wrap').style.display = 'block';
+      document.getElementById('foto-drop-zone').style.display = 'none';
+      document.getElementById('foto-scan-btn').disabled = false;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function startFotoScan() {
+  if (!_fotoBase64) return;
+  const apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
+  if (!apiKey) {
+    document.getElementById('foto-error-tekst').innerHTML = '<strong>❌ Geen API-sleutel</strong><br><br>Stel je Anthropic API-sleutel in via <a href="instellingen.html" style="color:var(--accent)">Instellingen</a>.';
+    _naarFotoStap(4); return;
+  }
+  _naarFotoStap(2);
+  try {
+    const systeemprompt = `Je bent een recept-extractie assistent. De gebruiker stuurt een foto van een recept (uit een kookboek, tijdschrift of handgeschreven). Analyseer de afbeelding en geef UITSLUITEND geldige JSON terug zonder markdown backticks of uitleg.
+Formaat:
+{
+  "naam": "string",
+  "types": ["avond|lunch|weekend|ontbijt"],
+  "tijd": 30,
+  "porties": 4,
+  "moeilijk": "Snel|Normaal|Uitgebreid",
+  "bereiding": "string — volledige bereidingswijze, stap voor stap",
+  "ingredienten": [{"naam":"string","hoev":"500","eenheid":"gram"}],
+  "tags": [],
+  "bron": "foto"
+}
+types is een array, kies uit: avond, lunch, weekend, ontbijt. Meerdere zijn mogelijk.
+tijd en porties zijn getallen. hoev is altijd een string. Geef ENKEL de JSON terug, niets anders.`;
+    const data = await agentFetch(apiKey, {
+      model: AGENT_MODEL,
+      max_tokens: 2000,
+      system: systeemprompt,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: _fotoMimeType, data: _fotoBase64 } },
+          { type: 'text', text: 'Extraheer het recept uit deze afbeelding en geef het terug als JSON.' },
+        ],
+      }],
+    });
+    const tekst = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    const jsonStr = tekst.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    let recept;
+    try { recept = JSON.parse(jsonStr); }
+    catch (e) { const m = jsonStr.match(/\{[\s\S]*\}/); if (!m) throw new Error('Geen recept herkend in de foto.'); recept = JSON.parse(m[0]); }
+    if (!recept.naam) throw new Error('Geen receptnaam gevonden. Is dit een foto van een recept?');
+    recept.ingredienten = (recept.ingredienten || []).map(i => ({
+      naam: i.naam || '', hoev: String(i.hoev || ''), eenheid: i.eenheid || '',
+      winkel: zoekStandaardWinkel(i.naam) || '',
+    }));
+    _geimporteerdFotoRecept = recept;
+    toonImportPreview(recept, 'foto-import-preview');
+    _naarFotoStap(3);
+  } catch(e) {
+    document.getElementById('foto-error-tekst').innerHTML = `<strong>❌ Scannen mislukt</strong><br><br>${escHtml(e?.message || String(e))}`;
+    _naarFotoStap(4);
+  }
+}
+
+function openReceptVanFoto() {
+  if (!_geimporteerdFotoRecept) return;
+  sluitFotoModal();
+  setTimeout(() => openReceptModal(_geimporteerdFotoRecept, true), 100);
+}
 
 function openLinkModal() {
   document.getElementById('link-url').value = '';
@@ -574,6 +687,7 @@ const _modalCloses = {
   'import-modal-bg': closeImportModal,
   'keuze-modal-bg': sluitKeuzeModal,
   'link-modal-bg': sluitLinkModal,
+  'foto-modal-bg': sluitFotoModal,
 };
 Object.entries(_modalCloses).forEach(([id, closeFn]) => {
   const el = document.getElementById(id);
@@ -587,6 +701,23 @@ document.getElementById('recept-fiche-overlay')?.addEventListener('click', funct
 document.getElementById('recept-type-sel-mob')?.addEventListener('change', e => filterRType(e.target.value, null));
 
 document.getElementById('recept-search')?.addEventListener('input', () => renderRecepten());
+
+// ── Foto-scan: file input + drag-and-drop ────────────────────
+document.getElementById('foto-scan-input')?.addEventListener('change', function() {
+  if (this.files[0]) _verwerkFotoBestand(this.files[0]);
+});
+
+const _fotoDrop = document.getElementById('foto-drop-zone');
+if (_fotoDrop) {
+  _fotoDrop.addEventListener('dragover', e => { e.preventDefault(); _fotoDrop.style.borderColor = 'var(--accent)'; });
+  _fotoDrop.addEventListener('dragleave', () => { _fotoDrop.style.borderColor = 'var(--border-2)'; });
+  _fotoDrop.addEventListener('drop', e => {
+    e.preventDefault();
+    _fotoDrop.style.borderColor = 'var(--border-2)';
+    const file = e.dataTransfer?.files?.[0];
+    if (file) _verwerkFotoBestand(file);
+  });
+}
 
 document.addEventListener('focusin', function (e) {
   if (e.target.classList.contains('ing-combo-input')) {
@@ -632,7 +763,7 @@ document.addEventListener('click', function (e) {
     case 'toggle-profiel-menu': document.getElementById('profiel-menu')?.classList.toggle('open'); break;
     case 'open-keuze-modal': openKeuzeModal(); break;
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
-    case 'open-fiche': openFiche(parseFloat(el.dataset.ficheId) || el.dataset.ficheId); break;
+    case 'open-fiche': openFiche(el.dataset.ficheId); break;
     case 'sluit-fiche': sluitFiche(); break;
     case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id)); break;
     case 'verwijder-recept': verwijderRecept(el.dataset.id); break;
@@ -643,7 +774,13 @@ document.addEventListener('click', function (e) {
     case 'manueel-invoeren': openReceptModal(); closeImportModal(); break;
     case 'sluit-keuze-modal': sluitKeuzeModal(); break;
     case 'keuze-manueel': sluitKeuzeModal(); openReceptModal(); break;
+    case 'keuze-foto': sluitKeuzeModal(); openFotoModal(); break;
     case 'keuze-link': sluitKeuzeModal(); openLinkModal(); break;
+    case 'sluit-foto-modal': sluitFotoModal(); break;
+    case 'klik-foto-input': document.getElementById('foto-scan-input').click(); break;
+    case 'start-foto-scan': startFotoScan(); break;
+    case 'recept-van-foto': openReceptVanFoto(); break;
+    case 'foto-opnieuw': _naarFotoStap(1); _fotoBase64 = null; document.getElementById('foto-preview-wrap').style.display='none'; document.getElementById('foto-drop-zone').style.display='block'; document.getElementById('foto-scan-btn').disabled=true; break;
     case 'sluit-link-modal': sluitLinkModal(); break;
     case 'start-scrape': startScrape(); break;
     case 'wissel-naar-import': sluitLinkModal(); openImportModal(); break;

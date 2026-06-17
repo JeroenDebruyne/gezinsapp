@@ -182,6 +182,13 @@
         <div style="font-size:12px;font-weight:400;opacity:.8;">Zelf naam, ingrediënten en bereiding invullen</div>
       </div>
     </button>
+    <button class="btn btn-secondary" data-action="keuze-foto" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
+      <i data-lucide="camera" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
+      <div style="text-align:left;">
+        <div style="font-weight:700;">Foto scannen</div>
+        <div style="font-size:12px;font-weight:400;opacity:.8;">Neem een foto of upload een afbeelding van een recept</div>
+      </div>
+    </button>
     <button class="btn btn-secondary" data-action="keuze-link" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
       <i data-lucide="link" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
       <div style="text-align:left;">
@@ -192,6 +199,64 @@
   </div>
   <div class="modal-actions" style="margin-top:16px;">
     <button class="modal-btn modal-btn-cancel" data-action="sluit-keuze-modal">Annuleren</button>
+  </div>
+</div>
+</div>
+
+<!-- verborgen file input voor foto-scan (buiten modals, wordt programmatisch geklikt) -->
+<input type="file" id="foto-scan-input" accept="image/*" capture="environment" style="display:none;">
+
+<!-- ══ MODAL: Recept scannen via foto ══ -->
+<div class="modal-bg" id="foto-modal-bg">
+<div class="modal" style="max-width:420px;">
+  <div class="modal-handle"></div>
+  <h3><i data-lucide="camera" class="icon-inline"></i> Recept scannen</h3>
+
+  <!-- Stap 1: preview van gekozen foto -->
+  <div class="import-stap actief" id="foto-stap-1">
+    <div id="foto-preview-wrap" style="display:none;margin-bottom:14px;">
+      <img id="foto-preview-img" style="width:100%;max-height:260px;object-fit:contain;border-radius:var(--radius);border:1.5px solid var(--border);" alt="Voorvertoning recept">
+    </div>
+    <div id="foto-drop-zone" style="border:2px dashed var(--border-2);border-radius:var(--radius);padding:28px 16px;text-align:center;color:var(--muted);cursor:pointer;margin-bottom:14px;" data-action="klik-foto-input">
+      <i data-lucide="image-plus" style="width:36px;height:36px;display:block;margin:0 auto 10px;opacity:.5;"></i>
+      <div style="font-size:14px;font-weight:600;">Tik om een foto te kiezen</div>
+      <div style="font-size:12px;margin-top:4px;">Of sleep een afbeelding hierheen</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" data-action="sluit-foto-modal">Annuleren</button>
+      <button class="modal-btn modal-btn-primary" id="foto-scan-btn" data-action="start-foto-scan" disabled>
+        <i data-lucide="scan-text" class="icon-inline"></i> Scannen
+      </button>
+    </div>
+  </div>
+
+  <!-- Stap 2: laden -->
+  <div class="import-stap" id="foto-stap-2">
+    <div class="import-loader">
+      <div class="spinner"></div>
+      <div class="import-loader-tekst">Recept herkennen…</div>
+      <div class="import-loader-sub">AI leest ingrediënten en bereiding uit de foto</div>
+    </div>
+  </div>
+
+  <!-- Stap 3: preview van resultaat -->
+  <div class="import-stap" id="foto-stap-3">
+    <div class="import-preview" id="foto-import-preview"></div>
+    <div class="info-box"><i data-lucide="pencil" class="icon-inline"></i> Je kan alles nog aanpassen voor je opslaat.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" data-action="foto-opnieuw">← Andere foto</button>
+      <button class="modal-btn modal-btn-primary" data-action="recept-van-foto"><i data-lucide="pencil" class="icon-inline"></i> Bekijk &amp; sla op</button>
+    </div>
+  </div>
+
+  <!-- Stap 4: fout -->
+  <div class="import-stap" id="foto-stap-4">
+    <div class="import-error" id="foto-error-tekst"></div>
+    <div class="info-box">Tip: zorg voor goede belichting en houd de camera recht boven het recept.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" data-action="foto-opnieuw">← Andere foto</button>
+      <button class="modal-btn modal-btn-primary" data-action="manueel-invoeren">Manueel invoeren</button>
+    </div>
   </div>
 </div>
 </div>
