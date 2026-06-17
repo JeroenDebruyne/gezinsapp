@@ -25,21 +25,16 @@ const PLABEL   = { familie:'Familie' };
 const PBADGE   = { familie:'badge-familie' };
 const PEMOJI   = {};
 
-// Kleuren worden hergebruikt als er meer dan 4 personen zijn
-const _BADGE_KLEUREN = ['badge-jeroen','badge-kelly','badge-nora','badge-odiel'];
-
 function herbouwPersonenData() {
   const profielen = Auth.getProfielen();
-  // Leegmaken (muteren, niet vervangen)
   PERSONEN.length = 0;
   Object.keys(PLABEL).forEach(k => { if (k !== 'familie') delete PLABEL[k]; });
   Object.keys(PBADGE).forEach(k => { if (k !== 'familie') delete PBADGE[k]; });
   Object.keys(PEMOJI).forEach(k => delete PEMOJI[k]);
-  // Opnieuw vullen vanuit database-profielen
-  profielen.forEach((p, i) => {
+  profielen.forEach(p => {
     PERSONEN.push(p.persoonKey);
     PLABEL[p.persoonKey] = p.naam;
-    PBADGE[p.persoonKey] = _BADGE_KLEUREN[i % _BADGE_KLEUREN.length];
+    PBADGE[p.persoonKey] = 'badge-' + p.persoonKey;
     PEMOJI[p.persoonKey] = p.emoji;
   });
 }

@@ -148,16 +148,3 @@ document.getElementById('ing-modal-bg').addEventListener('click', e => {
   if (e.target === document.getElementById('ing-modal-bg')) closeIngModal();
 });
 
-// ── Sluitknop injecteren in alle modals ───────────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
-    if(modal.querySelector('.modal-sluit-btn')) return;
-    const bg = modal.closest('.modal-bg');
-    const btn = document.createElement('button');
-    btn.className = 'modal-sluit-btn';
-    btn.setAttribute('aria-label', 'Sluiten');
-    btn.textContent = '✕';
-    btn.onclick = function(e){ e.stopPropagation(); if(bg) bg.classList.remove('open'); };
-    modal.insertBefore(btn, modal.firstChild);
-  });
-});

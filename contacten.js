@@ -456,23 +456,6 @@ document.addEventListener('click', function(e){
     document.getElementById('profiel-menu')?.classList.remove('open');
 });
 
-// ── Sluitknop injecteren in modals ────────────────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  document.querySelectorAll('.modal-bg .modal').forEach(modal => {
-    if(modal.querySelector('.modal-sluit-btn')) return;
-    const bg = modal.closest('.modal-bg');
-    const btn = document.createElement('button');
-    btn.className = 'modal-sluit-btn';
-    btn.setAttribute('aria-label', 'Sluiten');
-    btn.textContent = '✕';
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      if(bg) bg.classList.remove('open');
-    });
-    modal.insertBefore(btn, modal.firstChild);
-  });
-});
-
 // ── Event delegation ──────────────────────────────────────────
 document.addEventListener('click', function(e) {
   const el = e.target.closest('[data-action]');
