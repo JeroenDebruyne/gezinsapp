@@ -189,7 +189,7 @@ body{
     flex-direction:column;border-top:none;border-right:1px solid var(--border);
     background:var(--surface);padding:0.5rem 0;
     align-items:stretch;justify-content:flex-start;gap:0;
-    overflow:hidden;z-index:90;
+    overflow:hidden;z-index:110;
     transition:width .2s ease,box-shadow .2s ease;
     display:flex;
   }
@@ -202,15 +202,15 @@ body{
   .bottom-nav-item{
     display:flex;flex-direction:row;align-items:center;justify-content:flex-start;
     gap:0;padding:10px 16px;font-size:14px;
-    border-radius:0;overflow:hidden;white-space:nowrap;
-    min-height:44px;text-decoration:none;color:var(--ink-2);
+    border-radius:0;white-space:nowrap;
+    min-height:44px;text-decoration:none;color:var(--ink-2);cursor:pointer;
     transition:background .12s,color .12s;
     position:relative;
   }
   .bottom-nav-item:hover{background:var(--accent-l);color:var(--accent);}
   .bottom-nav-item:hover .nav-icon{color:var(--accent);}
-  .bottom-nav-item .nav-icon{font-size:20px;flex-shrink:0;width:24px;display:flex;align-items:center;justify-content:center;}
-  .bottom-nav-item .nav-icon svg{width:20px;height:20px;stroke-width:1.75;}
+  .bottom-nav-item .nav-icon{font-size:20px;flex-shrink:0;width:24px;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .bottom-nav-item .nav-icon svg{width:20px;height:20px;stroke-width:1.75;pointer-events:none;}
   .bottom-nav-item .nav-label{
     opacity:0;margin-left:12px;transition:opacity .15s .05s;
     font-size:14px;
