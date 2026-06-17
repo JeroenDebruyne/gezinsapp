@@ -23,7 +23,7 @@ function _bouwSysteemPrompt() {
         ': O=' + _atGetNaam(dag.ontbijt) + ' L=' + _atGetNaam(dag.lunch) + ' A=' + _atGetNaam(dag.avond) +
         (acts ? ' [' + acts + ']' : '');
     }).join('\n');
-  } catch(e) {}
+  } catch(e) { console.warn('[systeemprompt planCtx]', e); }
   return `Je bent de gezinsassistent.
 Vandaag: ${dagNaamNL} ${vandaagISO}.
 ${bouwGezinsContext()}
