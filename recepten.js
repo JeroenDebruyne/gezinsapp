@@ -65,7 +65,7 @@ function renderRecepten() {
     </div>`;
   }).join('') || `<div class="empty-state"><i data-lucide="book-open" class="empty-icon"></i><p>Geen recepten gevonden</p></div>`;
   if (actieveFicheId) {
-    const r = recepten.find(r => r.id == actieveFicheId);
+    const r = recepten.find(r => r.id === actieveFicheId);
     if (r) _renderFicheInDesktop(r);
     else { actieveFicheId = null; _clearFiche(); }
   }
@@ -74,7 +74,7 @@ function renderRecepten() {
 
 function openFiche(id) {
   actieveFicheId = id;
-  const r = recepten.find(r => r.id == id);
+  const r = recepten.find(r => r.id === id);
   if (!r) return;
   _renderFicheInDesktop(r);
   if (window.innerWidth < 768) {
@@ -83,7 +83,7 @@ function openFiche(id) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
   document.querySelectorAll('.recept-card').forEach(c => {
-    c.classList.toggle('actief', c.dataset.id == id);
+    c.classList.toggle('actief', c.dataset.id === id);
   });
 }
 
@@ -329,7 +329,7 @@ function saveRecept() {
       nieuweIngs.push(nieuwIng);
     }
   });
-  const bestaande = editId ? recepten.find(r => r.id == editId) : null;
+  const bestaande = editId ? recepten.find(r => r.id === editId) : null;
   const recept = {
     id: editId ? parseFloat(editId) || editId : _maakId(),
     _sbId: bestaande?._sbId,
@@ -346,7 +346,7 @@ function saveRecept() {
     tags,
     ingredienten: ings
   };
-  if (editId) recepten = recepten.map(r => r.id == editId ? recept : r);
+  if (editId) recepten = recepten.map(r => r.id === editId ? recept : r);
   else recepten.push(recept);
   closeReceptModal();
   renderRecepten();
@@ -362,9 +362,9 @@ function saveRecept() {
 
 function verwijderRecept(id) {
   _bevestig('Recept verwijderen?', function() {
-    const r = recepten.find(r => r.id === id || r.id == id);
-    recepten = recepten.filter(r => r.id !== id && r.id != id);
-    if (actieveFicheId == id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
+    const r = recepten.find(r => r.id === id || r.id === id);
+    recepten = recepten.filter(r => r.id !== id);
+    if (actieveFicheId === id) { actieveFicheId = null; _clearFiche(); document.getElementById('recept-fiche-overlay').classList.remove('open'); }
     renderRecepten(); slaLokaalOp(); if (r?._sbId) sbDeleteRecept(r._sbId);
     toonOpslagStatus('✅ Verwijderd');
   });
@@ -634,8 +634,8 @@ document.addEventListener('click', function (e) {
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
     case 'open-fiche': openFiche(parseFloat(el.dataset.ficheId) || el.dataset.ficheId); break;
     case 'sluit-fiche': sluitFiche(); break;
-    case 'bewerk-recept': openReceptModal(recepten.find(r => r.id == el.dataset.id)); break;
-    case 'verwijder-recept': verwijderRecept(parseFloat(el.dataset.id) || el.dataset.id); break;
+    case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id)); break;
+    case 'verwijder-recept': verwijderRecept(el.dataset.id); break;
     case 'close-import-modal': closeImportModal(); break;
     case 'start-import': startImport(); break;
     case 'naar-stap-1': naarStap(1); break;

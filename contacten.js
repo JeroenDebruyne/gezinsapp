@@ -245,7 +245,7 @@ function renderCrm(){
     </div>`;
   }).join('');
   if(actieveContactId){
-    const c=contacten.find(c=>c.id==actieveContactId);
+    const c=contacten.find(c=>c.id===actieveContactId);
     if(c) _renderContactFicheDesktop(c);
     else { actieveContactId=null; _clearContactFiche(); }
   }
@@ -254,7 +254,7 @@ function renderCrm(){
 // ── Contactfiche ──────────────────────────────────────────────
 function openContactFiche(id){
   actieveContactId=id;
-  const c=contacten.find(c=>c.id==id);
+  const c=contacten.find(c=>c.id===id);
   if(!c) return;
   _renderContactFicheDesktop(c);
   if(window.innerWidth<768){
@@ -404,7 +404,7 @@ function saveContact(){
 
   const kinderenData=_leesKinderenVelden();
   const editId=document.getElementById('crm-modal-bg').dataset.editId;
-  const bestaande=editId?contacten.find(c=>c.id==editId):null;
+  const bestaande=editId?contacten.find(c=>c.id===editId):null;
 
   // Auto-generate family name
   const ach1=partner1.achternaam||'';
@@ -427,15 +427,15 @@ function saveContact(){
     belangrijkeDatums:_leesDatumsVelden(),
   };
 
-  if(editId)contacten=contacten.map(c=>c.id==editId?contact:c);
+  if(editId)contacten=contacten.map(c=>c.id===editId?contact:c);
   else contacten.push(contact);
   closeCrmModal();renderCrm();renderVerjaarDagAlerts();slaLokaalOp();sbSaveContact(contact);toonOpslagStatus('✅ Opgeslagen');
 }
 
-function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id==id));}
+function editContact(id){openCrmModal(contacten.find(c=>c.id===id||c.id===id));}
 function verwijderContact(id){
   _bevestig('Contact verwijderen?', function(){
-    const c=contacten.find(c=>c.id===id||c.id==id);
+    const c=contacten.find(c=>c.id===id||c.id===id);
     contacten=contacten.filter(c=>c.id!==id&&c.id!=id);
     if(actieveContactId==id){ actieveContactId=null; _clearContactFiche(); document.getElementById('crm-fiche-overlay').classList.remove('open'); }
     renderCrm();slaLokaalOp();if(c?._sbId)sbDeleteContact(c._sbId);toonOpslagStatus('✅ Verwijderd');
@@ -463,15 +463,15 @@ document.addEventListener('click', function(e) {
   const action = el.dataset.action;
   switch (action) {
     case 'open-contact-fiche':
-      openContactFiche(Number(el.dataset.id));
+      openContactFiche(el.dataset.id);
       break;
     case 'edit-contact':
       e.stopPropagation();
-      editContact(Number(el.dataset.id));
+      editContact(el.dataset.id);
       break;
     case 'verwijder-contact':
       e.stopPropagation();
-      verwijderContact(Number(el.dataset.id));
+      verwijderContact(el.dataset.id);
       break;
     case 'sluit-contact-fiche':
       e.stopPropagation();

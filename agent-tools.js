@@ -21,7 +21,7 @@ function _atGetWeekDates(offset) { return getWeekDatesFrom(_atNuISO(), offset ||
 function _atGetNaam(keuze) {
   if (!keuze) return '–';
   if (SPEC[keuze]) return SPEC[keuze];
-  const r = recepten.find(r => r.id === keuze || r.id == keuze);
+  const r = recepten.find(r => r.id === String(keuze));
   return r ? r.naam : '–';
 }
 
@@ -546,7 +546,7 @@ async function agentExecute(naam, input) {
     }
 
     case 'beoordeel_maaltijd': {
-      const r = recepten.find(r => r.id === input.recept_id || r.id == input.recept_id);
+      const r = recepten.find(r => r.id === String(input.recept_id));
       if (!r) return `⚠️ Recept ${input.recept_id} niet gevonden.`;
       r.score = Math.min(5, Math.max(1, input.score));
       slaLokaalOp();

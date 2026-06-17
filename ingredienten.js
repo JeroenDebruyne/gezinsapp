@@ -64,12 +64,12 @@ function saveIngredient() {
   const editId = document.getElementById('ing-modal-bg').dataset.editId;
   const winkel = document.getElementById('i-winkel').value;
   const productLink = document.getElementById('i-link').value.trim() || null;
-  if (standaardIngredienten.some(i => i.naam.toLowerCase() === naam.toLowerCase() && i.id != editId)) {
+  if (standaardIngredienten.some(i => i.naam.toLowerCase() === naam.toLowerCase() && i.id !== editId)) {
     toonOpslagStatus('❌ "' + naam + '" bestaat al in de ingrediëntenlijst.');
     return;
   }
   if (editId) {
-    const ing = standaardIngredienten.find(i => i.id == editId);
+    const ing = standaardIngredienten.find(i => i.id === editId);
     if (ing) { ing.naam = naam; ing.winkel = winkel; ing.productLink = productLink; sbSaveIngredient(ing); }
   } else {
     const n = { id: _maakId(), naam, winkel, categorie: '', productLink };
@@ -82,14 +82,14 @@ function saveIngredient() {
 }
 
 function wijzigWinkel(id, winkel) {
-  const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
+  const ing = standaardIngredienten.find(i => i.id === id);
   if (ing) { ing.winkel = winkel; slaLokaalOp(); sbSaveIngredient(ing); }
 }
 
 function verwijderIngredient(id) {
   _bevestig('Ingrediënt verwijderen?', function() {
-    const ing = standaardIngredienten.find(i => i.id === id || i.id == id);
-    standaardIngredienten = standaardIngredienten.filter(i => i.id !== id && i.id != id);
+    const ing = standaardIngredienten.find(i => i.id === id);
+    standaardIngredienten = standaardIngredienten.filter(i => i.id !== id);
     slaLokaalOp();
     if (ing?._sbId) sbDeleteIngredient(ing._sbId);
     renderIngredienten();
@@ -121,10 +121,10 @@ document.addEventListener('click', function(e) {
       filterIngWinkel(el.dataset.winkel);
       break;
     case 'bewerk-ingredient':
-      openIngModal(standaardIngredienten.find(x => x.id == el.dataset.id));
+      openIngModal(standaardIngredienten.find(x => x.id === el.dataset.id));
       break;
     case 'verwijder-ingredient':
-      verwijderIngredient(parseFloat(el.dataset.id) || el.dataset.id);
+      verwijderIngredient(el.dataset.id);
       break;
   }
 });
@@ -134,7 +134,7 @@ document.addEventListener('change', function(e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   if (el.dataset.action === 'wijzig-winkel') {
-    wijzigWinkel(parseFloat(el.dataset.id) || el.dataset.id, el.value);
+    wijzigWinkel(el.dataset.id, el.value);
   } else if (el.dataset.action === 'filter-ing-winkel-mob') {
     filterIngWinkel(el.value);
   }
