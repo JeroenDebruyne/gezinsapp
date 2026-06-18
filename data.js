@@ -201,6 +201,34 @@ function isActiefOpDatum(act, datumStr) {
 
 // ── Supabase fetch ────────────────────────────────────────────
 let _eigenTs = 0;
+// Migreert oude platte transport-keys (brengtNora, haaltOdiel...) naar kinderen-object
+function _migreerTransport(t) {
+  if (!t || typeof t !== 'object') return {};
+  if (t.kinderen) return t; // al nieuw formaat
+  const kinderen = {};
+  Object.keys(t).forEach(k => {
+    const m = k.match(/^(brengt|haalt|eetGroo)(.+)$/);
+    if (!m) return;
+    const veld = m[1], persoonRaw = m[2];
+    const persoon = persoonRaw.charAt(0).toLowerCase() + persoonRaw.slice(1);
+    if (!kinderen[persoon]) kinderen[persoon] = { brengt: null, haalt: null, eetGroo: false };
+    kinderen[persoon][veld] = t[k] || (veld === 'eetGroo' ? false : null);
+  });
+  return { ...t, kinderen };
+}
+
+// Geeft { brengt, haalt, eetGroo } voor een kind op een activiteit
+function getKindTransportAct(act, kind) {
+  return (act.transport?.kinderen?.[kind]) || { brengt: null, haalt: null, eetGroo: false };
+}
+
+// Stelt transport in voor een kind op een activiteit (muteert act.transport)
+function setKindTransportAct(act, kind, data) {
+  if (!act.transport) act.transport = {};
+  if (!act.transport.kinderen) act.transport.kinderen = {};
+  act.transport.kinderen[kind] = { ...act.transport.kinderen[kind], ...data };
+}
+
 async function sbFetch(tabel, methode='GET', body=null, filter='', prefer=null) {
   if (methode !== 'GET') _eigenTs = Date.now();
   await Auth.refreshIfNeeded();
@@ -256,10 +284,8 @@ async function laadOp() {
       dagen:x.dagen||[], wie:Array.isArray(x.wie)?x.wie:[x.wie].filter(Boolean),
       reisHeen:x.reis_heen, reisTerug:x.reis_terug, eindUur:x.eind_uur,
       beginDatum:x.begin_datum, eindDatum:x.eind_datum, prive:x.prive||false,
-      transport: x.transport || {},
+      transport: _migreerTransport(x.transport || {}),
       uitgesloten: (x.transport||{}).uitgesloten || [],
-      brengtNora: (x.transport||{}).brengtNora||null, haaltNora: (x.transport||{}).haaltNora||null, eetGrooNora: (x.transport||{}).eetGrooNora||false,
-      brengtOdiel: (x.transport||{}).brengtOdiel||null, haaltOdiel: (x.transport||{}).haaltOdiel||null, eetGrooOdiel: (x.transport||{}).eetGrooOdiel||false,
       icalUid: x.ical_uid||null, icalSource: x.ical_source||null,
       maaltijdThuis: x.maaltijd_thuis || null,
     }));
@@ -478,8 +504,7 @@ async function sbSaveActiviteit(act) {
     transport: {
       ...(act.transport||{}),
       uitgesloten: act.uitgesloten||[],
-      brengtNora: act.brengtNora||null, haaltNora: act.haaltNora||null, eetGrooNora: act.eetGrooNora||false,
-      brengtOdiel: act.brengtOdiel||null, haaltOdiel: act.haaltOdiel||null, eetGrooOdiel: act.eetGrooOdiel||false,
+      kinderen: act.transport?.kinderen || {},
     },
     ical_uid: act.icalUid||null, ical_source: act.icalSource||null,
     maaltijd_thuis: act.maaltijdThuis||null,
