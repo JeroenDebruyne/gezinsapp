@@ -40,20 +40,23 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{height:100%;}
+html{height:100%;overflow-x:hidden;}
 body{
   font-family:-apple-system,'SF Pro Text',system-ui,sans-serif;
   background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55;
+  overflow-x:hidden;
   min-height:100%;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
   -webkit-font-smoothing:antialiased;
 }
 
 /* Topbar */
 .topbar{
-  position:sticky;top:0;z-index:100;height:var(--topbar-h);
+  position:sticky;top:0;z-index:100;
+  min-height:var(--topbar-h);
+  padding-top:env(safe-area-inset-top);
   background:rgba(250,254,249,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;gap:10px;
+  display:flex;align-items:center;justify-content:space-between;padding-left:1.25rem;padding-right:1.25rem;padding-bottom:0;gap:10px;
 }
 .topbar-title{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-0.4px;display:flex;align-items:center;gap:8px;}
 .topbar-actions{display:flex;align-items:center;gap:10px;}
@@ -371,7 +374,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .prive-toggle-sub{font-size:12px;color:var(--muted);}
 
 /* Modals */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(30,15,20,0.45);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(30,15,20,0.45);z-index:400;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
 .modal-bg.open{display:flex;}
 .modal{background:var(--surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;max-width:560px;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:94vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;box-shadow:0 -8px 40px rgba(252,108,133,0.12),0 -2px 8px rgba(0,0,0,0.08);will-change:transform;}
 .modal-handle{width:36px;height:4px;background:var(--border-2);border-radius:2px;margin:0 auto 20px;touch-action:none;cursor:grab;}
@@ -528,6 +531,20 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
 .slot-wis-btn:hover{background:var(--druk-bg);color:var(--druk-clr);}
 .slot-leeg{font-size:13px;color:var(--muted-2);}
 .slot-naam{font-size:14px;color:var(--ink);font-weight:500;}
+/* Ingrediënten grid in recept-modal */
+.ing-header-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;}
+@media(max-width:380px){
+  .ing-header-grid{grid-template-columns:minmax(0,2fr) minmax(0,0.6fr) minmax(0,0.6fr) 0 28px;}
+  .ing-header-grid .ing-winkel-col,.ing-header-grid .ing-winkel-hdr{display:none;}
+}
+
+/* Keuze-modal knoppen recept toevoegen */
+.keuze-optie-btn{padding:14px 16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;width:100%;text-align:left;white-space:normal;height:auto;}
+.keuze-optie-icon{width:24px;height:24px;flex-shrink:0;stroke-width:1.75;}
+.keuze-optie-tekst{flex:1;min-width:0;text-align:left;}
+.keuze-optie-titel{font-weight:700;font-size:15px;}
+.keuze-optie-sub{font-size:12px;font-weight:400;opacity:.8;margin-top:2px;white-space:normal;word-break:break-word;}
+
 .slot-tijd{font-size:11px;color:var(--muted);}
 .special-badge{font-size:12px;padding:3px 9px;border-radius:99px;font-weight:600;}
 .sb-shake{background:var(--c-jeroen);color:var(--c-jeroen-t);}
@@ -945,7 +962,7 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
 .combo-focus{background:var(--accent-l)!important;color:var(--accent);}
 
 /* ── Act-icon-btn (agenda delete button in activity row) ─────── */
-.act-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;border-radius:50%;cursor:pointer;color:var(--muted);transition:background .15s,color .15s;flex-shrink:0;}
+.act-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;background:none;border-radius:50%;cursor:pointer;color:var(--muted);transition:background .15s,color .15s;flex-shrink:0;}
 .act-icon-btn:hover{background:var(--accent-l);color:var(--accent);}
 .act-icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
