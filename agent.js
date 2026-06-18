@@ -219,10 +219,13 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       + 'Door de gezinsassistent te gebruiken stuur je gezinsgegevens (namen, agenda, planning) naar <strong>Anthropic</strong> voor verwerking. '
       + 'Zie hun <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--accent)">privacybeleid</a>.<br><br>'
       + 'Berichten worden niet langer dan nodig bewaard. Geen tracking of advertenties.<br><br>'
-      + '<button onclick="(function(b){localStorage.setItem(\'gezinsapp_ai_consent\',\'1\');b.closest(\'.privacy-consent-bubble\').remove();})(this)" '
-      + 'style="padding:8px 18px;background:var(--accent);color:white;border:none;border-radius:99px;cursor:pointer;font-weight:600;font-family:inherit;">Akkoord — doorgaan</button>'
+      + '<button class="privacy-akkoord-btn" style="padding:8px 18px;background:var(--accent);color:white;border:none;border-radius:99px;cursor:pointer;font-weight:600;font-family:inherit;">Akkoord — doorgaan</button>'
       + '</div>';
     container.appendChild(wrap);
+    wrap.querySelector('.privacy-akkoord-btn').addEventListener('click', function () {
+      localStorage.setItem('gezinsapp_ai_consent', '1');
+      wrap.remove();
+    });
     container.scrollTop = container.scrollHeight;
     return false;
   }
