@@ -380,7 +380,7 @@ async function agentExecute(naam, input) {
         const dag = planning[datum] || {};
         SLOTS.forEach(slot => {
           getSlotItems(dag, slot.key).filter(it => !SPEC[it.waarde]).forEach(it => {
-            const r = recepten.find(r => r.id === it.waarde || r.id === parseInt(it.waarde));
+            const r = recepten.find(r => String(r.id) === String(it.waarde));
             if (!r) return;
             const receptPorties = r.porties || 4;
             const geplandPorties = _berekenPorties(it) || receptPorties;
