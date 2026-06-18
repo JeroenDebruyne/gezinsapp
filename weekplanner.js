@@ -1,5 +1,5 @@
 Auth.initPagina('weekplanner');
-let weekOffsetP = +(sessionStorage.getItem('weekplanner_offset') || 0), activeSlot = null, selectedKeuze = null, selectedWie = [], _editIdx = null;
+let weekOffsetP = +(sessionStorage.getItem('weekplanner_offset') || 0), activeSlot = null, selectedKeuze = null, selectedWie = [], _editIdx = null, _planExtraEters = 0;
 let aiMenuVoorstel = null, chatGeschiedenisWP = [];
 let _openDagen = new Set();
 
@@ -182,22 +182,23 @@ function openPlanModal(dk, slotKey, dagnaam, dagIndex, editIdx = null) {
     if (item) {
       selectedKeuze = item.waarde;
       selectedWie = item.wie ? [...item.wie] : [];
+      _planExtraEters = item.extra_eters || 0;
       const naam = SPEC[item.waarde] || item.naam_override || recepten.find(r => String(r.id) === String(item.waarde))?.naam || String(item.waarde);
-      _toonGekozen(naam);
       const wieLeeg = !item.wie || item.wie.length === 0;
       document.getElementById('wie-chips-wrap').innerHTML = PERSONEN.map(p =>
         `<div class="wie-stap-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`
       ).join('');
       if (item.kok) {
         const sel = document.getElementById('wie-kok-sel');
-        if (item.kok === 'niemand') sel.value = 'niemand';
-        else sel.value = item.kok;
+        sel.value = item.kok === 'niemand' ? 'niemand' : item.kok;
       }
+      _toonGekozen(naam);
       document.getElementById('plan-opslaan-btn').textContent = 'Opslaan';
     }
   } else {
     selectedKeuze = null;
     selectedWie = [];
+    _planExtraEters = 0;
     _verbergGekozen();
     document.getElementById('wie-chips-wrap').innerHTML = PERSONEN.map(p =>
       `<div class="wie-stap-chip sel" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`
@@ -211,13 +212,27 @@ function openPlanModal(dk, slotKey, dagnaam, dagIndex, editIdx = null) {
 }
 
 function _toonGekozen(naam) {
-  const wrap = document.getElementById('plan-gekozen-wrap');
   document.getElementById('plan-gekozen-naam').textContent = naam;
-  wrap.style.display = 'flex';
+  document.getElementById('plan-gekozen-wrap').style.display = 'flex';
+  const isSpec = !!SPEC[selectedKeuze];
+  const heeftPorties = !isSpec && !!recepten.find(r => String(r.id) === String(selectedKeuze));
+  document.getElementById('plan-porties-wrap').style.display = heeftPorties ? 'flex' : 'none';
+  if (heeftPorties) _updatePortiesDisplay();
 }
 function _verbergGekozen() {
   document.getElementById('plan-gekozen-wrap').style.display = 'none';
   document.getElementById('plan-gekozen-naam').textContent = '';
+  document.getElementById('plan-porties-wrap').style.display = 'none';
+}
+function _updatePortiesDisplay() {
+  document.getElementById('plan-extra-lbl').textContent = `+${_planExtraEters} extra gast${_planExtraEters === 1 ? '' : 'en'}`;
+  const geselecteerd = [...document.querySelectorAll('#wie-chips-wrap .wie-stap-chip.sel')].map(e => e.dataset.p);
+  const wieEet = geselecteerd.length === 0 || geselecteerd.length === PERSONEN.length ? PERSONEN : geselecteerd;
+  const portieGewicht = wieEet.reduce((s, p) => {
+    const prof = Auth.getProfielen().find(x => x.persoonKey === p);
+    return s + (prof?.isKind ? (typeof portiesKindRatio !== 'undefined' ? portiesKindRatio : 0.5) : 1);
+  }, 0);
+  document.getElementById('plan-porties-lbl').textContent = Math.round((portieGewicht + _planExtraEters) * 10) / 10;
 }
 
 function renderPlanRecepten(lijst) {
@@ -249,6 +264,7 @@ function toggleWieStap(el, p) {
   el.classList.toggle('sel');
   const geselecteerd = [...document.querySelectorAll('#wie-chips-wrap .wie-stap-chip.sel')].map(e => e.dataset.p);
   selectedWie = geselecteerd.length === PERSONEN.length ? [] : geselecteerd;
+  if (document.getElementById('plan-porties-wrap').style.display !== 'none') _updatePortiesDisplay();
 }
 
 function slaPlanOp() {
@@ -261,8 +277,9 @@ function slaPlanOp() {
     items[_editIdx].waarde = selectedKeuze;
     items[_editIdx].wie = [...selectedWie];
     items[_editIdx].kok = kok;
+    items[_editIdx].extra_eters = _planExtraEters;
   } else {
-    items.push({ waarde: selectedKeuze, wie: [...selectedWie], kok, extra_eters: 0 });
+    items.push({ waarde: selectedKeuze, wie: [...selectedWie], kok, extra_eters: _planExtraEters });
   }
   _saveItems(dagKey, slotKey, items);
   closePlanModal();
@@ -316,6 +333,7 @@ function closePlanModal() {
   activeSlot = null;
   _editIdx = null;
   selectedKeuze = null;
+  _planExtraEters = 0;
 }
 
 function _getWeekKey(offset) {
@@ -506,7 +524,12 @@ document.addEventListener('click', function (e) {
     case 'wp-stuur': wpAgent.stuurBericht(document.getElementById('wp-chat-input').value); break;
     case 'close-plan-modal': closePlanModal(); break;
     case 'sla-plan-op': slaPlanOp(); break;
-    case 'plan-wis-keuze': selectedKeuze = null; _verbergGekozen(); break;
+    case 'plan-wis-keuze': selectedKeuze = null; _planExtraEters = 0; _verbergGekozen(); break;
+    case 'plan-extra-delta': {
+      _planExtraEters = Math.max(0, Math.min(20, _planExtraEters + parseInt(el.dataset.delta)));
+      _updatePortiesDisplay();
+      break;
+    }
     case 'toggle-dag': toggleDag(el.dataset.key); break;
     case 'open-plan-modal':
       openPlanModal(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));

@@ -34,8 +34,9 @@ async function icalFetchUrl(rawUrl) {
   // Externe iCal-providers hebben zelden CORS-headers, dus altijd via proxy ophalen.
   // Directe fetch vermijden: dat logt altijd een CORS-error in de console, ook al is hij gevangen.
   const url = rawUrl.replace(/^webcal:\/\//i, 'https://');
-  const proxy = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-  const r = await fetch(proxy);
+  const proxy = `${SUPABASE_URL}/functions/v1/cors-proxy?url=${encodeURIComponent(url)}`;
+  const s = typeof Auth !== 'undefined' ? Auth.session() : null;
+  const r = await fetch(proxy, s?.access_token ? { headers: { 'Authorization': 'Bearer ' + s.access_token } } : {});
   if (!r.ok) throw new Error(`Kan agenda niet ophalen (HTTP ${r.status})`);
   const t = await r.text();
   if (!t.includes('BEGIN:VCALENDAR')) throw new Error('Geen geldig iCal-bestand ontvangen.');
