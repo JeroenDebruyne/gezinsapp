@@ -277,9 +277,10 @@ function renderTransportDetail(act,datumISO){
     if(!(act.wie||[]).includes(kind)) return;
     const std=isEenmalig?{}:stdTransport[kind]?.[dagKey]||{};
     const uitz=uitzondering?.[kind]||{};
-    const brengt=act[`brengt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.brengt||std.brengt||'';
-    const haalt=act[`haalt${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||uitz.haalt||std.haalt||'';
-    const eetGroo=act[`eetGroo${kind.charAt(0).toUpperCase()+kind.slice(1)}`]||(uitz.eetGroo!==undefined?uitz.eetGroo:std.eetGroo);
+    const kt=getKindTransportAct(act,kind);
+    const brengt=kt.brengt||uitz.brengt||std.brengt||'';
+    const haalt=kt.haalt||uitz.haalt||std.haalt||'';
+    const eetGroo=kt.eetGroo||(uitz.eetGroo!==undefined?uitz.eetGroo:std.eetGroo);
     if(!brengt&&!haalt&&!eetGroo) return;
     const isUitz=uitzondering&&uitzondering[kind];
     html+=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:3px;">
@@ -384,6 +385,32 @@ function getVerjaardagsOpDatum(datumISO){
 }
 function _tryParse(s){try{return JSON.parse(s);}catch{return null;}}
 
+function _renderTransportKinderenHTML(act) {
+  const opties=(transportPersonen||[]).map(p=>`<option>${escHtml(typeof p==='object'?p.naam:p)}</option>`).join('');
+  return KINDEREN().map(kind=>{
+    const profiel=Auth.getProfielen().find(p=>p.persoonKey===kind);
+    const naam=profiel?.naam||kind;
+    const emoji=profiel?.emoji||'';
+    const kt=act?getKindTransportAct(act,kind):{};
+    return `<div id="transport-${kind}" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;display:flex;align-items:center;gap:5px;"><i data-lucide="baby" class="icon-inline"></i> ${escHtml(emoji)} ${escHtml(naam)}</div>
+      <div class="form-grid">
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie brengt?</label>
+          <select id="a-brengt-${kind}"><option value="">— Standaard —</option>${opties}</select>
+        </div>
+        <div class="form-row" style="margin:0 0 10px;">
+          <label>Wie haalt?</label>
+          <select id="a-haalt-${kind}"><option value="">— Standaard —</option>${opties}</select>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;">
+        <input type="checkbox" id="a-eet-groo-${kind}" style="width:auto;accent-color:var(--accent);"/> Eet bij grootouders
+      </label>
+    </div>`;
+  }).join('');
+}
+
 function _vulTransportOpties(){
   const opties=(transportPersonen||[]).map(p=>`<option>${escHtml(typeof p==='object'?p.naam:p)}</option>`).join('');
   KINDEREN().forEach(kind=>{
@@ -443,13 +470,14 @@ function openActModal(act){
     `<label class="dag-cb"><input type="checkbox" value="${DAGKEYS[i]}"${act?.dagen?.includes(DAGKEYS[i])?' checked':''}> ${d}</label>`
   ).join('');
 
+  document.getElementById('transport-kinderen-wrap').innerHTML=_renderTransportKinderenHTML(act);
   checkKindjeSection();
   _vulTransportOpties();
   KINDEREN().forEach(kind=>{
-    const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
-    document.getElementById(`a-brengt-${kind}`).value=act?.[`brengt${cap}`]||'';
-    document.getElementById(`a-haalt-${kind}`).value=act?.[`haalt${cap}`]||'';
-    document.getElementById(`a-eet-groo-${kind}`).checked=act?.[`eetGroo${cap}`]||false;
+    const kt=act?getKindTransportAct(act,kind):{};
+    document.getElementById(`a-brengt-${kind}`).value=kt.brengt||'';
+    document.getElementById(`a-haalt-${kind}`).value=kt.haalt||'';
+    document.getElementById(`a-eet-groo-${kind}`).checked=kt.eetGroo||false;
   });
 
   // Verwijder-knop tonen bij bewerken
@@ -669,13 +697,15 @@ async function saveActiviteit(){
       uitgesloten: bestaande?.uitgesloten||[],
       maaltijdThuis:_mt,
     };
-    KINDEREN().forEach(kind=>{
-      if(!heeftKind) return;
-      const cap=kind.charAt(0).toUpperCase()+kind.slice(1);
-      act[`brengt${cap}`]=document.getElementById(`a-brengt-${kind}`).value;
-      act[`haalt${cap}`]=document.getElementById(`a-haalt-${kind}`).value;
-      act[`eetGroo${cap}`]=document.getElementById(`a-eet-groo-${kind}`).checked;
-    });
+    if (heeftKind) {
+      KINDEREN().forEach(kind=>{
+        setKindTransportAct(act, kind, {
+          brengt: document.getElementById(`a-brengt-${kind}`)?.value || null,
+          haalt:  document.getElementById(`a-haalt-${kind}`)?.value || null,
+          eetGroo: document.getElementById(`a-eet-groo-${kind}`)?.checked || false,
+        });
+      });
+    }
   }
 
   if(actEditId)activiteiten=activiteiten.map(a=>a.id===actEditId?act:a);

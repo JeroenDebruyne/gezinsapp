@@ -111,9 +111,7 @@ function renderKL(){
           !(a.wie||[]).some(w=>gezinshoofden.includes(w))
         )
         .map(a=>{
-          const cap = kind.charAt(0).toUpperCase()+kind.slice(1);
-          const brengt = a[`brengt${cap}`]||'';
-          const haalt  = a[`haalt${cap}`]||'';
+          const { brengt='' , haalt='' } = getKindTransportAct(a, kind);
           const transportInfo = [
             brengt ? `<i data-lucide="car" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i>→ ${escHtml(brengt)}` : '',
             haalt  ? `←<i data-lucide="car" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${escHtml(haalt)}` : '',
@@ -313,14 +311,14 @@ function openActTransportModal(actId, datum, kind) {
   const act = activiteiten.find(a=>a.id===actId||a.id==actId);
   if (!act) return;
   _modalActId = actId; _modalDatum = datum; _modalKind = kind;
-  const cap = kind.charAt(0).toUpperCase()+kind.slice(1);
+  const kt = getKindTransportAct(act, kind);
   document.getElementById('kl-modal-titel').textContent = act.naam;
   document.getElementById('kl-modal-sub').textContent =
     [act.start, act.eindUur].filter(Boolean).join(' – ') +
     (act.locatie ? ' · ' + act.locatie : '') +
     (act.reisHeen ? ' · Reistijd heen: '+act.reisHeen+' min' : '');
-  document.getElementById('kl-modal-brengt').value = act[`brengt${cap}`]||'';
-  document.getElementById('kl-modal-haalt').value  = act[`haalt${cap}`]||'';
+  document.getElementById('kl-modal-brengt').value = kt.brengt||'';
+  document.getElementById('kl-modal-haalt').value  = kt.haalt||'';
   document.getElementById('kl-act-modal').classList.remove('hidden');
 }
 
@@ -333,11 +331,9 @@ function sluitActModal(e) {
 function slaActTransportOp() {
   const act = activiteiten.find(a=>a.id===_modalActId||a.id==_modalActId);
   if (!act || !_modalKind) return;
-  const cap = _modalKind.charAt(0).toUpperCase()+_modalKind.slice(1);
   const brengt = document.getElementById('kl-modal-brengt').value;
   const haalt  = document.getElementById('kl-modal-haalt').value;
-  act[`brengt${cap}`] = brengt;
-  act[`haalt${cap}`]  = haalt;
+  setKindTransportAct(act, _modalKind, { brengt, haalt });
   slaLokaalOp();
   sbSaveActiviteit(act);
   toonOpslagStatus('✅ Opgeslagen');
