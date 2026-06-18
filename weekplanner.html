@@ -118,59 +118,53 @@
 </div>
 </main>
 
-<!-- Modal: slot detail (bewerken) -->
-<div class="modal-bg" id="slot-detail-modal-bg">
-<div class="modal" style="max-width:460px;">
-  <div class="modal-handle"></div>
-  <h3 id="slot-detail-titel"></h3>
-  <div id="slot-detail-inhoud"></div>
-  <div class="modal-actions" style="margin-top:14px;">
-    <button class="modal-btn modal-btn-cancel" data-action="close-slot-detail">Sluiten</button>
-    <button class="modal-btn modal-btn-primary" data-action="sd-voeg-toe" id="sd-voeg-toe-btn"><i data-lucide="plus" class="icon-inline"></i> Maaltijd toevoegen</button>
-  </div>
-</div>
-</div>
 
-<!-- Modal: slot keuze -->
+<!-- Modal: maaltijd toevoegen / bewerken -->
 <div class="modal-bg" id="plan-modal-bg">
-<div class="modal" style="max-width:420px;">
+<div class="modal" style="max-width:440px;">
   <div class="modal-handle"></div>
   <h3 id="plan-titel"></h3>
 
-  <!-- Stap 1: kies recept / snelle optie -->
-  <div id="pick-sectie">
-    <div id="drukte-info-box" style="margin-bottom:12px;"></div>
-    <div class="section-label">Snelle opties</div>
-    <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
-    <div id="top3-sectie" style="display:none;margin-bottom:4px;">
-      <div class="section-label">Meest gebruikt</div>
-      <div id="top3-recepten" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+  <div id="drukte-info-box" style="margin-bottom:12px;"></div>
+
+  <!-- Geselecteerde maaltijd -->
+  <div id="plan-gekozen-wrap" style="display:none;background:var(--accent-l);border:1.5px solid var(--accent);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
+    <span id="plan-gekozen-naam" style="flex:1;font-size:14px;font-weight:700;color:var(--accent);"></span>
+    <button data-action="plan-wis-keuze" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:18px;line-height:1;padding:0 2px;">×</button>
+  </div>
+
+  <!-- Snelle opties -->
+  <div class="section-label">Snelle opties</div>
+  <div id="spec-opties" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;"></div>
+
+  <!-- Meest gebruikt -->
+  <div id="top3-sectie" style="display:none;margin-bottom:8px;">
+    <div class="section-label">Meest gebruikt</div>
+    <div id="top3-recepten" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+  </div>
+
+  <!-- Zoek recept -->
+  <input type="text" id="plan-zoek" placeholder="Zoek recept…"
+    style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:4px;background:var(--bg);color:var(--ink);"/>
+  <div id="plan-recepten" style="display:none;max-height:180px;overflow-y:auto;margin-bottom:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);"></div>
+
+  <div style="height:1px;background:var(--border);margin:14px 0 12px;"></div>
+
+  <!-- Wie eet + Wie kookt naast elkaar -->
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="flex:1;min-width:120px;">
+      <div class="section-label" style="margin-bottom:6px;">Wie eet dit?</div>
+      <div id="wie-chips-wrap" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
-    <div class="section-label">Recepten</div>
-    <input type="text" id="plan-zoek" placeholder="Zoek recept…"
-      style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:8px;background:var(--bg);color:var(--ink);"/>
-    <div id="plan-recepten" style="max-height:200px;overflow-y:auto;"></div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" data-action="close-plan-modal">Annuleren</button>
+    <div style="flex:1;min-width:120px;">
+      <div class="section-label" style="margin-bottom:6px;">Wie kookt?</div>
+      <select id="wie-kok-sel" style="width:100%;min-width:max-content;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit;"></select>
     </div>
   </div>
 
-  <!-- Stap 2: wie eet dit + kok -->
-  <div id="wie-sectie" style="display:none;">
-    <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Gekozen</div>
-      <div id="wie-gekozen-naam" style="font-size:15px;font-weight:700;color:var(--ink);"></div>
-    </div>
-    <div class="section-label">Wie eet dit?</div>
-    <div id="wie-chips-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
-    <div class="section-label">Wie kookt?</div>
-    <select id="wie-kok-sel" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);color:var(--ink);font-family:inherit;margin-bottom:4px;">
-      <option value="">— Niemand / niet van toepassing —</option>
-    </select>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" data-action="toon-pick-stap">← Terug</button>
-      <button class="modal-btn modal-btn-primary" data-action="voeg-item-toe">Voeg toe</button>
-    </div>
+  <div class="modal-actions">
+    <button class="modal-btn modal-btn-cancel" data-action="close-plan-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" data-action="sla-plan-op" id="plan-opslaan-btn">Voeg toe</button>
   </div>
 </div>
 </div>
