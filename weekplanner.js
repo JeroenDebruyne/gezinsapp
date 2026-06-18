@@ -25,7 +25,19 @@ function _persKok() {
   return Auth.getProfielen().filter(p => p.rol !== 'kind').map(p => p.persoonKey);
 }
 
-laadOp().then(renderPlanner).catch(() => { laadLokaal(); renderPlanner(); });
+laadOp().then(() => {
+  renderPlanner();
+  const planId = new URLSearchParams(location.search).get('plan');
+  if (planId) {
+    const vandaag = fDateISO(new Date());
+    const dagKeys = getWeekDatesFrom(vandaag, weekOffsetP).map(d => fDateISO(d));
+    const dagIndex = dagKeys.findIndex(d => d === vandaag) !== -1 ? dagKeys.findIndex(d => d === vandaag) : 0;
+    const dk = dagKeys[dagIndex];
+    const DAGNAMEN = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+    openPlanModal(dk, 'avond', DAGNAMEN[dagIndex] || 'Vandaag', dagIndex);
+    setTimeout(() => kiesPlanK(planId), 50);
+  }
+}).catch(() => { laadLokaal(); renderPlanner(); });
 
 if (typeof BroadcastChannel !== 'undefined') {
   new BroadcastChannel('gezinsapp_data').onmessage = () => { laadLokaal(); renderPlanner(); };
