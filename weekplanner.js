@@ -74,10 +74,12 @@ function renderPlanner() {
         const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="toggle-wie-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
         const wieActief = wieLeeg ? PERSONEN : (item.wie || []);
         const wieDots = wieActief.map(p => `<span class="slot-wie-dot" style="background:var(--c-${escHtml(p)}-dot);" title="${escHtml(PLABEL[p] || p)}"></span>`).join('');
+        const kokIndicator = item.kok ? `<span class="slot-kok-indicator" title="Kookt: ${escHtml(PLABEL[item.kok] || item.kok)}">${escHtml(PEMOJI[item.kok] || '👤')}</span>` : '';
         return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}">
           <div class="slot-item-top">
             ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span class="slot-item-naam">${escHtml(naam)}${w ? ' <span class="warn"><i data-lucide="triangle-alert" style="width:12px;height:12px;"></i></span>' : ''}</span>`}
             <div class="slot-wie-dots">${wieDots}</div>
+            ${kokIndicator}
             <button class="slot-item-wis" data-action="wis-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}">×</button>
           </div>
           <div class="slot-item-ctrl">
