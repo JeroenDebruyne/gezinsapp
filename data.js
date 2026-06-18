@@ -352,7 +352,11 @@ async function laadOp() {
       if (r.id==='portiesKindRatio'&&typeof r.waarde==='number') portiesKindRatio = r.waarde;
     });
     // Hersync: lokale items die nooit Supabase bereikten (bijv. door iOS Safari page-unload)
-    const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x => x.id === a.id));
+    const toSyncActs  = _pendingActs.filter(a => !activiteiten.some(x =>
+      x.id === a.id ||
+      (x.naam === a.naam && x.beginDatum === a.beginDatum &&
+       JSON.stringify((x.wie||[]).slice().sort()) === JSON.stringify((a.wie||[]).slice().sort()))
+    ));
     const toSyncTodos = _pendingTodos.filter(t => !todos.some(x => x.id === t.id));
     toSyncActs.forEach(a => activiteiten.push(a));
     toSyncTodos.forEach(t => todos.push(t));
