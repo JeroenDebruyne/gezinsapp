@@ -51,9 +51,23 @@ async function _laadWeer() {
   if (_weerCache && Date.now() - _weerLaatst < 30 * 60 * 1000) return;
   try {
     const coords = (typeof Maps !== 'undefined' && Maps.getCoords()) || {lat:50.97, lng:3.19};
-    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&timezone=Europe%2FBrussels`);
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=14&timezone=Europe%2FBrussels`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
-    _weerCache = {temp:Math.round(d.current.temperature_2m), regen:d.current.precipitation_probability, omschrijving:_weerOmschrijving(d.current.weather_code || 0), icon:_weerIcon(d.current.weather_code || 0)};
+    const huidig = {
+      temp: Math.round(d.current.temperature_2m),
+      regen: d.current.precipitation_probability,
+      omschrijving: _weerOmschrijving(d.current.weather_code || 0),
+      icon: _weerIcon(d.current.weather_code || 0),
+    };
+    const forecast = (d.daily?.time || []).map((datum, i) => ({
+      datum,
+      max: Math.round(d.daily.temperature_2m_max[i]),
+      min: Math.round(d.daily.temperature_2m_min[i]),
+      regen_kans: d.daily.precipitation_probability_max[i] ?? 0,
+      omschrijving: _weerOmschrijving(d.daily.weather_code[i] || 0),
+    }));
+    _weerCache = { huidig, forecast };
     _weerLaatst = Date.now();
   } catch(e) { _weerCache = null; }
 }
@@ -156,8 +170,8 @@ const AGENT_TOOLS = [
    input_schema:{type:'object',properties:{weken:{type:'integer',description:'Standaard 8'}},required:[]}},
 
   {name:'get_weer',
-   description:'Huidig weer op thuislocatie: temperatuur, neerslagkans en weersomschrijving.',
-   input_schema:{type:'object',properties:{},required:[]}},
+   description:'Huidig weer én 14-daagse dagelijkse forecast op thuislocatie. Geeft huidig weer (temp, neerslagkans, omschrijving) en per dag: datum, min/max temp, neerslagkans en omschrijving.',
+   input_schema:{type:'object',properties:{dagen:{type:'integer',description:'Aantal forecastdagen terug te geven (1–14, standaard 14)'}},required:[]}},
 
   {name:'get_conflicten',
    description:'Detecteer overlappende activiteiten voor dezelfde persoon in de opgegeven week.',
@@ -469,9 +483,12 @@ async function agentExecute(naam, input) {
       return JSON.stringify(hist.length ? hist : 'Geen eethistoriek (planning nog leeg).');
     }
 
-    case 'get_weer':
+    case 'get_weer': {
       if (!_weerCache) await _laadWeer();
-      return _weerCache ? JSON.stringify(_weerCache) : 'Weersdata niet beschikbaar.';
+      if (!_weerCache) return 'Weersdata niet beschikbaar.';
+      const maxDagen = Math.min(Math.max(1, input.dagen || 14), 14);
+      return JSON.stringify({ huidig: _weerCache.huidig, forecast: _weerCache.forecast.slice(0, maxDagen) });
+    }
 
     case 'get_conflicten': {
       const dates = _atGetWeekDates(input.offset || 0);
