@@ -13,10 +13,7 @@ AppState.subscribe('contacten', renderHomepage);
 (function () {
   const welkom = document.getElementById('home-chat-welkom');
   if (!welkom) return;
-  const heeftKey = !!localStorage.getItem('anthropic_api_key');
-  welkom.innerHTML = heeftKey
-    ? '<div class="chat-bubble-bot">Hallo! Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div>'
-    : '<div class="chat-bubble-bot"><i data-lucide="key" class="icon-inline"></i> Gezinsassistent is niet actief. Stel je API key in via <i data-lucide="settings" class="icon-inline"></i> Instellingen om mij te activeren.</div>';
+  welkom.innerHTML = '<div class="chat-bubble-bot">Hallo! Ik heb toegang tot jullie agenda, recepten en planning. Waarmee kan ik helpen?</div>';
 })();
 
 function openActDetail(id) {
