@@ -298,7 +298,11 @@ function renderTransportDetail(act,datumISO){
 function isActiefOp(act,datumISO){
   if(act.meerdaags) return false;
   if((act.uitgesloten||[]).includes(datumISO)) return false;
-  if(act.freq==='eenmalig') return datumISO===act.beginDatum;
+  if(act.freq==='eenmalig'){
+    if(datumISO<act.beginDatum) return false;
+    if(act.eindDatum&&datumISO>act.eindDatum) return false;
+    return act.eindDatum ? datumISO>=act.beginDatum : datumISO===act.beginDatum;
+  }
   const d=new Date(datumISO+'T12:00:00');
   if(act.beginDatum&&d<new Date(act.beginDatum+'T00:00:00')) return false;
   if(act.eindDatum&&d>new Date(act.eindDatum+'T23:59:59')) return false;
@@ -574,8 +578,7 @@ function updateFreqUI(){
   // Dagen-rij: alleen tonen bij weekdag-gebaseerde frequenties
   const toontDagen = ['wekelijks','tweewekelijks'].includes(freq);
   if (dagenRow) dagenRow.style.display = toontDagen ? '' : 'none';
-  // Einddatum: verbergen bij eenmalig
-  if (einddatumRow) einddatumRow.style.display = freq === 'eenmalig' ? 'none' : '';
+  if (einddatumRow) einddatumRow.style.display = '';
 
   // Live preview
   if (!preview) return;
