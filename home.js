@@ -232,31 +232,39 @@ function stuurVoorbeeldHome(tekst) { homeAgent.stuurVoorbeeldVraag(tekst); }
 function homeWisChat() { homeAgent.wis('<div style="align-self:flex-start;"><div class="chat-bubble-bot">Chat gewist. Waarmee kan ik helpen?</div></div>'); }
 
 async function laadWeer() {
+  const iconEl = document.getElementById('weer-icon');
+  const tempEl = document.getElementById('weer-temp');
   try {
     const stored = JSON.parse(localStorage.getItem('gezinsapp_thuisadres_coords') || 'null');
     const coords = stored || { lat: 50.97, lng: 3.19 };
     let buienUrl = 'https://www.buienradar.be';
     try { const _u = new URL(localStorage.getItem('gezinsapp_buienradar_url') || ''); if (_u.protocol === 'https:') buienUrl = _u.href; } catch { }
     const wLink = document.getElementById('weer-widget');
-    if (wLink) { wLink.href = buienUrl; wLink.onclick = function (e) { e.preventDefault(); window.open(buienUrl, '_blank', 'noopener'); }; }
+    if (wLink) { wLink.href = buienUrl; wLink.onclick = e => { e.preventDefault(); window.open(buienUrl, '_blank', 'noopener'); }; }
     const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,weather_code&timezone=Europe%2FBrussels`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
     if (d.error) throw new Error(d.reason || 'API fout');
     const temp = Math.round(d.current.temperature_2m);
     const code = d.current.weather_code ?? 0;
-    document.getElementById('weer-icon').innerHTML = weerIcon(code);
-    document.getElementById('weer-temp').textContent = temp + '°C';
-  } catch (e) { console.warn('[Weer]', e); document.getElementById('weer-temp').textContent = '—'; }
+    if (iconEl) { iconEl.innerHTML = weerIcon(code); lucide.createIcons({ nodes: [iconEl] }); }
+    if (tempEl) tempEl.textContent = temp + '°C';
+  } catch (e) {
+    console.warn('[Weer]', e);
+    if (tempEl) tempEl.textContent = '—';
+  }
 }
 function weerIcon(code) {
   const s = 'width:16px;height:16px;display:inline-block;vertical-align:-0.15em;';
-  if (code === 0) return `<i data-lucide="sun" style="${s}"></i>`;
-  if (code <= 2) return `<i data-lucide="cloud-sun" style="${s}"></i>`;
-  if (code <= 3) return `<i data-lucide="cloud" style="${s}"></i>`;
-  if (code <= 67) return `<i data-lucide="cloud-rain" style="${s}"></i>`;
-  if (code <= 77) return `<i data-lucide="cloud-snow" style="${s}"></i>`;
-  if (code <= 82) return `<i data-lucide="cloud-drizzle" style="${s}"></i>`;
-  if (code <= 99) return `<i data-lucide="cloud-lightning" style="${s}"></i>`;
+  // WMO Weather interpretation codes: https://open-meteo.com/en/docs
+  if (code === 0)                    return `<i data-lucide="sun" style="${s}"></i>`;
+  if (code <= 2)                     return `<i data-lucide="cloud-sun" style="${s}"></i>`;
+  if (code <= 3)                     return `<i data-lucide="cloud" style="${s}"></i>`;
+  if (code <= 49)                    return `<i data-lucide="cloud-fog" style="${s}"></i>`; // mist/ijzel
+  if (code <= 67)                    return `<i data-lucide="cloud-rain" style="${s}"></i>`; // motregen/regen
+  if (code <= 77)                    return `<i data-lucide="cloud-snow" style="${s}"></i>`; // sneeuw/hagel
+  if (code <= 82)                    return `<i data-lucide="cloud-drizzle" style="${s}"></i>`; // buien
+  if (code <= 99)                    return `<i data-lucide="cloud-lightning" style="${s}"></i>`; // onweer
   return `<i data-lucide="cloud-sun" style="${s}"></i>`;
 }
 laadWeer();
