@@ -63,7 +63,7 @@ function renderPlanner() {
       }
       const itemsHtml = items.map((item, idx) => {
         const isSpec = !!SPEC[item.waarde];
-        const r = !isSpec ? recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)) : null;
+        const r = !isSpec ? recepten.find(r => String(r.id) === String(item.waarde)) : null;
         const naam = isSpec ? SPEC[item.waarde] : (item.naam_override || (r ? r.naam : '?'));
         const w = r && r.tijd > DRUKTE_MAX[drukte];
         const wieLeeg = !item.wie || item.wie.length === 0;
@@ -277,7 +277,7 @@ function renderSlotDetail(dk, slotKey) {
   const kokPers = _persKok();
   const html = items.map((item, idx) => {
     const isSpec = !!SPEC[item.waarde];
-    const r = !isSpec ? recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)) : null;
+    const r = !isSpec ? recepten.find(r => String(r.id) === String(item.waarde)) : null;
     const naam = isSpec ? SPEC[item.waarde] : (item.naam_override || (r ? r.naam : '?'));
     const w = r && r.tijd > DRUKTE_MAX[drukte];
     const itemPorties = _berekenPorties(item, dk);
@@ -348,7 +348,7 @@ async function _voegToeIntern(weekKey) {
     SLOTS.forEach(slot => {
       const slotItems = getSlotItems(dag, slot.key);
       slotItems.filter(item => !SPEC[item.waarde]).forEach(item => {
-        const r = recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)); if (!r) return;
+        const r = recepten.find(r => String(r.id) === String(item.waarde)); if (!r) return;
         const receptPorties = r.porties || 4;
         const geplandPorties = _berekenPorties(item, datum) || receptPorties;
         const schaal = geplandPorties / receptPorties;
@@ -561,7 +561,7 @@ document.addEventListener('click', function (e) {
       break;
     case 'kies-plan-k': {
       const k = el.dataset.k;
-      kiesPlanK(isNaN(k) ? k : parseFloat(k));
+      kiesPlanK(String(k));
       break;
     }
     case 'toggle-wie-stap':
