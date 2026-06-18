@@ -589,10 +589,11 @@ async function startScrape() {
   const statusEl = document.getElementById('link-status');
   const btn = document.getElementById('btn-scrape');
   btn.disabled = true; btn.textContent = '⏳ Bezig…';
-  statusEl.textContent = 'Pagina ophalen via corsproxy…';
+  statusEl.textContent = 'Pagina ophalen…';
   try {
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
-    const res = await fetch(proxyUrl);
+    const s = typeof Auth !== 'undefined' ? Auth.session() : null;
+    const proxyUrl = `${SUPABASE_URL}/functions/v1/cors-proxy?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, s?.access_token ? { headers: { 'Authorization': 'Bearer ' + s.access_token } } : {});
     if (!res.ok) throw new Error('Kon pagina niet laden (' + res.status + ')');
     const html = await res.text();
     const recept = parseJsonLd(html, url);

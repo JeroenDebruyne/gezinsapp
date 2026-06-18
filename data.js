@@ -242,7 +242,7 @@ async function laadOp() {
     const [r,i,a,p,b,c,d,t] = await Promise.all([
       sbFetch(`recepten${_gezinIdQ('?order=naam')}`),
       sbFetch(`ingredienten${_gezinIdQ('?order=naam')}`),
-      sbFetch(`activiteiten${_gezinIdQ('?order=naam')}`),
+      sbFetch(`activiteiten${_gezinIdQ(`?order=naam&or=(eind_datum.is.null,eind_datum.gte.${new Date(Date.now()-90*86400000).toISOString().slice(0,10)})`)}`),
       sbFetch(`planning${_gezinIdQ('')}`),
       sbFetch(`boodschappen_extra${_gezinIdQ('?order=naam')}`),
       sbFetch(`contacten${_gezinIdQ('?order=naam')}`),
