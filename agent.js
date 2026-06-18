@@ -21,22 +21,21 @@ const _rateLimiter = (() => {
   };
 })();
 
-async function agentFetch(apiKey, body) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
+function _agentHeaders() {
+  const s = typeof Auth !== 'undefined' ? Auth.session() : null;
+  const h = { 'Content-Type': 'application/json' };
+  if (s?.access_token) h['Authorization'] = 'Bearer ' + s.access_token;
+  return h;
+}
+
+async function agentFetch(body) {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/ai-proxy`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: _agentHeaders(),
     body: JSON.stringify(body),
   });
   const d = await r.json();
-  if (!r.ok) {
-    if (r.status === 401) localStorage.removeItem('anthropic_api_key');
-    throw new Error(d.error?.message || 'API fout ' + r.status);
-  }
+  if (!r.ok) throw new Error(d.error?.message || d.error || 'API fout ' + r.status);
   return d;
 }
 
@@ -89,25 +88,19 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     }));
   }
 
-  async function _fetch(apiKey, body) {
-    return agentFetch(apiKey, { ...body, messages: _cleanMessages(body.messages || []) });
+  async function _fetch(body) {
+    return agentFetch({ ...body, messages: _cleanMessages(body.messages || []) });
   }
 
-  async function _fetchStream(apiKey, body, onChunk) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+  async function _fetchStream(body, onChunk) {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/ai-proxy`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers: _agentHeaders(),
       body: JSON.stringify({ ...body, stream: true, messages: _cleanMessages(body.messages || []) }),
     });
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
-      if (r.status === 401) localStorage.removeItem('anthropic_api_key');
-      throw new Error(d.error?.message || 'API fout ' + r.status);
+      throw new Error(d.error?.message || d.error || 'API fout ' + r.status);
     }
     const reader = r.body.getReader();
     const dec = new TextDecoder();
@@ -189,7 +182,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     if (panel) panel.style.display = 'none';
   }
 
-  async function _toolLoop(apiKey, data) {
+  async function _toolLoop(data) {
     while (data.stop_reason === 'tool_use') {
       const toolResults = [];
       for (const block of (data.content || [])) {
@@ -208,26 +201,42 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       chatGeschiedenis.push({ role: 'assistant', content: data.content });
       chatGeschiedenis.push({ role: 'user', content: toolResults });
       _slaGeschiedenisOp();
-      data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      data = await _fetch({ model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
     }
     return data;
+  }
+
+  function _checkPrivacyConsent() {
+    if (localStorage.getItem('gezinsapp_ai_consent')) return true;
+    const container = document.getElementById(ids.berichten);
+    if (!container) return false;
+    if (container.querySelector('.privacy-consent-bubble')) return false;
+    const wrap = document.createElement('div');
+    wrap.className = 'privacy-consent-bubble';
+    wrap.style.cssText = 'align-self:flex-start;max-width:95%;';
+    wrap.innerHTML = '<div class="chat-bubble-bot" style="background:var(--surface-2);border:1.5px solid var(--border-2);">'
+      + '<strong>Privacy-melding</strong><br><br>'
+      + 'Door de gezinsassistent te gebruiken stuur je gezinsgegevens (namen, agenda, planning) naar <strong>Anthropic</strong> voor verwerking. '
+      + 'Zie hun <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color:var(--accent)">privacybeleid</a>.<br><br>'
+      + 'Berichten worden niet langer dan nodig bewaard. Geen tracking of advertenties.<br><br>'
+      + '<button onclick="(function(b){localStorage.setItem(\'gezinsapp_ai_consent\',\'1\');b.closest(\'.privacy-consent-bubble\').remove();})(this)" '
+      + 'style="padding:8px 18px;background:var(--accent);color:white;border:none;border-radius:99px;cursor:pointer;font-weight:600;font-family:inherit;">Akkoord — doorgaan</button>'
+      + '</div>';
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+    return false;
   }
 
   async function stuurBericht(tekst) {
     tekst = (tekst || '').trim();
     if (!tekst) return;
+    if (!_checkPrivacyConsent()) return;
     try { _rateLimiter.check(); } catch (e) { voegBerichtToe('assistant', '⏱️ ' + (e?.message || e)); return; }
     // Wacht tot data geladen is (optioneel)
     if (isDataGeladen && !isDataGeladen()) {
       const typWait = voegBerichtToe('assistant', '⏳ Even wachten, data wordt nog geladen…', true);
       await new Promise(r => { const start = Date.now(); const t = setInterval(() => { if (isDataGeladen() || Date.now() - start > 8000) { clearInterval(t); r(); } }, 200); });
       typWait?.remove();
-    }
-    let apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
-    if (!apiKey) {
-      apiKey = prompt('Anthropic API key (sk-ant-…):');
-      if (!apiKey) return;
-      localStorage.setItem('anthropic_api_key', apiKey); // CodeQL[js/clear-text-storage-of-sensitive-information]
     }
     const inputEl = document.getElementById(ids.input);
     if (inputEl) inputEl.value = '';
@@ -248,7 +257,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       container.scrollTop = container.scrollHeight;
     }
     try {
-      let data = await _fetchStream(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
+      let data = await _fetchStream({ model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis }, chunk => {
         if (!streamedText && streamBubble) streamBubble.textContent = '';
         streamedText += chunk;
         if (streamBubble) { streamBubble.innerHTML = formateerAntwoord(streamedText); if (container) container.scrollTop = container.scrollHeight; }
@@ -256,7 +265,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       if (data.stop_reason === 'tool_use') {
         if (streamWrap) { streamWrap.remove(); streamWrap = null; }
         const typingEl = voegBerichtToe('assistant', '⏳…', true);
-        const result = await _toolLoop(apiKey, data);
+        const result = await _toolLoop(data);
         typingEl?.remove();
         if (!result) return;
         const finaleTekst = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
@@ -271,11 +280,7 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
       }
     } catch (e) {
       if (streamWrap) streamWrap.remove();
-      if (e.message?.includes('401')) {
-        voegBerichtToe('assistant', '❌ API-sleutel ongeldig of verlopen. Stel een nieuwe in via Instellingen.');
-      } else {
-        voegBerichtToe('assistant', '❌ Fout: ' + (e?.message || e));
-      }
+      voegBerichtToe('assistant', '❌ Fout: ' + (e?.message || e));
     }
   }
 
@@ -284,7 +289,6 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
     _verbergBevestiging();
     const { naam, input, toolUseId } = _pending;
     _pending = null;
-    const apiKey = localStorage.getItem('anthropic_api_key') || ''; // CodeQL[js/clear-text-storage-of-sensitive-information]
     const typingEl = voegBerichtToe('assistant', '⏳…', true);
     try {
       const result = await execute(naam, input);
@@ -293,9 +297,9 @@ function createAgentChat({ tools, buildSystemPrompt, execute, ids, isDataGeladen
         const ph = last.content.find(b => b.type === 'tool_result' && b.tool_use_id === toolUseId);
         if (ph) ph.content = String(result);
       }
-      let data = await _fetch(apiKey, { model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
+      let data = await _fetch({ model: AGENT_MODEL, max_tokens: 4000, system: buildSystemPrompt(), tools, messages: chatGeschiedenis });
       typingEl?.remove();
-      const resultData = await _toolLoop(apiKey, data);
+      const resultData = await _toolLoop(data);
       if (!resultData) return;
       const tekst = (resultData.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
       voegBerichtToe('assistant', tekst);
