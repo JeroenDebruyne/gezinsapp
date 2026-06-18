@@ -300,12 +300,25 @@ function isActiefOp(act,datumISO){
   if((act.uitgesloten||[]).includes(datumISO)) return false;
   if(act.freq==='eenmalig') return datumISO===act.beginDatum;
   const d=new Date(datumISO+'T12:00:00');
+  if(act.beginDatum&&d<new Date(act.beginDatum+'T00:00:00')) return false;
+  if(act.eindDatum&&d>new Date(act.eindDatum+'T23:59:59')) return false;
+  // Jaarlijks: zelfde dag en maand als beginDatum, elk jaar
+  if(act.freq==='jaarlijks'){
+    if(!act.beginDatum) return false;
+    const [,bm,bd]=act.beginDatum.split('-');
+    const [,dm,dd]=datumISO.split('-');
+    return bm===dm && bd===dd;
+  }
+  // Maandelijks: zelfde dag van de maand als beginDatum
+  if(act.freq==='maandelijks'){
+    if(!act.beginDatum) return false;
+    return d.getDate()===new Date(act.beginDatum+'T12:00:00').getDate();
+  }
+  // Wekelijks, tweewekelijks, seizoen: weekdag-gebaseerd
   const dagKey=DAGMAP[d.getDay()];
   if(!act.dagen||!act.dagen.includes(dagKey)) return false;
-  if(act.beginDatum&&d<new Date(act.beginDatum)) return false;
-  if(act.eindDatum&&d>new Date(act.eindDatum+'T23:59:59')) return false;
   if(act.freq==='tweewekelijks'){
-    const ref=act.beginDatum?new Date(act.beginDatum):new Date('2024-01-01');
+    const ref=act.beginDatum?new Date(act.beginDatum+'T12:00:00'):new Date('2024-01-01');
     if(Math.floor((d-ref)/(7*24*3600*1000))%2!==0) return false;
   }
   return true;
@@ -467,10 +480,11 @@ function openActModal(act){
   renderPersonenMS();
 
   document.getElementById('dag-checkboxes').innerHTML=DAGKORT.map((d,i)=>
-    `<label class="dag-cb"><input type="checkbox" value="${DAGKEYS[i]}"${act?.dagen?.includes(DAGKEYS[i])?' checked':''}> ${d}</label>`
+    `<label class="dag-cb"><input type="checkbox" value="${DAGKEYS[i]}" data-action="freq-change"${act?.dagen?.includes(DAGKEYS[i])?' checked':''}> ${d}</label>`
   ).join('');
 
   document.getElementById('transport-kinderen-wrap').innerHTML=_renderTransportKinderenHTML(act);
+  updateFreqUI();
   checkKindjeSection();
   _vulTransportOpties();
   KINDEREN().forEach(kind=>{
@@ -497,7 +511,7 @@ let _editRecurActId=null,_editRecurDatum=null;
 function editActiviteit(id){
   const act=activiteiten.find(a=>a.id===id);
   if(!act)return;
-  const isHerhaling=(act.freq&&act.freq!=='eenmalig')&&(act.dagen||[]).length>0;
+  const isHerhaling=act.freq&&act.freq!=='eenmalig'&&(act.freq==='jaarlijks'||act.freq==='maandelijks'||(act.dagen||[]).length>0);
   if(isHerhaling&&geselecteerdeDatum){
     _editRecurActId=id;_editRecurDatum=geselecteerdeDatum;
     document.getElementById('er-act-naam').textContent=act.naam;
@@ -549,6 +563,44 @@ function togglePersoon(p){
     ?geselecteerdePersonen.filter(x=>x!==p):[...geselecteerdePersonen,p];
   renderPersonenMS();checkKindjeSection();
 }
+function updateFreqUI(){
+  const freq = document.getElementById('a-freq')?.value || 'eenmalig';
+  const dagenRow = document.getElementById('dagen-row');
+  const einddatumRow = document.getElementById('einddatum-row');
+  const preview = document.getElementById('freq-preview');
+  const beginDatum = document.getElementById('a-begin')?.value;
+  const dagGekozen = [...(document.querySelectorAll('#dag-checkboxes input:checked'))].map(c=>c.value);
+
+  // Dagen-rij: alleen tonen bij weekdag-gebaseerde frequenties
+  const toontDagen = ['wekelijks','tweewekelijks','seizoen'].includes(freq);
+  if (dagenRow) dagenRow.style.display = toontDagen ? '' : 'none';
+  // Einddatum: verbergen bij eenmalig
+  if (einddatumRow) einddatumRow.style.display = freq === 'eenmalig' ? 'none' : '';
+
+  // Live preview
+  if (!preview) return;
+  if (freq === 'eenmalig') { preview.style.display = 'none'; return; }
+  const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long'}) : null;
+  const fmtVol = d => d ? new Date(d+'T12:00:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'}) : null;
+  const DAGNAMEN_LANG = {ma:'maandag',di:'dinsdag',wo:'woensdag',do:'donderdag',vr:'vrijdag',za:'zaterdag',zo:'zondag'};
+  let tekst = '';
+  if (freq === 'jaarlijks') {
+    tekst = beginDatum ? `📅 Elk jaar op ${fmt(beginDatum)}` : '📅 Elk jaar op dezelfde datum als begindatum';
+  } else if (freq === 'maandelijks') {
+    const dag = beginDatum ? new Date(beginDatum+'T12:00:00').getDate() : '?';
+    tekst = `📅 Elke maand op de ${dag}e`;
+  } else {
+    const dagNamen = dagGekozen.map(d=>DAGNAMEN_LANG[d]||d).join(', ');
+    const prefix = freq === 'tweewekelijks' ? 'Elke 2 weken op' : freq === 'seizoen' ? 'Seizoensgebonden op' : 'Elke week op';
+    tekst = dagNamen ? `📅 ${prefix} ${dagNamen}` : `📅 ${prefix} … (kies een dag)`;
+    const einddatum = document.getElementById('a-eind')?.value;
+    if (beginDatum) tekst += ` · vanaf ${fmtVol(beginDatum)}`;
+    if (einddatum) tekst += ` t/m ${fmtVol(einddatum)}`;
+  }
+  preview.textContent = tekst;
+  preview.style.display = tekst ? 'block' : 'none';
+}
+
 function checkKindjeSection(){
   const kinderen=KINDEREN();
   const heeftKind=kinderen.some(k=>geselecteerdePersonen.includes(k));
@@ -719,7 +771,7 @@ let _verwijderActId=null,_verwijderDatum=null;
 function verwijderActiviteit(id,datumISO){
   const act=activiteiten.find(a=>a.id===id);
   if(!act) return;
-  const isHerhaling=(act.freq&&act.freq!=='eenmalig')&&(act.dagen||[]).length>0;
+  const isHerhaling=act.freq&&act.freq!=='eenmalig'&&(act.freq==='jaarlijks'||act.freq==='maandelijks'||(act.dagen||[]).length>0);
   if(isHerhaling&&datumISO){
     _verwijderActId=id;_verwijderDatum=datumISO;
     document.getElementById('vd-act-naam').textContent=act.naam;
@@ -1035,6 +1087,7 @@ document.addEventListener('change', function(e){
   if (!el) return;
   switch (el.dataset.action) {
     case 'check-nachtspan': checkNachtspan(); break;
+    case 'freq-change': checkNachtspan(); updateFreqUI(); break;
     case 'kies-locatie-contact': kiesLocatieContact(el.value); break;
     case 'ical-abo-check-toggle':
       document.getElementById('ical-abo-naam-rij').style.display = el.checked ? 'block' : 'none';

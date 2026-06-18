@@ -298,19 +298,21 @@
     </div>
     <div class="form-row">
       <label>Frequentie</label>
-      <select id="a-freq" data-action="check-nachtspan">
+      <select id="a-freq" data-action="freq-change">
+        <option value="eenmalig">Eenmalig</option>
         <option value="wekelijks">Wekelijks</option>
         <option value="tweewekelijks">Tweewekelijks</option>
-        <option value="maandelijks">Maandelijks</option>
-        <option value="eenmalig">Eenmalig</option>
-        <option value="seizoen">Seizoensgebonden</option>
+        <option value="maandelijks">Maandelijks (zelfde dag van de maand)</option>
+        <option value="jaarlijks">Jaarlijks (zelfde datum elk jaar)</option>
+        <option value="seizoen">Seizoensgebonden (weekelijks binnen periode)</option>
       </select>
     </div>
+    <div id="freq-preview" style="font-size:12px;color:var(--accent);padding:4px 2px 8px;display:none;"></div>
     <div class="form-grid">
-      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" data-action="check-nachtspan"/></div>
-      <div class="form-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
+      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" data-action="freq-change"/></div>
+      <div class="form-row" id="einddatum-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
     </div>
-    <div class="form-row">
+    <div class="form-row" id="dagen-row">
       <label>Dagen</label>
       <div class="dag-checkboxes" id="dag-checkboxes"></div>
     </div>
