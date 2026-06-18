@@ -188,7 +188,7 @@ function ingRow(naam = '', hoev = '', eenheid = '', winkel = '', isNieuw = false
   const bestaatAl = naam ? standaardIngredienten.some(i => i.naam.toLowerCase() === naam.toLowerCase()) : false;
   const rowId = 'ing-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
   const baseI = 'padding:8px 5px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;box-sizing:border-box;width:100%;background:var(--surface);color:var(--ink);font-family:inherit;min-width:0;';
-  return `<div id="${rowId}" style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;align-items:center;margin-bottom:8px;">
+  return `<div id="${rowId}" class="ing-header-grid" style="align-items:center;margin-bottom:8px;">
     <div class="ing-combo-wrap" style="min-width:0;position:relative;">
       <input class="ing-combo-input" type="text" placeholder="Ingrediënt…" value="${escHtml(naam)}" autocomplete="off"/>
       ${isNieuw ? `<span class="ing-nieuw-badge">Nieuw</span>` : ''}
@@ -295,6 +295,8 @@ function openReceptModal(recept, vanImport = false) {
     document.getElementById('ingredients-container').innerHTML = ingRow();
     document.getElementById('recept-modal-bg').dataset.editId = '';
   }
+  // Op mobiel de fiche-overlay sluiten zodat ze niet voor de bewerkmodal staat
+  document.getElementById('recept-fiche-overlay')?.classList.remove('open');
   document.getElementById('recept-modal-bg').classList.add('open');
   setTimeout(() => document.getElementById('f-naam').focus(), 150);
 }

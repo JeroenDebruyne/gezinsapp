@@ -176,25 +176,25 @@
   <h3>Recept toevoegen</h3>
   <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Hoe wil je het recept toevoegen?</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    <button class="btn btn-primary" data-action="keuze-manueel" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
-      <i data-lucide="pencil" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
-      <div style="text-align:left;">
-        <div style="font-weight:700;">Manueel invoeren</div>
-        <div style="font-size:12px;font-weight:400;opacity:.8;">Zelf naam, ingrediënten en bereiding invullen</div>
+    <button class="btn btn-primary keuze-optie-btn" data-action="keuze-manueel">
+      <i data-lucide="pencil" class="keuze-optie-icon"></i>
+      <div class="keuze-optie-tekst">
+        <div class="keuze-optie-titel">Manueel invoeren</div>
+        <div class="keuze-optie-sub">Zelf naam, ingrediënten en bereiding invullen</div>
       </div>
     </button>
-    <button class="btn btn-secondary" data-action="keuze-foto" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
-      <i data-lucide="camera" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
-      <div style="text-align:left;">
-        <div style="font-weight:700;">Foto scannen</div>
-        <div style="font-size:12px;font-weight:400;opacity:.8;">Neem een foto of upload een afbeelding van een recept</div>
+    <button class="btn btn-secondary keuze-optie-btn" data-action="keuze-foto">
+      <i data-lucide="camera" class="keuze-optie-icon"></i>
+      <div class="keuze-optie-tekst">
+        <div class="keuze-optie-titel">Foto scannen</div>
+        <div class="keuze-optie-sub">Neem een foto of upload een afbeelding van een recept</div>
       </div>
     </button>
-    <button class="btn btn-secondary" data-action="keuze-link" style="padding:16px;font-size:15px;justify-content:flex-start;gap:12px;display:flex;align-items:center;">
-      <i data-lucide="link" style="width:24px;height:24px;display:block;color:var(--ink);stroke-width:1.75;"></i>
-      <div style="text-align:left;">
-        <div style="font-weight:700;">Importeren via link</div>
-        <div style="font-size:12px;font-weight:400;opacity:.8;">Plak een URL van een receptensite</div>
+    <button class="btn btn-secondary keuze-optie-btn" data-action="keuze-link">
+      <i data-lucide="link" class="keuze-optie-icon"></i>
+      <div class="keuze-optie-tekst">
+        <div class="keuze-optie-titel">Importeren via link</div>
+        <div class="keuze-optie-sub">Plak een URL van een receptensite</div>
       </div>
     </button>
   </div>
@@ -344,7 +344,7 @@
 
   <!-- Ingrediënten -->
   <div class="section-label">Ingrediënten</div>
-  <div style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,0.5fr) minmax(0,0.6fr) minmax(0,0.75fr) 28px;gap:5px;margin-bottom:4px;padding:0 2px;">
+  <div class="ing-header-grid" style="margin-bottom:4px;padding:0 2px;">
     <span style="font-size:11px;color:var(--muted);font-weight:600;">NAAM</span>
     <span style="font-size:11px;color:var(--muted);font-weight:600;text-align:center;">AANT.</span>
     <span style="font-size:11px;color:var(--muted);font-weight:600;">EENHEID</span>
