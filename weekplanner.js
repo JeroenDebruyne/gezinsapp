@@ -51,7 +51,7 @@ function renderPlanner() {
     const previewItems = SLOTS.map(slot => {
       const items = getSlotItems(dagPlan, slot.key); if (!items.length) return null;
       const first = items[0];
-      const naam = SPEC[first.waarde] ? SPEC[first.waarde] : (recepten.find(r => r.id === first.waarde || r.id === parseInt(first.waarde))?.naam || null);
+      const naam = SPEC[first.waarde] ? SPEC[first.waarde] : (first.naam_override || recepten.find(r => r.id === first.waarde || r.id === parseInt(first.waarde))?.naam || null);
       if (!naam) return null;
       return escHtml(naam) + (items.length > 1 ? ` +${items.length - 1}` : '');
     }).filter(Boolean);
@@ -64,36 +64,23 @@ function renderPlanner() {
       const itemsHtml = items.map((item, idx) => {
         const isSpec = !!SPEC[item.waarde];
         const r = !isSpec ? recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)) : null;
-        const naam = isSpec ? SPEC[item.waarde] : (r ? r.naam : '?');
+        const naam = isSpec ? SPEC[item.waarde] : (item.naam_override || (r ? r.naam : '?'));
         const w = r && r.tijd > DRUKTE_MAX[drukte];
-        const itemPorties = _berekenPorties(item, key);
-        const extraEters = item.extra_eters || 0;
-        const kokPers = _persKok();
-        const persOpts = kokPers.map(p => `<option value="${escHtml(p)}"${p === item.kok ? ' selected' : ''}>${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
         const wieLeeg = !item.wie || item.wie.length === 0;
-        const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="toggle-wie-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
         const wieActief = wieLeeg ? PERSONEN : (item.wie || []);
-        const wieDots = wieActief.map(p => `<span class="slot-wie-dot" style="background:var(--c-${escHtml(p)}-dot);" title="${escHtml(PLABEL[p] || p)}"></span>`).join('');
-        const kokIndicator = item.kok ? `<span class="slot-kok-indicator" title="Kookt: ${escHtml(PLABEL[item.kok] || item.kok)}">${escHtml(PEMOJI[item.kok] || '👤')}</span>` : '';
-        return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}">
+        const wieRoChips = wieActief.map(p => `<span class="wie-chip sel slot-wie-ro" title="${escHtml(PLABEL[p] || p)}" style="pointer-events:none;">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
+        const kokLabel = item.kok ? `${escHtml(PEMOJI[item.kok] || '👤')} ${escHtml(PLABEL[item.kok] || item.kok)}` : '—';
+        const totalItems = items.length;
+        const isLast = idx === totalItems - 1;
+        const borderRadius = totalItems === 1 ? '0 0 var(--radius-sm) var(--radius-sm)' : (isLast ? '0 0 var(--radius-sm) var(--radius-sm)' : '0');
+        return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}" style="border-radius:${borderRadius};">
           <div class="slot-item-top">
             ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span class="slot-item-naam">${escHtml(naam)}${w ? ' <span class="warn"><i data-lucide="triangle-alert" style="width:12px;height:12px;"></i></span>' : ''}</span>`}
-            <div class="slot-wie-dots">${wieDots}</div>
-            ${kokIndicator}
             <button class="slot-item-wis" data-action="wis-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}">×</button>
           </div>
-          <div class="slot-item-ctrl">
-            <div style="display:flex;gap:3px;">${wieHtml}</div>
-            ${r ? `<div class="slot-porties-wrap">
-              <button class="slot-ctrl-btn" data-action="wijzig-extra-eters" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}" data-delta="-1">−</button>
-              <span class="slot-porties-val">+${extraEters} extra</span>
-              <button class="slot-ctrl-btn" data-action="wijzig-extra-eters" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}" data-delta="1">+</button>
-              <span class="slot-porties-val"><i data-lucide="users" style="width:12px;height:12px;display:inline-block;vertical-align:-0.1em;"></i> ${itemPorties}</span>
-            </div>` : ''}
-            <select class="slot-kok-sel" data-action="wijzig-kok-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}">
-              <option value="">— Kok? —</option>
-              ${persOpts}
-            </select>
+          <div class="slot-item-meta">
+            <div class="slot-wie-ro-wrap">${wieRoChips}</div>
+            <div class="slot-kok-ro">${kokLabel}</div>
           </div>
         </div>`;
       }).join('');
@@ -217,7 +204,7 @@ function kiesPlanK(k) {
   const chipsHtml = PERSONEN.map(p => `<div class="wie-stap-chip sel" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`).join('');
   document.getElementById('wie-chips-wrap').innerHTML = chipsHtml;
   const kokOpts = _persKok().map(p => `<option value="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
-  document.getElementById('wie-kok-sel').innerHTML = `<option value="">— Niemand / niet van toepassing —</option>${kokOpts}`;
+  document.getElementById('wie-kok-sel').innerHTML = `<option value="" selected>Te bepalen</option><option value="niemand">Niemand</option>${kokOpts}`;
   document.getElementById('pick-sectie').style.display = 'none';
   document.getElementById('wie-sectie').style.display = '';
 }
@@ -254,7 +241,7 @@ function wijzigExtraEters(dagKey, slotKey, idx, delta) {
 }
 function wijzigKokItem(dagKey, slotKey, idx, kokKey) {
   const items = getSlotItems(planning[dagKey] || {}, slotKey);
-  items[idx].kok = kokKey || null;
+  items[idx].kok = (kokKey && kokKey !== 'niemand') ? kokKey : null;
   _saveItems(dagKey, slotKey, items);
   renderPlanner();
 }
@@ -291,32 +278,42 @@ function renderSlotDetail(dk, slotKey) {
   const html = items.map((item, idx) => {
     const isSpec = !!SPEC[item.waarde];
     const r = !isSpec ? recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)) : null;
-    const naam = isSpec ? SPEC[item.waarde] : (r ? r.naam : '?');
+    const naam = isSpec ? SPEC[item.waarde] : (item.naam_override || (r ? r.naam : '?'));
     const w = r && r.tijd > DRUKTE_MAX[drukte];
     const itemPorties = _berekenPorties(item, dk);
     const extraEters = item.extra_eters || 0;
     const wieLeeg = !item.wie || item.wie.length === 0;
     const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="sd-toggle-wie" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
     const persOpts = kokPers.map(p => `<option value="${escHtml(p)}"${p === item.kok ? ' selected' : ''}>${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
+    const teBepalenSel = !item.kok ? ' selected' : '';
     return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span style="font-size:15px;font-weight:700;flex:1;">${escHtml(naam)}${w ? ' ⚠️' : ''}</span>`}
+        ${isSpec
+          ? `<span class="special-badge sb-${item.waarde}" style="flex:1;">${naam}</span>`
+          : `<input type="text" class="sd-naam-input" value="${escHtml(naam)}" data-action="sd-hernoem" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" style="flex:1;font-size:15px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;background:var(--surface);color:var(--ink);font-family:inherit;"${w ? ' title="Recept lang voor drukke dag ⚠️"' : ''}>`}
         <button class="slot-item-wis" style="font-size:20px;" data-action="sd-wis-item" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">×</button>
       </div>
-      <div class="section-label" style="margin-bottom:6px;">Wie eet dit?</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${wieHtml}</div>
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="flex:1;min-width:120px;">
+          <div class="section-label" style="margin-bottom:6px;">Wie eet dit?</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${wieHtml}</div>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <div class="section-label" style="margin-bottom:6px;">Wie kookt?</div>
+          <select class="slot-kok-sel" style="width:100%;min-width:max-content;" data-action="sd-wijzig-kok" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">
+            <option value=""${teBepalenSel}>Te bepalen</option>
+            <option value="niemand">Niemand</option>
+            ${persOpts}
+          </select>
+        </div>
+      </div>
       ${r ? `<div class="section-label" style="margin-bottom:6px;">Porties</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="-1">−</button>
         <span style="font-size:13px;color:var(--muted);">+${extraEters} extra gasten</span>
         <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="1">+</button>
         <span style="font-size:13px;color:var(--muted);margin-left:4px;"><i data-lucide="users" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ${itemPorties} porties</span>
       </div>` : ''}
-      <div class="section-label" style="margin-bottom:6px;">Wie kookt?</div>
-      <select class="slot-kok-sel" style="width:100%;" data-action="sd-wijzig-kok" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">
-        <option value="">— Niemand / niet van toepassing —</option>
-        ${persOpts}
-      </select>
     </div>`;
   }).join('');
   document.getElementById('slot-detail-inhoud').innerHTML = html || '<p style="color:var(--muted);font-size:14px;">Geen maaltijd ingepland.</p>';
@@ -520,6 +517,16 @@ document.addEventListener('change', function (e) {
     wijzigKokItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.value);
   }
 });
+
+document.addEventListener('blur', function (e) {
+  const el = e.target.closest('[data-action="sd-hernoem"]');
+  if (!el) return;
+  const { dk, slot, idx } = el.dataset;
+  const items = getSlotItems(planning[dk] || {}, slot);
+  if (!items[idx]) return;
+  const newNaam = el.value.trim();
+  if (newNaam) { items[parseInt(idx)].naam_override = newNaam; _saveItems(dk, slot, items); renderPlanner(); }
+}, true);
 
 document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
