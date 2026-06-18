@@ -162,7 +162,8 @@ async function slaMapsKeyOp() {
     const d = await r.json().catch(() => ({}));
     if (!r.ok || d.status === 'REQUEST_DENIED') { toonOpslagStatus('❌ Ongeldige Maps API-sleutel of Geocoding API niet ingeschakeld.'); return; }
   } catch(e) { toonOpslagStatus('❌ Kan Google Maps API niet bereiken.'); return; }
-  localStorage.setItem(Maps.KEY_KEY, key); // CodeQL[js/clear-text-storage-of-sensitive-information]
+  Maps.setKey(key);
+  localStorage.removeItem(Maps.KEY_KEY);
   sbSaveInstellingen();
   sluitMapsKeyForm();
   renderInstellingen();
@@ -170,6 +171,7 @@ async function slaMapsKeyOp() {
 }
 function verwijderMapsKey() {
   if (!confirm('Google Maps API key verwijderen?')) return;
+  Maps.setKey('');
   localStorage.removeItem(Maps.KEY_KEY);
   sbSaveInstellingen();
   sluitMapsKeyForm();

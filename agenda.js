@@ -776,7 +776,7 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{
     if(e.target!==bg) return;
     switch(bg.id){
-      case 'act-modal-bg': closeActModal(); break; // closeActModal regelt zelf _terugNaarHome
+      case 'act-modal-bg': if (!_savingAct) closeActModal(); break; // closeActModal regelt zelf _terugNaarHome
       case 'drukte-modal-bg': closeDOModal(); break;
       case 'ical-modal-bg': closeIcalModal(); break;
       case 'verwijder-modal-bg': closeVerwijderModal(); break;

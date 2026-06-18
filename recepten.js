@@ -114,6 +114,7 @@ function renderFicheHtml(r, metSluitknop) {
   <div class="fiche-header">
     <div class="fiche-naam">${escHtml(r.naam)}</div>
     <div class="fiche-acties">
+      <button class="btn btn-secondary btn-sm" data-action="plan-recept" data-id="${r.id}" title="Inplannen in weekmenu"><i data-lucide="calendar-plus" class="icon-inline"></i></button>
       ${kanBewerken ? `
         <button class="btn btn-secondary btn-sm" data-action="bewerk-recept" data-id="${r.id}" title="Bewerken"><i data-lucide="pencil" class="icon-inline"></i></button>
         <button class="btn btn-danger btn-sm" data-action="verwijder-recept" data-id="${r.id}" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
@@ -758,6 +759,7 @@ document.addEventListener('click', function (e) {
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
     case 'open-fiche': openFiche(el.dataset.ficheId); break;
     case 'sluit-fiche': sluitFiche(); break;
+    case 'plan-recept': window.location.href = `weekplanner.html?plan=${encodeURIComponent(el.dataset.id)}`; break;
     case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id)); break;
     case 'verwijder-recept': verwijderRecept(el.dataset.id); break;
     case 'close-import-modal': closeImportModal(); break;

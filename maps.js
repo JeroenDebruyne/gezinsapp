@@ -8,8 +8,10 @@ const Maps = (() => {
   const COORDS_KEY = 'gezinsapp_thuisadres_coords';
 
   let _ready = false, _loading = false, _queue = [];
+  let _key = ''; // in-memory, nooit in localStorage
 
-  function getKey()        { return localStorage.getItem(KEY_KEY)   || ''; }
+  function getKey()        { return _key || localStorage.getItem(KEY_KEY) || ''; }
+  function setKey(k)       { _key = k || ''; }
   function getThuisadres() { return localStorage.getItem(THUIS_KEY) || ''; }
 
   // Geeft {lat, lng} terug vanuit cache, of null als er nog geen coords zijn.
@@ -131,5 +133,5 @@ const Maps = (() => {
     });
   }
 
-  return { laad, autocomplete, resetAutocomplete, reistijd, getKey, getThuisadres, getCoords, geocodeerAdres, KEY_KEY, THUIS_KEY, COORDS_KEY };
+  return { laad, autocomplete, resetAutocomplete, reistijd, getKey, setKey, getThuisadres, getCoords, geocodeerAdres, KEY_KEY, THUIS_KEY, COORDS_KEY };
 })();
