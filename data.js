@@ -338,7 +338,7 @@ async function laadOp() {
       if (r.id==='uitzonderingen'&&r.waarde) uitzonderingen=r.waarde;
       if (r.id==='transportUitzonderingen'&&r.waarde) transportUitzonderingen=r.waarde;
       if (r.id==='standaardTransport'&&r.waarde) standaardTransport={...standaardTransport,...r.waarde};
-      if (r.id==='googleMapsKey'&&r.waarde) localStorage.setItem('google_maps_key', r.waarde);
+      if (r.id==='googleMapsKey'&&r.waarde) { Maps.setKey(r.waarde); localStorage.removeItem('google_maps_key'); }
       if (r.id==='thuisadres'&&r.waarde) localStorage.setItem('gezinsapp_thuisadres', r.waarde);
       if (r.id==='buienradarUrl'&&r.waarde) localStorage.setItem('gezinsapp_buienradar_url', r.waarde);
       if (r.id==='geheugen' && r.waarde) geheugen = r.waarde;
@@ -677,7 +677,7 @@ async function sbSaveInstellingen() {
   if (!gid) { toonOpslagStatus('⚠️ Geen gezin_id — herlaad de pagina'); return; }
   try {
     const extra = [
-      ['googleMapsKey',  localStorage.getItem('google_maps_key')         || null],
+      ['googleMapsKey',  Maps.getKey()                                     || null],
       ['thuisadres',     localStorage.getItem('gezinsapp_thuisadres')   || null],
       ['buienradarUrl',  localStorage.getItem('gezinsapp_buienradar_url')|| null],
     ].filter(([,v]) => v !== null);
