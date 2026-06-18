@@ -1,5 +1,5 @@
 Auth.initPagina('weekplanner');
-let weekOffsetP = +(sessionStorage.getItem('weekplanner_offset') || 0), activeSlot = null, selectedKeuze = null, selectedWie = [];
+let weekOffsetP = +(sessionStorage.getItem('weekplanner_offset') || 0), activeSlot = null, selectedKeuze = null, selectedWie = [], _editIdx = null;
 let aiMenuVoorstel = null, chatGeschiedenisWP = [];
 let _openDagen = new Set();
 
@@ -73,7 +73,7 @@ function renderPlanner() {
         const totalItems = items.length;
         const isLast = idx === totalItems - 1;
         const borderRadius = totalItems === 1 ? '0 0 var(--radius-sm) var(--radius-sm)' : (isLast ? '0 0 var(--radius-sm) var(--radius-sm)' : '0');
-        return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}" style="border-radius:${borderRadius};">
+        return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}" data-idx="${idx}" style="border-radius:${borderRadius};">
           <div class="slot-item-top">
             ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span class="slot-item-naam">${escHtml(naam)}${w ? ' <span class="warn"><i data-lucide="triangle-alert" style="width:12px;height:12px;"></i></span>' : ''}</span>`}
             <button class="slot-item-wis" data-action="wis-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}">×</button>
@@ -143,8 +143,9 @@ function _receptMatchTypes(r, types) {
   return types.some(t => rt.includes(t));
 }
 
-function openPlanModal(dk, slotKey, dagnaam, dagIndex) {
+function openPlanModal(dk, slotKey, dagnaam, dagIndex, editIdx = null) {
   activeSlot = { dagKey: dk, slotKey, dagIndex };
+  _editIdx = editIdx;
   const drukte = getDagDrukte(dk);
   document.getElementById('plan-titel').textContent = dagnaam + ' — ' + SLOTS.find(s => s.key === slotKey).lbl;
   document.getElementById('drukte-info-box').innerHTML = `<div style="background:${DRUKTE_BG[drukte]};border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:${DRUKTE_CLR[drukte]};font-weight:500;display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${{ rustig: 'var(--rustig-dot)', normaal: 'var(--normaal-dot)', druk: 'var(--druk-dot)' }[drukte]};flex-shrink:0;"></span>${{ rustig: 'Rustige dag', normaal: 'Drukke dag', druk: 'Zeer drukke dag' }[drukte]}</div>`;
@@ -152,12 +153,11 @@ function openPlanModal(dk, slotKey, dagnaam, dagIndex) {
   const slot = SLOTS.find(s => s.key === slotKey);
   const types = isW ? ['weekend'] : slot.types;
 
-  let specHtml = '';
-  specHtml += `<button class="spec-btn sb-shake" data-action="kies-plan-k" data-k="shake"><i data-lucide="cup-soda" class="icon-inline"></i> Maaltijdshake</button>`;
-  specHtml += `<button class="spec-btn sb-uiteten" data-action="kies-plan-k" data-k="uiteten"><i data-lucide="utensils" class="icon-inline"></i> Uit eten</button>`;
-  specHtml += `<button class="spec-btn sb-afhalen" data-action="kies-plan-k" data-k="afhalen"><i data-lucide="package" class="icon-inline"></i> Afhalen</button>`;
-  specHtml += `<button class="spec-btn sb-restjes" data-action="kies-plan-k" data-k="restjes"><i data-lucide="refresh-cw" class="icon-inline"></i> Restjes</button>`;
-  document.getElementById('spec-opties').innerHTML = specHtml;
+  document.getElementById('spec-opties').innerHTML =
+    `<button class="spec-btn sb-shake" data-action="kies-plan-k" data-k="shake"><i data-lucide="cup-soda" class="icon-inline"></i> Maaltijdshake</button>` +
+    `<button class="spec-btn sb-uiteten" data-action="kies-plan-k" data-k="uiteten"><i data-lucide="utensils" class="icon-inline"></i> Uit eten</button>` +
+    `<button class="spec-btn sb-afhalen" data-action="kies-plan-k" data-k="afhalen"><i data-lucide="package" class="icon-inline"></i> Afhalen</button>` +
+    `<button class="spec-btn sb-restjes" data-action="kies-plan-k" data-k="restjes"><i data-lucide="refresh-cw" class="icon-inline"></i> Restjes</button>`;
 
   const top3 = getTop3Recepten(types);
   const top3El = document.getElementById('top3-sectie');
@@ -170,56 +170,100 @@ function openPlanModal(dk, slotKey, dagnaam, dagIndex) {
 
   planReceptenGefilterd = recepten.filter(r => _receptMatchTypes(r, types));
   document.getElementById('plan-zoek').value = '';
-  renderPlanRecepten(planReceptenGefilterd);
+  document.getElementById('plan-recepten').style.display = 'none';
+  document.getElementById('plan-recepten').innerHTML = '';
+
+  const kokOpts = _persKok().map(p => `<option value="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
+  document.getElementById('wie-kok-sel').innerHTML = `<option value="" selected>Te bepalen</option><option value="niemand">Niemand</option>${kokOpts}`;
+
+  // Pre-fill when editing
+  if (editIdx !== null) {
+    const item = getSlotItems(planning[dk] || {}, slotKey)[editIdx];
+    if (item) {
+      selectedKeuze = item.waarde;
+      selectedWie = item.wie ? [...item.wie] : [];
+      const naam = SPEC[item.waarde] || item.naam_override || recepten.find(r => String(r.id) === String(item.waarde))?.naam || String(item.waarde);
+      _toonGekozen(naam);
+      const wieLeeg = !item.wie || item.wie.length === 0;
+      document.getElementById('wie-chips-wrap').innerHTML = PERSONEN.map(p =>
+        `<div class="wie-stap-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`
+      ).join('');
+      if (item.kok) {
+        const sel = document.getElementById('wie-kok-sel');
+        if (item.kok === 'niemand') sel.value = 'niemand';
+        else sel.value = item.kok;
+      }
+      document.getElementById('plan-opslaan-btn').textContent = 'Opslaan';
+    }
+  } else {
+    selectedKeuze = null;
+    selectedWie = [];
+    _verbergGekozen();
+    document.getElementById('wie-chips-wrap').innerHTML = PERSONEN.map(p =>
+      `<div class="wie-stap-chip sel" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`
+    ).join('');
+    document.getElementById('plan-opslaan-btn').textContent = 'Voeg toe';
+  }
+
   document.getElementById('plan-modal-bg').classList.add('open');
   setTimeout(() => document.getElementById('plan-zoek').focus(), 150);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+function _toonGekozen(naam) {
+  const wrap = document.getElementById('plan-gekozen-wrap');
+  document.getElementById('plan-gekozen-naam').textContent = naam;
+  wrap.style.display = 'flex';
+}
+function _verbergGekozen() {
+  document.getElementById('plan-gekozen-wrap').style.display = 'none';
+  document.getElementById('plan-gekozen-naam').textContent = '';
+}
+
 function renderPlanRecepten(lijst) {
-  document.getElementById('plan-recepten').innerHTML = lijst.length
-    ? lijst.map(r => `<button class="plan-recept-btn" data-action="kies-plan-k" data-k="${r.id}">${escHtml(r.naam)}<span style="font-size:11px;color:var(--muted);margin-left:6px;">${r.tijd}m</span></button>`).join('')
-    : `<p style="font-size:13px;color:var(--muted);padding:8px 0;">Geen recepten gevonden.</p>`;
+  const el = document.getElementById('plan-recepten');
+  if (!lijst.length) {
+    el.innerHTML = `<p style="font-size:13px;color:var(--muted);padding:8px 12px;">Geen recepten gevonden.</p>`;
+  } else {
+    el.innerHTML = lijst.map(r => `<button class="plan-recept-btn" data-action="kies-plan-k" data-k="${r.id}">${escHtml(r.naam)}<span style="font-size:11px;color:var(--muted);margin-left:6px;">${r.tijd}m</span></button>`).join('');
+  }
+  el.style.display = 'block';
 }
 
 function zoekRecepten(q) {
   const zoek = q.toLowerCase().trim();
-  renderPlanRecepten(zoek
-    ? planReceptenGefilterd.filter(r => r.naam.toLowerCase().includes(zoek))
-    : planReceptenGefilterd
-  );
+  if (!zoek) { document.getElementById('plan-recepten').style.display = 'none'; return; }
+  renderPlanRecepten(planReceptenGefilterd.filter(r => r.naam.toLowerCase().includes(zoek)));
 }
 
-function toonPickStap() {
-  document.getElementById('pick-sectie').style.display = '';
-  document.getElementById('wie-sectie').style.display = 'none';
-  selectedKeuze = null;
-}
 function kiesPlanK(k) {
   if (!activeSlot) return;
-  selectedKeuze = k;
-  const naam = SPEC[k] || recepten.find(r => r.id === k || r.id === parseInt(k))?.naam || String(k);
-  document.getElementById('wie-gekozen-naam').textContent = naam;
-  selectedWie = [];
-  const chipsHtml = PERSONEN.map(p => `<div class="wie-stap-chip sel" data-action="toggle-wie-stap" data-p="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</div>`).join('');
-  document.getElementById('wie-chips-wrap').innerHTML = chipsHtml;
-  const kokOpts = _persKok().map(p => `<option value="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
-  document.getElementById('wie-kok-sel').innerHTML = `<option value="" selected>Te bepalen</option><option value="niemand">Niemand</option>${kokOpts}`;
-  document.getElementById('pick-sectie').style.display = 'none';
-  document.getElementById('wie-sectie').style.display = '';
+  selectedKeuze = String(k);
+  const naam = SPEC[k] || recepten.find(r => String(r.id) === String(k))?.naam || String(k);
+  _toonGekozen(naam);
+  document.getElementById('plan-zoek').value = '';
+  document.getElementById('plan-recepten').style.display = 'none';
 }
+
 function toggleWieStap(el, p) {
   el.classList.toggle('sel');
   const geselecteerd = [...document.querySelectorAll('#wie-chips-wrap .wie-stap-chip.sel')].map(e => e.dataset.p);
   selectedWie = geselecteerd.length === PERSONEN.length ? [] : geselecteerd;
 }
-function voegItemToe() {
+
+function slaPlanOp() {
   if (!activeSlot || selectedKeuze == null) return;
   const { dagKey, slotKey } = activeSlot;
-  const kok = document.getElementById('wie-kok-sel').value || null;
-  const dagPlan = planning[dagKey] || {};
-  const items = getSlotItems(dagPlan, slotKey);
-  items.push({ waarde: selectedKeuze, wie: [...selectedWie], kok, extra_eters: 0 });
+  const kokVal = document.getElementById('wie-kok-sel').value;
+  const kok = (kokVal && kokVal !== 'niemand') ? kokVal : null;
+  const items = getSlotItems(planning[dagKey] || {}, slotKey);
+  if (_editIdx !== null && items[_editIdx]) {
+    items[_editIdx].waarde = selectedKeuze;
+    items[_editIdx].wie = [...selectedWie];
+    items[_editIdx].kok = kok;
+  } else {
+    items.push({ waarde: selectedKeuze, wie: [...selectedWie], kok, extra_eters: 0 });
+  }
   _saveItems(dagKey, slotKey, items);
   closePlanModal();
   renderPlanner();
@@ -260,75 +304,18 @@ function toggleWieItem(dagKey, slotKey, idx, persoon) {
   _saveItems(dagKey, slotKey, items);
   renderPlanner();
 }
-function openSlotDetail(dk, slotKey, dagnaam, dagIndex) {
-  activeSlot = { dagKey: dk, slotKey, dagIndex };
-  const slotDef = SLOTS.find(s => s.key === slotKey);
-  document.getElementById('slot-detail-titel').textContent = dagnaam + ' — ' + slotDef.lbl;
-  renderSlotDetail(dk, slotKey);
-  const btn = document.getElementById('sd-voeg-toe-btn');
-  btn.dataset.dk = dk; btn.dataset.slot = slotKey; btn.dataset.dagnaam = dagnaam; btn.dataset.dagIndex = dagIndex;
-  document.getElementById('slot-detail-modal-bg').classList.add('open');
+function openSlotDetail(dk, slotKey, dagnaam, dagIndex, editIdx) {
+  openPlanModal(dk, slotKey, dagnaam, dagIndex, editIdx);
 }
 
-function renderSlotDetail(dk, slotKey) {
-  const dagPlan = planning[dk] || {};
-  const items = getSlotItems(dagPlan, slotKey);
-  const drukte = getDagDrukte(dk);
-  const kokPers = _persKok();
-  const html = items.map((item, idx) => {
-    const isSpec = !!SPEC[item.waarde];
-    const r = !isSpec ? recepten.find(r => String(r.id) === String(item.waarde)) : null;
-    const naam = isSpec ? SPEC[item.waarde] : (item.naam_override || (r ? r.naam : '?'));
-    const w = r && r.tijd > DRUKTE_MAX[drukte];
-    const itemPorties = _berekenPorties(item, dk);
-    const extraEters = item.extra_eters || 0;
-    const wieLeeg = !item.wie || item.wie.length === 0;
-    const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="sd-toggle-wie" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
-    const persOpts = kokPers.map(p => `<option value="${escHtml(p)}"${p === item.kok ? ' selected' : ''}>${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
-    const teBepalenSel = !item.kok ? ' selected' : '';
-    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        ${isSpec
-          ? `<span class="special-badge sb-${item.waarde}" style="flex:1;">${naam}</span>`
-          : `<input type="text" class="sd-naam-input" value="${escHtml(naam)}" data-action="sd-hernoem" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" style="flex:1;font-size:15px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;background:var(--surface);color:var(--ink);font-family:inherit;"${w ? ' title="Recept lang voor drukke dag ⚠️"' : ''}>`}
-        <button class="slot-item-wis" style="font-size:20px;" data-action="sd-wis-item" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">×</button>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;">
-        <div style="flex:1;min-width:120px;">
-          <div class="section-label" style="margin-bottom:6px;">Wie eet dit?</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">${wieHtml}</div>
-        </div>
-        <div style="flex:1;min-width:120px;">
-          <div class="section-label" style="margin-bottom:6px;">Wie kookt?</div>
-          <select class="slot-kok-sel" style="width:100%;min-width:max-content;" data-action="sd-wijzig-kok" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">
-            <option value=""${teBepalenSel}>Te bepalen</option>
-            <option value="niemand">Niemand</option>
-            ${persOpts}
-          </select>
-        </div>
-      </div>
-      ${r ? `<div class="section-label" style="margin-bottom:6px;">Porties</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-        <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="-1">−</button>
-        <span style="font-size:13px;color:var(--muted);">+${extraEters} extra gasten</span>
-        <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="1">+</button>
-        <span style="font-size:13px;color:var(--muted);margin-left:4px;"><i data-lucide="users" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ${itemPorties} porties</span>
-      </div>` : ''}
-    </div>`;
-  }).join('');
-  document.getElementById('slot-detail-inhoud').innerHTML = html || '<p style="color:var(--muted);font-size:14px;">Geen maaltijd ingepland.</p>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
 
-function closeSlotDetail() {
-  document.getElementById('slot-detail-modal-bg').classList.remove('open');
-  activeSlot = null;
-}
+function closeSlotDetail() { closePlanModal(); }
 
 function closePlanModal() {
   document.getElementById('plan-modal-bg').classList.remove('open');
   activeSlot = null;
-  toonPickStap();
+  _editIdx = null;
+  selectedKeuze = null;
 }
 
 function _getWeekKey(offset) {
@@ -502,31 +489,6 @@ if (_wpInp) _wpInp.addEventListener('keydown', e => { if (e.key === 'Enter') wpA
 
 document.getElementById('plan-zoek')?.addEventListener('input', e => zoekRecepten(e.target.value));
 
-document.getElementById('slot-detail-modal-bg').addEventListener('click', e => {
-  if (e.target === document.getElementById('slot-detail-modal-bg')) closeSlotDetail();
-});
-
-document.addEventListener('change', function (e) {
-  const el = e.target.closest('[data-action]');
-  if (!el) return;
-  if (el.dataset.action === 'sd-wijzig-kok') {
-    wijzigKokItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.value);
-    renderSlotDetail(el.dataset.dk, el.dataset.slot);
-  }
-  if (el.dataset.action === 'wijzig-kok-item') {
-    wijzigKokItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.value);
-  }
-});
-
-document.addEventListener('blur', function (e) {
-  const el = e.target.closest('[data-action="sd-hernoem"]');
-  if (!el) return;
-  const { dk, slot, idx } = el.dataset;
-  const items = getSlotItems(planning[dk] || {}, slot);
-  if (!items[idx]) return;
-  const newNaam = el.value.trim();
-  if (newNaam) { items[parseInt(idx)].naam_override = newNaam; _saveItems(dk, slot, items); renderPlanner(); }
-}, true);
 
 document.addEventListener('click', function (e) {
   const el = e.target.closest('[data-action]');
@@ -543,51 +505,24 @@ document.addEventListener('click', function (e) {
     case 'wp-annuleer': wpAgent.annuleer(); break;
     case 'wp-stuur': wpAgent.stuurBericht(document.getElementById('wp-chat-input').value); break;
     case 'close-plan-modal': closePlanModal(); break;
-    case 'toon-pick-stap': toonPickStap(); break;
-    case 'voeg-item-toe': voegItemToe(); break;
+    case 'sla-plan-op': slaPlanOp(); break;
+    case 'plan-wis-keuze': selectedKeuze = null; _verbergGekozen(); break;
     case 'toggle-dag': toggleDag(el.dataset.key); break;
     case 'open-plan-modal':
       openPlanModal(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));
-      break;
-    case 'toggle-wie-item':
-      toggleWieItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.dataset.p);
       break;
     case 'wis-item':
       e.stopPropagation();
       wisItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx));
       break;
-    case 'wijzig-extra-eters':
-      wijzigExtraEters(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), parseInt(el.dataset.delta));
+    case 'kies-plan-k':
+      kiesPlanK(el.dataset.k);
       break;
-    case 'kies-plan-k': {
-      const k = el.dataset.k;
-      kiesPlanK(String(k));
-      break;
-    }
     case 'toggle-wie-stap':
       toggleWieStap(el, el.dataset.p);
       break;
     case 'open-slot-detail':
-      openSlotDetail(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));
-      break;
-    case 'close-slot-detail':
-      closeSlotDetail();
-      break;
-    case 'sd-toggle-wie':
-      toggleWieItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.dataset.p);
-      renderSlotDetail(el.dataset.dk, el.dataset.slot);
-      break;
-    case 'sd-wis-item':
-      wisItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx));
-      renderSlotDetail(el.dataset.dk, el.dataset.slot);
-      break;
-    case 'sd-extra-eters':
-      wijzigExtraEters(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), parseInt(el.dataset.delta));
-      renderSlotDetail(el.dataset.dk, el.dataset.slot);
-      break;
-    case 'sd-voeg-toe':
-      closeSlotDetail();
-      openPlanModal(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));
+      openSlotDetail(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex), parseInt(el.dataset.idx));
       break;
   }
 });
