@@ -572,7 +572,7 @@ function updateFreqUI(){
   const dagGekozen = [...(document.querySelectorAll('#dag-checkboxes input:checked'))].map(c=>c.value);
 
   // Dagen-rij: alleen tonen bij weekdag-gebaseerde frequenties
-  const toontDagen = ['wekelijks','tweewekelijks','seizoen'].includes(freq);
+  const toontDagen = ['wekelijks','tweewekelijks'].includes(freq);
   if (dagenRow) dagenRow.style.display = toontDagen ? '' : 'none';
   // Einddatum: verbergen bij eenmalig
   if (einddatumRow) einddatumRow.style.display = freq === 'eenmalig' ? 'none' : '';
@@ -584,18 +584,17 @@ function updateFreqUI(){
   const fmtVol = d => d ? new Date(d+'T12:00:00').toLocaleDateString('nl-BE',{day:'numeric',month:'long',year:'numeric'}) : null;
   const DAGNAMEN_LANG = {ma:'maandag',di:'dinsdag',wo:'woensdag',do:'donderdag',vr:'vrijdag',za:'zaterdag',zo:'zondag'};
   let tekst = '';
+  const einddatum = document.getElementById('a-eind')?.value;
+  const periodeSuffix = (beginDatum||einddatum) ? ` · ${beginDatum?'vanaf '+fmtVol(beginDatum):''}${einddatum?' t/m '+fmtVol(einddatum):''}` : '';
   if (freq === 'jaarlijks') {
-    tekst = beginDatum ? `📅 Elk jaar op ${fmt(beginDatum)}` : '📅 Elk jaar op dezelfde datum als begindatum';
+    tekst = (beginDatum ? `📅 Elk jaar op ${fmt(beginDatum)}` : '📅 Elk jaar op dezelfde datum als begindatum') + periodeSuffix;
   } else if (freq === 'maandelijks') {
     const dag = beginDatum ? new Date(beginDatum+'T12:00:00').getDate() : '?';
-    tekst = `📅 Elke maand op de ${dag}e`;
+    tekst = `📅 Elke maand op de ${dag}e` + periodeSuffix;
   } else {
     const dagNamen = dagGekozen.map(d=>DAGNAMEN_LANG[d]||d).join(', ');
-    const prefix = freq === 'tweewekelijks' ? 'Elke 2 weken op' : freq === 'seizoen' ? 'Seizoensgebonden op' : 'Elke week op';
-    tekst = dagNamen ? `📅 ${prefix} ${dagNamen}` : `📅 ${prefix} … (kies een dag)`;
-    const einddatum = document.getElementById('a-eind')?.value;
-    if (beginDatum) tekst += ` · vanaf ${fmtVol(beginDatum)}`;
-    if (einddatum) tekst += ` t/m ${fmtVol(einddatum)}`;
+    const prefix = freq === 'tweewekelijks' ? 'Elke 2 weken op' : 'Elke week op';
+    tekst = (dagNamen ? `📅 ${prefix} ${dagNamen}` : `📅 ${prefix} … (kies een dag)`) + periodeSuffix;
   }
   preview.textContent = tekst;
   preview.style.display = tekst ? 'block' : 'none';
