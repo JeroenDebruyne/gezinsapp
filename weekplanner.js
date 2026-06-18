@@ -72,9 +72,14 @@ function renderPlanner() {
         const persOpts = kokPers.map(p => `<option value="${escHtml(p)}"${p === item.kok ? ' selected' : ''}>${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
         const wieLeeg = !item.wie || item.wie.length === 0;
         const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="toggle-wie-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
-        return `<div class="slot-item">
+        const wieActief = wieLeeg ? PERSONEN : (item.wie || []);
+        const wieDots = wieActief.map(p => `<span class="slot-wie-dot" style="background:var(--c-${escHtml(p)}-dot);" title="${escHtml(PLABEL[p] || p)}"></span>`).join('');
+        const kokIndicator = item.kok ? `<span class="slot-kok-indicator" title="Kookt: ${escHtml(PLABEL[item.kok] || item.kok)}">${escHtml(PEMOJI[item.kok] || '👤')}</span>` : '';
+        return `<div class="slot-item" data-action="open-slot-detail" data-dk="${key}" data-slot="${slot.key}" data-dagnaam="${escHtml(DLANG[i])}" data-dag-index="${i}">
           <div class="slot-item-top">
             ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span class="slot-item-naam">${escHtml(naam)}${w ? ' <span class="warn"><i data-lucide="triangle-alert" style="width:12px;height:12px;"></i></span>' : ''}</span>`}
+            <div class="slot-wie-dots">${wieDots}</div>
+            ${kokIndicator}
             <button class="slot-item-wis" data-action="wis-item" data-dk="${key}" data-slot="${slot.key}" data-idx="${idx}">×</button>
           </div>
           <div class="slot-item-ctrl">
@@ -268,6 +273,61 @@ function toggleWieItem(dagKey, slotKey, idx, persoon) {
   _saveItems(dagKey, slotKey, items);
   renderPlanner();
 }
+function openSlotDetail(dk, slotKey, dagnaam, dagIndex) {
+  activeSlot = { dagKey: dk, slotKey, dagIndex };
+  const slotDef = SLOTS.find(s => s.key === slotKey);
+  document.getElementById('slot-detail-titel').textContent = dagnaam + ' — ' + slotDef.lbl;
+  renderSlotDetail(dk, slotKey);
+  const btn = document.getElementById('sd-voeg-toe-btn');
+  btn.dataset.dk = dk; btn.dataset.slot = slotKey; btn.dataset.dagnaam = dagnaam; btn.dataset.dagIndex = dagIndex;
+  document.getElementById('slot-detail-modal-bg').classList.add('open');
+}
+
+function renderSlotDetail(dk, slotKey) {
+  const dagPlan = planning[dk] || {};
+  const items = getSlotItems(dagPlan, slotKey);
+  const drukte = getDagDrukte(dk);
+  const kokPers = _persKok();
+  const html = items.map((item, idx) => {
+    const isSpec = !!SPEC[item.waarde];
+    const r = !isSpec ? recepten.find(r => r.id === item.waarde || r.id === parseInt(item.waarde)) : null;
+    const naam = isSpec ? SPEC[item.waarde] : (r ? r.naam : '?');
+    const w = r && r.tijd > DRUKTE_MAX[drukte];
+    const itemPorties = _berekenPorties(item, dk);
+    const extraEters = item.extra_eters || 0;
+    const wieLeeg = !item.wie || item.wie.length === 0;
+    const wieHtml = PERSONEN.map(p => `<span class="wie-chip${wieLeeg || (item.wie || []).includes(p) ? ' sel' : ''}" data-action="sd-toggle-wie" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-p="${p}">${escHtml(PEMOJI[p] || '👤')}</span>`).join('');
+    const persOpts = kokPers.map(p => `<option value="${escHtml(p)}"${p === item.kok ? ' selected' : ''}>${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        ${isSpec ? `<span class="special-badge sb-${item.waarde}">${naam}</span>` : `<span style="font-size:15px;font-weight:700;flex:1;">${escHtml(naam)}${w ? ' ⚠️' : ''}</span>`}
+        <button class="slot-item-wis" style="font-size:20px;" data-action="sd-wis-item" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">×</button>
+      </div>
+      <div class="section-label" style="margin-bottom:6px;">Wie eet dit?</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${wieHtml}</div>
+      ${r ? `<div class="section-label" style="margin-bottom:6px;">Porties</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+        <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="-1">−</button>
+        <span style="font-size:13px;color:var(--muted);">+${extraEters} extra gasten</span>
+        <button class="slot-ctrl-btn" data-action="sd-extra-eters" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}" data-delta="1">+</button>
+        <span style="font-size:13px;color:var(--muted);margin-left:4px;"><i data-lucide="users" style="width:13px;height:13px;display:inline-block;vertical-align:-0.1em;"></i> ${itemPorties} porties</span>
+      </div>` : ''}
+      <div class="section-label" style="margin-bottom:6px;">Wie kookt?</div>
+      <select class="slot-kok-sel" style="width:100%;" data-action="sd-wijzig-kok" data-dk="${dk}" data-slot="${slotKey}" data-idx="${idx}">
+        <option value="">— Niemand / niet van toepassing —</option>
+        ${persOpts}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('slot-detail-inhoud').innerHTML = html || '<p style="color:var(--muted);font-size:14px;">Geen maaltijd ingepland.</p>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeSlotDetail() {
+  document.getElementById('slot-detail-modal-bg').classList.remove('open');
+  activeSlot = null;
+}
+
 function closePlanModal() {
   document.getElementById('plan-modal-bg').classList.remove('open');
   activeSlot = null;
@@ -445,9 +505,17 @@ if (_wpInp) _wpInp.addEventListener('keydown', e => { if (e.key === 'Enter') wpA
 
 document.getElementById('plan-zoek')?.addEventListener('input', e => zoekRecepten(e.target.value));
 
+document.getElementById('slot-detail-modal-bg').addEventListener('click', e => {
+  if (e.target === document.getElementById('slot-detail-modal-bg')) closeSlotDetail();
+});
+
 document.addEventListener('change', function (e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
+  if (el.dataset.action === 'sd-wijzig-kok') {
+    wijzigKokItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.value);
+    renderSlotDetail(el.dataset.dk, el.dataset.slot);
+  }
   if (el.dataset.action === 'wijzig-kok-item') {
     wijzigKokItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.value);
   }
@@ -478,6 +546,7 @@ document.addEventListener('click', function (e) {
       toggleWieItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.dataset.p);
       break;
     case 'wis-item':
+      e.stopPropagation();
       wisItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx));
       break;
     case 'wijzig-extra-eters':
@@ -490,6 +559,28 @@ document.addEventListener('click', function (e) {
     }
     case 'toggle-wie-stap':
       toggleWieStap(el, el.dataset.p);
+      break;
+    case 'open-slot-detail':
+      openSlotDetail(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));
+      break;
+    case 'close-slot-detail':
+      closeSlotDetail();
+      break;
+    case 'sd-toggle-wie':
+      toggleWieItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), el.dataset.p);
+      renderSlotDetail(el.dataset.dk, el.dataset.slot);
+      break;
+    case 'sd-wis-item':
+      wisItem(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx));
+      renderSlotDetail(el.dataset.dk, el.dataset.slot);
+      break;
+    case 'sd-extra-eters':
+      wijzigExtraEters(el.dataset.dk, el.dataset.slot, parseInt(el.dataset.idx), parseInt(el.dataset.delta));
+      renderSlotDetail(el.dataset.dk, el.dataset.slot);
+      break;
+    case 'sd-voeg-toe':
+      closeSlotDetail();
+      openPlanModal(el.dataset.dk, el.dataset.slot, el.dataset.dagnaam, parseInt(el.dataset.dagIndex));
       break;
   }
 });
