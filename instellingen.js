@@ -865,10 +865,23 @@ async function voegWinkelToe() {
 
 async function slaWinkelNaamOp(idx, naam) {
   if (!naam?.trim()) return;
-  WINKELS[idx] = naam.trim();
+  const oudeNaam = WINKELS[idx];
+  const nieuweNaam = naam.trim();
+  WINKELS[idx] = nieuweNaam;
+  // Update alle ingrediënten en extra items die de oude winkelnaam hadden
+  if (oudeNaam && oudeNaam !== nieuweNaam) {
+    let ingGewijzigd = false;
+    standaardIngredienten.forEach(i => {
+      if (i.winkel === oudeNaam) { i.winkel = nieuweNaam; sbSaveIngredient(i); ingGewijzigd = true; }
+    });
+    extraItems.forEach(i => { if (i.winkel === oudeNaam) i.winkel = nieuweNaam; });
+    if (ingGewijzigd) AppState.notify('standaardIngredienten');
+    AppState.notify('extraItems');
+  }
   await slaWinkelsOp();
   slaLokaalOp();
   toonOpslagStatus('✅ Opgeslagen');
+  renderWinkels();
 }
 
 async function verwijderWinkel(idx) {
