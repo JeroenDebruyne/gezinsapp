@@ -47,7 +47,7 @@ laadOp().then(() => {
     const dk = dagIndex !== -1 ? dagKeys[dagIndex] : dagKeys[0];
     const DAGNAMEN = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
     openPlanModal(dk, planMoment, DAGNAMEN[dagIndex !== -1 ? dagIndex : 0] || 'Vandaag', dagIndex !== -1 ? dagIndex : 0);
-    setTimeout(() => kiesPlanK(planId), 50);
+    setTimeout(() => kiesPlanK(planId), 150);
   }
 }).catch(() => { laadLokaal(); renderPlanner(); });
 
