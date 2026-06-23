@@ -87,8 +87,8 @@ function openFiche(id) {
     const mobielEl = document.getElementById('recept-fiche-mobiel');
     mobielEl.innerHTML = `
       <div class="fiche-mobiel-sluiten">
-        <span class="fiche-mobiel-titel">${escHtml(r.naam)}</span>
-        <button class="btn btn-secondary btn-sm" data-action="sluit-fiche">✕ Sluiten</button>
+        <span class="fiche-mobiel-titel">Receptdetail</span>
+        <button class="btn btn-secondary btn-sm" data-action="sluit-fiche">✕</button>
       </div>
       <div class="fiche-mobiel-content">${renderFicheHtml(r)}</div>`;
     document.getElementById('recept-fiche-overlay').classList.add('open');
@@ -164,11 +164,13 @@ function sluitFiche() {
 }
 
 function openPlanReceptModal(id) {
-  _planReceptId = id;
+  _planReceptId = String(id);
   const r = recepten.find(r => String(r.id) === String(id));
   document.getElementById('plan-recept-naam').textContent = r ? r.naam : '';
   const DAGNAMEN_KORT = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
   const today = new Date();
+  _planReceptDag = fDateISO(today);
+  _planReceptMoment = 'avond';
   document.getElementById('plan-dag-keuze').innerHTML = Array.from({length: 7}, (_, i) => {
     const d = new Date(today); d.setDate(today.getDate() + i);
     const iso = fDateISO(d);
@@ -179,9 +181,7 @@ function openPlanReceptModal(id) {
       <span class="plan-dag-datum">${datum}</span>
     </button>`;
   }).join('');
-  _planReceptDag = fDateISO(today);
-  _planReceptMoment = 'avond';
-  document.querySelectorAll('.plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === 'avond'));
+  document.querySelectorAll('#plan-recept-modal-bg .plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === 'avond'));
   document.getElementById('recept-fiche-overlay')?.classList.remove('open');
   document.getElementById('plan-recept-modal-bg').classList.add('open');
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -818,11 +818,11 @@ document.addEventListener('click', function (e) {
     case 'bevestig-plan-recept': bevestigPlanRecept(); break;
     case 'kies-plan-dag':
       _planReceptDag = el.dataset.dag;
-      document.querySelectorAll('.plan-dag-btn').forEach(b => b.classList.toggle('active', b.dataset.dag === el.dataset.dag));
+      document.querySelectorAll('#plan-dag-keuze .plan-dag-btn').forEach(b => b.classList.toggle('active', b.dataset.dag === el.dataset.dag));
       break;
     case 'kies-plan-moment':
       _planReceptMoment = el.dataset.moment;
-      document.querySelectorAll('.plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === el.dataset.moment));
+      document.querySelectorAll('#plan-recept-modal-bg .plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === el.dataset.moment));
       break;
     case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id || String(r.id) === el.dataset.id)); break;
     case 'verwijder-recept': verwijderRecept(el.dataset.id); break;

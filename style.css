@@ -595,7 +595,8 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
 .fiche-ing-hoev{font-size:13px;color:var(--muted);white-space:nowrap;flex-shrink:0;text-align:right;}
 .fiche-ing-winkel{font-size:11px;color:var(--muted-2);white-space:nowrap;flex-shrink:0;}
 .fiche-bereiding{font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;padding-bottom:2rem;}
-.fiche-bottom-acties{display:flex;gap:8px;margin-top:2rem;padding-top:1rem;border-top:1.5px solid var(--border);flex-wrap:wrap;}
+.fiche-bottom-acties{display:flex;gap:8px;margin-top:2rem;padding-top:1rem;border-top:1.5px solid var(--border);}
+.fiche-bottom-acties .btn{flex:1;justify-content:center;}
 /* Mobile fiche overlay — full screen */
 .recept-fiche-overlay{display:none;position:fixed;inset:0;z-index:300;}
 .recept-fiche-overlay.open{display:block;}
