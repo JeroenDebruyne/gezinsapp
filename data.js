@@ -426,7 +426,7 @@ function _initPolling() {
       _updateCallbacks.forEach(fn => { try { fn(); } catch(e) { console.warn('[Polling] render fout', e); } });
       _dataChannel?.postMessage('changed');
     }).catch(() => {});
-  }, 30_000);
+  }, 10_000);
 }
 
 function slaLokaalOp() {
