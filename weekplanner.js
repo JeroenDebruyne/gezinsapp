@@ -27,14 +27,26 @@ function _persKok() {
 
 laadOp().then(() => {
   renderPlanner();
-  const planId = new URLSearchParams(location.search).get('plan');
+  const _urlParams = new URLSearchParams(location.search);
+  const planId = _urlParams.get('plan');
+  const planDag = _urlParams.get('dag');
+  const planMoment = _urlParams.get('moment') || 'avond';
   if (planId) {
     const vandaag = fDateISO(new Date());
-    const dagKeys = getWeekDatesFrom(vandaag, weekOffsetP).map(d => fDateISO(d));
-    const dagIndex = dagKeys.findIndex(d => d === vandaag) !== -1 ? dagKeys.findIndex(d => d === vandaag) : 0;
-    const dk = dagKeys[dagIndex];
+    const targetDag = planDag || vandaag;
+    const targetWeekMon = getWeekDatesFrom(targetDag, 0)[0];
+    const todayWeekMon = getWeekDatesFrom(vandaag, 0)[0];
+    const weekDiff = Math.round((targetWeekMon - todayWeekMon) / (7 * 24 * 3600 * 1000));
+    if (weekDiff !== 0) {
+      weekOffsetP = weekDiff;
+      sessionStorage.setItem('weekplanner_offset', weekOffsetP);
+      renderPlanner();
+    }
+    const dagKeys = getWeekDatesFrom(targetDag, 0).map(d => fDateISO(d));
+    const dagIndex = dagKeys.findIndex(d => d === targetDag);
+    const dk = dagIndex !== -1 ? dagKeys[dagIndex] : dagKeys[0];
     const DAGNAMEN = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
-    openPlanModal(dk, 'avond', DAGNAMEN[dagIndex] || 'Vandaag', dagIndex);
+    openPlanModal(dk, planMoment, DAGNAMEN[dagIndex !== -1 ? dagIndex : 0] || 'Vandaag', dagIndex !== -1 ? dagIndex : 0);
     setTimeout(() => kiesPlanK(planId), 50);
   }
 }).catch(() => { laadLokaal(); renderPlanner(); });

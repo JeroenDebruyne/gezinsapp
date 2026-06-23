@@ -4,6 +4,9 @@ let activeRType = 'alle';
 let geimporteerdRecept = null;
 let geselecteerdeTypes = [];
 let actieveFicheId = null;
+let _planReceptId = null;
+let _planReceptDag = null;
+let _planReceptMoment = 'avond';
 
 laadOp().then(() => {
   renderRecepten();
@@ -62,6 +65,9 @@ function renderRecepten() {
           ${(r.tags || []).slice(0, 2).map(t => `<span class="tag-pill">${escHtml(t)}</span>`).join('')}
         </div>
       </div>
+      <button class="recept-card-plan-btn" data-action="plan-recept" data-id="${r.id}" title="Inplannen">
+        <i data-lucide="calendar-plus" style="width:16px;height:16px;stroke-width:2;"></i>
+      </button>
     </div>`;
   }).join('') || `<div class="empty-state"><i data-lucide="book-open" class="empty-icon"></i><p>Geen recepten gevonden</p></div>`;
   if (actieveFicheId) {
@@ -78,7 +84,13 @@ function openFiche(id) {
   if (!r) return;
   _renderFicheInDesktop(r);
   if (window.innerWidth < 768) {
-    document.getElementById('recept-fiche-mobiel').innerHTML = renderFicheHtml(r, true);
+    const mobielEl = document.getElementById('recept-fiche-mobiel');
+    mobielEl.innerHTML = `
+      <div class="fiche-mobiel-sluiten">
+        <span class="fiche-mobiel-titel">${escHtml(r.naam)}</span>
+        <button class="btn btn-secondary btn-sm" data-action="sluit-fiche">✕ Sluiten</button>
+      </div>
+      <div class="fiche-mobiel-content">${renderFicheHtml(r)}</div>`;
     document.getElementById('recept-fiche-overlay').classList.add('open');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
@@ -104,7 +116,7 @@ function _clearFiche() {
   if (ph) ph.style.display = 'flex';
 }
 
-function renderFicheHtml(r, metSluitknop) {
+function renderFicheHtml(r) {
   const kanBewerken = Auth.kan('kanReceptenBeheren');
   const typeLabels = { avond: '<i data-lucide="utensils" class="icon-inline"></i> Avond', lunch: '<i data-lucide="leaf" class="icon-inline"></i> Lunch', weekend: '<i data-lucide="utensils" class="icon-inline"></i> Weekend', ontbijt: '<i data-lucide="coffee" class="icon-inline"></i> Ontbijt' };
   const types = r.types && r.types.length ? r.types : [r.type].filter(Boolean);
@@ -114,12 +126,7 @@ function renderFicheHtml(r, metSluitknop) {
   <div class="fiche-header">
     <div class="fiche-naam">${escHtml(r.naam)}</div>
     <div class="fiche-acties">
-      <button class="btn btn-secondary btn-sm" data-action="plan-recept" data-id="${r.id}" title="Inplannen in weekmenu"><i data-lucide="calendar-plus" class="icon-inline"></i></button>
-      ${kanBewerken ? `
-        <button class="btn btn-secondary btn-sm" data-action="bewerk-recept" data-id="${r.id}" title="Bewerken"><i data-lucide="pencil" class="icon-inline"></i></button>
-        <button class="btn btn-danger btn-sm" data-action="verwijder-recept" data-id="${r.id}" title="Verwijderen"><i data-lucide="trash-2" class="icon-inline"></i></button>
-      ` : ''}
-      ${metSluitknop ? `<button class="btn btn-secondary btn-sm" data-action="sluit-fiche" title="Sluiten">✕</button>` : ''}
+      <button class="btn btn-secondary btn-sm" data-action="plan-recept" data-id="${r.id}" title="Inplannen in weekmenu"><i data-lucide="calendar-plus" class="icon-inline"></i> Inplannen</button>
     </div>
   </div>
   <div class="fiche-meta">
@@ -144,11 +151,47 @@ function renderFicheHtml(r, metSluitknop) {
   ${r.bereiding ? `
     <div class="fiche-sectie-label">Bereiding</div>
     <div class="fiche-bereiding">${escHtml(r.bereiding)}</div>
-  ` : ''}`;
+  ` : ''}
+  ${kanBewerken ? `
+  <div class="fiche-bottom-acties">
+    <button class="btn btn-secondary" data-action="bewerk-recept" data-id="${r.id}"><i data-lucide="pencil" class="icon-inline"></i> Bewerken</button>
+    <button class="btn btn-danger" data-action="verwijder-recept" data-id="${r.id}"><i data-lucide="trash-2" class="icon-inline"></i> Verwijderen</button>
+  </div>` : ''}`;
 }
 
 function sluitFiche() {
   document.getElementById('recept-fiche-overlay').classList.remove('open');
+}
+
+function openPlanReceptModal(id) {
+  _planReceptId = id;
+  const r = recepten.find(r => String(r.id) === String(id));
+  document.getElementById('plan-recept-naam').textContent = r ? r.naam : '';
+  const DAGNAMEN_KORT = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
+  const today = new Date();
+  document.getElementById('plan-dag-keuze').innerHTML = Array.from({length: 7}, (_, i) => {
+    const d = new Date(today); d.setDate(today.getDate() + i);
+    const iso = fDateISO(d);
+    const lbl = i === 0 ? 'Vandaag' : DAGNAMEN_KORT[d.getDay()];
+    const datum = d.getDate() + '/' + (d.getMonth() + 1);
+    return `<button class="plan-dag-btn${i === 0 ? ' active' : ''}" data-action="kies-plan-dag" data-dag="${iso}">
+      <span class="plan-dag-naam">${lbl}</span>
+      <span class="plan-dag-datum">${datum}</span>
+    </button>`;
+  }).join('');
+  _planReceptDag = fDateISO(today);
+  _planReceptMoment = 'avond';
+  document.querySelectorAll('.plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === 'avond'));
+  document.getElementById('recept-fiche-overlay')?.classList.remove('open');
+  document.getElementById('plan-recept-modal-bg').classList.add('open');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function sluitPlanReceptModal() {
+  document.getElementById('plan-recept-modal-bg').classList.remove('open');
+}
+function bevestigPlanRecept() {
+  if (!_planReceptId || !_planReceptDag || !_planReceptMoment) return;
+  window.location.href = `weekplanner.html?plan=${encodeURIComponent(_planReceptId)}&dag=${_planReceptDag}&moment=${_planReceptMoment}`;
 }
 
 function setSter(v) {
@@ -682,6 +725,7 @@ const _modalCloses = {
   'keuze-modal-bg': sluitKeuzeModal,
   'link-modal-bg': sluitLinkModal,
   'foto-modal-bg': sluitFotoModal,
+  'plan-recept-modal-bg': sluitPlanReceptModal,
 };
 Object.entries(_modalCloses).forEach(([id, closeFn]) => {
   const el = document.getElementById(id);
@@ -739,6 +783,16 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+// Swipe-down to close mobile fiche
+(function() {
+  const sheet = document.querySelector('.recept-fiche-sheet');
+  let _ty0 = 0;
+  sheet?.addEventListener('touchstart', e => { _ty0 = e.touches[0].clientY; }, { passive: true });
+  sheet?.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientY - _ty0 > 80 && sheet.scrollTop === 0) sluitFiche();
+  }, { passive: true });
+})();
+
 document.addEventListener('mousedown', function (e) {
   const el = e.target.closest('[data-action="kies-ing"],[data-action="maak-nieuw-ing"]');
   if (!el) return;
@@ -759,8 +813,18 @@ document.addEventListener('click', function (e) {
     case 'filter-rtype': filterRType(el.dataset.type, el); break;
     case 'open-fiche': openFiche(el.dataset.ficheId); break;
     case 'sluit-fiche': sluitFiche(); break;
-    case 'plan-recept': window.location.href = `weekplanner.html?plan=${encodeURIComponent(el.dataset.id)}`; break;
-    case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id)); break;
+    case 'plan-recept': e.stopPropagation(); openPlanReceptModal(el.dataset.id); break;
+    case 'sluit-plan-recept-modal': sluitPlanReceptModal(); break;
+    case 'bevestig-plan-recept': bevestigPlanRecept(); break;
+    case 'kies-plan-dag':
+      _planReceptDag = el.dataset.dag;
+      document.querySelectorAll('.plan-dag-btn').forEach(b => b.classList.toggle('active', b.dataset.dag === el.dataset.dag));
+      break;
+    case 'kies-plan-moment':
+      _planReceptMoment = el.dataset.moment;
+      document.querySelectorAll('.plan-moment-btn').forEach(b => b.classList.toggle('active', b.dataset.moment === el.dataset.moment));
+      break;
+    case 'bewerk-recept': openReceptModal(recepten.find(r => r.id === el.dataset.id || String(r.id) === el.dataset.id)); break;
     case 'verwijder-recept': verwijderRecept(el.dataset.id); break;
     case 'close-import-modal': closeImportModal(); break;
     case 'start-import': startImport(); break;
