@@ -19,7 +19,7 @@ laadOp().then(()=>{
   afgevinkt=JSON.parse(localStorage.getItem('gezinsapp_afgevinkt')||'{}');
   laadLokaal();renderWinkelTabs();renderBoodschappen();renderExtraItems();initBoodWinkelSel();
 });
-onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderBoodschappen(); renderExtraItems(); });
+onGezinsappUpdate(()=>{ _herbouwAfgevinkt(); renderWinkelTabs(); renderBoodschappen(); renderExtraItems(); initBoodWinkelSel(); });
 AppState.subscribe('extraItems', ()=>{ renderBoodschappen(); renderExtraItems(); });
 AppState.subscribe('boodschappenReceptItems', renderBoodschappen);
 
