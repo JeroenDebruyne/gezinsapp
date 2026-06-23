@@ -505,7 +505,8 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
   .slot-lbl{min-width:0;font-size:11px;}
   .slot-lbl-bar{padding:5px 10px 3px;font-size:10px;}
   .slot-item-naam{font-size:13px;}
-  .slot-add-btn{display:none;}
+  .slot-add-btn{display:block;width:100%;padding:4px 10px;font-size:11px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;cursor:pointer;color:var(--muted);font-family:inherit;margin-top:4px;transition:all .15s;}
+  .slot-add-btn:hover{border-color:var(--accent);color:var(--accent);}
   .slot-kok-sel{max-width:100%;font-size:11px;padding:3px 5px;}
   .wie-chip{width:24px;height:24px;font-size:12px;}
   .slot-ctrl-btn{width:20px;height:20px;font-size:12px;}
