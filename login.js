@@ -13,14 +13,7 @@ async function initialiseerLogin() {
     if (!profRes.ok) throw new Error();
     const profielen = await profRes.json();
 
-    if (!profielen.length) {
-      // Geen gezin aangemaakt — toon setup scherm
-      document.getElementById('mode-tabs').style.display = 'none';
-      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-      document.getElementById('sect-setup').classList.add('active');
-      document.getElementById('logo-sub').textContent = 'Stel je gezin in';
-      return;
-    }
+    if (!profielen.length) return;
 
     // Gezinsnaam ophalen en tonen
     const gezinRes = await fetch(
