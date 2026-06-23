@@ -361,6 +361,31 @@
 </div>
 </div>
 
+<!-- ══ MODAL: Recept inplannen (tussenstap dag + moment) ══ -->
+<div class="modal-bg" id="plan-recept-modal-bg">
+<div class="modal" style="max-width:400px;">
+  <div class="modal-handle"></div>
+  <h3><i data-lucide="calendar-plus" class="icon-inline"></i> Inplannen</h3>
+  <div id="plan-recept-naam" style="font-weight:600;margin-bottom:1.25rem;color:var(--muted);font-size:14px;"></div>
+  <div class="form-row">
+    <label>Dag</label>
+    <div class="plan-dag-grid" id="plan-dag-keuze"></div>
+  </div>
+  <div class="form-row" style="margin-top:1rem;">
+    <label>Moment</label>
+    <div class="plan-moment-grid">
+      <button class="plan-moment-btn" data-action="kies-plan-moment" data-moment="ontbijt">🌅 Ontbijt</button>
+      <button class="plan-moment-btn" data-action="kies-plan-moment" data-moment="lunch">☀️ Lunch</button>
+      <button class="plan-moment-btn active" data-action="kies-plan-moment" data-moment="avond">🌙 Avond</button>
+    </div>
+  </div>
+  <div class="modal-actions" style="margin-top:1.5rem;">
+    <button class="modal-btn modal-btn-cancel" data-action="sluit-plan-recept-modal">Annuleren</button>
+    <button class="modal-btn modal-btn-primary" data-action="bevestig-plan-recept"><i data-lucide="calendar-check" class="icon-inline"></i> Inplannen</button>
+  </div>
+</div>
+</div>
+
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="state.js"></script>
