@@ -829,9 +829,10 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
     padding-bottom: 0;
   }
   body.chat-volledig .main-content {
-    height: calc(var(--vvh, 100dvh) - var(--topbar-h));
+    height: calc(var(--vvh, 100dvh) - var(--topbar-h) - var(--nav-h));
     overflow: hidden;
     padding-bottom: 0;
+    margin-bottom: 0;
   }
   body.chat-volledig .page-content {
     height: 100%;
@@ -867,7 +868,7 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
     flex-shrink: 0;
     display: flex;
     gap: 8px;
-    padding: 8px 0 calc(env(safe-area-inset-bottom) + 8px);
+    padding: 8px 0 10px;
   }
 }
 
