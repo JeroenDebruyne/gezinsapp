@@ -1,4 +1,12 @@
 Auth.initPagina('agent');
+
+// iOS keyboard: pas --vvh aan zodat de chat-container krimpt ipv wegschuift
+if (window.visualViewport) {
+  const _setVVH = () => document.documentElement.style.setProperty('--vvh', window.visualViewport.height + 'px');
+  window.visualViewport.addEventListener('resize', _setVVH);
+  _setVVH();
+}
+
 let _dataGeladen = false;
 let _vandaagISO = null, _dagNaamNL = null;
 

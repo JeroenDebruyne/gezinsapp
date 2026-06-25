@@ -867,7 +867,7 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
     flex-shrink: 0;
     display: flex;
     gap: 8px;
-    padding: 8px 0 calc(var(--nav-h) + env(safe-area-inset-bottom) + 4px);
+    padding: 8px 0 calc(env(safe-area-inset-bottom) + 8px);
   }
 }
 
