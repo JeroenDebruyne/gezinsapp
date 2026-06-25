@@ -2,3 +2,4 @@
 
 lucide-*.tgz
 package/
+.claude/worktrees/
