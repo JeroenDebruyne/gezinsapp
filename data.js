@@ -427,6 +427,14 @@ function _initPolling() {
       _dataChannel?.postMessage('changed');
     }).catch(() => {});
   }, 10_000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    if (Date.now() - _eigenTs < 2000) return;
+    laadOp().then(() => {
+      _updateCallbacks.forEach(fn => { try { fn(); } catch(e) { console.warn('[Polling] render fout', e); } });
+      _dataChannel?.postMessage('changed');
+    }).catch(() => {});
+  });
 }
 
 function slaLokaalOp() {
