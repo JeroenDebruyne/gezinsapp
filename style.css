@@ -905,11 +905,11 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
     --bg-2:      #221808;
     --surface:   #2A1E0C;
     --surface-2: #1E1608;
-    --border:    #4A3520;
-    --border-2:  #6A5030;
+    --border:    #8A6840;
+    --border-2:  #9A7848;
     --ink:       #F5EAD8;
     --ink-2:     #C8A878;
-    --muted:     #A07840;
+    --muted:     #B8904A;
     --muted-2:   #3A2810;
     --accent:    #FF8C3A;
     --accent-dark:#FF7A28;
@@ -930,6 +930,8 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
     --shadow:    0 4px 16px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4);
     --shadow-lg: 0 12px 40px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.5);
   }
+  /* Knoptekst op accent: donker voor voldoende contrast (wit haalt maar 2.3:1) */
+  .btn-primary,.btn-saved{color:#1A0800;}
   /* Hardcoded rgba overrides */
   .topbar{background:rgba(26,18,8,0.96);}
   .bottom-nav-mobile{background:rgba(26,18,8,0.98);}
