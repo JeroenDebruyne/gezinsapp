@@ -43,9 +43,9 @@
     <span class="mobile-nav-icon"><i data-lucide="home"></i></span>
     <span class="mobile-nav-label">Home</span>
   </a>
-  <a class="mobile-nav-item" href="agenda.html" data-pagina="agenda">
-    <span class="mobile-nav-icon"><i data-lucide="calendar"></i></span>
-    <span class="mobile-nav-label">Agenda</span>
+  <a class="mobile-nav-item" href="agent.html" data-pagina="agent">
+    <span class="mobile-nav-icon"><i data-lucide="bot"></i></span>
+    <span class="mobile-nav-label">Assistent</span>
   </a>
   <a class="mobile-nav-item" href="todos.html" data-pagina="todos">
     <span class="mobile-nav-icon"><i data-lucide="list-todo"></i></span>

@@ -9,6 +9,7 @@ onGezinsappUpdate(renderHomepage);
 AppState.subscribe('activiteiten', renderHomepage);
 AppState.subscribe('todos', renderHomepage);
 AppState.subscribe('contacten', renderHomepage);
+AppState.subscribe('planning', renderHomepage);
 
 (function () {
   const welkom = document.getElementById('home-chat-welkom');
@@ -58,10 +59,41 @@ function renderHomepage() {
   const drukte = getDagDrukte(datumISO);
   document.getElementById('dag-drukte-dot').style.background = { rustig: 'var(--rustig-dot)', normaal: 'var(--normaal-dot)', druk: 'var(--druk-dot)' }[drukte];
   document.getElementById('dag-drukte-label').textContent = { rustig: 'Rustige dag', normaal: 'Drukke dag', druk: 'Zeer drukke dag' }[drukte];
+  renderVanavond(datumISO);
   renderPersoonStrip(p);
   renderVandaag(datumISO, p);
   renderTodosPreview(p);
   renderVerjaardagHome();
+}
+
+function renderVanavond(datumISO) {
+  const el = document.getElementById('vanavond-kaart');
+  if (!el) return;
+  const dag = planning[datumISO] || {};
+  const avond = dag.avond;
+  const naam = avond ? (typeof avond === 'string' ? avond : (avond.waarde || null)) : null;
+  const kok = avond?.kok ? (PLABEL[avond.kok] || avond.kok) : null;
+  if (!naam) {
+    el.innerHTML = `<div class="card" style="display:flex;align-items:center;gap:12px;opacity:.7;">
+      <span style="font-size:22px;">🍽️</span>
+      <div style="flex:1;">
+        <div class="card-title" style="color:var(--muted);">Nog niet gepland</div>
+        <div class="meta"><a href="weekplanner.html" style="color:var(--accent);">Weekmenu invullen →</a></div>
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<a href="weekplanner.html" style="text-decoration:none;">
+    <div class="card" style="display:flex;align-items:center;gap:12px;background:var(--accent-l);border:1.5px solid var(--accent);cursor:pointer;">
+      <span style="font-size:28px;">🍽️</span>
+      <div style="flex:1;min-width:0;">
+        <div class="card-title" style="color:var(--accent);font-size:16px;">${escHtml(naam)}</div>
+        ${kok ? `<div class="meta"><i data-lucide="chef-hat" class="icon-inline"></i> ${escHtml(kok)} kookt</div>` : ''}
+      </div>
+      <div style="color:var(--accent);font-size:18px;flex-shrink:0;">›</div>
+    </div>
+  </a>`;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function _vhParseObj(v) { if (!v) return null; if (typeof v === 'string') { try { return JSON.parse(v); } catch { return null; } } return v; }
