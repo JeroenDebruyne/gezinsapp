@@ -90,12 +90,35 @@
     </button>
   </div>
 
-  <!-- Agent: verborgen elementen voor desktop (blijft werken op desktop sidebar) -->
-  <div style="display:none;">
-    <div id="home-chat-berichten-desktop"></div>
-    <div id="home-bevestiging-desktop"></div>
-    <div id="home-bevestiging-tekst-desktop"></div>
-    <input id="home-chat-input-desktop"/>
+  <!-- Agent: alleen zichtbaar op desktop -->
+  <div class="home-agent-panel mob-hide-on-mobile">
+    <div class="home-agent-header">
+      <span class="home-agent-titel"><i data-lucide="bot" class="icon-inline"></i> Gezinsassistent</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="home-agent-snelvragen" style="padding:0;">
+          <button class="voorbeeld-btn" data-action="stuur-voorbeeld-home" data-tekst="Wat staat er vandaag op de planning?"><i data-lucide="calendar" class="icon-inline"></i> Vandaag</button>
+          <button class="voorbeeld-btn" data-action="stuur-voorbeeld-home" data-tekst="Maak een weekmenu voor deze week."><i data-lucide="utensils" class="icon-inline"></i> Weekmenu</button>
+          <button class="voorbeeld-btn" data-action="stuur-voorbeeld-home" data-tekst="Wat staat er open op de to-do lijst?"><i data-lucide="list-todo" class="icon-inline"></i> To-do's</button>
+          <button class="voorbeeld-btn" data-action="stuur-voorbeeld-home" data-tekst="Genereer boodschappenlijst op basis van weekmenu."><i data-lucide="shopping-cart" class="icon-inline"></i> Boodschappen</button>
+        </div>
+        <button data-action="home-wis-chat" title="Wis chat" class="icon-btn"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+      </div>
+    </div>
+    <div class="home-chat-berichten" id="home-chat-berichten-desktop">
+      <div style="align-self:flex-start;" id="home-chat-welkom"></div>
+    </div>
+    <div id="home-bevestiging-desktop" class="home-bevestiging-panel" style="display:none;">
+      <div class="home-bevestiging-titel"><i data-lucide="hand" class="icon-inline"></i> Bevestiging vereist</div>
+      <div id="home-bevestiging-tekst-desktop" class="home-bevestiging-tekst"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" data-action="home-bevestig"><i data-lucide="check" class="icon-inline"></i> Ja</button>
+        <button class="btn btn-secondary btn-sm" data-action="home-annuleer"><i data-lucide="x" class="icon-inline"></i> Nee</button>
+      </div>
+    </div>
+    <div class="home-chat-input-row">
+      <input type="text" id="home-chat-input-desktop" placeholder="Stel een vraag of geef een opdracht…"/>
+      <button class="btn btn-primary btn-sm" data-action="home-stuur" style="flex-shrink:0;">→</button>
+    </div>
   </div>
 </div>
 </main>
