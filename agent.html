@@ -19,6 +19,12 @@
 .voorbeeld-btn{padding:7px 14px;border:1.5px solid var(--border-2);border-radius:99px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--muted);font-family:inherit;font-weight:500;transition:all .15s;}
 .voorbeeld-btn:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
 .bevestiging-modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px;}
+@media(min-width:768px){
+  .chat-container{min-height:480px;max-height:calc(100vh - 360px);}
+  #chat-input{font-size:16px;padding:16px 20px;}
+  .chat-input-wrap{gap:12px;}
+  .chat-input-wrap .btn{padding:16px 32px;font-size:15px;}
+}
 </style>
 </head>
 <body class="chat-volledig">
