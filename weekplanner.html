@@ -65,7 +65,10 @@
   <div class="page-header">
     <div class="week-nav-row" style="margin-bottom:0;width:100%;">
       <button class="nav-btn" data-action="change-week-p" data-dir="-1">&#8592;</button>
-      <span class="week-lbl" id="week-lbl-p" style="flex:1;text-align:center;"></span>
+      <label id="week-lbl-p" style="flex:1;text-align:center;cursor:pointer;" title="Klik om naar een datum te springen">
+        <span id="week-lbl-tekst"></span>
+        <input type="week" id="week-picker" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" />
+      </label>
       <button class="nav-btn" data-action="change-week-p" data-dir="1">&#8594;</button>
     </div>
     <div class="wp-actie-rij" style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;">

@@ -176,6 +176,20 @@
     </div>
   </div>
 
+  <!-- Weekstart -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Begin van de week</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Welke dag start de weekplanner?</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <select id="inst-weekstart" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink);">
+        <option value="1">Maandag</option>
+        <option value="0">Zondag</option>
+        <option value="6">Zaterdag</option>
+      </select>
+      <button class="btn btn-primary btn-sm" data-action="sla-weekstart">Opslaan</button>
+    </div>
+  </div>
+
   <!-- Winkels -->
   <div class="section-label" id="sect-winkels" style="margin-top:1.5rem;"><i data-lucide="shopping-cart" class="icon-inline"></i> Winkels</div>
   <div class="info-box">Stel in welke winkels beschikbaar zijn voor boodschappen en recepten.</div>

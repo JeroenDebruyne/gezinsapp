@@ -6,9 +6,19 @@ let afgevinkt={};
 function _slaAfgevinktOp(){localStorage.setItem('gezinsapp_afgevinkt',JSON.stringify(afgevinkt));}
 
 function _herbouwAfgevinkt(){
-  afgevinkt={};
-  boodschappenReceptItems.forEach(i=>{ if(i.afgevinkt) afgevinkt['ing_'+i.naam.toLowerCase()]=true; });
-  extraItems.forEach(i=>{ if(i.afgevinkt) afgevinkt['extra_'+i.id]=true; });
+  // Merge: Supabase-state wint, maar behoud lokaal afgevinkte items die Supabase nog niet kent
+  const lokaal = JSON.parse(localStorage.getItem('gezinsapp_afgevinkt')||'{}');
+  afgevinkt = {...lokaal};
+  boodschappenReceptItems.forEach(i=>{
+    const key='ing_'+i.naam.toLowerCase();
+    if(i.afgevinkt) afgevinkt[key]=true;
+    else if(!lokaal[key]) delete afgevinkt[key];
+  });
+  extraItems.forEach(i=>{
+    const key='extra_'+i.id;
+    if(i.afgevinkt) afgevinkt[key]=true;
+    else if(!lokaal[key]) delete afgevinkt[key];
+  });
   _slaAfgevinktOp();
 }
 
@@ -45,13 +55,14 @@ function _ingVoorWinkel(w){
 
 function _ingItemHtml(item){
   const key='ing_'+item.naam.toLowerCase();const gedaan=afgevinkt[key];
-  return `<div class="boodschap-item" data-action="toggle-afgevinkt" data-key="${key}" style="${gedaan?'opacity:.4;':''}">
-    <div class="boodschap-cirkel${gedaan?' gedaan':''}"></div>
-    <div style="flex:1;">
+  return `<div class="boodschap-item" style="${gedaan?'opacity:.4;':''}">
+    <div class="boodschap-cirkel${gedaan?' gedaan':''}" data-action="toggle-afgevinkt" data-key="${key}" style="cursor:pointer;flex-shrink:0;"></div>
+    <div style="flex:1;cursor:pointer;" data-action="toggle-afgevinkt" data-key="${key}">
       <div style="font-size:14px;font-weight:500;color:var(--ink);${gedaan?'text-decoration:line-through;':''}">${escHtml(item.naam)}</div>
       ${item.gebruiken.map(g=>`<div style="font-size:12px;color:var(--muted);display:flex;justify-content:space-between;"><span>${escHtml(g.recept)}</span><span style="font-weight:500;">${escHtml(g.hoev||'')} ${escHtml(item.eenheid||'')}</span></div>`).join('')}
       ${item.gebruiken.length>1?`<div style="font-size:11px;color:var(--muted-2);margin-top:2px;">${item.gebruiken.length}× nodig</div>`:''}
     </div>
+    <button data-action="verwijder-ing-item" data-naam="${escHtml(item.naam)}" style="background:none;border:none;cursor:pointer;color:var(--muted-2);font-size:18px;line-height:1;padding:0 2px;flex-shrink:0;">×</button>
   </div>`;
 }
 
@@ -261,6 +272,17 @@ function voegExtraToe(){
 
 function verwijderExtra(id){const item=extraItems.find(i=>i.id===id);extraItems=extraItems.filter(i=>i.id!==id);renderBoodschappen();renderExtraItems();slaLokaalOp();if(item?._sbId)sbDeleteExtra(item._sbId);toonOpslagStatus('✅ Verwijderd');}
 
+function verwijderIngItem(naam){
+  const key='ing_'+naam.toLowerCase();
+  boodschappenReceptItems=boodschappenReceptItems.filter(i=>{
+    if(i.naam.toLowerCase()!==naam.toLowerCase()) return true;
+    if(i._sbId) sbDeleteExtra(i._sbId);
+    return false;
+  });
+  delete afgevinkt[key]; _slaAfgevinktOp();
+  renderBoodschappen(); toonOpslagStatus('✅ Verwijderd');
+}
+
 function wijzigIngWinkel(naam,nieuweWinkel){
   const ing=standaardIngredienten.find(i=>i.naam.toLowerCase()===naam.toLowerCase());
   if(ing){ing.winkel=nieuweWinkel;slaLokaalOp();sbSaveIngredient(ing);toonOpslagStatus('✅ Opgeslagen');}
@@ -321,6 +343,7 @@ document.addEventListener('click', function(e) {
   switch (action) {
     case 'toggle-afgevinkt': toggleAfgevinkt(el.dataset.key); break;
     case 'verwijder-extra': verwijderExtra(+el.dataset.id); break;
+    case 'verwijder-ing-item': verwijderIngItem(el.dataset.naam); break;
     case 'verwijder-afgevinkt': verwijderAfgevinkt(); break;
     case 'reset-afgevinkt': resetAfgevinkt(); break;
     case 'voeg-extra-toe': voegExtraToe(); break;
