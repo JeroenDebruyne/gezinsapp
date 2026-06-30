@@ -65,8 +65,9 @@
   <div class="page-header">
     <div class="week-nav-row" style="margin-bottom:0;width:100%;">
       <button class="nav-btn" data-action="change-week-p" data-dir="-1">&#8592;</button>
-      <label id="week-lbl-p" style="flex:1;text-align:center;cursor:pointer;" title="Klik om naar een datum te springen">
-        <span id="week-lbl-tekst"></span>
+      <label id="week-lbl-p" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--accent);" title="Klik om naar een datum te springen">
+        <i data-lucide="calendar-days" class="icon-inline" style="width:16px;height:16px;flex-shrink:0;"></i>
+        <span id="week-lbl-tekst" style="color:var(--ink);"></span>
         <input type="week" id="week-picker" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" />
       </label>
       <button class="nav-btn" data-action="change-week-p" data-dir="1">&#8594;</button>
