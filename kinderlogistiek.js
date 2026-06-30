@@ -1,9 +1,12 @@
 Auth.initPagina('kinderlogistiek');
 
-// Transportopties worden dynamisch geladen uit transportPersonen (instellingen)
+// Transportopties: uit instellingen, met gezinsleden als fallback
 function getTransportOpties() {
-  const personen = (typeof transportPersonen !== 'undefined' ? transportPersonen : []).map(p => p.naam || p);
-  return ['', ...personen];
+  const ingesteld = (typeof transportPersonen !== 'undefined' ? transportPersonen : []).map(p => p.naam || p).filter(Boolean);
+  if (ingesteld.length) return ['', ...ingesteld];
+  // Fallback: gezinsleden die geen kind zijn
+  const fallback = (Auth.getProfielen() || []).filter(p => !p.isKind).map(p => p.naam).filter(Boolean);
+  return ['', ...fallback];
 }
 
 let weekOffsetKL = 0;

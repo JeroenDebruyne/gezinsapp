@@ -105,9 +105,13 @@ const FEESTDAGEN = [
 // blijft werken zonder aanpassingen.
 
 // ── Hulpfuncties datum ────────────────────────────────────────
+// weekStartDag: 0=zondag, 1=maandag (standaard). Instelbaar via instellingen.
+var weekStartDag = +(localStorage.getItem('gezinsapp_weekstart') || 1);
+
 function getWeekDatesFrom(isoDate, offset) {
   const now=new Date(isoDate+'T12:00:00'); const day=now.getDay();
-  const diff=(day===0?-6:1-day);
+  const start = weekStartDag || 1;
+  const diff = ((day - start + 7) % 7) === 0 ? 0 : -((day - start + 7) % 7);
   const mon=new Date(now); mon.setDate(now.getDate()+diff+(offset||0)*7);
   return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
 }

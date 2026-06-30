@@ -60,9 +60,45 @@ AppState.subscribe('recepten', renderPlanner);
 
 function changeWeekP(dir) { weekOffsetP += dir; sessionStorage.setItem('weekplanner_offset', weekOffsetP); _openDagen.clear(); renderPlanner(); }
 
+function _isoWeekNr(d) {
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+}
+
+// Week-picker: klik op het label opent de native week-kiezer
+document.getElementById('week-lbl-p')?.addEventListener('click', () => {
+  const picker = document.getElementById('week-picker');
+  if (picker) picker.showPicker?.() || picker.click();
+});
+document.getElementById('week-picker')?.addEventListener('change', function() {
+  if (!this.value) return;
+  const [jaar, week] = this.value.split('-W');
+  // ISO week → maandag van die week
+  const jan4 = new Date(Date.UTC(+jaar, 0, 4));
+  const mon = new Date(jan4);
+  mon.setUTCDate(jan4.getUTCDate() - (jan4.getUTCDay() || 7) + 1 + (+week - 1) * 7);
+  const vandaagMon = getWeekDates(0)[0];
+  const diff = Math.round((mon - vandaagMon) / (7 * 86400000));
+  weekOffsetP = diff;
+  sessionStorage.setItem('weekplanner_offset', weekOffsetP);
+  _openDagen.clear();
+  renderPlanner();
+});
+
 function renderPlanner() {
   const dates = getWeekDates(weekOffsetP);
-  document.getElementById('week-lbl-p').textContent = wLabel(dates);
+  const lbl = document.getElementById('week-lbl-tekst');
+  if (lbl) lbl.textContent = wLabel(dates);
+  // Sync week-picker waarde
+  const picker = document.getElementById('week-picker');
+  if (picker) {
+    const mon = dates[0];
+    const jaar = mon.getFullYear();
+    const week = _isoWeekNr(mon);
+    picker.value = `${jaar}-W${String(week).padStart(2,'0')}`;
+  }
   const today = fDateISO(new Date());
   const weekHeeftVandaag = dates.some(d => fDateISO(d) === today);
   document.getElementById('planner-grid').innerHTML = dates.map((date, i) => {

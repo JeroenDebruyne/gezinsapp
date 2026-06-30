@@ -38,6 +38,8 @@ function renderInstellingen(){
   renderWinkels();
   const pkEl = document.getElementById('inst-porties-kind');
   if (pkEl) pkEl.value = portiesKindRatio;
+  const wsEl = document.getElementById('inst-weekstart');
+  if (wsEl) wsEl.value = String(weekStartDag);
   // Feestdagen iCal kaart initialiseren
   renderFeestdagenKaart();
   // Werkadressen
@@ -824,6 +826,14 @@ async function verwijderTransportPersoon(idx) {
   renderTransportPersonen();
 }
 
+function slaWeekstartOp() {
+  const v = document.getElementById('inst-weekstart')?.value;
+  if (v === undefined) return;
+  weekStartDag = +v;
+  localStorage.setItem('gezinsapp_weekstart', v);
+  toonOpslagStatus('✅ Opgeslagen');
+}
+
 // ── Maaltijden ────────────────────────────────────────────────
 async function slaPortiesKindOp() {
   const v = parseFloat(document.getElementById('inst-porties-kind')?.value);
@@ -1093,6 +1103,7 @@ document.addEventListener('click', function(e){
     case 'voeg-gezinsdatum': voegGezinsDatumToe(); break;
     case 'voeg-transport-persoon': voegTransportPersoonToe(); break;
     case 'sla-porties-kind': slaPortiesKindOp(); break;
+    case 'sla-weekstart': slaWeekstartOp(); break;
     case 'voeg-winkel': voegWinkelToe(); break;
     case 'exporteer-data': exporteerData(); break;
     case 'herlaad-data': laadOp().then(()=>alert('✅ Herladen!')); break;
