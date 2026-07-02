@@ -281,7 +281,7 @@ async function laadOp() {
       sbFetch(`drukte_override${_gezinIdQ('')}`),
       sbFetch(`todos${_gezinIdQ('?order=aangemaakt_op')}`).catch(()=>[]),
     ]);
-    if (r.length) recepten = r.map(x=>({...x, id:String(x.id), _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false}));
+    if (r.length) { recepten = r.map(x=>({...x, id:String(x.id), _sbId:x.id, tags:x.tags||[], ingredienten:x.ingredienten||[], wie:x.wie||[], prive:x.prive||false})); AppState.notify('recepten'); }
     if (i.length) standaardIngredienten = i.map(x => ({...x, id:String(x.id), _sbId: x.id, productLink: x.product_link || null}));
     if (a.length) activiteiten = a.map(x=>({
       ...x, id:String(x.id), _sbId:x.id,
@@ -373,6 +373,8 @@ async function laadOp() {
       syncOk = results.every(r => r !== false);
     }
     if (syncOk) toonOpslagStatus('✅ Gesynchroniseerd');
+    // Cache naar localStorage zodat mobiele toestellen data hebben bij trage/falende verbinding
+    slaLokaalOp();
     _initPolling();
   } catch(e) {
     console.warn('Laden mislukt:', e);
