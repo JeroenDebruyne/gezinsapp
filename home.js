@@ -70,9 +70,14 @@ function renderVanavond(datumISO) {
   const el = document.getElementById('vanavond-kaart');
   if (!el) return;
   const dag = planning[datumISO] || {};
-  const avond = dag.avond;
-  const naam = avond ? (typeof avond === 'string' ? avond : (avond.waarde || null)) : null;
-  const kok = avond?.kok ? (PLABEL[avond.kok] || avond.kok) : null;
+  // Gebruik dezelfde logica als getSlotItems: kijk eerst naar items_avond, dan naar dag.avond
+  const storedItems = (dag.porties || {})['items_avond'];
+  const items = storedItems?.length ? storedItems : (dag.avond ? [{waarde: dag.avond, kok: (dag.porties||{})['kok_avond']||null}] : []);
+  const first = items[0];
+  const waarde = first?.waarde;
+  const SPEC = {verlof:'Verlof',uithuis:'Uit eten',bestelling:'Bestelling',thuis:'Thuis eten'};
+  const naam = waarde ? (SPEC[waarde] || recepten.find(r => String(r.id) === String(waarde))?.naam || null) : null;
+  const kok = first?.kok ? (PLABEL[first.kok] || first.kok) : null;
   if (!naam) {
     el.innerHTML = `<div class="card" style="display:flex;align-items:center;gap:12px;opacity:.7;">
       <span style="font-size:22px;">🍽️</span>
