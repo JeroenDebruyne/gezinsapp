@@ -10,6 +10,7 @@ AppState.subscribe('activiteiten', renderHomepage);
 AppState.subscribe('todos', renderHomepage);
 AppState.subscribe('contacten', renderHomepage);
 AppState.subscribe('planning', renderHomepage);
+AppState.subscribe('recepten', renderHomepage);
 
 (function () {
   const welkom = document.getElementById('home-chat-welkom');
