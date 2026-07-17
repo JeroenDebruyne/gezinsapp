@@ -84,7 +84,7 @@ function renderVanavond(datumISO) {
       <span style="font-size:22px;">🍽️</span>
       <div style="flex:1;">
         <div class="card-title" style="color:var(--muted);">Nog niet gepland</div>
-        <div class="meta"><a href="weekplanner.html" style="color:var(--accent);">Weekmenu invullen →</a></div>
+        <div class="meta"><a href="weekplanner.html?nieuw=1&moment=avond" style="color:var(--accent);">Plan vanavond →</a></div>
       </div>
     </div>`;
     return;

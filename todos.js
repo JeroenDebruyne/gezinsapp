@@ -298,6 +298,44 @@ function saveTodo() {
   renderTodos();
 }
 
+// ── Snel toevoegen ────────────────────────────────────────────
+function quickAddTodo() {
+  const inp = document.getElementById('quick-add-input');
+  const titel = (inp?.value || '').trim();
+  if (!titel) { inp?.focus(); return; }
+  const todo = {
+    id: String(_maakId()),
+    titel,
+    notitie: '',
+    // In het "Vandaag"-filter krijgt een snelle to-do meteen deadline vandaag,
+    // zodat hij zichtbaar blijft in de actieve lijst
+    deadline: actieveFilter === 'vandaag' ? fDateISO(new Date()) : '',
+    duur: null,
+    prioriteit: 'middel',
+    wie: [Auth.profiel()?.persoonKey].filter(Boolean),
+    prive: false,
+    gedaan: false,
+    gedaanOp: null,
+    aangemaaktDoor: Auth.profiel()?.persoonKey,
+    aangemaaktOp: fDateISO(new Date()),
+  };
+  todos.push(todo);
+  slaLokaalOp();
+  sbSaveTodo(todo);
+  inp.value = '';
+  inp.focus();
+  toonOpslagStatus('✅ Toegevoegd');
+  renderTodos();
+}
+
+function zetDeadlineChip(when) {
+  const d = new Date();
+  if (when === 'morgen') d.setDate(d.getDate() + 1);
+  else if (when === 'weekend') d.setDate(d.getDate() + (6 - d.getDay() + 7) % 7); // komende zaterdag
+  else if (when === 'volgende-week') d.setDate(d.getDate() + 7);
+  document.getElementById('t-deadline').value = fDateISO(d);
+}
+
 function verwijderTodo(id) {
   _bevestig('To-do verwijderen?', function() {
     const t = todos.find(x=>x.id===id);
@@ -320,6 +358,9 @@ document.getElementById('todo-modal-bg').addEventListener('click', e=>{
 // Enter = opslaan
 document.getElementById('t-titel').addEventListener('keydown', e=>{
   if (e.key==='Enter') saveTodo();
+});
+document.getElementById('quick-add-input')?.addEventListener('keydown', e=>{
+  if (e.key==='Enter') quickAddTodo();
 });
 
 // Auto-open als ?nieuw=1
@@ -373,6 +414,12 @@ document.addEventListener('click', function(e) {
       break;
     case 'open-modal':
       openModal();
+      break;
+    case 'quick-add-todo':
+      quickAddTodo();
+      break;
+    case 'deadline-chip':
+      zetDeadlineChip(el.dataset.when);
       break;
     case 'close-modal':
       closeModal();

@@ -31,7 +31,8 @@ laadOp().then(() => {
   const planId = _urlParams.get('plan');
   const planDag = _urlParams.get('dag');
   const planMoment = _urlParams.get('moment') || 'avond';
-  if (planId) {
+  const planNieuw = _urlParams.get('nieuw') === '1';
+  if (planId || planNieuw) {
     const vandaag = fDateISO(new Date());
     const targetDag = planDag || vandaag;
     const targetWeekMon = getWeekDatesFrom(targetDag, 0)[0];
@@ -47,7 +48,7 @@ laadOp().then(() => {
     const dk = dagIndex !== -1 ? dagKeys[dagIndex] : dagKeys[0];
     const DAGNAMEN = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
     openPlanModal(dk, planMoment, DAGNAMEN[dagIndex !== -1 ? dagIndex : 0] || 'Vandaag', dagIndex !== -1 ? dagIndex : 0);
-    setTimeout(() => kiesPlanK(planId), 150);
+    if (planId) setTimeout(() => kiesPlanK(planId), 150);
   }
 }).catch(() => { laadLokaal(); renderPlanner(); });
 
@@ -230,8 +231,7 @@ function openPlanModal(dk, slotKey, dagnaam, dagIndex, editIdx = null) {
 
   planReceptenGefilterd = recepten.filter(r => _receptMatchTypes(r, types));
   document.getElementById('plan-zoek').value = '';
-  document.getElementById('plan-recepten').style.display = 'none';
-  document.getElementById('plan-recepten').innerHTML = '';
+  renderPlanRecepten(_planDefaultLijst());
 
   const kokOpts = _persKok().map(p => `<option value="${escHtml(p)}">${escHtml(PEMOJI[p] || '👤')} ${escHtml(PLABEL[p] || p)}</option>`).join('');
   document.getElementById('wie-kok-sel').innerHTML = `<option value="" selected>Te bepalen</option><option value="niemand">Niemand</option>${kokOpts}`;
@@ -305,9 +305,13 @@ function renderPlanRecepten(lijst) {
   el.style.display = 'block';
 }
 
+function _planDefaultLijst() {
+  return [...planReceptenGefilterd].sort((a, b) => a.naam.localeCompare(b.naam, 'nl')).slice(0, 8);
+}
+
 function zoekRecepten(q) {
   const zoek = q.toLowerCase().trim();
-  if (!zoek) { document.getElementById('plan-recepten').style.display = 'none'; return; }
+  if (!zoek) { renderPlanRecepten(_planDefaultLijst()); return; }
   renderPlanRecepten(planReceptenGefilterd.filter(r => r.naam.toLowerCase().includes(zoek)));
 }
 

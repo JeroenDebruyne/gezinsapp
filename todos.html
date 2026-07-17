@@ -36,6 +36,12 @@
 <script src="nav.js"></script>
 <main class="main-content">
 
+  <!-- Snel toevoegen -->
+  <div class="quick-add-row">
+    <input type="text" id="quick-add-input" placeholder="Snel een to-do toevoegen…" autocomplete="off"/>
+    <button class="quick-add-btn" data-action="quick-add-todo" title="Toevoegen">＋</button>
+  </div>
+
   <!-- Filter tabs -->
   <select class="mob-filter-sel" id="filter-sel-mob">
     <option value="mijn">Mijn to-do's</option>
@@ -76,6 +82,12 @@
     <div class="form-row">
       <label>Deadline</label>
       <input type="date" id="t-deadline"/>
+      <div class="deadline-chips">
+        <button type="button" class="deadline-chip" data-action="deadline-chip" data-when="vandaag">Vandaag</button>
+        <button type="button" class="deadline-chip" data-action="deadline-chip" data-when="morgen">Morgen</button>
+        <button type="button" class="deadline-chip" data-action="deadline-chip" data-when="weekend">Weekend</button>
+        <button type="button" class="deadline-chip" data-action="deadline-chip" data-when="volgende-week">+1 week</button>
+      </div>
     </div>
     <div class="form-row">
       <label>Geschatte tijd</label>
