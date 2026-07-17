@@ -457,6 +457,44 @@ async function voegToeAanBoodschappenlijst() {
   _voegToeIntern(weekKey);
 }
 
+// ── Kopieer vorige week ───────────────────────────────────────
+function _weekItemCount(offset) {
+  let n = 0;
+  getWeekDates(offset).forEach(d => {
+    const dag = planning[fDateISO(d)] || {};
+    SLOTS.forEach(slot => { n += getSlotItems(dag, slot.key).length; });
+  });
+  return n;
+}
+
+function _doeKopieerVorigeWeek() {
+  const doelDates = getWeekDates(weekOffsetP);
+  const bronDates = getWeekDates(weekOffsetP - 1);
+  let n = 0;
+  doelDates.forEach((d, i) => {
+    const bronDag = planning[fDateISO(bronDates[i])] || {};
+    SLOTS.forEach(slot => {
+      const items = getSlotItems(bronDag, slot.key)
+        .map(it => ({ ...it, wie: [...(it.wie || [])] }));
+      if (!items.length) return;
+      _saveItems(fDateISO(d), slot.key, items);
+      n += items.length;
+    });
+  });
+  renderPlanner();
+  toonOpslagStatus(`✅ ${n} maaltijden gekopieerd`);
+}
+
+function kopieerVorigeWeek() {
+  if (!_weekItemCount(weekOffsetP - 1)) { toonOpslagStatus('❌ Vorige week is leeg — niets te kopiëren.'); return; }
+  if (_weekItemCount(weekOffsetP)) {
+    _bevestig('Weekmenu van vorige week kopiëren?', _doeKopieerVorigeWeek,
+      { sub: 'Ingeplande maaltijden deze week worden vervangen door die van vorige week.', bevestigLabel: 'Kopieer', danger: false });
+  } else {
+    _doeKopieerVorigeWeek();
+  }
+}
+
 document.getElementById('plan-modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('plan-modal-bg')) closePlanModal(); });
 
 function openWpAgent() { document.getElementById('wp-agent-panel').style.display = 'block'; }
@@ -580,6 +618,7 @@ document.addEventListener('click', function (e) {
     case 'change-week-p': changeWeekP(parseInt(el.dataset.dir)); break;
     case 'open-wp-agent': openWpAgent(); break;
     case 'voeg-toe-boodschappen': voegToeAanBoodschappenlijst(); break;
+    case 'kopieer-vorige-week': kopieerVorigeWeek(); break;
     case 'ga-boodschappen': location.href = 'boodschappen.html'; break;
     case 'sluit-wp-panel': document.getElementById('wp-agent-panel').style.display = 'none'; break;
     case 'wp-voorbeeld': wpStuurVoorbeeldVraag(el.dataset.tekst); break;

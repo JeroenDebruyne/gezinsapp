@@ -506,6 +506,9 @@ function openActModal(act){
     : `<button class="modal-btn modal-btn-cancel" data-action="close-act-modal">Annuleren</button>
        <button class="modal-btn modal-btn-primary" data-action="save-activiteit">Opslaan</button>`;
 
+  // Meer opties: ingeklapt bij nieuw, open bij bewerken met geavanceerde instellingen
+  toggleMeerOpties(_gebruiktMeerOpties(act));
+
   const _actModalEl=document.getElementById('act-modal-bg');
   _actModalEl.classList.add('open');
   _actModalEl.querySelector('.modal').scrollTop=0;
@@ -622,7 +625,26 @@ function toggleMeerdaags(){meerdaagsAan=!meerdaagsAan;updateMeerdaagsSwitch();}
 function updateMeerdaagsSwitch(){
   document.getElementById('meerdaags-switch').className='ios-switch'+(meerdaagsAan?' on':'');
   document.getElementById('eendaags-velden').style.display=meerdaagsAan?'none':'block';
+  const extra=document.getElementById('eendaags-extra');
+  if(extra) extra.style.display=meerdaagsAan?'none':'block';
   document.getElementById('meerdaags-velden').style.display=meerdaagsAan?'block':'none';
+}
+
+// ── Meer opties expander ──────────────────────────────────────
+function toggleMeerOpties(force){
+  const wrap=document.getElementById('act-meer-opties');
+  if(!wrap) return;
+  const open=typeof force==='boolean'?force:wrap.style.display==='none';
+  wrap.style.display=open?'block':'none';
+  const chev=document.getElementById('meer-opties-chevron');
+  if(chev) chev.textContent=open?'▴':'▾';
+}
+// Bepaalt of een activiteit instellingen gebruikt die achter "Meer opties" zitten
+function _gebruiktMeerOpties(act){
+  if(!act) return false;
+  return !!(act.meerdaags||(act.freq&&act.freq!=='eenmalig')||act.locatie||act.prep||
+    act.prive||act.informatief||act.reisHeen||act.reisTerug||act.eindDatum||
+    act.maaltijdThuis||(act.transport&&Object.keys(act.transport).length));
 }
 
 function checkNachtspan(){
@@ -1052,6 +1074,7 @@ document.addEventListener('click', function(e){
     case 'open-ical-modal': openIcalModal(); break;
     case 'open-act-modal': openActModal(); break;
     case 'toggle-meerdaags': toggleMeerdaags(); break;
+    case 'toggle-meer-opties': toggleMeerOpties(); break;
     case 'bereken-reistijd-auto': berekenReistijdAuto(); break;
     case 'toggle-prive': togglePrive(); break;
     case 'toggle-informatief': toggleInformatief(); break;

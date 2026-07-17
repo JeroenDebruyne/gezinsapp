@@ -279,43 +279,13 @@
     <div class="persoon-ms" id="a-wie-ms"></div>
   </div>
 
-  <!-- Meerdaagse toggle -->
-  <div class="meerdaags-toggle-rij" data-action="toggle-meerdaags">
-    <div>
-      <div style="font-size:15px;font-weight:500;color:var(--ink);"><i data-lucide="calendar-range" class="icon-inline"></i> Meerdaagse activiteit</div>
-      <div style="font-size:12px;color:var(--muted);">Bijv. vakantie, schoolkamp, …</div>
-    </div>
-    <div class="ios-switch" id="meerdaags-switch"></div>
-  </div>
-
-  <!-- Eendaagse velden -->
+  <!-- Basis: tijdstip en datum (eendaags) -->
   <div id="eendaags-velden">
     <div class="form-grid">
       <div class="form-row"><label>Startuur</label><input type="time" id="a-start" data-action="check-nachtspan"/></div>
       <div class="form-row"><label>Einduur <span id="nachtspan-hint" style="display:none;font-size:11px;font-weight:400;color:var(--muted);">(volgende dag)</span></label><input type="time" id="a-eind-uur" data-action="check-nachtspan"/></div>
-      <div class="form-row"><label>Reistijd heen (min)</label><input type="number" id="a-reis-heen" placeholder="0" min="0"/></div>
-      <div class="form-row"><label>Reistijd terug (min)</label><input type="number" id="a-reis-terug" placeholder="0" min="0"/></div>
     </div>
-    <div class="form-row">
-      <label>Frequentie</label>
-      <select id="a-freq" data-action="freq-change">
-        <option value="eenmalig">Eenmalig</option>
-        <option value="wekelijks">Wekelijks</option>
-        <option value="tweewekelijks">Tweewekelijks</option>
-        <option value="maandelijks">Maandelijks</option>
-        <option value="eenmalig">Eenmalig</option>
-        <option value="jaarlijks">Jaarlijks</option>
-      </select>
-    </div>
-    <div id="freq-preview" style="font-size:12px;color:var(--accent);padding:4px 2px 8px;display:none;"></div>
-    <div class="form-grid">
-      <div class="form-row"><label>Begindatum</label><input type="date" id="a-begin" data-action="freq-change"/></div>
-      <div class="form-row" id="einddatum-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
-    </div>
-    <div class="form-row" id="dagen-row">
-      <label>Dagen</label>
-      <div class="dag-checkboxes" id="dag-checkboxes"></div>
-    </div>
+    <div class="form-row"><label>Datum</label><input type="date" id="a-begin" data-action="freq-change"/></div>
   </div>
 
   <!-- Meerdaagse velden -->
@@ -328,50 +298,94 @@
     </div>
   </div>
 
-  <div class="form-row">
-    <label>Locatie</label>
-    <div style="display:flex;gap:6px;">
-      <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" data-action="locatie-input"/>
-      <button type="button" id="btn-reistijd-auto" data-action="bereken-reistijd-auto" title="Reistijd berekenen via Google Maps"
-        style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;"><i data-lucide="map" style="width:16px;height:16px;"></i></button>
+  <!-- Meer opties expander -->
+  <button type="button" class="meer-opties-toggle" data-action="toggle-meer-opties">
+    <i data-lucide="sliders-horizontal" class="icon-inline"></i> Meer opties
+    <span style="font-size:11px;font-weight:400;color:var(--muted);">herhaling · locatie · privé · transport …</span>
+    <span class="meer-opties-chevron" id="meer-opties-chevron">▾</span>
+  </button>
+
+  <div id="act-meer-opties" style="display:none;">
+
+    <!-- Meerdaagse toggle -->
+    <div class="meerdaags-toggle-rij" data-action="toggle-meerdaags">
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--ink);"><i data-lucide="calendar-range" class="icon-inline"></i> Meerdaagse activiteit</div>
+        <div style="font-size:12px;color:var(--muted);">Bijv. vakantie, schoolkamp, …</div>
+      </div>
+      <div class="ios-switch" id="meerdaags-switch"></div>
     </div>
-    <div id="locatie-contact-wrap" style="margin-top:6px;"></div>
-  </div>
 
-  <!-- Maaltijd thuis -->
-  <div class="form-row">
-    <label>Maaltijd niet thuis <span style="font-size:11px;font-weight:400;color:var(--muted);">(auto-berekend op basis van tijdstip)</span></label>
-    <div class="form-grid-3" style="margin-top:6px;">
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> <i data-lucide="coffee" class="icon-inline"></i> Ontbijt</label>
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> <i data-lucide="leaf" class="icon-inline"></i> Lunch</label>
-      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> <i data-lucide="utensils" class="icon-inline"></i> Avond</label>
+    <!-- Extra eendaagse velden -->
+    <div id="eendaags-extra">
+      <div class="form-row">
+        <label>Frequentie</label>
+        <select id="a-freq" data-action="freq-change">
+          <option value="eenmalig">Eenmalig</option>
+          <option value="wekelijks">Wekelijks</option>
+          <option value="tweewekelijks">Tweewekelijks</option>
+          <option value="maandelijks">Maandelijks</option>
+          <option value="jaarlijks">Jaarlijks</option>
+        </select>
+      </div>
+      <div id="freq-preview" style="font-size:12px;color:var(--accent);padding:4px 2px 8px;display:none;"></div>
+      <div class="form-row" id="dagen-row">
+        <label>Dagen</label>
+        <div class="dag-checkboxes" id="dag-checkboxes"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row" id="einddatum-row"><label>Einddatum</label><input type="date" id="a-eind"/></div>
+        <div class="form-row"><label>Reistijd heen (min)</label><input type="number" id="a-reis-heen" placeholder="0" min="0"/></div>
+        <div class="form-row"><label>Reistijd terug (min)</label><input type="number" id="a-reis-terug" placeholder="0" min="0"/></div>
+      </div>
     </div>
-  </div>
 
-  <div class="form-row">
-    <label>Voorbereiding</label>
-    <input type="text" id="a-prep" placeholder="Sporttas, medicatie, …"/>
-  </div>
-
-  <!-- Privé toggle -->
-  <div class="prive-toggle" data-action="toggle-prive">
-    <div class="prive-toggle-left">
-      <span class="prive-toggle-label"><i data-lucide="lock" class="icon-inline"></i> Privé activiteit</span>
-      <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
+    <div class="form-row">
+      <label>Locatie</label>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="a-locatie" placeholder="Adres of locatie…" style="flex:1;" data-action="locatie-input"/>
+        <button type="button" id="btn-reistijd-auto" data-action="bereken-reistijd-auto" title="Reistijd berekenen via Google Maps"
+          style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;flex-shrink:0;line-height:1;"><i data-lucide="map" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div id="locatie-contact-wrap" style="margin-top:6px;"></div>
     </div>
-    <div class="ios-switch" id="prive-switch"></div>
-  </div>
 
-  <!-- Informatief toggle -->
-  <div class="prive-toggle" data-action="toggle-informatief">
-    <div class="prive-toggle-left">
-      <span class="prive-toggle-label"><i data-lucide="pin" class="icon-inline"></i> Informatieve activiteit</span>
-      <span class="prive-toggle-sub">Geen impact op drukte (schoolreis, herinnering, …)</span>
+    <!-- Maaltijd thuis -->
+    <div class="form-row">
+      <label>Maaltijd niet thuis <span style="font-size:11px;font-weight:400;color:var(--muted);">(auto-berekend op basis van tijdstip)</span></label>
+      <div class="form-grid-3" style="margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-ontbijt"/> <i data-lucide="coffee" class="icon-inline"></i> Ontbijt</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-lunch"/> <i data-lucide="leaf" class="icon-inline"></i> Lunch</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;cursor:pointer;"><input type="checkbox" id="a-mt-avond"/> <i data-lucide="utensils" class="icon-inline"></i> Avond</label>
+      </div>
     </div>
-    <div class="ios-switch" id="informatief-switch"></div>
-  </div>
 
-  <!-- Transport kindje -->
+    <div class="form-row">
+      <label>Voorbereiding</label>
+      <input type="text" id="a-prep" placeholder="Sporttas, medicatie, …"/>
+    </div>
+
+    <!-- Privé toggle -->
+    <div class="prive-toggle" data-action="toggle-prive">
+      <div class="prive-toggle-left">
+        <span class="prive-toggle-label"><i data-lucide="lock" class="icon-inline"></i> Privé activiteit</span>
+        <span class="prive-toggle-sub">Alleen voor jezelf zichtbaar</span>
+      </div>
+      <div class="ios-switch" id="prive-switch"></div>
+    </div>
+
+    <!-- Informatief toggle -->
+    <div class="prive-toggle" data-action="toggle-informatief">
+      <div class="prive-toggle-left">
+        <span class="prive-toggle-label"><i data-lucide="pin" class="icon-inline"></i> Informatieve activiteit</span>
+        <span class="prive-toggle-sub">Geen impact op drukte (schoolreis, herinnering, …)</span>
+      </div>
+      <div class="ios-switch" id="informatief-switch"></div>
+    </div>
+
+  </div><!-- /act-meer-opties -->
+
+  <!-- Transport kindje: buiten de expander — verschijnt automatisch als enkel een kind geselecteerd is -->
   <div class="kindje-sectie-modal" id="kindje-sectie" style="display:none;">
     <div class="kindje-sectie-lbl"><i data-lucide="car" class="icon-inline"></i> Transport kindje</div>
 

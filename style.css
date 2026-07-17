@@ -1018,3 +1018,8 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
 .deadline-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .deadline-chip{padding:5px 12px;border-radius:99px;border:1.5px solid var(--border-2);background:var(--surface);color:var(--muted);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .15s;}
 .deadline-chip:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent);}
+
+/* ── "Meer opties" expander (activiteit-modal) ───────────────── */
+.meer-opties-toggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;padding:11px 14px;margin:2px 0 14px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;text-align:left;}
+.meer-opties-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l);}
+.meer-opties-chevron{margin-left:auto;font-size:12px;}
