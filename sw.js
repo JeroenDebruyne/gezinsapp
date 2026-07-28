@@ -3,7 +3,7 @@
 //   HTML         → network-first   (altijd verse inhoud, cache als fallback)
 //   JS/CSS/SVG   → stale-while-revalidate  (snel laden, update op achtergrond)
 //   Extern (API) → network-first, geen cache
-const CACHE = 'gezinsapp-v2026-07-17T063618';
+const CACHE = 'gezinsapp-v2026-07-28T155152';
 
 const STATIC = [
   'index.html', 'agent.html', 'agenda.html', 'boodschappen.html',
@@ -15,7 +15,7 @@ const STATIC = [
   'agent.js', 'agent-tools.js', 'agent-page.js',
   'agenda.js', 'instellingen.js', 'todos.js', 'boodschappen.js',
   'contacten.js', 'kinderlogistiek.js', 'recepten.js',
-  'home.js', 'weekplanner.js', 'ingredienten.js', 'login.js', 'maps.js',
+  'home.js', 'weekplanner.js', 'weekmenu-docx.js', 'ingredienten.js', 'login.js', 'maps.js',
   'lucide.min.js',
 ];
 

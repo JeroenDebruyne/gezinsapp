@@ -1023,3 +1023,7 @@ svg.empty-icon,.empty-state svg.lucide{width:48px;height:48px;display:block;colo
 .meer-opties-toggle{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;padding:11px 14px;margin:2px 0 14px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;text-align:left;}
 .meer-opties-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l);}
 .meer-opties-chevron{margin-left:auto;font-size:12px;}
+
+/* ── Word weekmenu drop-zone ─────────────────────────────────── */
+.word-drop-zone{display:flex;align-items:center;justify-content:center;gap:10px;border:2px dashed var(--border-2);border-radius:var(--radius);padding:22px 16px;color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;text-align:center;}
+.word-drop-zone:hover,.word-drop-zone.word-drop-actief{border-color:var(--accent);color:var(--accent);background:var(--accent-l);}
